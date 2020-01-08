@@ -17,5 +17,5 @@ docker-compose exec hydra \
     --secret secret \
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \
-    --scope openid,offline \
+    --scope studentcard \
     --callbacks http://127.0.0.1:5555/callback

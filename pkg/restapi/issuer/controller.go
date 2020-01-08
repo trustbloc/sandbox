@@ -11,10 +11,10 @@ import (
 )
 
 // New returns new controller instance.
-func New() (*Controller, error) {
+func New(config *operation.Config) (*Controller, error) {
 	var allHandlers []operation.Handler
 
-	issuerService := operation.New()
+	issuerService := operation.New(config)
 	allHandlers = append(allHandlers, issuerService.GetRESTHandlers()...)
 
 	return &Controller{handlers: allHandlers}, nil
