@@ -8,7 +8,6 @@ package operation
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -16,43 +15,74 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 
 	"github.com/hyperledger/aries-framework-go/pkg/restapi/operation"
 )
 
-func TestOperation_Test(t *testing.T) {
-	handler := getHandler(t, token)
-	buf, err := getSuccessResponseFromHandler(handler, bytes.NewBuffer([]byte("sample-connection-id")),
-		token)
+func TestOperation_Login(t *testing.T) {
+	handler := getHandler(t, login)
+	buff, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), nil, nil, login)
 	require.NoError(t, err)
+	require.Contains(t, buff.String(), "Temporary Redirect")
+	require.Equal(t, http.StatusTemporaryRedirect, status)
+}
 
-	// verify response
-	require.Contains(t, buf.String(), "hello")
+func TestOperation_CallbackWithoutCookie(t *testing.T) {
+	handler := getHandler(t, callback)
+	_, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), nil, nil, callback)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusTemporaryRedirect, status)
+}
+
+func TestOperation_CallbackWithoutStateValue(t *testing.T) {
+	handler := getHandler(t, callback)
+	oauthCookie := &http.Cookie{
+		Name:  oauthCookieName,
+		Value: "value",
+	}
+
+	_, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), []*http.Cookie{oauthCookie}, nil, callback)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusTemporaryRedirect, status)
+}
+
+func TestOperation_CallbackWithoutCodeValue(t *testing.T) {
+	handler := getHandler(t, callback)
+
+	const oauthCookieValue = "some value"
+
+	cookie := &http.Cookie{
+		Name:  oauthCookieName,
+		Value: oauthCookieValue,
+	}
+	cookies := []*http.Cookie{cookie}
+
+	formValues := make(map[string][]string)
+	formValues["state"] = []string{oauthCookieValue}
+
+	_, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), cookies, formValues, callback)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusTemporaryRedirect, status)
 }
 
 func TestOperation_WriteResponse(t *testing.T) {
-	svc := New()
+	svc := New(&Config{OAuth2Config: &oauth2.Config{}})
 	require.NotNil(t, svc)
 	svc.writeResponse(&httptest.ResponseRecorder{}, "hello")
 }
 
-// getSuccessResponseFromHandler reads response from given http handle func and expects http status to be OK.
-func getSuccessResponseFromHandler(handler operation.Handler, requestBody io.Reader,
-	path string) (*bytes.Buffer, error) {
-	response, status, err := handleRequest(handler, requestBody, path)
-	if status != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: got %v, want %v",
-			status, http.StatusOK)
-	}
-
-	return response, err
-}
-
-func handleRequest(handler operation.Handler, requestBody io.Reader, path string) (*bytes.Buffer, int, error) {
+func handleRequest(handler operation.Handler, requestBody io.Reader, cookies []*http.Cookie, formValues map[string][]string, path string) (*bytes.Buffer, int, error) { //nolint:lll
 	req, err := http.NewRequest(handler.Method(), path, requestBody)
 	if err != nil {
 		return nil, 0, err
 	}
+
+	for _, c := range cookies {
+		req.AddCookie(c)
+	}
+
+	req.Form = formValues
 
 	router := mux.NewRouter()
 
@@ -71,7 +101,7 @@ func getHandler(t *testing.T, lookup string) Handler {
 }
 
 func getHandlerWithError(t *testing.T, lookup string) Handler {
-	svc := New()
+	svc := New(&Config{OAuth2Config: &oauth2.Config{}})
 	require.NotNil(t, svc)
 
 	return handlerLookup(t, svc, lookup)
