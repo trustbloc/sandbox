@@ -11,6 +11,7 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/stretchr/testify v1.4.0
 	github.com/trustbloc/edge-sandbox v0.0.0
+	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
 )
 
 go 1.13
