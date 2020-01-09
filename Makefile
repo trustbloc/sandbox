@@ -4,6 +4,7 @@
 
 GO_CMD ?= go
 ISSUER_REST_PATH=cmd/issuer-rest
+STRAPI_DEMO_PATH=cmd/strapi-demo
 
 .PHONY: all
 all: checks unit-test
@@ -38,3 +39,16 @@ issuer-rest:
 	@echo "Building issuer-rest"
 	@mkdir -p ./build/bin
 	@cd ${ISSUER_REST_PATH} && go build -o ../../build/bin/issuer-rest main.go
+strapi-build:
+	@echo "Building strapi demo"
+	@mkdir -p ./build/bin
+	@cd ${STRAPI_DEMO_PATH} && go build -o ../../build/bin/strapi-demo main.go
+
+strapi-start:
+	@scripts/strapi-start.sh
+
+strapi-stop:
+	@scripts/strapi-stop.sh
+
+strapi-setup:
+	@scripts/strapi-setup.sh
