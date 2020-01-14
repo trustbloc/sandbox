@@ -38,6 +38,7 @@ hydra-test-app:
 issuer-rest:
 	@echo "Building issuer-rest"
 	@mkdir -p ./build/bin
+	@cp -r ${ISSUER_REST_PATH}/static ./build/bin
 	@cd ${ISSUER_REST_PATH} && go build -o ../../build/bin/issuer-rest main.go
 
 strapi-build:
