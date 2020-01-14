@@ -88,7 +88,7 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// exchange code for token
-	token, err := c.cmsConfig.Exchange(context.Background(), r.FormValue(codeFormKey))
+	_, err = c.cmsConfig.Exchange(context.Background(), r.FormValue(codeFormKey))
 	if err != nil {
 		log.Error(err)
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
@@ -97,7 +97,7 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get user data from CMS here (display token for now)
-	c.writeResponse(w, token)
+	c.writeResponse(w, validCredential)
 }
 
 func generateStateOauthCookie(w http.ResponseWriter) string {
@@ -141,3 +141,31 @@ func (c *Operation) writeResponse(rw io.Writer, v interface{}) {
 func (c *Operation) GetRESTHandlers() []Handler {
 	return c.handlers
 }
+
+//nolint:lll
+const validCredential = `{
+  "@context": "https://www.w3.org/2018/credentials/v1",
+  "id": "http://example.edu/credentials/1872",
+  "type": "VerifiableCredential",
+  "credentialSubject": {
+    "id": "did:example:ebfeb1f712ebc6f1c276e12ec21"
+  },
+  "issuer": {
+    "id": "did:example:76e12ec712ebc6f1c221ebfeb1f",
+    "name": "Example University"
+  },
+  "issuanceDate": "2010-01-01T19:23:24Z",
+  "proof": {
+    "type": "RsaSignature2018",
+    "created": "2018-06-18T21:19:10Z",
+    "proofPurpose": "assertionMethod",
+    "verificationMethod": "https://example.com/jdoe/keys/1",
+    "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..DJBMvvFAIC00nSGB6Tn0XKbbF9XrsaJZREWvR2aONYTQQxnyXirtXnlewJMBBn2h9hfcGZrvnC1b6PgWmukzFJ1IiH1dWgnDIS81BH-IxXnPkbuYDeySorc4QU9MJxdVkY5EL4HYbcIfwKj6X4LBQ2_ZHZIu1jdqLcRZqHcsDF5KKylKc1THn5VRWy5WhYg_gBnyWny8E6Qkrze53MR7OuAmmNJ1m1nN8SxDrG6a08L78J0-Fbas5OjAQz3c17GY8mVuDPOBIOVjMEghBlgl3nOi1ysxbRGhHLEK4s0KKbeRogZdgt1DkQxDFxxn41QWDw_mmMCjs9qxg0zcZzqEJw"
+  },
+  "expirationDate": "2020-01-01T19:23:24Z",
+  "credentialStatus": {
+    "id": "https://example.edu/status/24",
+    "type": "CredentialStatusList2017"
+  }
+}
+`
