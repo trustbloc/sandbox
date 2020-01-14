@@ -7,7 +7,7 @@
 
 echo "Running $0"
 
-cd test/bdd/fixtures/hydra
+cd test/bdd/fixtures/sandbox
 
 #Figure out how to cofigure client without docker-compose
 docker-compose exec hydra \
