@@ -4,10 +4,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-set -e
 
 echo "Running $0"
 
-cd test/bdd/fixtures/hydra
-docker-compose up --build
-
+cd test/bdd/fixtures/sandbox
+docker-compose kill
+docker-compose rm -f
