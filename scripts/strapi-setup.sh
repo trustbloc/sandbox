@@ -7,7 +7,7 @@
 
 set -e
 
-STRAPI_FOLDER="cms/app"
+STRAPI_FOLDER="test/bdd/fixtures/cms/app"
 
 #Make sure Node.js and npm are properly on machine
 echo "Generating Strapi API"
@@ -29,5 +29,5 @@ $GENERATE_TRANSCRIPT_COMMAND
 sleep 20s
 
 # This is assuming strapi is running on default 1337 port
-cd ../../build/bin
+cd ../../../../../build/bin
 ./strapi-demo create-demo-data --admin-url http://localhost:1337

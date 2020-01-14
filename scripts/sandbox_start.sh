@@ -4,9 +4,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
+set -e
 
 echo "Running $0"
 
-cd strapi
-docker-compose kill
-docker-compose rm -f
+cd test/bdd/fixtures/sandbox
+docker-compose up --build
+
