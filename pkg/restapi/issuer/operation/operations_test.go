@@ -8,6 +8,7 @@ package operation
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -22,67 +23,37 @@ import (
 
 func TestOperation_Login(t *testing.T) {
 	handler := getHandler(t, login)
-	buff, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), nil, nil, login)
+	buff, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), login)
 	require.NoError(t, err)
 	require.Contains(t, buff.String(), "Temporary Redirect")
 	require.Equal(t, http.StatusTemporaryRedirect, status)
 }
 
-func TestOperation_CallbackWithoutCookie(t *testing.T) {
+func TestOperation_Callback(t *testing.T) {
 	handler := getHandler(t, callback)
-	_, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), nil, nil, callback)
+	_, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), callback)
 	require.NoError(t, err)
-	require.Equal(t, http.StatusTemporaryRedirect, status)
+	require.Equal(t, http.StatusOK, status)
 }
 
-func TestOperation_CallbackWithoutStateValue(t *testing.T) {
-	handler := getHandler(t, callback)
-	oauthCookie := &http.Cookie{
-		Name:  oauthCookieName,
-		Value: "value",
-	}
-
-	_, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), []*http.Cookie{oauthCookie}, nil, callback)
-	require.NoError(t, err)
-	require.Equal(t, http.StatusTemporaryRedirect, status)
-}
-
-func TestOperation_CallbackWithoutCodeValue(t *testing.T) {
-	handler := getHandler(t, callback)
-
-	const oauthCookieValue = "some value"
-
-	cookie := &http.Cookie{
-		Name:  oauthCookieName,
-		Value: oauthCookieValue,
-	}
-	cookies := []*http.Cookie{cookie}
-
-	formValues := make(map[string][]string)
-	formValues["state"] = []string{oauthCookieValue}
-
-	_, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), cookies, formValues, callback)
+func TestOperation_Callback_Error(t *testing.T) {
+	handler := getHandlerWithError(t, callback, errors.New("some error"))
+	_, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), callback)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusTemporaryRedirect, status)
 }
 
 func TestOperation_WriteResponse(t *testing.T) {
-	svc := New(&Config{OAuth2Config: &oauth2.Config{}})
+	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}})
 	require.NotNil(t, svc)
 	svc.writeResponse(&httptest.ResponseRecorder{}, "hello")
 }
 
-func handleRequest(handler operation.Handler, requestBody io.Reader, cookies []*http.Cookie, formValues map[string][]string, path string) (*bytes.Buffer, int, error) { //nolint:lll
+func handleRequest(handler operation.Handler, requestBody io.Reader, path string) (*bytes.Buffer, int, error) { //nolint:lll
 	req, err := http.NewRequest(handler.Method(), path, requestBody)
 	if err != nil {
 		return nil, 0, err
 	}
-
-	for _, c := range cookies {
-		req.AddCookie(c)
-	}
-
-	req.Form = formValues
 
 	router := mux.NewRouter()
 
@@ -97,11 +68,11 @@ func handleRequest(handler operation.Handler, requestBody io.Reader, cookies []*
 }
 
 func getHandler(t *testing.T, lookup string) Handler {
-	return getHandlerWithError(t, lookup)
+	return getHandlerWithError(t, lookup, nil)
 }
 
-func getHandlerWithError(t *testing.T, lookup string) Handler {
-	svc := New(&Config{OAuth2Config: &oauth2.Config{}})
+func getHandlerWithError(t *testing.T, lookup string, err error) Handler {
+	svc := New(&Config{TokenIssuer: &mockTokenIssuer{err: err}})
 	require.NotNil(t, svc)
 
 	return handlerLookup(t, svc, lookup)
@@ -120,4 +91,20 @@ func handlerLookup(t *testing.T, op *Operation, lookup string) Handler {
 	require.Fail(t, "unable to find handler")
 
 	return nil
+}
+
+type mockTokenIssuer struct {
+	err error
+}
+
+func (m *mockTokenIssuer) AuthCodeURL(w http.ResponseWriter) string {
+	return "url"
+}
+
+func (m *mockTokenIssuer) Exchange(r *http.Request) (*oauth2.Token, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+
+	return &oauth2.Token{}, nil
 }
