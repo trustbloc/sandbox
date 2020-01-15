@@ -148,8 +148,17 @@ func TestStartIssuerWithBlankHost(t *testing.T) {
 	require.Contains(t, err.Error(), "host URL is empty")
 }
 
+func TestStartIssuerWithBlankTokentIntrospectionURL(t *testing.T) {
+	parameters := &issuerParameters{hostURL: "hostURL", tokenIntrospectionURL: ""}
+
+	err := startIssuer(parameters)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "token introspection URL is empty")
+}
+
 func TestStartIssuerWithInvalidOAuth2Config(t *testing.T) {
-	parameters := &issuerParameters{hostURL: "hostURL", oauth2Config: &oauth2.Config{Endpoint: oauth2.Endpoint{}}}
+	parameters := &issuerParameters{hostURL: "hostURL", tokenIntrospectionURL: "introspect",
+		oauth2Config: &oauth2.Config{Endpoint: oauth2.Endpoint{}}}
 
 	err := startIssuer(parameters)
 	require.NotNil(t, err)
@@ -188,6 +197,9 @@ func TestStartCmdValidArgsEnvVar(t *testing.T) {
 	require.Nil(t, err)
 
 	err = os.Setenv(clientScopesEnvKey, "scopes")
+	require.Nil(t, err)
+
+	err = os.Setenv(introspectionURLEnvKey, "endpoint/introspect")
 	require.Nil(t, err)
 
 	err = startCmd.Execute()
@@ -253,6 +265,7 @@ func getValidArgs() []string {
 	args = append(args, clientIDArg()...)
 	args = append(args, clientSecretArg()...)
 	args = append(args, clientScopesArg()...)
+	args = append(args, tokenIntrospectionURLArg()...)
 
 	return args
 }
@@ -283,4 +296,8 @@ func clientSecretArg() []string {
 
 func clientScopesArg() []string {
 	return []string{flag + clientScopesFlagName, "openid"}
+}
+
+func tokenIntrospectionURLArg() []string {
+	return []string{flag + introspectionURLFlagName, "endpoint/introspect"}
 }
