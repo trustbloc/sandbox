@@ -17,6 +17,7 @@ import (
 
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/issuer"
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/issuer/operation"
+	tokenIssuer "github.com/trustbloc/edge-sandbox/pkg/token/issuer"
 	cmdutils "github.com/trustbloc/edge-sandbox/pkg/utils/cmd"
 )
 
@@ -132,7 +133,7 @@ func startIssuer(parameters *issuerParameters) error {
 		return err
 	}
 
-	cfg := &operation.Config{OAuth2Config: parameters.oauth2Config}
+	cfg := &operation.Config{TokenIssuer: tokenIssuer.New(parameters.oauth2Config)}
 
 	issuerService, err := issuer.New(cfg)
 	if err != nil {
