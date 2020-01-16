@@ -11,13 +11,13 @@ version: '3'
 services:
 
   hydra:
-    image: oryd/hydra:latest
+    image: oryd/hydra:v1.2.1-alpine
     ports:
       - "4444:4444" # Public port
       - "4445:4445" # Admin port
       - "5555:5555" # Port for hydra token user
-    command:
-      serve all --dangerous-force-http
+    command:  /bin/sh -c "tmp/hydra_configure.sh& hydra serve all --dangerous-force-http"
+    entrypoint: ""
     environment:
       - DSN=mysql://root:secret@tcp(mysqld:3306)/mysql?max_conns=20&max_idle_conns=4
       - URLS_SELF_ISSUER=http://127.0.0.1:4444
@@ -29,6 +29,8 @@ services:
       - OIDC_SUBJECT_TYPES_SUPPORTED=public,pairwise
       - OIDC_SUBJECT_TYPE_PAIRWISE_SALT=testSecretsSystem
     restart: unless-stopped
+    volumes:
+      - ./hydra_configure.sh:/tmp/hydra_configure.sh
 
   consent:
     environment:
