@@ -9,7 +9,6 @@ package operation
 import (
 	"bytes"
 	"errors"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,29 +17,58 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
-	"github.com/hyperledger/aries-framework-go/pkg/restapi/operation"
+	"github.com/trustbloc/edge-sandbox/pkg/token"
 )
 
 func TestOperation_Login(t *testing.T) {
 	handler := getHandler(t, login)
-	buff, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), login)
+	buff, status, err := handleRequest(handler, nil, login)
 	require.NoError(t, err)
 	require.Contains(t, buff.String(), "Temporary Redirect")
 	require.Equal(t, http.StatusTemporaryRedirect, status)
 }
 
 func TestOperation_Callback(t *testing.T) {
+	headers := make(map[string]string)
+	headers["Authorization"] = "Bearer ABC"
+
 	handler := getHandler(t, callback)
-	_, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), callback)
+
+	_, status, err := handleRequest(handler, headers, callback)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, status)
 }
 
-func TestOperation_Callback_Error(t *testing.T) {
-	handler := getHandlerWithError(t, callback, errors.New("some error"))
-	_, status, err := handleRequest(handler, bytes.NewBuffer([]byte("")), callback)
+func TestOperation_Callback_ExchangeCodeError(t *testing.T) {
+	svc := New(&Config{
+		TokenIssuer:   &mockTokenIssuer{err: errors.New("exchange code error")},
+		TokenResolver: &mockTokenResolver{}})
+	require.NotNil(t, svc)
+
+	handler := handlerLookup(t, svc, callback)
+
+	body, status, err := handleRequest(handler, nil, callback)
 	require.NoError(t, err)
-	require.Equal(t, http.StatusTemporaryRedirect, status)
+	require.Equal(t, http.StatusBadRequest, status)
+	require.Contains(t, body.String(), "failed to exchange code for token")
+	require.Contains(t, body.String(), "exchange code error")
+}
+
+func TestOperation_Callback_TokenIntrospectionError(t *testing.T) {
+	headers := make(map[string]string)
+	headers["Authorization"] = "Bearer ABC"
+
+	svc := New(&Config{
+		TokenIssuer:   &mockTokenIssuer{},
+		TokenResolver: &mockTokenResolver{err: errors.New("token info error")}})
+	require.NotNil(t, svc)
+
+	handler := handlerLookup(t, svc, callback)
+	body, status, err := handleRequest(handler, headers, callback)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusBadRequest, status)
+	require.Contains(t, body.String(), "failed to get token info")
+	require.Contains(t, body.String(), "token info error")
 }
 
 func TestOperation_WriteResponse(t *testing.T) {
@@ -49,10 +77,14 @@ func TestOperation_WriteResponse(t *testing.T) {
 	svc.writeResponse(&httptest.ResponseRecorder{}, "hello")
 }
 
-func handleRequest(handler operation.Handler, requestBody io.Reader, path string) (*bytes.Buffer, int, error) { //nolint:lll
-	req, err := http.NewRequest(handler.Method(), path, requestBody)
+func handleRequest(handler Handler, headers map[string]string, path string) (*bytes.Buffer, int, error) { //nolint:lll
+	req, err := http.NewRequest(handler.Method(), path, bytes.NewBuffer([]byte("")))
 	if err != nil {
 		return nil, 0, err
+	}
+
+	for k, v := range headers {
+		req.Header.Add(k, v)
 	}
 
 	router := mux.NewRouter()
@@ -68,11 +100,7 @@ func handleRequest(handler operation.Handler, requestBody io.Reader, path string
 }
 
 func getHandler(t *testing.T, lookup string) Handler {
-	return getHandlerWithError(t, lookup, nil)
-}
-
-func getHandlerWithError(t *testing.T, lookup string, err error) Handler {
-	svc := New(&Config{TokenIssuer: &mockTokenIssuer{err: err}})
+	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}})
 	require.NotNil(t, svc)
 
 	return handlerLookup(t, svc, lookup)
@@ -107,4 +135,16 @@ func (m *mockTokenIssuer) Exchange(r *http.Request) (*oauth2.Token, error) {
 	}
 
 	return &oauth2.Token{}, nil
+}
+
+type mockTokenResolver struct {
+	err error
+}
+
+func (r *mockTokenResolver) Resolve(tk string) (*token.Introspection, error) {
+	if r.err != nil {
+		return nil, r.err
+	}
+
+	return &token.Introspection{}, nil
 }

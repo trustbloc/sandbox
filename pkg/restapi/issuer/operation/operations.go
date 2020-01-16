@@ -8,6 +8,7 @@ package operation
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -15,6 +16,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/edge-sandbox/pkg/internal/common/support"
+	"github.com/trustbloc/edge-sandbox/pkg/token"
 )
 
 const (
@@ -31,13 +33,15 @@ type Handler interface {
 
 // Operation defines handlers for authorization service
 type Operation struct {
-	handlers    []Handler
-	tokenIssuer tokenIssuer
+	handlers      []Handler
+	tokenIssuer   tokenIssuer
+	tokenResolver tokenResolver
 }
 
 // Config defines configuration for issuer operations
 type Config struct {
-	TokenIssuer tokenIssuer
+	TokenIssuer   tokenIssuer
+	TokenResolver tokenResolver
 }
 
 type tokenIssuer interface {
@@ -45,9 +49,13 @@ type tokenIssuer interface {
 	Exchange(r *http.Request) (*oauth2.Token, error)
 }
 
+type tokenResolver interface {
+	Resolve(token string) (*token.Introspection, error)
+}
+
 // New returns authorization instance
 func New(config *Config) *Operation {
-	svc := &Operation{tokenIssuer: config.TokenIssuer}
+	svc := &Operation{tokenIssuer: config.TokenIssuer, tokenResolver: config.TokenResolver}
 	svc.registerHandler()
 
 	return svc
@@ -61,13 +69,24 @@ func (c *Operation) Login(w http.ResponseWriter, r *http.Request) {
 
 // Callback for oauth2 login
 func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
-	_, err := c.tokenIssuer.Exchange(r)
+	tk, err := c.tokenIssuer.Exchange(r)
 	if err != nil {
 		log.Error(err)
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to exchange code for token: %s", err.Error()))
 
 		return
 	}
+
+	// user info from token will be used for to retrieve data from cms
+	ti, err := c.tokenResolver.Resolve(tk.AccessToken)
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get token info: %s", err.Error()))
+
+		return
+	}
+
+	log.Info(ti)
 
 	// get user data from CMS here (hard-code vc for now)
 	c.writeResponse(w, validCredential)
@@ -87,7 +106,16 @@ func (c *Operation) writeResponse(rw io.Writer, v interface{}) {
 	err := json.NewEncoder(rw).Encode(v)
 	// as of now, just log errors for writing response
 	if err != nil {
-		log.Errorf("Unable to send error response, %s", err)
+		log.Errorf("Unable to send json response, %s", err)
+	}
+}
+
+// writeResponse writes interface value to response
+func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg string) {
+	rw.WriteHeader(status)
+
+	if _, err := rw.Write([]byte(msg)); err != nil {
+		log.Errorf("Unable to send error message, %s", err)
 	}
 }
 

@@ -18,6 +18,7 @@ import (
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/issuer"
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/issuer/operation"
 	tokenIssuer "github.com/trustbloc/edge-sandbox/pkg/token/issuer"
+	tokenResolver "github.com/trustbloc/edge-sandbox/pkg/token/resolver"
 	cmdutils "github.com/trustbloc/edge-sandbox/pkg/utils/cmd"
 )
 
@@ -58,6 +59,12 @@ const (
 	clientScopesFlagShorthand = "p"
 	clientScopesFlagUsage     = "Client scopes for issuer auth2 client."
 	clientScopesEnvKey        = "OAUTH2_ISSUER_CLIENT_SCOPES"
+
+	// oauth2 token introspection config flags
+	introspectionURLFlagName      = "introspect-url"
+	introspectionURLFlagShorthand = "i"
+	introspectionURLFlagUsage     = "Token introspection URL for auth2 server. Format: HostName:Port."
+	introspectionURLEnvKey        = "OAUTH2_ENDPOINT_TOKEN_INTROSPECTION_URL"
 )
 
 type server interface {
@@ -73,9 +80,10 @@ func (s *HTTPServer) ListenAndServe(host string, router http.Handler) error {
 }
 
 type issuerParameters struct {
-	srv          server
-	hostURL      string
-	oauth2Config *oauth2.Config
+	srv                   server
+	hostURL               string
+	oauth2Config          *oauth2.Config
+	tokenIntrospectionURL string
 }
 
 // GetStartCmd returns the Cobra start command.
@@ -103,10 +111,16 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			tokenIntrospectionURL, err := cmdutils.GetUserSetVar(cmd, introspectionURLFlagName, introspectionURLEnvKey)
+			if err != nil {
+				return err
+			}
+
 			parameters := &issuerParameters{
-				srv:          srv,
-				hostURL:      strings.TrimSpace(hostURL),
-				oauth2Config: oauth2Config,
+				srv:                   srv,
+				hostURL:               strings.TrimSpace(hostURL),
+				oauth2Config:          oauth2Config,
+				tokenIntrospectionURL: strings.TrimSpace(tokenIntrospectionURL),
 			}
 
 			return startIssuer(parameters)
@@ -122,6 +136,8 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(clientIDFlagName, clientIDFlagShorthand, "", clientIDFlagUsage)
 	startCmd.Flags().StringP(clientSecretFlagName, clientSecretFlagShorthand, "", clientSecretFlagUsage)
 	startCmd.Flags().StringP(clientScopesFlagName, clientScopesFlagShorthand, "", clientScopesFlagUsage)
+	startCmd.Flags().StringP(introspectionURLFlagName, introspectionURLFlagShorthand, "",
+		introspectionURLFlagUsage)
 }
 
 func startIssuer(parameters *issuerParameters) error {
@@ -129,11 +145,16 @@ func startIssuer(parameters *issuerParameters) error {
 		return errors.New("host URL is empty")
 	}
 
+	if parameters.tokenIntrospectionURL == "" {
+		return errors.New("token introspection URL is empty")
+	}
+
 	if err := validateOAuth2Config(parameters.oauth2Config); err != nil {
 		return err
 	}
 
-	cfg := &operation.Config{TokenIssuer: tokenIssuer.New(parameters.oauth2Config)}
+	cfg := &operation.Config{TokenIssuer: tokenIssuer.New(parameters.oauth2Config),
+		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL)}
 
 	issuerService, err := issuer.New(cfg)
 	if err != nil {
