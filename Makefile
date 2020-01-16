@@ -29,9 +29,6 @@ sandbox-start:
 sandbox-stop:
 	@scripts/sandbox_stop.sh
 
-hydra-configure:
-	@scripts/hydra_configure.sh
-
 hydra-test-app:
 	@scripts/hydra_test_app.sh
 
