@@ -6,6 +6,14 @@ GO_CMD ?= go
 ISSUER_REST_PATH=cmd/issuer-rest
 STRAPI_DEMO_PATH=cmd/strapi-demo
 
+DOCKER_OUTPUT_NS         ?= docker.pkg.github.com
+# Namespace for the issuer image
+ISSUER_REST_IMAGE_NAME   ?= trustbloc/edge-sandbox/issuer-rest
+
+# Tool commands (overridable)
+ALPINE_VER ?= 3.10
+GO_VER     ?= 1.13.1
+
 .PHONY: all
 all: checks unit-test
 
@@ -45,3 +53,11 @@ strapi-build:
 
 strapi-setup:
 	@scripts/strapi-setup.sh
+
+
+.PHONY: issuer-rest-docker
+issuer-rest-docker:
+	@echo "Building issuer rest docker image"
+	@docker build -f ./images/issuer-rest/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(ISSUER_REST_IMAGE_NAME):latest \
+	--build-arg GO_VER=$(GO_VER) \
+	--build-arg ALPINE_VER=$(ALPINE_VER) .
