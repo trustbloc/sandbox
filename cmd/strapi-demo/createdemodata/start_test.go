@@ -10,6 +10,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -78,6 +79,9 @@ func TestAdminUserAndCreateRecordWithRoundTripper(t *testing.T) {
 		require.NotNil(t, token)
 		require.Nil(t, err)
 		require.Equal(t, "Bearer eyJhbGciOiJIU", token)
+
+		err = os.Remove(strapiCodeFile)
+		require.NoError(t, err)
 	})
 	t.Run("add the student record and verify", func(t *testing.T) {
 		client2 := NewTestClient(func(req *http.Request) *http.Response {
@@ -94,6 +98,9 @@ func TestAdminUserAndCreateRecordWithRoundTripper(t *testing.T) {
 		parameters := &strapiDemoParameters{client: client2, adminURL: testURL}
 		err := startStrapiDemo(parameters)
 		require.Nil(t, err)
+
+		err = os.Remove(strapiCodeFile)
+		require.NoError(t, err)
 	})
 	t.Run("error while verifying record", func(t *testing.T) {
 		client2 := NewTestClient(func(req *http.Request) *http.Response {
@@ -110,6 +117,9 @@ func TestAdminUserAndCreateRecordWithRoundTripper(t *testing.T) {
 		err := startStrapiDemo(parameters)
 		require.NotNil(t, err)
 		require.Contains(t, err.Error(), "fetched record doesnt match the stored record")
+
+		err = os.Remove(strapiCodeFile)
+		require.NoError(t, err)
 	})
 	t.Run("error while getting record ", func(t *testing.T) {
 		client := NewTestClient(func(req *http.Request) *http.Response {

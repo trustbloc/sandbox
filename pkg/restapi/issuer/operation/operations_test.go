@@ -8,7 +8,9 @@ package operation
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,6 +22,8 @@ import (
 	"github.com/trustbloc/edge-sandbox/pkg/token"
 )
 
+const authHeader = "Bearer ABC"
+
 func TestOperation_Login(t *testing.T) {
 	handler := getHandler(t, login)
 	buff, status, err := handleRequest(handler, nil, login)
@@ -29,10 +33,17 @@ func TestOperation_Login(t *testing.T) {
 }
 
 func TestOperation_Callback(t *testing.T) {
-	headers := make(map[string]string)
-	headers["Authorization"] = "Bearer ABC"
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	defer ts.Close()
 
-	handler := getHandler(t, callback)
+	headers := make(map[string]string)
+	headers["Authorization"] = authHeader
+
+	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		CMSURL: ts.URL}
+	handler := getHandlerWithConfig(t, callback, cfg)
 
 	_, status, err := handleRequest(handler, headers, callback)
 	require.NoError(t, err)
@@ -56,7 +67,7 @@ func TestOperation_Callback_ExchangeCodeError(t *testing.T) {
 
 func TestOperation_Callback_TokenIntrospectionError(t *testing.T) {
 	headers := make(map[string]string)
-	headers["Authorization"] = "Bearer ABC"
+	headers["Authorization"] = authHeader
 
 	svc := New(&Config{
 		TokenIssuer:   &mockTokenIssuer{},
@@ -69,6 +80,42 @@ func TestOperation_Callback_TokenIntrospectionError(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, status)
 	require.Contains(t, body.String(), "failed to get token info")
 	require.Contains(t, body.String(), "token info error")
+}
+
+func TestOperation_Callback_GetCMSData_Error(t *testing.T) {
+	headers := make(map[string]string)
+	headers["Authorization"] = authHeader
+
+	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		CMSURL: "cms"}
+	handler := getHandlerWithConfig(t, callback, cfg)
+
+	data, status, err := handleRequest(handler, headers, callback)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusBadRequest, status)
+	require.Contains(t, data.String(), "unsupported protocol scheme")
+}
+
+func TestOperation_GetCMSData_InvalidURL(t *testing.T) {
+	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		CMSURL: "xyz:cms"})
+	require.NotNil(t, svc)
+
+	data, err := svc.getCMSData(&oauth2.Token{})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "unsupported protocol scheme")
+	require.Nil(t, data)
+}
+
+func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
+	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		CMSURL: "http://cms\\"})
+	require.NotNil(t, svc)
+
+	data, err := svc.getCMSData(&oauth2.Token{})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid character")
+	require.Nil(t, data)
 }
 
 func TestOperation_WriteResponse(t *testing.T) {
@@ -106,6 +153,13 @@ func getHandler(t *testing.T, lookup string) Handler {
 	return handlerLookup(t, svc, lookup)
 }
 
+func getHandlerWithConfig(t *testing.T, lookup string, cfg *Config) Handler {
+	svc := New(cfg)
+	require.NotNil(t, svc)
+
+	return handlerLookup(t, svc, lookup)
+}
+
 func handlerLookup(t *testing.T, op *Operation, lookup string) Handler {
 	handlers := op.GetRESTHandlers()
 	require.NotEmpty(t, handlers)
@@ -135,6 +189,10 @@ func (m *mockTokenIssuer) Exchange(r *http.Request) (*oauth2.Token, error) {
 	}
 
 	return &oauth2.Token{}, nil
+}
+
+func (m *mockTokenIssuer) Client(ctx context.Context, t *oauth2.Token) *http.Client {
+	return http.DefaultClient
 }
 
 type mockTokenResolver struct {

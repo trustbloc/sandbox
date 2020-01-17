@@ -40,6 +40,22 @@ services:
       - "3000:3000"
     restart: unless-stopped
 
+  oathkeeper-proxy:
+    image: oryd/oathkeeper:latest
+    ports:
+      - "4455:4455"
+    depends_on:
+      - hydra
+    command:
+      serve proxy --config /oathkeeper/config.yaml
+    environment:
+      - LOG_LEVEL=debug
+      - PORT=4455
+      - ISSUER_URL=http://localhost:4455/
+    restart: on-failure
+    volumes:
+      - ../oathkeeper:/oathkeeper
+
   mysqld:
     image: mysql:5.7
     ports:
@@ -91,6 +107,7 @@ services:
       - OAUTH2_ENDPOINT_TOKEN_INTROSPECTION_URL=http://hydra:4445/oauth2/introspect
       - ISSUER_TLS_CERT_FILE=/etc/tls/ec-pubCert.pem
       - ISSUER_TLS_KEY_FILE=/etc/tls/ec-key.pem
+      - ISSUER_CMS_URL=http://oathkeeper-proxy:4455
     ports:
       - 5556:5556
     command: start
