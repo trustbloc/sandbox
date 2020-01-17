@@ -22,6 +22,13 @@ func (s *mockServer) ListenAndServe(host, certFile, keyFile string, handler http
 	return nil
 }
 
+func TestListenAndServe(t *testing.T) {
+	h := HTTPServer{}
+	err := h.ListenAndServe("localhost:8080", "test.key", "test.cert", nil)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "open test.key: no such file or directory")
+}
+
 func TestStartCmdContents(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
@@ -32,15 +39,88 @@ func TestStartCmdContents(t *testing.T) {
 	checkFlagPropertiesCorrect(t, startCmd, hostURLFlagName, hostURLFlagShorthand, hostURLFlagUsage)
 }
 
-func TestStartFailure(t *testing.T) {
-	startCmd := GetStartCmd(&mockServer{})
+func TestStartCmdWithBlankArg(t *testing.T) {
+	t.Run("test blank tls cert arg", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
 
-	args := []string{"--" + hostURLFlagName, ""}
-	startCmd.SetArgs(args)
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, endpointAuthURLArg()...)
+		args = append(args, endpointTokenURLArg()...)
+		args = append(args, clientRedirectURLArg()...)
+		args = append(args, clientIDArg()...)
+		args = append(args, clientSecretArg()...)
+		args = append(args, clientScopesArg()...)
+		args = append(args, []string{flag + introspectionURLFlagName, ""}...)
+		startCmd.SetArgs(args)
 
-	err := startCmd.Execute()
-	require.Contains(t, err.Error(),
-		"host-url value is empty")
+		err := startCmd.Execute()
+		require.Error(t, err)
+		require.Equal(t, "introspect-url value is empty", err.Error())
+	})
+
+	t.Run("test blank tls cert arg", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, endpointAuthURLArg()...)
+		args = append(args, endpointTokenURLArg()...)
+		args = append(args, clientRedirectURLArg()...)
+		args = append(args, clientIDArg()...)
+		args = append(args, clientSecretArg()...)
+		args = append(args, clientScopesArg()...)
+		args = append(args, tokenIntrospectionURLArg()...)
+		args = append(args, []string{flag + tlsCertFileFlagName, ""}...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Error(t, err)
+		require.Equal(t, "tls-cert-file value is empty", err.Error())
+	})
+
+	t.Run("test blank tls cert arg", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, endpointAuthURLArg()...)
+		args = append(args, endpointTokenURLArg()...)
+		args = append(args, clientRedirectURLArg()...)
+		args = append(args, clientIDArg()...)
+		args = append(args, clientSecretArg()...)
+		args = append(args, clientScopesArg()...)
+		args = append(args, tokenIntrospectionURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, []string{flag + tlsKeyFileFlagName, ""}...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Error(t, err)
+		require.Equal(t, "tls-key-file value is empty", err.Error())
+	})
+
+	t.Run("test blank cms url arg", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, endpointAuthURLArg()...)
+		args = append(args, endpointTokenURLArg()...)
+		args = append(args, clientRedirectURLArg()...)
+		args = append(args, clientIDArg()...)
+		args = append(args, clientSecretArg()...)
+		args = append(args, clientScopesArg()...)
+		args = append(args, tokenIntrospectionURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, []string{flag + cmsURLFlagName, ""}...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Error(t, err)
+		require.Equal(t, "cms-url value is empty", err.Error())
+	})
 }
 
 func TestStartCmdWithMissingHostArg(t *testing.T) {

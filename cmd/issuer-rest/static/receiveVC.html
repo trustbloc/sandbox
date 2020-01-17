@@ -1,0 +1,61 @@
+<!--
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+</head>
+<body>
+<div>
+    <textarea id="vcDataTextArea" readonly rows="30" cols="200">{{.Data}}</textarea>
+    <br>
+    <button id='storeVCBtn'>Store VC in Wallet</button>
+</div>
+</body>
+<script>
+    console.log('Installing...')
+    installHandler()
+        .catch(e => console.error('Error in installHandler:', e));
+
+    async function installHandler() {
+        console.log('Loading polyfill...');
+        try {
+            await credentialHandlerPolyfill.loadOnce();
+        } catch(e) {
+            console.error('Error in loadOnce:', e);
+        }
+    }
+
+    function ready(fn) {
+        if (document.readyState !== 'loading'){
+            fn();
+        } else {
+            document.addEventListener('DOMContentLoaded', fn);
+        }
+    }
+
+    async function onClickReceive() {
+        const credentialToStore = document.getElementById('vcDataTextArea').value;
+
+        const credentialType = 'AlumniCredential';
+        // Construct the WebCredential wrapper around the credential to be stored
+        const webCredentialWrapper = new WebCredential(credentialType, credentialToStore);
+        // Use Credential Handler API to store
+        result = await navigator.credentials.store(webCredentialWrapper);
+        console.log('Result of receiving via store() request:', result);
+        if(!result) {
+            alert('null result');
+            return;
+        }
+        alert(result.data);
+    }
+    ready(() => {
+        document.getElementById('storeVCBtn').addEventListener('click', onClickReceive);
+    })
+</script>
+</html>
