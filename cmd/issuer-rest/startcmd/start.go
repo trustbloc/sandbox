@@ -7,7 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package startcmd
 
 import (
-	"errors"
 	"net/http"
 	"strings"
 
@@ -65,18 +64,30 @@ const (
 	introspectionURLFlagShorthand = "i"
 	introspectionURLFlagUsage     = "Token introspection URL for auth2 server. Format: HostName:Port."
 	introspectionURLEnvKey        = "OAUTH2_ENDPOINT_TOKEN_INTROSPECTION_URL"
+
+	tlsCertFileFlagName      = "tls-cert-file"
+	tlsCertFileFlagShorthand = ""
+	tlsCertFileFlagUsage     = "tls certificate file." +
+		" Alternatively, this can be set with the following environment variable: " + tlsCertFileEnvKey
+	tlsCertFileEnvKey = "ISSUER_TLS_CERT_FILE"
+
+	tlsKeyFileFlagName      = "tls-key-file"
+	tlsKeyFileFlagShorthand = ""
+	tlsKeyFileFlagUsage     = "tls key file." +
+		" Alternatively, this can be set with the following environment variable: " + tlsKeyFileEnvKey
+	tlsKeyFileEnvKey = "ISSUER_TLS_KEY_FILE"
 )
 
 type server interface {
-	ListenAndServe(host string, router http.Handler) error
+	ListenAndServe(host, certFile, keyFile string, router http.Handler) error
 }
 
 // HTTPServer represents an actual HTTP server implementation.
 type HTTPServer struct{}
 
 // ListenAndServe starts the server using the standard Go HTTP server implementation.
-func (s *HTTPServer) ListenAndServe(host string, router http.Handler) error {
-	return http.ListenAndServe(host, router)
+func (s *HTTPServer) ListenAndServe(host, certFile, keyFile string, router http.Handler) error {
+	return http.ListenAndServeTLS(host, certFile, keyFile, router)
 }
 
 type issuerParameters struct {
@@ -84,6 +95,8 @@ type issuerParameters struct {
 	hostURL               string
 	oauth2Config          *oauth2.Config
 	tokenIntrospectionURL string
+	tlsCertFile           string
+	tlsKeyFile            string
 }
 
 // GetStartCmd returns the Cobra start command.
@@ -101,7 +114,7 @@ func createStartCmd(srv server) *cobra.Command {
 		Short: "Start issuer",
 		Long:  "Start issuer",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			hostURL, err := cmdutils.GetUserSetVar(cmd, hostURLFlagName, hostURLEnvKey)
+			hostURL, err := cmdutils.GetUserSetVar(cmd, hostURLFlagName, hostURLEnvKey, false)
 			if err != nil {
 				return err
 			}
@@ -111,7 +124,17 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
-			tokenIntrospectionURL, err := cmdutils.GetUserSetVar(cmd, introspectionURLFlagName, introspectionURLEnvKey)
+			tokenIntrospectionURL, err := cmdutils.GetUserSetVar(cmd, introspectionURLFlagName, introspectionURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
+			tlsCertFile, err := cmdutils.GetUserSetVar(cmd, tlsCertFileFlagName, tlsCertFileEnvKey, false)
+			if err != nil {
+				return err
+			}
+
+			tlsKeyFile, err := cmdutils.GetUserSetVar(cmd, tlsKeyFileFlagName, tlsKeyFileEnvKey, false)
 			if err != nil {
 				return err
 			}
@@ -121,6 +144,8 @@ func createStartCmd(srv server) *cobra.Command {
 				hostURL:               strings.TrimSpace(hostURL),
 				oauth2Config:          oauth2Config,
 				tokenIntrospectionURL: strings.TrimSpace(tokenIntrospectionURL),
+				tlsCertFile:           tlsCertFile,
+				tlsKeyFile:            tlsKeyFile,
 			}
 
 			return startIssuer(parameters)
@@ -138,21 +163,11 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(clientScopesFlagName, clientScopesFlagShorthand, "", clientScopesFlagUsage)
 	startCmd.Flags().StringP(introspectionURLFlagName, introspectionURLFlagShorthand, "",
 		introspectionURLFlagUsage)
+	startCmd.Flags().StringP(tlsCertFileFlagName, tlsCertFileFlagShorthand, "", tlsCertFileFlagUsage)
+	startCmd.Flags().StringP(tlsKeyFileFlagName, tlsKeyFileFlagShorthand, "", tlsKeyFileFlagUsage)
 }
 
 func startIssuer(parameters *issuerParameters) error {
-	if parameters.hostURL == "" {
-		return errors.New("host URL is empty")
-	}
-
-	if parameters.tokenIntrospectionURL == "" {
-		return errors.New("token introspection URL is empty")
-	}
-
-	if err := validateOAuth2Config(parameters.oauth2Config); err != nil {
-		return err
-	}
-
 	cfg := &operation.Config{TokenIssuer: tokenIssuer.New(parameters.oauth2Config),
 		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL)}
 
@@ -170,16 +185,16 @@ func startIssuer(parameters *issuerParameters) error {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
 	}
 
-	return parameters.srv.ListenAndServe(parameters.hostURL, router)
+	return parameters.srv.ListenAndServe(parameters.hostURL, parameters.tlsCertFile, parameters.tlsKeyFile, router)
 }
 
 func getOAuth2Config(cmd *cobra.Command) (*oauth2.Config, error) {
-	authURL, err := cmdutils.GetUserSetVar(cmd, endpointAuthURLFlagName, endpointAuthURLEnvKey)
+	authURL, err := cmdutils.GetUserSetVar(cmd, endpointAuthURLFlagName, endpointAuthURLEnvKey, false)
 	if err != nil {
 		return nil, err
 	}
 
-	tokenURL, err := cmdutils.GetUserSetVar(cmd, endpointTokenURLFlagName, endpointTokenURLEnvKey)
+	tokenURL, err := cmdutils.GetUserSetVar(cmd, endpointTokenURLFlagName, endpointTokenURLEnvKey, false)
 	if err != nil {
 		return nil, err
 	}
@@ -190,22 +205,22 @@ func getOAuth2Config(cmd *cobra.Command) (*oauth2.Config, error) {
 		AuthStyle: 2, // basic
 	}
 
-	redirectURL, err := cmdutils.GetUserSetVar(cmd, clientRedirectURLFlagName, clientRedirectURLEnvKey)
+	redirectURL, err := cmdutils.GetUserSetVar(cmd, clientRedirectURLFlagName, clientRedirectURLEnvKey, false)
 	if err != nil {
 		return nil, err
 	}
 
-	clientID, err := cmdutils.GetUserSetVar(cmd, clientIDFlagName, clientIDEnvKey)
+	clientID, err := cmdutils.GetUserSetVar(cmd, clientIDFlagName, clientIDEnvKey, false)
 	if err != nil {
 		return nil, err
 	}
 
-	secret, err := cmdutils.GetUserSetVar(cmd, clientSecretFlagName, clientSecretEnvKey)
+	secret, err := cmdutils.GetUserSetVar(cmd, clientSecretFlagName, clientSecretEnvKey, false)
 	if err != nil {
 		return nil, err
 	}
 
-	scopes, err := cmdutils.GetUserSetVar(cmd, clientScopesFlagName, clientScopesEnvKey)
+	scopes, err := cmdutils.GetUserSetVar(cmd, clientScopesFlagName, clientScopesEnvKey, false)
 	if err != nil {
 		return nil, err
 	}
@@ -219,32 +234,4 @@ func getOAuth2Config(cmd *cobra.Command) (*oauth2.Config, error) {
 	}
 
 	return config, nil
-}
-
-func validateOAuth2Config(config *oauth2.Config) error {
-	if config.Endpoint.AuthURL == "" {
-		return errors.New("auth URL is empty")
-	}
-
-	if config.Endpoint.TokenURL == "" {
-		return errors.New("token URL is empty")
-	}
-
-	if config.RedirectURL == "" {
-		return errors.New("redirect URL is empty")
-	}
-
-	if config.ClientID == "" {
-		return errors.New("client ID is empty")
-	}
-
-	if config.ClientSecret == "" {
-		return errors.New("secret is empty")
-	}
-
-	if len(config.Scopes) == 0 {
-		return errors.New("scopes is empty")
-	}
-
-	return nil
 }
