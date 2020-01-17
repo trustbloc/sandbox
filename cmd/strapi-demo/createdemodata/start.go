@@ -31,8 +31,6 @@ const (
 	get                  = "GET"
 )
 
-var errMissingAdminURL = errors.New("admin URL not provided")
-
 type strapiDemoParameters struct {
 	client   *http.Client
 	adminURL string
@@ -62,7 +60,7 @@ func createStartCmd() *cobra.Command {
 		Short: "create demo data",
 		Long:  "Start populating data in strapi with default studentcards and transcripts",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			hostURL, err := cmdutils.GetUserSetVar(cmd, hostURLFlagName, hostURLEnvKey)
+			hostURL, err := cmdutils.GetUserSetVar(cmd, hostURLFlagName, hostURLEnvKey, false)
 			if err != nil {
 				return err
 			}
@@ -81,10 +79,6 @@ func createFlags(startCmd *cobra.Command) {
 
 // For Demo you can verify the records by browsing http://localhost:1337/admin/
 func startStrapiDemo(parameters *strapiDemoParameters) error {
-	if parameters.adminURL == "" {
-		return errMissingAdminURL
-	}
-
 	var client = parameters.client
 
 	adminUserValues := map[string]string{

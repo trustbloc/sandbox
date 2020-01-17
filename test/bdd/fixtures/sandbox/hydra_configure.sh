@@ -13,5 +13,5 @@ hydra clients create \
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \
     --scope studentcard \
-    --callbacks http://127.0.0.1:5556/callback
+    --callbacks https://127.0.0.1:5556/callback
 echo "Finish Creating client"
