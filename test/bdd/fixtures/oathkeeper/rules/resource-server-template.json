@@ -1,0 +1,38 @@
+[
+{
+  "id": "resource-server-rule",
+  "upstream": {
+    "url": "http://strapi:1337"
+  },
+  "match": {
+    "url": "http://oathkeeper-proxy:4455/<.*>",
+    "methods": [
+      "GET"
+    ]
+  },
+  "authenticators": [
+    {
+      "handler": "oauth2_introspection",
+      "config": {
+        "required_scope": [
+          "studentcard"
+        ]
+      }
+    }
+  ],
+  "mutators": [
+    {
+      "handler": "header",
+      "config": {
+        "headers": {
+          "X-User": "{{ print .Subject }}",
+          "Authorization": "Bearer {TOKEN}"
+        }
+      }
+    }
+  ],
+  "authorizer": {
+    "handler": "allow"
+  }
+}
+]

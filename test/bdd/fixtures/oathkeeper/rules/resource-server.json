@@ -1,0 +1,38 @@
+[
+{
+  "id": "resource-server-rule",
+  "upstream": {
+    "url": "http://strapi:1337"
+  },
+  "match": {
+    "url": "http://oathkeeper-proxy:4455/<.*>",
+    "methods": [
+      "GET"
+    ]
+  },
+  "authenticators": [
+    {
+      "handler": "oauth2_introspection",
+      "config": {
+        "required_scope": [
+          "studentcard"
+        ]
+      }
+    }
+  ],
+  "mutators": [
+    {
+      "handler": "header",
+      "config": {
+        "headers": {
+          "X-User": "{{ print .Subject }}",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaXNBZG1pbiI6dHJ1ZSwiaWF0IjoxNTc5MjkwMjM5LCJleHAiOjE1ODE4ODIyMzl9.JNFUaLl35B3FCPwlos2mEPVnmJTfnJ9mjJWEQ6bcb7c"
+        }
+      }
+    }
+  ],
+  "authorizer": {
+    "handler": "allow"
+  }
+}
+]
