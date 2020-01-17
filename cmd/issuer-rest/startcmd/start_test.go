@@ -12,14 +12,13 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/oauth2"
 )
 
 const flag = "--"
 
 type mockServer struct{}
 
-func (s *mockServer) ListenAndServe(host string, handler http.Handler) error {
+func (s *mockServer) ListenAndServe(host, certFile, keyFile string, handler http.Handler) error {
 	return nil
 }
 
@@ -41,7 +40,7 @@ func TestStartFailure(t *testing.T) {
 
 	err := startCmd.Execute()
 	require.Contains(t, err.Error(),
-		"Neither auth-url (command line flag) nor OAUTH2_ENDPOINT_AUTH_URL (environment variable) have been set.")
+		"host-url value is empty")
 }
 
 func TestStartCmdWithMissingHostArg(t *testing.T) {
@@ -140,31 +139,6 @@ func TestStartCmdWithMissingClientScopesArg(t *testing.T) {
 		"Neither client-scopes (command line flag) nor OAUTH2_ISSUER_CLIENT_SCOPES (environment variable) have been set.")
 }
 
-func TestStartIssuerWithBlankHost(t *testing.T) {
-	parameters := &issuerParameters{hostURL: ""}
-
-	err := startIssuer(parameters)
-	require.NotNil(t, err)
-	require.Contains(t, err.Error(), "host URL is empty")
-}
-
-func TestStartIssuerWithBlankTokentIntrospectionURL(t *testing.T) {
-	parameters := &issuerParameters{hostURL: "hostURL", tokenIntrospectionURL: ""}
-
-	err := startIssuer(parameters)
-	require.NotNil(t, err)
-	require.Contains(t, err.Error(), "token introspection URL is empty")
-}
-
-func TestStartIssuerWithInvalidOAuth2Config(t *testing.T) {
-	parameters := &issuerParameters{hostURL: "hostURL", tokenIntrospectionURL: "introspect",
-		oauth2Config: &oauth2.Config{Endpoint: oauth2.Endpoint{}}}
-
-	err := startIssuer(parameters)
-	require.NotNil(t, err)
-	require.Contains(t, err.Error(), "auth URL is empty")
-}
-
 func TestStartCmdValidArgs(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
@@ -202,45 +176,14 @@ func TestStartCmdValidArgsEnvVar(t *testing.T) {
 	err = os.Setenv(introspectionURLEnvKey, "endpoint/introspect")
 	require.Nil(t, err)
 
+	err = os.Setenv(tlsCertFileEnvKey, "cert")
+	require.Nil(t, err)
+
+	err = os.Setenv(tlsKeyFileEnvKey, "key")
+	require.Nil(t, err)
+
 	err = startCmd.Execute()
 	require.Nil(t, err)
-}
-
-func TestValidateOauth2Config(t *testing.T) {
-	config := &oauth2.Config{Endpoint: oauth2.Endpoint{}}
-
-	err := validateOAuth2Config(config)
-	require.Contains(t, err.Error(), "auth URL is empty")
-
-	config.Endpoint.AuthURL = "endpoint/auth"
-
-	err = validateOAuth2Config(config)
-	require.Contains(t, err.Error(), "token URL is empty")
-
-	config.Endpoint.TokenURL = "endpoint/token"
-
-	err = validateOAuth2Config(config)
-	require.Contains(t, err.Error(), "redirect URL is empty")
-
-	config.RedirectURL = "redirect"
-
-	err = validateOAuth2Config(config)
-	require.Contains(t, err.Error(), "client ID is empty")
-
-	config.ClientID = "client-id"
-
-	err = validateOAuth2Config(config)
-	require.Contains(t, err.Error(), "secret is empty")
-
-	config.ClientSecret = "secret"
-
-	err = validateOAuth2Config(config)
-	require.Contains(t, err.Error(), "scopes is empty")
-
-	config.Scopes = []string{"openid"}
-
-	err = validateOAuth2Config(config)
-	require.NoError(t, err)
 }
 
 func checkFlagPropertiesCorrect(t *testing.T, cmd *cobra.Command, flagName, flagShorthand, flagUsage string) {
@@ -266,6 +209,8 @@ func getValidArgs() []string {
 	args = append(args, clientSecretArg()...)
 	args = append(args, clientScopesArg()...)
 	args = append(args, tokenIntrospectionURLArg()...)
+	args = append(args, tlsCertFileArg()...)
+	args = append(args, tlsKeyFileArg()...)
 
 	return args
 }
@@ -300,4 +245,12 @@ func clientScopesArg() []string {
 
 func tokenIntrospectionURLArg() []string {
 	return []string{flag + introspectionURLFlagName, "endpoint/introspect"}
+}
+
+func tlsCertFileArg() []string {
+	return []string{flag + tlsCertFileFlagName, "cert"}
+}
+
+func tlsKeyFileArg() []string {
+	return []string{flag + tlsKeyFileFlagName, "key"}
 }

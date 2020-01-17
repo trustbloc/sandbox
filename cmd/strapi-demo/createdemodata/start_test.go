@@ -36,7 +36,7 @@ func TestStartCmdWithBlankHostArg(t *testing.T) {
 
 	err := startCmd.Execute()
 
-	require.Equal(t, errMissingAdminURL.Error(), err.Error())
+	require.Contains(t, err.Error(), "host-url value is empty")
 }
 
 func TestStartCmdWithMissingHostArg(t *testing.T) {
@@ -46,13 +46,6 @@ func TestStartCmdWithMissingHostArg(t *testing.T) {
 	require.Equal(t,
 		"Neither host-url (command line flag) nor STRAPI-DEMO_ADMIN_URL (environment variable) have been set.",
 		err.Error())
-}
-func TestStartEdgeStoreWithBlankHost(t *testing.T) {
-	parameters := &strapiDemoParameters{adminURL: ""}
-
-	err := startStrapiDemo(parameters)
-	require.NotNil(t, err)
-	require.Equal(t, errMissingAdminURL, err)
 }
 
 func checkFlagPropertiesCorrect(t *testing.T, cmd *cobra.Command, flagName, flagShorthand, flagUsage string) {

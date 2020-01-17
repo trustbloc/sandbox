@@ -31,7 +31,7 @@ license:
 unit-test:
 	@scripts/check_unit.sh
 
-sandbox-start:
+sandbox-start: clean issuer-rest-docker generate-test-keys
 	@scripts/sandbox_start.sh
 
 sandbox-stop:
@@ -61,3 +61,19 @@ issuer-rest-docker:
 	@docker build -f ./images/issuer-rest/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(ISSUER_REST_IMAGE_NAME):latest \
 	--build-arg GO_VER=$(GO_VER) \
 	--build-arg ALPINE_VER=$(ALPINE_VER) .
+
+.PHONY: generate-test-keys
+generate-test-keys: clean
+	@mkdir -p -p test/bdd/fixtures/keys/tls
+	@docker run -i --rm \
+		-v $(abspath .):/opt/workspace/edge-sandbox \
+		--entrypoint "/opt/workspace/edge-sandbox/scripts/generate_test_keys.sh" \
+		frapsoft/openssl
+
+.PHONY: clean
+clean: clean-build
+
+.PHONY: clean-build
+clean-build:
+	@rm -Rf ./build
+	@rm -Rf ./test/bdd/fixtures/keys
