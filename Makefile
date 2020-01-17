@@ -31,6 +31,7 @@ license:
 unit-test:
 	@scripts/check_unit.sh
 
+
 sandbox-start: clean issuer-rest-docker generate-test-keys
 	@scripts/sandbox_start.sh
 

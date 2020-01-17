@@ -76,6 +76,12 @@ const (
 	tlsKeyFileFlagUsage     = "tls key file." +
 		" Alternatively, this can be set with the following environment variable: " + tlsKeyFileEnvKey
 	tlsKeyFileEnvKey = "ISSUER_TLS_KEY_FILE"
+
+	// content management url config flags
+	cmsURLFlagName      = "cms-url"
+	cmsURLFlagShorthand = "m"
+	cmsURLFlagUsage     = "Content management server (CMS) URL. Format: HostName:Port."
+	cmsURLEnvKey        = "ISSUER_CMS_URL"
 )
 
 type server interface {
@@ -97,6 +103,7 @@ type issuerParameters struct {
 	tokenIntrospectionURL string
 	tlsCertFile           string
 	tlsKeyFile            string
+	cmsURL                string
 }
 
 // GetStartCmd returns the Cobra start command.
@@ -139,6 +146,11 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			cmsURL, err := cmdutils.GetUserSetVar(cmd, cmsURLFlagName, cmsURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
 			parameters := &issuerParameters{
 				srv:                   srv,
 				hostURL:               strings.TrimSpace(hostURL),
@@ -146,6 +158,7 @@ func createStartCmd(srv server) *cobra.Command {
 				tokenIntrospectionURL: strings.TrimSpace(tokenIntrospectionURL),
 				tlsCertFile:           tlsCertFile,
 				tlsKeyFile:            tlsKeyFile,
+				cmsURL:                strings.TrimSpace(cmsURL),
 			}
 
 			return startIssuer(parameters)
@@ -165,11 +178,12 @@ func createFlags(startCmd *cobra.Command) {
 		introspectionURLFlagUsage)
 	startCmd.Flags().StringP(tlsCertFileFlagName, tlsCertFileFlagShorthand, "", tlsCertFileFlagUsage)
 	startCmd.Flags().StringP(tlsKeyFileFlagName, tlsKeyFileFlagShorthand, "", tlsKeyFileFlagUsage)
+	startCmd.Flags().StringP(cmsURLFlagName, cmsURLFlagShorthand, "", cmsURLFlagUsage)
 }
 
 func startIssuer(parameters *issuerParameters) error {
 	cfg := &operation.Config{TokenIssuer: tokenIssuer.New(parameters.oauth2Config),
-		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL)}
+		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL), CMSURL: parameters.cmsURL}
 
 	issuerService, err := issuer.New(cfg)
 	if err != nil {

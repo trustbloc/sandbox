@@ -31,7 +31,7 @@ echo "Generating Strapi API"
 echo "Inside app folder to install APIs"
 
 # generate the student cards api and model
-GENERATE_STUDENTAPI_COMMAND="npx strapi generate:api studentcards StudentID:string Name:string University:string Semester:string"
+GENERATE_STUDENTAPI_COMMAND="npx strapi generate:api studentcards StudentID:string Name:string Email:string University:string Semester:string"
 
 $GENERATE_STUDENTAPI_COMMAND
 
@@ -45,3 +45,6 @@ sleep 20s
 # This is assuming strapi is running on default 1337 port
 cd ../../../../../build/bin
 ./strapi-demo create-demo-data --host-url http://localhost:1337
+
+sed -e "s/{TOKEN}/$(sed 's:/:\\/:g' ./strapi.txt)/" ../../test/bdd/fixtures/oathkeeper/rules/resource-server-template.json > ../../test/bdd/fixtures/oathkeeper/rules/resource-server.json
+
