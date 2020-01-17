@@ -13,7 +13,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	cmdutils "github.com/trustbloc/edge-store/pkg/utils/cmd"
@@ -29,6 +31,8 @@ const (
 	transcriptEndpoint   = "/transcripts"
 	post                 = "POST"
 	get                  = "GET"
+
+	strapiCodeFile = "./strapi.txt"
 )
 
 type strapiDemoParameters struct {
@@ -93,13 +97,14 @@ func startStrapiDemo(parameters *strapiDemoParameters) error {
 	// dummy data for demo purposes
 	studentRecord1 := map[string]interface{}{
 		"studentid":  "1234568",
-		"name":       "Tanu",
+		"name":       "Foo",
+		"email":      "foo@bar.com",
 		"university": "Faber College",
 		"semester":   "3",
 	}
 	transcriptRecord1 := map[string]interface{}{
 		"studentid":    "323456898",
-		"name":         "Tanu",
+		"name":         "Foo",
 		"university":   "Faber College",
 		"status":       "graduated",
 		"totalcredits": "100",
@@ -166,7 +171,34 @@ func createAdminUser(client *http.Client, adminURL string, adminUserValues inter
 
 	token := fmt.Sprintf("%v", adminUser.Jwt)
 
+	err = writeToFile(strapiCodeFile, token)
+	if err != nil {
+		return "", err
+	}
+
 	return "Bearer " + token, nil
+}
+
+func writeToFile(name, content string) error {
+	file, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE, 0644) // nolint: gosec
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			log.Warn("failed to close strapi file")
+		}
+	}()
+
+	_, err = file.WriteString(content)
+	if err != nil {
+		return err
+	}
+
+	// Save file changes.
+	return file.Sync()
 }
 
 // createRecord Create the record in CMS and fetch the records too

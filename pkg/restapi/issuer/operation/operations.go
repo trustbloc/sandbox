@@ -7,9 +7,11 @@ SPDX-License-Identifier: Apache-2.0
 package operation
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -36,17 +38,20 @@ type Operation struct {
 	handlers      []Handler
 	tokenIssuer   tokenIssuer
 	tokenResolver tokenResolver
+	cmsURL        string
 }
 
 // Config defines configuration for issuer operations
 type Config struct {
 	TokenIssuer   tokenIssuer
 	TokenResolver tokenResolver
+	CMSURL        string
 }
 
 type tokenIssuer interface {
 	AuthCodeURL(w http.ResponseWriter) string
 	Exchange(r *http.Request) (*oauth2.Token, error)
+	Client(ctx context.Context, t *oauth2.Token) *http.Client
 }
 
 type tokenResolver interface {
@@ -55,7 +60,10 @@ type tokenResolver interface {
 
 // New returns authorization instance
 func New(config *Config) *Operation {
-	svc := &Operation{tokenIssuer: config.TokenIssuer, tokenResolver: config.TokenResolver}
+	svc := &Operation{
+		tokenIssuer:   config.TokenIssuer,
+		tokenResolver: config.TokenResolver,
+		cmsURL:        config.CMSURL}
 	svc.registerHandler()
 
 	return svc
@@ -88,8 +96,39 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 
 	log.Info(ti)
 
+	_, err = c.getCMSData(tk)
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get user cms data: %s", err.Error()))
+
+		return
+	}
+
 	// get user data from CMS here (hard-code vc for now)
 	c.writeResponse(w, validCredential)
+}
+
+func (c *Operation) getCMSData(tk *oauth2.Token) ([]byte, error) {
+	httpClient := c.tokenIssuer.Client(context.Background(), tk)
+
+	req, err := http.NewRequest("GET", c.cmsURL+"/studentcards/1", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = resp.Body.Close()
+		if err != nil {
+			log.Warn("failed to close response body")
+		}
+	}()
+
+	return ioutil.ReadAll(resp.Body)
 }
 
 // registerHandler register handlers to be exposed from this service as REST API endpoints

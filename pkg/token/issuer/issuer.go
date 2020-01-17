@@ -67,6 +67,11 @@ func (i *Issuer) Exchange(r *http.Request) (*oauth2.Token, error) {
 	return token, nil
 }
 
+// Client returns an HTTP client using the provided token.
+func (i *Issuer) Client(ctx context.Context, t *oauth2.Token) *http.Client {
+	return oauth2.NewClient(ctx, i.oauthConfig.TokenSource(ctx, t))
+}
+
 func generateStateOauthCookie(w http.ResponseWriter) string {
 	// generate random bytes for state value
 	b := make([]byte, stateValueLength)

@@ -8,6 +8,7 @@ package issuer
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -22,6 +23,13 @@ func TestIssuer_AuthCodeURL(t *testing.T) {
 	w := httptest.NewRecorder()
 	u := tokenIssuer.AuthCodeURL(w)
 	require.NotEmpty(t, u)
+}
+
+func TestIssuer_Client(t *testing.T) {
+	tokenIssuer := New(&oauth2.Config{})
+
+	c := tokenIssuer.Client(context.Background(), &oauth2.Token{})
+	require.NotNil(t, c)
 }
 
 func TestIssuer_Exchange_NoStateCookie(t *testing.T) {
