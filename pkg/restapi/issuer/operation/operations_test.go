@@ -11,8 +11,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -41,13 +43,28 @@ func TestOperation_Callback(t *testing.T) {
 	headers := make(map[string]string)
 	headers["Authorization"] = authHeader
 
+	file, err := ioutil.TempFile("", "*.html")
+	require.NoError(t, err)
+
+	defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
 	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: ts.URL}
+		CMSURL: ts.URL, ReceiveVCHTML: file.Name()}
 	handler := getHandlerWithConfig(t, callback, cfg)
 
 	_, status, err := handleRequest(handler, headers, callback)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, status)
+
+	// test html not exist
+	cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		CMSURL: ts.URL, ReceiveVCHTML: ""}
+	handler = getHandlerWithConfig(t, callback, cfg)
+
+	body, status, err := handleRequest(handler, headers, callback)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusInternalServerError, status)
+	require.Contains(t, body.String(), "unable to load html")
 }
 
 func TestOperation_Callback_ExchangeCodeError(t *testing.T) {
@@ -116,12 +133,6 @@ func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid character")
 	require.Nil(t, data)
-}
-
-func TestOperation_WriteResponse(t *testing.T) {
-	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}})
-	require.NotNil(t, svc)
-	svc.writeResponse(&httptest.ResponseRecorder{}, "hello")
 }
 
 func handleRequest(handler Handler, headers map[string]string, path string) (*bytes.Buffer, int, error) { //nolint:lll
