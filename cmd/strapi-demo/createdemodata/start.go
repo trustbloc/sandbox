@@ -20,15 +20,15 @@ import (
 )
 
 const (
-	adminURLFlagName      = "admin-url"
-	adminURLFlagShorthand = "a"
-	adminURLFlagUsage     = "URL to run the strapi-demo instance on. Format: HostName:Port."
-	adminURLEnvKey        = "STRAPI-DEMO_ADMIN_URL"
-	adminURLEndpoint      = "/admin/auth/local/register"
-	studentCardsEndpoint  = "/studentcards"
-	transcriptEndpoint    = "/transcripts"
-	post                  = "post"
-	get                   = "get"
+	hostURLFlagName      = "host-url"
+	hostURLFlagShorthand = "u"
+	hostURLFlagUsage     = "URL to run the strapi-demo instance on. Format: HostName:Port."
+	hostURLEnvKey        = "STRAPI-DEMO_ADMIN_URL"
+	adminURLEndpoint     = "/admin/auth/local/register"
+	studentCardsEndpoint = "/studentcards"
+	transcriptEndpoint   = "/transcripts"
+	post                 = "POST"
+	get                  = "GET"
 )
 
 var errMissingAdminURL = errors.New("admin URL not provided")
@@ -59,10 +59,10 @@ func GetStartCmd() *cobra.Command {
 func createStartCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "create-demo-data",
-		Short: "Create demo data",
+		Short: "create demo data",
 		Long:  "Start populating data in strapi with default studentcards and transcripts",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			hostURL, err := cmdutils.GetUserSetVar(cmd, adminURLFlagName, adminURLEnvKey)
+			hostURL, err := cmdutils.GetUserSetVar(cmd, hostURLFlagName, hostURLEnvKey)
 			if err != nil {
 				return err
 			}
@@ -76,7 +76,7 @@ func createStartCmd() *cobra.Command {
 }
 
 func createFlags(startCmd *cobra.Command) {
-	startCmd.Flags().StringP(adminURLFlagName, adminURLFlagShorthand, "", adminURLFlagUsage)
+	startCmd.Flags().StringP(hostURLFlagName, hostURLFlagShorthand, "", hostURLFlagUsage)
 }
 
 // For Demo you can verify the records by browsing http://localhost:1337/admin/
@@ -101,8 +101,7 @@ func startStrapiDemo(parameters *strapiDemoParameters) error {
 		"studentid":  "1234568",
 		"name":       "Tanu",
 		"university": "Faber College",
-		"semester":   3,
-		"issuedate":  "2019-01-02T00:00:00.000Z",
+		"semester":   "3",
 	}
 	transcriptRecord1 := map[string]interface{}{
 		"studentid":    "323456898",
@@ -113,10 +112,17 @@ func startStrapiDemo(parameters *strapiDemoParameters) error {
 		"course":       "Bachelors'in Computing Science",
 	}
 
-	createRecord(client, authToken, parameters.adminURL+studentCardsEndpoint, studentRecord1)
-	createRecord(client, authToken, parameters.adminURL+transcriptEndpoint, transcriptRecord1)
-	resp, err := getRecord(client, authToken, parameters.adminURL+studentCardsEndpoint+"/1")
+	err = createRecord(client, authToken, parameters.adminURL+studentCardsEndpoint, studentRecord1)
+	if err != nil {
+		return err
+	}
 
+	err = createRecord(client, authToken, parameters.adminURL+transcriptEndpoint, transcriptRecord1)
+	if err != nil {
+		return err
+	}
+
+	resp, err := getRecord(client, authToken, parameters.adminURL+studentCardsEndpoint+"/1")
 	if err != nil {
 		return err
 	}
@@ -140,8 +146,8 @@ func createAdminUser(client *http.Client, adminURL string, adminUserValues inter
 
 	resp, err := client.Post(adminURL+adminURLEndpoint, "application/json", bytes.NewBuffer(jsonValue))
 
-	if err != nil {
-		return "", err
+	if resp.StatusCode == 400 || err != nil {
+		return "", fmt.Errorf("error posting the admin user: %s", err)
 	}
 
 	defer func() {
@@ -170,23 +176,23 @@ func createAdminUser(client *http.Client, adminURL string, adminUserValues inter
 }
 
 // createRecord Create the record in CMS and fetch the records too
-func createRecord(client *http.Client, authToken, url string, record interface{}) {
+func createRecord(client *http.Client, authToken, url string, record interface{}) error {
 	requestBody, err := json.Marshal(record)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	req, err := http.NewRequest(post, url, bytes.NewBuffer(requestBody))
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	req.Header.Set("content-type", "application/json")
 	req.Header.Set("Authorization", authToken)
 
 	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
+	if resp.StatusCode == 400 || err != nil {
+		return fmt.Errorf("error posting the create record request: %s", err)
 	}
 
 	defer func() {
@@ -198,8 +204,10 @@ func createRecord(client *http.Client, authToken, url string, record interface{}
 
 	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
 
 func getRecord(client *http.Client, authToken, url string) ([]byte, error) {
@@ -212,8 +220,8 @@ func getRecord(client *http.Client, authToken, url string) ([]byte, error) {
 	req.Header.Set("Authorization", authToken)
 
 	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
+	if resp.StatusCode == 400 || err != nil {
+		return nil, fmt.Errorf("error posting the get record request: %s", err)
 	}
 
 	defer func() {

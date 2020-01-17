@@ -51,7 +51,7 @@ strapi-build:
 	@mkdir -p ./build/bin
 	@cd ${STRAPI_DEMO_PATH} && go build -o ../../build/bin/strapi-demo main.go
 
-strapi-setup:
+strapi-setup: strapi-build
 	@scripts/strapi-setup.sh
 
 
