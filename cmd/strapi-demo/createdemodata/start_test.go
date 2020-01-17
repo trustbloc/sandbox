@@ -22,16 +22,16 @@ func TestStartCmdContents(t *testing.T) {
 	startCmd := GetStartCmd()
 
 	require.Equal(t, "create-demo-data", startCmd.Use)
-	require.Equal(t, "Create demo data", startCmd.Short)
+	require.Equal(t, "create demo data", startCmd.Short)
 	require.Equal(t, "Start populating data in strapi with default studentcards and transcripts", startCmd.Long)
 
-	checkFlagPropertiesCorrect(t, startCmd, adminURLFlagName, adminURLFlagShorthand, adminURLFlagUsage)
+	checkFlagPropertiesCorrect(t, startCmd, hostURLFlagName, hostURLFlagShorthand, hostURLFlagUsage)
 }
 
 func TestStartCmdWithBlankHostArg(t *testing.T) {
 	startCmd := GetStartCmd()
 
-	args := []string{"--" + adminURLFlagName, ""}
+	args := []string{"--" + hostURLFlagName, ""}
 	startCmd.SetArgs(args)
 
 	err := startCmd.Execute()
@@ -44,7 +44,7 @@ func TestStartCmdWithMissingHostArg(t *testing.T) {
 	err := startCmd.Execute()
 
 	require.Equal(t,
-		"Neither admin-url (command line flag) nor STRAPI-DEMO_ADMIN_URL (environment variable) have been set.",
+		"Neither host-url (command line flag) nor STRAPI-DEMO_ADMIN_URL (environment variable) have been set.",
 		err.Error())
 }
 func TestStartEdgeStoreWithBlankHost(t *testing.T) {
@@ -78,8 +78,6 @@ func TestAdminUserAndCreateRecordWithRoundTripper(t *testing.T) {
 				"user": {
         		"id": 12 }
 	}`)),
-				// Must be set to non-nil value or it panics
-				Header: make(http.Header),
 			}
 		})
 		adminUserValues := map[string]string{"username": "strapi"}
@@ -98,8 +96,6 @@ func TestAdminUserAndCreateRecordWithRoundTripper(t *testing.T) {
 	 	"studentid": "1234568",
 		"name":      "Tanu"
 	}`)),
-				// Must be set to non-nil value or it panics
-				Header: make(http.Header),
 			}
 		})
 		parameters := &strapiDemoParameters{client: client2, adminURL: testURL}
@@ -113,11 +109,8 @@ func TestAdminUserAndCreateRecordWithRoundTripper(t *testing.T) {
 				// Send response to be tested
 				Body: ioutil.NopCloser(bytes.NewBufferString(`{
 		"id" : 1,
-	 	"when": "test",
-		"test": "all"
+	 	"when": "test"
 	}`)),
-				// Must be set to non-nil value or it panics
-				Header: make(http.Header),
 			}
 		})
 		parameters := &strapiDemoParameters{client: client2, adminURL: testURL}
@@ -159,10 +152,59 @@ func TestCreateAdminUserError(t *testing.T) {
 	require.Equal(t, "", token)
 	require.Contains(t, err.Error(), "json: unsupported type: chan int")
 
-	createRecord(client, token, testURL+studentCardsEndpoint, make(chan int))
+	err = createRecord(client, token, testURL+studentCardsEndpoint, make(chan int))
+	require.NotNil(t, err.Error())
 	require.Contains(t, err.Error(), "json: unsupported type: chan int")
+
+	t.Run("add the admin user ", func(t *testing.T) {
+		client := NewTestClient(func(req *http.Request) *http.Response {
+			// Test request parameters
+			return &http.Response{
+				StatusCode: 400,
+			}
+		})
+		adminUserValues := map[string]string{"username": "strapi"}
+		token, err := createAdminUser(client, testURL, adminUserValues)
+		require.NotNil(t, token)
+		require.NotNil(t, err)
+		require.Contains(t, err.Error(), "error posting the admin user:")
+	})
 }
 
+func TestCreateRecord(t *testing.T) {
+	client := NewTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: 400,
+		}
+	})
+	studentRecord1 := map[string]interface{}{
+		"studentid": "1234568",
+		"name":      "Tanu",
+	}
+
+	t.Run("create record error", func(t *testing.T) {
+		err := createRecord(client, "token", testURL+studentCardsEndpoint, studentRecord1)
+		require.NotNil(t, err)
+		require.Contains(t, err.Error(), "error posting the create record request")
+	})
+
+	client2 := NewTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			Body: ioutil.NopCloser(r{}),
+		}
+	})
+
+	t.Run("error in reading the http response", func(t *testing.T) {
+		err := createRecord(client2, "token", testURL+studentCardsEndpoint, studentRecord1)
+		require.NotNil(t, err)
+		require.Contains(t, err.Error(), "error in reading http response")
+	})
+	t.Run("error in reading the http response", func(t *testing.T) {
+		err := createRecord(client2, "token", testURL+studentCardsEndpoint, make(chan int))
+		require.NotNil(t, err)
+		require.Contains(t, err.Error(), "json: unsupported type: chan int")
+	})
+}
 func TestGetRecord(t *testing.T) {
 	client := NewTestClient(func(req *http.Request) *http.Response {
 		return &http.Response{
@@ -177,11 +219,6 @@ func TestGetRecord(t *testing.T) {
 		require.Contains(t, err.Error(), "error in reading http response")
 	})
 
-	t.Run("error in create Record reading the http response", func(t *testing.T) {
-		require.Panics(t, func() { createRecord(client, "token", testURL+studentCardsEndpoint, nil) },
-			"error in reading http response")
-	})
-
 	client2 := NewTestClient(func(req *http.Request) *http.Response {
 		// Test request parameters
 		return &http.Response{
@@ -190,11 +227,7 @@ func TestGetRecord(t *testing.T) {
 		}
 	})
 
-	t.Run("error in create Record reading the http response", func(t *testing.T) {
-		require.Panics(t, func() { createRecord(client2, "token", "%%%%3554", nil) },
-			"error in reading http response")
-	})
-	t.Run("error in create Record reading the http response", func(t *testing.T) {
+	t.Run("error in get Record reading the http response", func(t *testing.T) {
 		resp, err := getRecord(client2, "token", "%%%%3554")
 		require.NotNil(t, err)
 		require.Empty(t, resp)
@@ -205,6 +238,18 @@ func TestGetRecord(t *testing.T) {
 		require.NotNil(t, err)
 		require.Equal(t, token, "")
 		require.Contains(t, err.Error(), "error in reading http response")
+	})
+
+	t.Run("get record bad request error", func(t *testing.T) {
+		client := NewTestClient(func(req *http.Request) *http.Response {
+			return &http.Response{
+				StatusCode: 400,
+			}
+		})
+		resp, err := getRecord(client, "token", testURL+studentCardsEndpoint)
+		require.NotNil(t, err)
+		require.Empty(t, resp)
+		require.Contains(t, err.Error(), "error posting the get record request")
 	})
 }
 
