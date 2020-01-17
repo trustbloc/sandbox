@@ -76,3 +76,19 @@ services:
       MYSQL_ROOT_PASSWORD: strapi
     volumes:
       - ../cms/db:/var/lib/mysql
+
+  issuer.example.com:
+    container_name: issuer.example.com
+    image: ${ISSUER_IMAGE}:latest
+    environment:
+      - ISSUER_HOST_URL=0.0.0.0:5556
+      - OAUTH2_ENDPOINT_AUTH_URL=http://127.0.0.1:4444/oauth2/auth
+      - OAUTH2_ENDPOINT_TOKEN_URL=http://hydra:4444/oauth2/token
+      - OAUTH2_ISSUER_CLIENT_REDIRECT_URL=http://127.0.0.1:5556/callback
+      - OAUTH2_ISSUER_CLIENT_ID=auth-code-client
+      - OAUTH2_ISSUER_CLIENT_SECRET=secret
+      - OAUTH2_ISSUER_CLIENT_SCOPES=studentcard
+      - OAUTH2_ENDPOINT_TOKEN_INTROSPECTION_URL=http://hydra:4445/oauth2/introspect
+    ports:
+      - 5556:5556
+    command: start
