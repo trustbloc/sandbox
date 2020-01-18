@@ -183,7 +183,8 @@ func createFlags(startCmd *cobra.Command) {
 
 func startIssuer(parameters *issuerParameters) error {
 	cfg := &operation.Config{TokenIssuer: tokenIssuer.New(parameters.oauth2Config),
-		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL), CMSURL: parameters.cmsURL}
+		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL), CMSURL: parameters.cmsURL,
+		ReceiveVCHTML: "static/receiveVC.html"}
 
 	issuerService, err := issuer.New(cfg)
 	if err != nil {

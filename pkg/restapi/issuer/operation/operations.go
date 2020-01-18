@@ -8,9 +8,8 @@ package operation
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 
@@ -39,6 +38,7 @@ type Operation struct {
 	tokenIssuer   tokenIssuer
 	tokenResolver tokenResolver
 	cmsURL        string
+	receiveVCHTML string
 }
 
 // Config defines configuration for issuer operations
@@ -46,6 +46,12 @@ type Config struct {
 	TokenIssuer   tokenIssuer
 	TokenResolver tokenResolver
 	CMSURL        string
+	ReceiveVCHTML string
+}
+
+// vc struct used to return vc data to html
+type vc struct {
+	Data string `json:"data"`
 }
 
 type tokenIssuer interface {
@@ -63,7 +69,8 @@ func New(config *Config) *Operation {
 	svc := &Operation{
 		tokenIssuer:   config.TokenIssuer,
 		tokenResolver: config.TokenResolver,
-		cmsURL:        config.CMSURL}
+		cmsURL:        config.CMSURL,
+		receiveVCHTML: config.ReceiveVCHTML}
 	svc.registerHandler()
 
 	return svc
@@ -86,15 +93,13 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// user info from token will be used for to retrieve data from cms
-	ti, err := c.tokenResolver.Resolve(tk.AccessToken)
+	_, err = c.tokenResolver.Resolve(tk.AccessToken)
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get token info: %s", err.Error()))
 
 		return
 	}
-
-	log.Info(ti)
 
 	_, err = c.getCMSData(tk)
 	if err != nil {
@@ -104,8 +109,19 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get user data from CMS here (hard-code vc for now)
-	c.writeResponse(w, validCredential)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	t, err := template.ParseFiles(c.receiveVCHTML)
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to load html: %s", err.Error()))
+
+		return
+	}
+
+	if err := t.Execute(w, vc{Data: validCredential}); err != nil {
+		log.Error(fmt.Sprintf("failed execute html template: %s", err.Error()))
+	}
 }
 
 func (c *Operation) getCMSData(tk *oauth2.Token) ([]byte, error) {
@@ -137,15 +153,6 @@ func (c *Operation) registerHandler() {
 	c.handlers = []Handler{
 		support.NewHTTPHandler(login, http.MethodGet, c.Login),
 		support.NewHTTPHandler(callback, http.MethodGet, c.Callback),
-	}
-}
-
-// writeResponse writes interface value to response
-func (c *Operation) writeResponse(rw io.Writer, v interface{}) {
-	err := json.NewEncoder(rw).Encode(v)
-	// as of now, just log errors for writing response
-	if err != nil {
-		log.Errorf("Unable to send json response, %s", err)
 	}
 }
 
