@@ -113,3 +113,17 @@ services:
     command: start
     volumes:
       - ../keys/tls:/etc/tls
+
+  rp.example.com:
+    container_name: rp.example.com
+    image: ${RP_IMAGE}:latest
+    environment:
+      - RP_HOST_URL=0.0.0.0:5557
+      - RP_TLS_CERT_FILE=/etc/tls/ec-pubCert.pem
+      - RP_TLS_KEY_FILE=/etc/tls/ec-key.pem
+      - RP_VC_SERVICE_URL=localhost:9090
+    ports:
+      - 5557:5557
+    command: start
+    volumes:
+      - ../keys/tls:/etc/tls
