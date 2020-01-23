@@ -15,6 +15,9 @@ SPDX-License-Identifier: Apache-2.0
 <body>
 <div>
     <button id='getVCBtn'>Get VC</button>
+    <form method="post" id="vcForm" action="/verifyVC">
+        <input type="hidden" name="vcDataInput" id="vcDataInput">
+    </form>
 </div>
 </body>
 
@@ -46,7 +49,8 @@ SPDX-License-Identifier: Apache-2.0
             alert("null result");
             return;
         }
-        alert(result.data);
+        document.getElementById('vcDataInput').value=result.data
+        document.getElementById('vcForm').submit()
     }
 
     ready(() => {
