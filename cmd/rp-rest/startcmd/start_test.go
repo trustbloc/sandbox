@@ -67,19 +67,19 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 		require.Equal(t, "tls-key-file value is empty", err.Error())
 	})
 
-	t.Run("test blank vc service url arg", func(t *testing.T) {
+	t.Run("test blank vcs service url arg", func(t *testing.T) {
 		startCmd := GetStartCmd(&mockServer{})
 
 		var args []string
 		args = append(args, hostURLArg()...)
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, tlsKeyFileArg()...)
-		args = append(args, []string{flag + rpVCServiceURLFlagName, ""}...)
+		args = append(args, []string{flag + vcsURLFlagName, ""}...)
 		startCmd.SetArgs(args)
 
 		err := startCmd.Execute()
 		require.Error(t, err)
-		require.Equal(t, "vc-service-url value is empty", err.Error())
+		require.Equal(t, "vcs-url value is empty", err.Error())
 	})
 }
 
@@ -114,7 +114,7 @@ func TestStartCmdValidArgsEnvVar(t *testing.T) {
 	err = os.Setenv(tlsKeyFileEnvKey, "key")
 	require.Nil(t, err)
 
-	err = os.Setenv(rpVCServiceURLEnvKey, "localhost:8081")
+	err = os.Setenv(vcsURLEnvKey, "localhost:8081")
 	require.Nil(t, err)
 
 	err = startCmd.Execute()
@@ -139,7 +139,7 @@ func getValidArgs() []string {
 	args = append(args, hostURLArg()...)
 	args = append(args, tlsCertFileArg()...)
 	args = append(args, tlsKeyFileArg()...)
-	args = append(args, vcServiceURLArg()...)
+	args = append(args, vcsServiceURLArg()...)
 
 	return args
 }
@@ -156,6 +156,6 @@ func tlsKeyFileArg() []string {
 	return []string{flag + tlsKeyFileFlagName, "key"}
 }
 
-func vcServiceURLArg() []string {
-	return []string{flag + rpVCServiceURLFlagName, "localhost:8081"}
+func vcsServiceURLArg() []string {
+	return []string{flag + vcsURLFlagName, "localhost:8081"}
 }
