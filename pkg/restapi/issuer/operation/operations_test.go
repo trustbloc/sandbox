@@ -27,7 +27,9 @@ import (
 const authHeader = "Bearer ABC"
 
 func TestOperation_Login(t *testing.T) {
-	handler := getHandler(t, login)
+	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
+	handler := getHandlerWithConfig(t, login, cfg)
+
 	buff, status, err := handleRequest(handler, nil, login)
 	require.NoError(t, err)
 	require.Contains(t, buff.String(), "Temporary Redirect")
@@ -35,10 +37,16 @@ func TestOperation_Login(t *testing.T) {
 }
 
 func TestOperation_Callback(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "{}")
 	}))
-	defer ts.Close()
+	defer cms.Close()
+
+	vcs := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprintln(w, "{}")
+	}))
+	defer vcs.Close()
 
 	headers := make(map[string]string)
 	headers["Authorization"] = authHeader
@@ -49,7 +57,7 @@ func TestOperation_Callback(t *testing.T) {
 	defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
 	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: ts.URL, ReceiveVCHTML: file.Name()}
+		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name()}
 	handler := getHandlerWithConfig(t, callback, cfg)
 
 	_, status, err := handleRequest(handler, headers, callback)
@@ -58,7 +66,7 @@ func TestOperation_Callback(t *testing.T) {
 
 	// test html not exist
 	cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: ts.URL, ReceiveVCHTML: ""}
+		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: ""}
 	handler = getHandlerWithConfig(t, callback, cfg)
 
 	body, status, err := handleRequest(handler, headers, callback)
@@ -113,6 +121,34 @@ func TestOperation_Callback_GetCMSData_Error(t *testing.T) {
 	require.Contains(t, data.String(), "unsupported protocol scheme")
 }
 
+func TestOperation_Callback_CreateCredential_Error(t *testing.T) {
+	cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	defer cms.Close()
+
+	headers := make(map[string]string)
+	headers["Authorization"] = authHeader
+
+	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		CMSURL: cms.URL, VCSURL: "vcs"}
+	handler := getHandlerWithConfig(t, callback, cfg)
+
+	data, status, err := handleRequest(handler, headers, callback)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusInternalServerError, status)
+	require.Contains(t, data.String(), "unsupported protocol scheme")
+}
+
+func TestOperation_CreateCredential_Error(t *testing.T) {
+	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}})
+
+	vc, err := svc.createCredential([]byte(""))
+	require.Error(t, err)
+	require.Nil(t, vc)
+	require.Contains(t, err.Error(), "unexpected end of JSON input")
+}
+
 func TestOperation_GetCMSData_InvalidURL(t *testing.T) {
 	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 		CMSURL: "xyz:cms"})
@@ -132,6 +168,43 @@ func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
 	data, err := svc.getCMSData(&oauth2.Token{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid character")
+	require.Nil(t, data)
+}
+
+func TestOperation_CreateCredential_InvalidURL(t *testing.T) {
+	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		VCSURL: "xyz:vcs"})
+	require.NotNil(t, svc)
+
+	data, err := svc.createCredential([]byte("{}"))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "unsupported protocol scheme")
+	require.Nil(t, data)
+}
+
+func TestOperation_CreateCredential_InvalidHTTPRequest(t *testing.T) {
+	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		VCSURL: "http://vcs\\"})
+	require.NotNil(t, svc)
+
+	data, err := svc.createCredential([]byte("{}"))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid character")
+	require.Nil(t, data)
+}
+
+func TestOperation_SendHTTPRequest_WrongStatus(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	defer ts.Close()
+
+	req, err := http.NewRequest("GET", ts.URL, nil)
+	require.NoError(t, err)
+
+	data, err := sendHTTPRequest(req, http.DefaultClient, http.StatusInternalServerError)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "200 OK")
 	require.Nil(t, data)
 }
 
@@ -155,13 +228,6 @@ func handleRequest(handler Handler, headers map[string]string, path string) (*by
 	router.ServeHTTP(rr, req)
 
 	return rr.Body, rr.Code, nil
-}
-
-func getHandler(t *testing.T, lookup string) Handler {
-	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}})
-	require.NotNil(t, svc)
-
-	return handlerLookup(t, svc, lookup)
 }
 
 func getHandlerWithConfig(t *testing.T, lookup string, cfg *Config) Handler {
