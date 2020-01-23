@@ -41,7 +41,7 @@ services:
     restart: unless-stopped
 
   oathkeeper-proxy:
-    image: oryd/oathkeeper:latest
+    image: oryd/oathkeeper:v0.35.1-alpine
     ports:
       - "4455:4455"
     depends_on:
@@ -65,7 +65,7 @@ services:
 
   strapi:
     container_name: strapi
-    image: strapi/strapi:latest
+    image: strapi/strapi:3.0.0-beta.18.6
     environment:
       - DATABASE_CLIENT=mysql
       - DATABASE_HOST=db
@@ -108,6 +108,7 @@ services:
       - ISSUER_TLS_CERT_FILE=/etc/tls/ec-pubCert.pem
       - ISSUER_TLS_KEY_FILE=/etc/tls/ec-key.pem
       - ISSUER_CMS_URL=http://oathkeeper-proxy:4455
+      - ISSUER_VCS_URL=http://vcs.example.com:8070
     ports:
       - 5556:5556
     command: start
@@ -127,3 +128,13 @@ services:
     command: start
     volumes:
       - ../keys/tls:/etc/tls
+
+  vcs.example.com:
+    container_name: vcs.example.com
+    image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
+    environment:
+      - VC_REST_HOST_URL=0.0.0.0:8070
+    ports:
+      - 8070:8070
+    command: start
+

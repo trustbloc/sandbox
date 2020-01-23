@@ -7,7 +7,10 @@ SPDX-License-Identifier: Apache-2.0
 package operation
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -23,6 +26,7 @@ import (
 const (
 	login    = "/login"
 	callback = "/callback"
+	profile  = "issuer"
 )
 
 // Handler http handler for each controller API endpoint
@@ -38,6 +42,7 @@ type Operation struct {
 	tokenIssuer   tokenIssuer
 	tokenResolver tokenResolver
 	cmsURL        string
+	vcsURL        string
 	receiveVCHTML string
 }
 
@@ -46,6 +51,7 @@ type Config struct {
 	TokenIssuer   tokenIssuer
 	TokenResolver tokenResolver
 	CMSURL        string
+	VCSURL        string
 	ReceiveVCHTML string
 }
 
@@ -70,6 +76,7 @@ func New(config *Config) *Operation {
 		tokenIssuer:   config.TokenIssuer,
 		tokenResolver: config.TokenResolver,
 		cmsURL:        config.CMSURL,
+		vcsURL:        config.VCSURL,
 		receiveVCHTML: config.ReceiveVCHTML}
 	svc.registerHandler()
 
@@ -101,10 +108,18 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = c.getCMSData(tk)
+	data, err := c.getCMSData(tk)
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get user cms data: %s", err.Error()))
+
+		return
+	}
+
+	cred, err := c.createCredential(data)
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create credential: %s", err.Error()))
 
 		return
 	}
@@ -119,9 +134,49 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := t.Execute(w, vc{Data: validCredential}); err != nil {
+	if err := t.Execute(w, vc{Data: string(cred)}); err != nil {
 		log.Error(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
+}
+
+func prepareCreateCredentialRequest(data []byte) ([]byte, error) {
+	var subject map[string]interface{}
+
+	err := json.Unmarshal(data, &subject)
+	if err != nil {
+		return nil, err
+	}
+
+	// remove cms id, add name as id (will be replaced by DID)
+	subject["id"] = subject["name"]
+
+	// remove cms specific fields
+	delete(subject, "created_at")
+	delete(subject, "updated_at")
+
+	req := &createCredential{
+		Subject: subject,
+		Type:    []string{"VerifiableCredential", "StudentCard"},
+		Profile: profile,
+	}
+
+	return json.Marshal(req)
+}
+
+func (c *Operation) createCredential(subject []byte) ([]byte, error) {
+	body, err := prepareCreateCredentialRequest(subject)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", c.vcsURL+"/credential", bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+
+	httpClient := http.DefaultClient
+
+	return sendHTTPRequest(req, httpClient, http.StatusCreated)
 }
 
 func (c *Operation) getCMSData(tk *oauth2.Token) ([]byte, error) {
@@ -132,7 +187,11 @@ func (c *Operation) getCMSData(tk *oauth2.Token) ([]byte, error) {
 		return nil, err
 	}
 
-	resp, err := httpClient.Do(req)
+	return sendHTTPRequest(req, httpClient, http.StatusOK)
+}
+
+func sendHTTPRequest(req *http.Request, client *http.Client, status int) ([]byte, error) {
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -143,6 +202,10 @@ func (c *Operation) getCMSData(tk *oauth2.Token) ([]byte, error) {
 			log.Warn("failed to close response body")
 		}
 	}()
+
+	if resp.StatusCode != status {
+		return nil, errors.New(resp.Status)
+	}
 
 	return ioutil.ReadAll(resp.Body)
 }
@@ -170,30 +233,9 @@ func (c *Operation) GetRESTHandlers() []Handler {
 	return c.handlers
 }
 
-//nolint:lll
-const validCredential = `{
-  "@context": "https://www.w3.org/2018/credentials/v1",
-  "id": "http://example.edu/credentials/1872",
-  "type": "VerifiableCredential",
-  "credentialSubject": {
-    "id": "did:example:ebfeb1f712ebc6f1c276e12ec21"
-  },
-  "issuer": {
-    "id": "did:example:76e12ec712ebc6f1c221ebfeb1f",
-    "name": "Example University"
-  },
-  "issuanceDate": "2010-01-01T19:23:24Z",
-  "proof": {
-    "type": "RsaSignature2018",
-    "created": "2018-06-18T21:19:10Z",
-    "proofPurpose": "assertionMethod",
-    "verificationMethod": "https://example.com/jdoe/keys/1",
-    "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..DJBMvvFAIC00nSGB6Tn0XKbbF9XrsaJZREWvR2aONYTQQxnyXirtXnlewJMBBn2h9hfcGZrvnC1b6PgWmukzFJ1IiH1dWgnDIS81BH-IxXnPkbuYDeySorc4QU9MJxdVkY5EL4HYbcIfwKj6X4LBQ2_ZHZIu1jdqLcRZqHcsDF5KKylKc1THn5VRWy5WhYg_gBnyWny8E6Qkrze53MR7OuAmmNJ1m1nN8SxDrG6a08L78J0-Fbas5OjAQz3c17GY8mVuDPOBIOVjMEghBlgl3nOi1ysxbRGhHLEK4s0KKbeRogZdgt1DkQxDFxxn41QWDw_mmMCjs9qxg0zcZzqEJw"
-  },
-  "expirationDate": "2020-01-01T19:23:24Z",
-  "credentialStatus": {
-    "id": "https://example.edu/status/24",
-    "type": "CredentialStatusList2017"
-  }
+// createCredential input data for edge service issuer rest api
+type createCredential struct {
+	Subject map[string]interface{} `json:"credentialSubject"`
+	Type    []string               `json:"type,omitempty"`
+	Profile string                 `json:"profile,omitempty"`
 }
-`

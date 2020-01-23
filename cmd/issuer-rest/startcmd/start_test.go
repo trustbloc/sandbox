@@ -262,6 +262,9 @@ func TestStartCmdValidArgsEnvVar(t *testing.T) {
 	err = os.Setenv(cmsURLEnvKey, "cms")
 	require.Nil(t, err)
 
+	err = os.Setenv(vcsURLEnvKey, "vcs")
+	require.Nil(t, err)
+
 	err = os.Setenv(tlsKeyFileEnvKey, "key")
 	require.Nil(t, err)
 
@@ -295,6 +298,7 @@ func getValidArgs() []string {
 	args = append(args, tlsCertFileArg()...)
 	args = append(args, tlsKeyFileArg()...)
 	args = append(args, cmsURLArg()...)
+	args = append(args, vcsURLArg()...)
 
 	return args
 }
@@ -341,4 +345,8 @@ func tlsKeyFileArg() []string {
 
 func cmsURLArg() []string {
 	return []string{flag + cmsURLFlagName, "cms"}
+}
+
+func vcsURLArg() []string {
+	return []string{flag + vcsURLFlagName, "vcs"}
 }
