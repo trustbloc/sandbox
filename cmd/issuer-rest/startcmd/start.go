@@ -82,6 +82,12 @@ const (
 	cmsURLFlagShorthand = "m"
 	cmsURLFlagUsage     = "Content management server (CMS) URL. Format: HostName:Port."
 	cmsURLEnvKey        = "ISSUER_CMS_URL"
+
+	// vc service url config flags
+	vcsURLFlagName      = "vcs-url"
+	vcsURLFlagShorthand = "v"
+	vcsURLFlagUsage     = "VC Service URL. Format: HostName:Port."
+	vcsURLEnvKey        = "ISSUER_VCS_URL"
 )
 
 type server interface {
@@ -104,6 +110,7 @@ type issuerParameters struct {
 	tlsCertFile           string
 	tlsKeyFile            string
 	cmsURL                string
+	vcsURL                string
 }
 
 // GetStartCmd returns the Cobra start command.
@@ -151,6 +158,11 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			vcsURL, err := cmdutils.GetUserSetVar(cmd, vcsURLFlagName, vcsURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
 			parameters := &issuerParameters{
 				srv:                   srv,
 				hostURL:               strings.TrimSpace(hostURL),
@@ -159,6 +171,7 @@ func createStartCmd(srv server) *cobra.Command {
 				tlsCertFile:           tlsCertFile,
 				tlsKeyFile:            tlsKeyFile,
 				cmsURL:                strings.TrimSpace(cmsURL),
+				vcsURL:                strings.TrimSpace(vcsURL),
 			}
 
 			return startIssuer(parameters)
@@ -179,11 +192,15 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(tlsCertFileFlagName, tlsCertFileFlagShorthand, "", tlsCertFileFlagUsage)
 	startCmd.Flags().StringP(tlsKeyFileFlagName, tlsKeyFileFlagShorthand, "", tlsKeyFileFlagUsage)
 	startCmd.Flags().StringP(cmsURLFlagName, cmsURLFlagShorthand, "", cmsURLFlagUsage)
+	startCmd.Flags().StringP(vcsURLFlagName, vcsURLFlagShorthand, "", vcsURLFlagUsage)
 }
 
 func startIssuer(parameters *issuerParameters) error {
-	cfg := &operation.Config{TokenIssuer: tokenIssuer.New(parameters.oauth2Config),
-		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL), CMSURL: parameters.cmsURL,
+	cfg := &operation.Config{
+		TokenIssuer:   tokenIssuer.New(parameters.oauth2Config),
+		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL),
+		CMSURL:        parameters.cmsURL,
+		VCSURL:        parameters.vcsURL,
 		ReceiveVCHTML: "static/receiveVC.html"}
 
 	issuerService, err := issuer.New(cfg)
