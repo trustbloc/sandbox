@@ -1,4 +1,4 @@
-## Relaying Party
+## Relying Party
 
 Relying Party is a sample application that will request verifiable credential (VC) from the user. 
 
