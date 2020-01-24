@@ -34,10 +34,10 @@ const (
 		" Alternatively, this can be set with the following environment variable: " + tlsKeyFileEnvKey
 	tlsKeyFileEnvKey = "RP_TLS_KEY_FILE"
 
-	rpVCServiceURLFlagName = "vc-service-url"
-	rpVCServiceURLUsage    = "vc service url." +
-		" Alternatively, this can be set with the following environment variable: " + rpVCServiceURLEnvKey
-	rpVCServiceURLEnvKey = "RP_VC_SERVICE_URL"
+	// vc service url config flags
+	vcsURLFlagName  = "vcs-url"
+	vcsURLFlagUsage = "VC Service URL. Format: HostName:Port."
+	vcsURLEnvKey    = "RP_VCS_URL"
 )
 
 type server interface {
@@ -90,7 +90,7 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
-			vcServiceURL, err := cmdutils.GetUserSetVar(cmd, rpVCServiceURLFlagName, rpVCServiceURLEnvKey, false)
+			vcServiceURL, err := cmdutils.GetUserSetVar(cmd, vcsURLFlagName, vcsURLEnvKey, false)
 			if err != nil {
 				return err
 			}
@@ -112,12 +112,12 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(hostURLFlagName, hostURLFlagShorthand, "", hostURLFlagUsage)
 	startCmd.Flags().StringP(tlsCertFileFlagName, "", "", tlsCertFileFlagUsage)
 	startCmd.Flags().StringP(tlsKeyFileFlagName, "", "", tlsKeyFileFlagUsage)
-	startCmd.Flags().StringP(rpVCServiceURLFlagName, "", "", rpVCServiceURLUsage)
+	startCmd.Flags().StringP(vcsURLFlagName, "", "", vcsURLFlagUsage)
 }
 
 func startRP(parameters *rpParameters) error {
 	cfg := &operation.Config{
-		VCHTML: "", VCServiceURL: parameters.vcServiceURL}
+		VCHTML: "static/vc.html", VCSURL: parameters.vcServiceURL}
 
 	rpService, err := rp.New(cfg)
 	if err != nil {
