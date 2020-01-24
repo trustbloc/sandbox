@@ -55,7 +55,7 @@ Edge Components:
 
 Demo Applications:
 - [Issuer](https://github.com/trustbloc/edge-sandbox/docs/issuer/README.md)
-- [Relaying Party](https://github.com/trustbloc/edge-sandbox/docs/rp/README.md)
+- [Relying Party](https://github.com/trustbloc/edge-sandbox/docs/rp/README.md)
 
 Third Party:
 - [ORY Hydra](https://www.ory.sh/docs/hydra/) OAuth2 Server 
