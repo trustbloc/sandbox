@@ -15,7 +15,7 @@ As a User, I should be able to get the Student Card from the Issuer and present 
 
 ## Sample Applications
 - [Issuer](docs/issuer/README.md)
-- [Relaying Party](docs/rp/README.md)
+- [Relying Party](docs/rp/README.md)
 
 ## Demo
 - [Build](docs/demo/build.md)
