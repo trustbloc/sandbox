@@ -8,6 +8,7 @@ set -e
 
 echo "Running $0"
 
-cd test/bdd/fixtures/sandbox
-docker-compose up --build
+cd test/bdd/fixtures/demo
+(source .env && docker-compose down && docker-compose up --force-recreate)
+
 

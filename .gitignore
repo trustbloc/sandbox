@@ -18,9 +18,6 @@ vendor
 # Test binary, build with `go test -c`
 *.test
 
-#Exclude strapi installation and api
-cms
-
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 .idea

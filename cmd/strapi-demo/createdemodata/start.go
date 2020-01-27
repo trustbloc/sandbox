@@ -145,7 +145,7 @@ func createAdminUser(client *http.Client, adminURL string, adminUserValues inter
 
 	resp, err := client.Post(adminURL+adminURLEndpoint, "application/json", bytes.NewBuffer(jsonValue))
 
-	if resp.StatusCode == 400 || err != nil {
+	if err != nil {
 		return "", fmt.Errorf("error posting the admin user: %s", err)
 	}
 
@@ -160,6 +160,10 @@ func createAdminUser(client *http.Client, adminURL string, adminUserValues inter
 
 	if err != nil {
 		return "", err
+	}
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("resp status %d not equal 200 %s", resp.StatusCode, string(body))
 	}
 
 	var adminUser strapiUser
