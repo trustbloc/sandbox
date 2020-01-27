@@ -7,6 +7,6 @@
 
 echo "Running $0"
 
-cd test/bdd/fixtures/sandbox
+cd test/bdd/fixtures/demo
 docker-compose kill
 docker-compose rm -f

@@ -29,13 +29,13 @@ make checks
 # run unit tests
 make unit-test
 
-# start sandbox components
-make sandbox-start
+# start demo components
+make demo-start
 ```
 
-## Sandbox Components	
+## Demo Components	
 
-The following components are started when you run 'make sandbox-start':
+The following components are started when you run 'make demo-start':
 
 Edge Components:
 - [Edge Service](https://github.com/trustbloc/edge-service) for creating, storing and verifying credentials
@@ -54,7 +54,7 @@ Third Party:
 
 ## Strapi Data Setup
 
-After you have started sandbox components using 'make sandbox-start' set up test data using following command:
+After you have started sandbox components using 'make demo-start' set up test data using following command:
 
 make strapi-setup
 
@@ -64,9 +64,9 @@ You can verify student card data setup by logging in to [admin console](http://l
 
 ## Register User Wallet
 
-After you have started sandbox components using 'make sandbox-start' register user wallet using following step:
+After you have started sandbox components using 'make demo-start' register user wallet using following step:
 
-Open [user agent home page](https://127.0.0.1:8091/RegisterWallet) and follow the links.
+Open [user agent register wallet](https://127.0.0.1:8091/RegisterWallet) and follow the links.
 
 ## Demo
 
