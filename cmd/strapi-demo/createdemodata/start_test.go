@@ -66,6 +66,7 @@ func TestAdminUserAndCreateRecordWithRoundTripper(t *testing.T) {
 		client := NewTestClient(func(req *http.Request) *http.Response {
 			// Test request parameters
 			return &http.Response{
+				StatusCode: http.StatusOK,
 				// Send response to be tested
 				Body: ioutil.NopCloser(bytes.NewBufferString(`{
 	 			"jwt": "eyJhbGciOiJIU",
@@ -87,6 +88,7 @@ func TestAdminUserAndCreateRecordWithRoundTripper(t *testing.T) {
 		client2 := NewTestClient(func(req *http.Request) *http.Response {
 			// Test request parameters
 			return &http.Response{
+				StatusCode: http.StatusOK,
 				// Send response to be tested
 				Body: ioutil.NopCloser(bytes.NewBufferString(`{
 		"id" : 1,
@@ -106,6 +108,7 @@ func TestAdminUserAndCreateRecordWithRoundTripper(t *testing.T) {
 		client2 := NewTestClient(func(req *http.Request) *http.Response {
 			// Test request parameters
 			return &http.Response{
+				StatusCode: http.StatusOK,
 				// Send response to be tested
 				Body: ioutil.NopCloser(bytes.NewBufferString(`{
 		"id" : 1,
@@ -137,14 +140,16 @@ func TestCreateAdminUserError(t *testing.T) {
 	client := NewTestClient(func(req *http.Request) *http.Response {
 		// Test request parameters
 		return &http.Response{
+			StatusCode: http.StatusInternalServerError,
 			// Send response to be tested
 			Body: ioutil.NopCloser(bytes.NewBufferString(`OK`)),
 		}
 	})
 	adminUserValues := map[string]string{"username": "strapi"}
 	token, err := createAdminUser(client, testURL, adminUserValues)
+	require.Error(t, err)
 	require.Equal(t, "", token)
-	require.Contains(t, err.Error(), "invalid character")
+	require.Contains(t, err.Error(), "resp status 500 not equal 200")
 
 	parameters := &strapiDemoParameters{client: client, adminURL: testURL}
 
@@ -158,20 +163,6 @@ func TestCreateAdminUserError(t *testing.T) {
 	err = createRecord(client, token, testURL+studentCardsEndpoint, make(chan int))
 	require.NotNil(t, err.Error())
 	require.Contains(t, err.Error(), "json: unsupported type: chan int")
-
-	t.Run("add the admin user ", func(t *testing.T) {
-		client := NewTestClient(func(req *http.Request) *http.Response {
-			// Test request parameters
-			return &http.Response{
-				StatusCode: 400,
-			}
-		})
-		adminUserValues := map[string]string{"username": "strapi"}
-		token, err := createAdminUser(client, testURL, adminUserValues)
-		require.NotNil(t, token)
-		require.NotNil(t, err)
-		require.Contains(t, err.Error(), "error posting the admin user:")
-	})
 }
 
 func TestCreateRecord(t *testing.T) {

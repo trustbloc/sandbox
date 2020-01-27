@@ -35,10 +35,10 @@ unit-test:
 	@scripts/check_unit.sh
 
 
-sandbox-start: clean issuer-rest-docker rp-rest-docker generate-test-keys
+demo-start: clean issuer-rest-docker rp-rest-docker generate-test-keys
 	@scripts/sandbox_start.sh
 
-sandbox-stop:
+demo-stop:
 	@scripts/sandbox_stop.sh
 
 hydra-test-app:
