@@ -62,10 +62,14 @@ services:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=secret
+    logging:
+      driver: "none"
 
   strapi:
     container_name: strapi
     image: strapi/strapi:3.0.0-beta.18.6-alpine
+    entrypoint: ""
+    command:  /bin/sh -c "/tmp/strapi_schema_configure.sh;strapi develop"
     environment:
       - DATABASE_CLIENT=mysql
       - DATABASE_HOST=db
@@ -76,7 +80,7 @@ services:
     ports:
       - 1337:1337
     volumes:
-      - ../cms/app:/srv/app
+      - ./strapi_schema_configure.sh:/tmp/strapi_schema_configure.sh
     depends_on:
       - db
 
@@ -90,8 +94,8 @@ services:
       MYSQL_USER: strapi
       MYSQL_PASSWORD: secret
       MYSQL_ROOT_PASSWORD: strapi
-    volumes:
-      - ../cms/db:/var/lib/mysql
+    logging:
+      driver: "none"
 
   issuer.example.com:
     container_name: issuer.example.com
