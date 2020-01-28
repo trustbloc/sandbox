@@ -77,6 +77,7 @@ services:
       - DATABASE_NAME=strapi
       - DATABASE_USERNAME=strapi
       - DATABASE_PASSWORD=secret
+      - VIRTUAL_HOST=cms.trustbloc.local
     ports:
       - 1337:1337
     volumes:
@@ -109,10 +110,12 @@ services:
       - OAUTH2_ISSUER_CLIENT_SECRET=secret
       - OAUTH2_ISSUER_CLIENT_SCOPES=studentcard
       - OAUTH2_ENDPOINT_TOKEN_INTROSPECTION_URL=http://hydra:4445/oauth2/introspect
-      - ISSUER_TLS_CERT_FILE=/etc/tls/ec-pubCert.pem
-      - ISSUER_TLS_KEY_FILE=/etc/tls/ec-key.pem
+      - ISSUER_TLS_CERT_FILE=/etc/tls/localhost.crt
+      - ISSUER_TLS_KEY_FILE=/etc/tls/localhost.key
       - ISSUER_CMS_URL=http://oathkeeper-proxy:4455
       - ISSUER_VCS_URL=http://vcs.example.com:8070
+      - VIRTUAL_HOST=issuer.trustbloc.local
+      - VIRTUAL_PROTO=https
     ports:
       - 5556:5556
     command: start
@@ -124,9 +127,11 @@ services:
     image: ${RP_IMAGE}:latest
     environment:
       - RP_HOST_URL=0.0.0.0:5557
-      - RP_TLS_CERT_FILE=/etc/tls/ec-pubCert.pem
-      - RP_TLS_KEY_FILE=/etc/tls/ec-key.pem
+      - RP_TLS_CERT_FILE=/etc/tls/localhost.crt
+      - RP_TLS_KEY_FILE=/etc/tls/localhost.key
       - RP_VCS_URL=http://vcs.example.com:8070
+      - VIRTUAL_HOST=rp.trustbloc.local
+      - VIRTUAL_PROTO=https
     ports:
       - 5557:5557
     command: start
@@ -147,10 +152,20 @@ services:
     image: ${USER_AGENT_WASM_IMAGE}:${USER_AGENT_WASM_IMAGE_TAG}
     environment:
       - HTTP_SERVER_HOST_URL=0.0.0.0:8091
-      - TLS_CERT_FILE=/etc/tls/ec-pubCert.pem
-      - TLS_KEY_FILE=/etc/tls/ec-key.pem
+      - TLS_CERT_FILE=/etc/tls/localhost.crt
+      - TLS_KEY_FILE=/etc/tls/localhost.key
+      - VIRTUAL_HOST=myagent.trustbloc.local
+      - VIRTUAL_PROTO=https
     ports:
       - 8091:8091
     volumes:
       - ../keys/tls:/etc/tls
     command: start
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - "${TRUSTBLOC_LOCAL_HTTPS_PORT:-8443}:443"
+    volumes:
+      - ../keys/tls:/etc/nginx/certs
+      - /var/run/docker.sock:/tmp/docker.sock:ro
