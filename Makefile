@@ -31,36 +31,55 @@ lint:
 license:
 	@scripts/check_license.sh
 
+.PHONY: unit-test
 unit-test:
 	@scripts/check_unit.sh
 
-
+.PHONY: demo-start
 demo-start: clean issuer-rest-docker rp-rest-docker generate-test-keys
 	@scripts/sandbox_start.sh
 
+.PHONY: demo-stop
 demo-stop:
 	@scripts/sandbox_stop.sh
 
+# trustbloc-local targets enable the sandbox hosts to be accessed by friendly names.
+# trustbloc-local-setup: Creates a TLS CA into ~/.trustbloc-local/sandbox/trustbloc-dev-ca.crt
+#                        Creates hosts entries into ~/.trustbloc-local/sandbox/hosts.
+#                        These fixtures can be manually imported into the cert chain and /etc/hosts.
+.PHONY: trustbloc-local-setup
+trustbloc-local-setup: trustbloc-local-remove generate-test-keys
+	@scripts/trustbloc_local_setup.sh
+
+.PHONY: trustbloc-local-remove
+trustbloc-local-remove:
+	rm -Rf ~/.trustbloc-local/
+
+.PHONY: hydra-test-app
 hydra-test-app:
 	@scripts/hydra_test_app.sh
 
+.PHONY: issuer-rest
 issuer-rest:
 	@echo "Building issuer-rest"
 	@mkdir -p ./build/bin/issuer
 	@cp -r ${ISSUER_REST_PATH}/static ./build/bin/issuer
 	@cd ${ISSUER_REST_PATH} && go build -o ../../build/bin/issuer/issuer-rest main.go
 
+.PHONY: rp-rest
 rp-rest:
 	@echo "Building rp-rest"
 	@mkdir -p ./build/bin/rp
 	@cp -r ${RP_REST_PATH}/static ./build/bin/rp
 	@cd ${RP_REST_PATH} && go build -o ../../build/bin/rp/rp-rest main.go
 
+.PHONY: strapi-build
 strapi-build:
 	@echo "Building strapi demo"
 	@mkdir -p ./build/bin
 	@cd ${STRAPI_DEMO_PATH} && go build -o ../../build/bin/strapi-demo main.go
 
+.PHONY: strapi-setup
 strapi-setup: strapi-build
 	@scripts/strapi-setup.sh
 
@@ -81,7 +100,8 @@ rp-rest-docker:
 
 .PHONY: generate-test-keys
 generate-test-keys: clean
-	@mkdir -p -p test/bdd/fixtures/keys/tls
+	@mkdir -p test/bdd/fixtures/keys/tls
+	@cp ~/.trustbloc-local/sandbox/certs/trustbloc-dev-ca.* test/bdd/fixtures/keys/tls 2>/dev/null || :
 	@docker run -i --rm \
 		-v $(abspath .):/opt/workspace/edge-sandbox \
 		--entrypoint "/opt/workspace/edge-sandbox/scripts/generate_test_keys.sh" \
