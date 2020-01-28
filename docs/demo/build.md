@@ -9,7 +9,7 @@ In order to access edge service image and user agent image you have to create pe
 Run the following command using your newly generated personal token:
 
 ```
-docker login -u <username> -p <github token with read:packages permission> docker.pkg.github.com
+docker login -u <username> -p <github token with read:packages  and repo permission> docker.pkg.github.com
 ```
 
 ## Prerequisites (for running tests and demos)

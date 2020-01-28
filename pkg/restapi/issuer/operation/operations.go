@@ -176,7 +176,29 @@ func (c *Operation) createCredential(subject []byte) ([]byte, error) {
 
 	httpClient := http.DefaultClient
 
-	return sendHTTPRequest(req, httpClient, http.StatusCreated)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = resp.Body.Close()
+		if err != nil {
+			log.Warn("failed to close response body")
+		}
+	}()
+
+	cred, err := ioutil.ReadAll(resp.Body)
+	if err == nil {
+		req, err = http.NewRequest("POST", c.vcsURL+"/store", bytes.NewBuffer(cred))
+		if err != nil {
+			return nil, err
+		}
+
+		return sendHTTPRequest(req, httpClient, http.StatusCreated)
+	}
+
+	return nil, err
 }
 
 func (c *Operation) getCMSData(tk *oauth2.Token) ([]byte, error) {

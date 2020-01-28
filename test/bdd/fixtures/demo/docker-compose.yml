@@ -143,8 +143,18 @@ services:
     image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8070
+      - EDV_REST_HOST_URL=0.0.0.0:8081
     ports:
       - 8070:8070
+    command: start
+
+  edv.example.com:
+    container_name: edv.example.com
+    image: ${EDV_IMAGE}:${EDV_IMAGE_TAG}
+    environment:
+      - EDV_HOST_URL=0.0.0.0:8081
+    ports:
+      - 8081:8081
     command: start
 
   user.agent.example.com:
