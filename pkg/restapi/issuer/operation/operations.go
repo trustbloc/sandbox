@@ -165,18 +165,44 @@ func prepareCreateCredentialRequest(data []byte) ([]byte, error) {
 
 func (c *Operation) createCredential(subject []byte) ([]byte, error) {
 	body, err := prepareCreateCredentialRequest(subject)
+
 	if err != nil {
 		return nil, err
 	}
 
 	req, err := http.NewRequest("POST", c.vcsURL+"/credential", bytes.NewBuffer(body))
+
 	if err != nil {
 		return nil, err
 	}
 
 	httpClient := http.DefaultClient
+	cred, err := sendHTTPRequest(req, httpClient, http.StatusCreated)
 
-	return sendHTTPRequest(req, httpClient, http.StatusCreated)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create credential: %s", err.Error())
+	}
+
+	if err := c.storeCredential(cred, httpClient); err != nil {
+		return nil, fmt.Errorf("failed to store credential: %s", err.Error())
+	}
+
+	return cred, nil
+}
+
+func (c *Operation) storeCredential(cred []byte, client *http.Client) error {
+	storeReq, err := http.NewRequest("POST", c.vcsURL+"/store", bytes.NewBuffer(cred))
+
+	if err != nil {
+		return err
+	}
+
+	_, err = sendHTTPRequest(storeReq, client, http.StatusCreated)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Operation) getCMSData(tk *oauth2.Token) ([]byte, error) {
