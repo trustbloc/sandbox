@@ -121,7 +121,17 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 	cred, err := c.createCredential(data)
 	if err != nil {
 		log.Error(err)
-		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create credential: %s", err.Error()))
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create credential: %s", err.Error()))
+
+		return
+	}
+
+	err = c.storeCredential(cred)
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to store credential: %s", err.Error()))
 
 		return
 	}
@@ -179,28 +189,45 @@ func (c *Operation) createCredential(subject []byte) ([]byte, error) {
 	}
 
 	httpClient := http.DefaultClient
-	cred, err := sendHTTPRequest(req, httpClient, http.StatusCreated)
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to create credential: %s", err.Error())
-	}
-
-	return cred, nil
+	return sendHTTPRequest(req, httpClient, http.StatusCreated)
 }
 
-func (c *Operation) storeCredential(cred []byte, client *http.Client) error {
-	storeReq, err := http.NewRequest("POST", c.vcsURL+"/store", bytes.NewBuffer(cred))
+func (c *Operation) storeCredential(cred []byte) error {
+	storeVCBytes, err := prepareStoreVCRequest(cred, c.vcsProfile)
+	if err != nil {
+		return err
+	}
+
+	storeReq, err := http.NewRequest("POST", c.vcsURL+"/store", bytes.NewBuffer(storeVCBytes))
 
 	if err != nil {
 		return err
 	}
 
-	_, err = sendHTTPRequest(storeReq, client, http.StatusCreated)
+	httpClient := http.DefaultClient
+
+	_, err = sendHTTPRequest(storeReq, httpClient, http.StatusOK)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+func prepareStoreVCRequest(cred []byte, profile string) ([]byte, error) {
+	var verifiableCredential map[string]interface{}
+
+	err := json.Unmarshal(cred, &verifiableCredential)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal verifiable Credential: %s", err.Error())
+	}
+
+	storeVCRequest := storeVC{
+		Credential: verifiableCredential,
+		Profile:    profile,
+	}
+
+	return json.Marshal(storeVCRequest)
 }
 
 func (c *Operation) getCMSData(tk *oauth2.Token) ([]byte, error) {
@@ -262,4 +289,9 @@ type createCredential struct {
 	Subject map[string]interface{} `json:"credentialSubject"`
 	Type    []string               `json:"type,omitempty"`
 	Profile string                 `json:"profile,omitempty"`
+}
+
+type storeVC struct {
+	Credential map[string]interface{} `json:"credential"`
+	Profile    string                 `json:"profile,omitempty"`
 }
