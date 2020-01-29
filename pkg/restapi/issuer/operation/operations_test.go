@@ -149,6 +149,24 @@ func TestOperation_CreateCredential_Error(t *testing.T) {
 	require.Contains(t, err.Error(), "unexpected end of JSON input")
 }
 
+func TestOperation_StoreCredential_Error(t *testing.T) {
+	t.Run("store credential error invalid url ", func(t *testing.T) {
+		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			VCSURL: "%&^$"})
+		httpClient := http.DefaultClient
+		err := svc.storeCredential([]byte(""), httpClient)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid URL escape")
+	})
+	t.Run("store credential error unsupported protocol scheme ", func(t *testing.T) {
+		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}})
+		httpClient := http.DefaultClient
+		err := svc.storeCredential([]byte(""), httpClient)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "unsupported protocol scheme")
+	})
+}
+
 func TestOperation_GetCMSData_InvalidURL(t *testing.T) {
 	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 		CMSURL: "xyz:cms"})
