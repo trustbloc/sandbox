@@ -56,9 +56,9 @@ Third Party:
 
 After you have started sandbox components using 'make demo-start' set up test data using following command:
 
-make strapi-setup
+make demo-setup
 
-This command will also update ORY Oathkeeper configuration (access rule file) with Strapi admin token.
+This command will insert demo data into CMS, update ORY Oathkeeper configuration (access rule file) with Strapi admin token and setup up issuer profile for VC service.
 
 You can verify student card data setup by logging in to [admin console](http://localhost:1337/admin) with user strapi (password: strapi).
 
