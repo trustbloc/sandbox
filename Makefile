@@ -114,3 +114,4 @@ clean: clean-build
 clean-build:
 	@rm -Rf ./build
 	@rm -Rf ./test/bdd/fixtures/keys
+	@rm -Rf ./test/bdd/fixtures/oathkeeper/rules/resource-server.json
