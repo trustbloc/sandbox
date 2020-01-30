@@ -26,7 +26,6 @@ import (
 const (
 	login    = "/login"
 	callback = "/callback"
-	profile  = "issuer"
 )
 
 // Handler http handler for each controller API endpoint
@@ -43,6 +42,7 @@ type Operation struct {
 	tokenResolver tokenResolver
 	cmsURL        string
 	vcsURL        string
+	vcsProfile    string
 	receiveVCHTML string
 }
 
@@ -52,6 +52,7 @@ type Config struct {
 	TokenResolver tokenResolver
 	CMSURL        string
 	VCSURL        string
+	VCSProfile    string
 	ReceiveVCHTML string
 }
 
@@ -77,6 +78,7 @@ func New(config *Config) *Operation {
 		tokenResolver: config.TokenResolver,
 		cmsURL:        config.CMSURL,
 		vcsURL:        config.VCSURL,
+		vcsProfile:    config.VCSProfile,
 		receiveVCHTML: config.ReceiveVCHTML}
 	svc.registerHandler()
 
@@ -139,7 +141,7 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func prepareCreateCredentialRequest(data []byte) ([]byte, error) {
+func (c *Operation) prepareCreateCredentialRequest(data []byte) ([]byte, error) {
 	var subject map[string]interface{}
 
 	err := json.Unmarshal(data, &subject)
@@ -157,14 +159,14 @@ func prepareCreateCredentialRequest(data []byte) ([]byte, error) {
 	req := &createCredential{
 		Subject: subject,
 		Type:    []string{"VerifiableCredential", "StudentCard"},
-		Profile: profile,
+		Profile: c.vcsProfile,
 	}
 
 	return json.Marshal(req)
 }
 
 func (c *Operation) createCredential(subject []byte) ([]byte, error) {
-	body, err := prepareCreateCredentialRequest(subject)
+	body, err := c.prepareCreateCredentialRequest(subject)
 
 	if err != nil {
 		return nil, err
