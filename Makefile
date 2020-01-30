@@ -80,8 +80,8 @@ strapi-build:
 	@cd ${STRAPI_DEMO_PATH} && go build -o ../../build/bin/strapi-demo main.go
 
 .PHONY: strapi-setup
-strapi-setup: strapi-build
-	@scripts/strapi-setup.sh
+demo-setup: strapi-build
+	@scripts/demo-setup.sh
 
 
 .PHONY: issuer-rest-docker
