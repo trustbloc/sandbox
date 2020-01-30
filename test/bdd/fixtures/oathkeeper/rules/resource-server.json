@@ -26,7 +26,7 @@
       "config": {
         "headers": {
           "X-User": "{{ print .Subject }}",
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaXNBZG1pbiI6dHJ1ZSwiaWF0IjoxNTgwMzM0Mjc5LCJleHAiOjE1ODI5MjYyNzl9.4Qw-sWnD6aT9pcQr_jKB9jsF_N9lZD6IPdKzAGR7TmY"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaXNBZG1pbiI6dHJ1ZSwiaWF0IjoxNTgwNDA1MjEzLCJleHAiOjE1ODI5OTcyMTN9.X6Cdt2koVg4tvPrWOoVtwO062sCXnP3d4XUrpBaEuZg"
         }
       }
     }
