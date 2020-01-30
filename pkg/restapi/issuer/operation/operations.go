@@ -158,8 +158,6 @@ func prepareCreateCredentialRequest(data []byte) ([]byte, error) {
 		Subject: subject,
 		Type:    []string{"VerifiableCredential", "StudentCard"},
 		Profile: profile,
-		// TODO
-		Issuer: issuer{ID: "did:example:76e12ec712ebc6f1c221ebfeb1f", Name: "Example University"},
 	}
 
 	return json.Marshal(req)
@@ -262,11 +260,4 @@ type createCredential struct {
 	Subject map[string]interface{} `json:"credentialSubject"`
 	Type    []string               `json:"type,omitempty"`
 	Profile string                 `json:"profile,omitempty"`
-	Issuer  issuer                 `json:"issuer"`
-}
-
-// issuer of the Verifiable Credential
-type issuer struct {
-	ID   string
-	Name string
 }
