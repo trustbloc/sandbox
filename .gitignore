@@ -30,4 +30,6 @@ build
 
 test/bdd/fixtures/keys/tls
 
+test/bdd/fixtures/oathkeeper/rules/resource-server.json
+
 
