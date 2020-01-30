@@ -88,6 +88,12 @@ const (
 	vcsURLFlagShorthand = "v"
 	vcsURLFlagUsage     = "VC Service URL. Format: HostName:Port."
 	vcsURLEnvKey        = "ISSUER_VCS_URL"
+
+	// vcs profile name flags
+	vcsProfileFlagName      = "vcs-profile"
+	vcsProfileFlagShorthand = "n"
+	vcsProfileFlagUsage     = "Profile name for VC service."
+	vcsProfileEnvKey        = "ISSUER_VCS_PROFILE"
 )
 
 type server interface {
@@ -111,6 +117,7 @@ type issuerParameters struct {
 	tlsKeyFile            string
 	cmsURL                string
 	vcsURL                string
+	vcsProfile            string
 }
 
 // GetStartCmd returns the Cobra start command.
@@ -163,6 +170,11 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			vcsProfile, err := cmdutils.GetUserSetVar(cmd, vcsProfileFlagName, vcsProfileEnvKey, false)
+			if err != nil {
+				return err
+			}
+
 			parameters := &issuerParameters{
 				srv:                   srv,
 				hostURL:               strings.TrimSpace(hostURL),
@@ -172,6 +184,7 @@ func createStartCmd(srv server) *cobra.Command {
 				tlsKeyFile:            tlsKeyFile,
 				cmsURL:                strings.TrimSpace(cmsURL),
 				vcsURL:                strings.TrimSpace(vcsURL),
+				vcsProfile:            strings.TrimSpace(vcsProfile),
 			}
 
 			return startIssuer(parameters)
@@ -193,6 +206,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(tlsKeyFileFlagName, tlsKeyFileFlagShorthand, "", tlsKeyFileFlagUsage)
 	startCmd.Flags().StringP(cmsURLFlagName, cmsURLFlagShorthand, "", cmsURLFlagUsage)
 	startCmd.Flags().StringP(vcsURLFlagName, vcsURLFlagShorthand, "", vcsURLFlagUsage)
+	startCmd.Flags().StringP(vcsProfileFlagName, vcsProfileFlagShorthand, "", vcsProfileFlagUsage)
 }
 
 func startIssuer(parameters *issuerParameters) error {
@@ -201,6 +215,7 @@ func startIssuer(parameters *issuerParameters) error {
 		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL),
 		CMSURL:        parameters.cmsURL,
 		VCSURL:        parameters.vcsURL,
+		VCSProfile:    parameters.vcsProfile,
 		ReceiveVCHTML: "static/receiveVC.html"}
 
 	issuerService, err := issuer.New(cfg)
