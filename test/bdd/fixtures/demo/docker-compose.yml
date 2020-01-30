@@ -114,6 +114,7 @@ services:
       - ISSUER_TLS_KEY_FILE=/etc/tls/localhost.key
       - ISSUER_CMS_URL=http://oathkeeper-proxy:4455
       - ISSUER_VCS_URL=http://vcs.example.com:8070
+      - ISSUER_VCS_PROFILE=issuer
       - VIRTUAL_HOST=issuer.trustbloc.local
       - VIRTUAL_PROTO=https
     ports:
