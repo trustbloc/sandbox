@@ -52,13 +52,9 @@ Third Party:
 - [Strapi](https://strapi.io/documentation/3.0.0-beta.x/getting-started/introduction.html) Content Management Service
 
 
-## Strapi Data Setup
+## Demo Data
 
-After you have started sandbox components using 'make demo-start' set up test data using following command:
-
-make demo-setup
-
-This command will insert demo data into CMS, update ORY Oathkeeper configuration (access rule file) with Strapi admin token and setup up issuer profile for VC service.
+'make demo-start' will also insert demo data into CMS, update ORY Oathkeeper configuration (access rule file) with Strapi admin token and setup up issuer profile for VC service.
 
 You can verify student card data setup by logging in to [admin console](http://localhost:1337/admin) with user strapi (password: strapi).
 

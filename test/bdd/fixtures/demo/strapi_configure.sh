@@ -71,4 +71,4 @@ echo "STRAPI SETUP IS COMPLETED"
 # Copy token to oathkeeper
 sed -e "s/{TOKEN}/$token/g" /oathkeeper/rules/resource-server-template.json > /oathkeeper/rules/resource-server.json
 
-echo "TOKEN IS COPYED"
+echo "TOKEN IS COPIED"
