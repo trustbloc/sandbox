@@ -69,10 +69,6 @@ rp-rest:
 	@cp -r ${RP_REST_PATH}/static ./build/bin/rp
 	@cd ${RP_REST_PATH} && go build -o ../../build/bin/rp/rp-rest main.go
 
-.PHONY: demo-setup
-demo-setup:
-	@scripts/demo-setup.sh
-
 .PHONY: issuer-rest-docker
 issuer-rest-docker:
 	@echo "Building issuer rest docker image"
