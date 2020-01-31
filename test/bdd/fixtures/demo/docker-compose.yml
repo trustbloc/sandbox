@@ -67,9 +67,9 @@ services:
 
   strapi:
     container_name: strapi
-    image: strapi/strapi:3.0.0-beta.18.6-alpine
+    image: strapi/strapi:3.0.0-beta.18.6
     entrypoint: ""
-    command:  /bin/sh -c "/tmp/strapi_schema_configure.sh;strapi develop"
+    command:  /bin/sh -c "/usr/local/bin/docker-entrypoint.sh strapi;/tmp/strapi_configure.sh& strapi develop"
     environment:
       - DATABASE_CLIENT=mysql
       - DATABASE_HOST=db
@@ -81,7 +81,8 @@ services:
     ports:
       - 1337:1337
     volumes:
-      - ./strapi_schema_configure.sh:/tmp/strapi_schema_configure.sh
+      - ./strapi_configure.sh:/tmp/strapi_configure.sh
+      - ../oathkeeper:/oathkeeper
     depends_on:
       - db
 
