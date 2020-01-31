@@ -215,15 +215,8 @@ func (c *Operation) storeCredential(cred []byte) error {
 	return nil
 }
 func prepareStoreVCRequest(cred []byte, profile string) ([]byte, error) {
-	var verifiableCredential map[string]interface{}
-
-	err := json.Unmarshal(cred, &verifiableCredential)
-	if err != nil {
-		return nil, fmt.Errorf("unmarshal verifiable Credential: %s", err.Error())
-	}
-
 	storeVCRequest := storeVC{
-		Credential: verifiableCredential,
+		Credential: string(cred),
 		Profile:    profile,
 	}
 
@@ -292,6 +285,6 @@ type createCredential struct {
 }
 
 type storeVC struct {
-	Credential map[string]interface{} `json:"credential"`
-	Profile    string                 `json:"profile,omitempty"`
+	Credential string `json:"credential"`
+	Profile    string `json:"profile,omitempty"`
 }
