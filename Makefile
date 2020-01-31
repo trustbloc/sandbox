@@ -55,10 +55,6 @@ trustbloc-local-setup: trustbloc-local-remove generate-test-keys
 trustbloc-local-remove:
 	rm -Rf ~/.trustbloc-local/
 
-.PHONY: hydra-test-app
-hydra-test-app:
-	@scripts/hydra_test_app.sh
-
 .PHONY: issuer-rest
 issuer-rest:
 	@echo "Building issuer-rest"
@@ -73,16 +69,9 @@ rp-rest:
 	@cp -r ${RP_REST_PATH}/static ./build/bin/rp
 	@cd ${RP_REST_PATH} && go build -o ../../build/bin/rp/rp-rest main.go
 
-.PHONY: strapi-build
-strapi-build:
-	@echo "Building strapi demo"
-	@mkdir -p ./build/bin
-	@cd ${STRAPI_DEMO_PATH} && go build -o ../../build/bin/strapi-demo main.go
-
-.PHONY: strapi-setup
-demo-setup: strapi-build
+.PHONY: demo-setup
+demo-setup:
 	@scripts/demo-setup.sh
-
 
 .PHONY: issuer-rest-docker
 issuer-rest-docker:
