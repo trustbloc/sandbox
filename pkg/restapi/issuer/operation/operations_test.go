@@ -231,12 +231,6 @@ func TestOperation_StoreCredential(t *testing.T) {
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "201 Created")
 	})
-	t.Run("store credential error unmarshal verifiable Credential ", func(t *testing.T) {
-		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}})
-		err := svc.storeCredential([]byte(""))
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "unmarshal verifiable Credential: unexpected end of JSON input")
-	})
 }
 func TestOperation_GetCMSData_InvalidURL(t *testing.T) {
 	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
@@ -259,14 +253,6 @@ func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
 	require.Contains(t, err.Error(), "invalid character")
 	require.Nil(t, data)
 }
-
-func TestPrepareStoreVCRequest(t *testing.T) {
-	s, err := prepareStoreVCRequest(nil, "demo")
-	require.Error(t, err)
-	require.Nil(t, s)
-	require.Contains(t, err.Error(), "unmarshal verifiable Credential: unexpected end of JSON input")
-}
-
 func TestOperation_CreateCredential_InvalidURL(t *testing.T) {
 	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 		VCSURL: "xyz:vcs"})
