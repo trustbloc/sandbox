@@ -7,10 +7,4 @@
 
 set -e
 
-# This is assuming strapi is running on default 1337 port
-cd build/bin
-./strapi-demo create-demo-data --host-url http://localhost:1337
-
-sed -e "s/{TOKEN}/$(sed 's:/:\\/:g' ./strapi.txt)/" ../../test/bdd/fixtures/oathkeeper/rules/resource-server-template.json > ../../test/bdd/fixtures/oathkeeper/rules/resource-server.json
-
 curl -d '{"name":"demo", "did":"did:demo:abc", "uri":"http://demo.com", "signatureType":"Ed25519Signature2018", "creator":"did:demo:abc#key1" }' -H "Content-Type: application/json" -X POST http://localhost:8070/profile
