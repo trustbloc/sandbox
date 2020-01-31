@@ -26,6 +26,24 @@ import (
 
 const authHeader = "Bearer ABC"
 
+const testCredentialRequest = `{
+"context":"https://www.w3.org/2018/credentials/examples/v1",
+"type": [
+    "VerifiableCredential",
+    "UniversityDegreeCredential"
+  ],
+  "credentialSubject": {
+    "id": "did:example:ebfeb1f712ebc6f1c276e12ec21",
+    "degree": {
+      "type": "BachelorDegree",
+      "university": "MIT"
+    },
+    "name": "Jayden Doe",
+    "spouse": "did:example:c276e12ec21ebfeb1f712ebc6f1"
+  },
+  "profile": "test"
+}`
+
 func TestOperation_Login(t *testing.T) {
 	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
 	handler := getHandlerWithConfig(t, login, cfg)
@@ -42,10 +60,20 @@ func TestOperation_Callback(t *testing.T) {
 	}))
 	defer cms.Close()
 
-	vcs := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusCreated)
-		fmt.Fprintln(w, "{}")
-	}))
+	router := mux.NewRouter()
+	router.HandleFunc("/store", func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(http.StatusOK)
+	})
+	router.HandleFunc("/credential", func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(http.StatusCreated)
+		_, err := writer.Write([]byte(testCredentialRequest))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	vcs := httptest.NewServer(router)
+
 	defer vcs.Close()
 
 	headers := make(map[string]string)
@@ -140,33 +168,76 @@ func TestOperation_Callback_CreateCredential_Error(t *testing.T) {
 	require.Contains(t, data.String(), "unsupported protocol scheme")
 }
 
+func TestOperation_Callback_StoreCredential_Error(t *testing.T) {
+	cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	defer cms.Close()
+
+	vcs := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprintln(w, "{}")
+	}))
+
+	defer vcs.Close()
+
+	headers := make(map[string]string)
+	headers["Authorization"] = authHeader
+
+	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		CMSURL: cms.URL, VCSURL: vcs.URL}
+	handler := getHandlerWithConfig(t, callback, cfg)
+
+	data, status, err := handleRequest(handler, headers, callback)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusInternalServerError, status)
+	require.Contains(t, data.String(), "failed to store credential")
+}
+
 func TestOperation_CreateCredential_Error(t *testing.T) {
 	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}})
-
 	vc, err := svc.createCredential([]byte(""))
 	require.Error(t, err)
 	require.Nil(t, vc)
 	require.Contains(t, err.Error(), "unexpected end of JSON input")
 }
 
-func TestOperation_StoreCredential_Error(t *testing.T) {
+func TestOperation_StoreCredential(t *testing.T) {
+	t.Run("store credential success", func(t *testing.T) {
+		vcs := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintln(w, "{}")
+		}))
+		defer vcs.Close()
+		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}, VCSURL: vcs.URL})
+		err := svc.storeCredential([]byte(testCredentialRequest))
+		require.NoError(t, err)
+	})
 	t.Run("store credential error invalid url ", func(t *testing.T) {
 		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-			VCSURL: "%&^$"})
-		httpClient := http.DefaultClient
-		err := svc.storeCredential([]byte(""), httpClient)
+			VCSURL: "%%&^$"})
+		err := svc.storeCredential([]byte(testCredentialRequest))
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid URL escape")
 	})
-	t.Run("store credential error unsupported protocol scheme ", func(t *testing.T) {
-		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}})
-		httpClient := http.DefaultClient
-		err := svc.storeCredential([]byte(""), httpClient)
+	t.Run("store credential error incorrect status", func(t *testing.T) {
+		vcs := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusCreated)
+			fmt.Fprintln(w, "{}")
+		}))
+		defer vcs.Close()
+		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}, VCSURL: vcs.URL})
+		err := svc.storeCredential([]byte(testCredentialRequest))
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "unsupported protocol scheme")
+		require.Contains(t, err.Error(), "201 Created")
+	})
+	t.Run("store credential error unmarshal verifiable Credential ", func(t *testing.T) {
+		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}})
+		err := svc.storeCredential([]byte(""))
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "unmarshal verifiable Credential: unexpected end of JSON input")
 	})
 }
-
 func TestOperation_GetCMSData_InvalidURL(t *testing.T) {
 	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 		CMSURL: "xyz:cms"})
@@ -187,6 +258,13 @@ func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid character")
 	require.Nil(t, data)
+}
+
+func TestPrepareStoreVCRequest(t *testing.T) {
+	s, err := prepareStoreVCRequest(nil, "demo")
+	require.Error(t, err)
+	require.Nil(t, s)
+	require.Contains(t, err.Error(), "unmarshal verifiable Credential: unexpected end of JSON input")
 }
 
 func TestOperation_CreateCredential_InvalidURL(t *testing.T) {
