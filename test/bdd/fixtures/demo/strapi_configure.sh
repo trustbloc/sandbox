@@ -17,6 +17,11 @@ GENERATE_TRANSCRIPT_COMMAND="strapi generate:api transcripts StudentID:string Na
 
 $GENERATE_TRANSCRIPT_COMMAND
 
+# generate the travel card api and model
+GENERATE_TRAVELCARD_COMMAND="strapi generate:api travelcards TravelCardID:string GivenName:string Surname:string Sex:string Country:string DOB:string IssueDate:string CardExpires:string"
+
+$GENERATE_TRAVELCARD_COMMAND
+
 sleep 30
 
 # Create admin user
@@ -62,6 +67,17 @@ result=$(curl --header "Content-Type: application/json" --header "Authorization:
 if [ "$result" != "null" ]
    then
         echo "error insert studentcards data in strapi: $result"
+fi
+
+# Add travel card data
+result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
+   --request POST \
+   --data '{"travelcardid":"123-456-765","givenname":"Foo","surname":"Bar","sex":"M","country":"Canada","dob":"12-06-1989","issuedate":"01-06-2018","cardexpires":"01-06-2023"}' \
+   http://strapi:1337/travelcards | jq  -r ".error")
+# check for error
+if [ "$result" != "null" ]
+   then
+        echo "error insert travelcards data in strapi: $result"
 fi
 
 echo "STRAPI SETUP IS COMPLETED"
