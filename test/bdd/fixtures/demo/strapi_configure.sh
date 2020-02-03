@@ -5,8 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-apt-get update
-apt-get -y install jq
+apk --no-cache add curl jq
 
 # generate the student cards api and model
 GENERATE_STUDENTAPI_COMMAND="strapi generate:api studentcards StudentID:string Name:string Email:string University:string Semester:string"
