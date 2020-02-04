@@ -242,7 +242,6 @@ func TestOperation_GetCMSData_InvalidURL(t *testing.T) {
 	require.Contains(t, err.Error(), "unsupported protocol scheme")
 	require.Nil(t, data)
 }
-
 func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
 	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 		CMSURL: "http://cms\\"})
