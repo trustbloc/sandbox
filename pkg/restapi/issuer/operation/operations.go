@@ -10,11 +10,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -88,6 +88,12 @@ func New(config *Config) *Operation {
 // Login using oauth2, will redirect to Auth Code URL
 func (c *Operation) Login(w http.ResponseWriter, r *http.Request) {
 	u := c.tokenIssuer.AuthCodeURL(w)
+
+	scope := r.URL.Query()["scope"]
+	if len(scope) > 0 {
+		u += "&scope=" + scope[0]
+	}
+
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 }
 
@@ -102,7 +108,7 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// user info from token will be used for to retrieve data from cms
-	_, err = c.tokenResolver.Resolve(tk.AccessToken)
+	info, err := c.tokenResolver.Resolve(tk.AccessToken)
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get token info: %s", err.Error()))
@@ -110,7 +116,7 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := c.getCMSData(tk)
+	data, err := c.getCMSData(tk, info)
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get user cms data: %s", err.Error()))
@@ -118,7 +124,7 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cred, err := c.createCredential(data)
+	cred, err := c.createCredential(data, info)
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -151,7 +157,15 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *Operation) prepareCreateCredentialRequest(data []byte) ([]byte, error) {
+func (c *Operation) getCMSURL(info *token.Introspection) string {
+	// we have only one user for now ...
+	userID := "1"
+
+	// scope StudentCard matches studentcards in CMS etc.
+	return c.cmsURL + "/" + strings.ToLower(info.Scope) + "s/" + userID
+}
+
+func (c *Operation) prepareCreateCredentialRequest(data []byte, info *token.Introspection) ([]byte, error) {
 	var subject map[string]interface{}
 
 	err := json.Unmarshal(data, &subject)
@@ -168,15 +182,15 @@ func (c *Operation) prepareCreateCredentialRequest(data []byte) ([]byte, error) 
 
 	req := &createCredential{
 		Subject: subject,
-		Type:    []string{"VerifiableCredential", "StudentCard"},
+		Type:    []string{"VerifiableCredential", info.Scope},
 		Profile: c.vcsProfile,
 	}
 
 	return json.Marshal(req)
 }
 
-func (c *Operation) createCredential(subject []byte) ([]byte, error) {
-	body, err := c.prepareCreateCredentialRequest(subject)
+func (c *Operation) createCredential(subject []byte, info *token.Introspection) ([]byte, error) {
+	body, err := c.prepareCreateCredentialRequest(subject, info)
 
 	if err != nil {
 		return nil, err
@@ -223,10 +237,12 @@ func prepareStoreVCRequest(cred []byte, profile string) ([]byte, error) {
 	return json.Marshal(storeVCRequest)
 }
 
-func (c *Operation) getCMSData(tk *oauth2.Token) ([]byte, error) {
+func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) ([]byte, error) {
+	url := c.getCMSURL(info)
+
 	httpClient := c.tokenIssuer.Client(context.Background(), tk)
 
-	req, err := http.NewRequest("GET", c.cmsURL+"/studentcards/1", nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +264,12 @@ func sendHTTPRequest(req *http.Request, client *http.Client, status int) ([]byte
 	}()
 
 	if resp.StatusCode != status {
-		return nil, errors.New(resp.Status)
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Warnf("failed to read response body for status: %d", resp.StatusCode)
+		}
+
+		return nil, fmt.Errorf("%s: %s", resp.Status, string(body))
 	}
 
 	return ioutil.ReadAll(resp.Body)
