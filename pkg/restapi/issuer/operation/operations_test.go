@@ -52,6 +52,30 @@ func TestOperation_Login(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, buff.String(), "Temporary Redirect")
 	require.Equal(t, http.StatusTemporaryRedirect, status)
+
+	buff, status, err = handleRequest(handler, nil, login+"?scope=test")
+	require.NoError(t, err)
+	require.Contains(t, buff.String(), "Temporary Redirect")
+	require.Equal(t, http.StatusTemporaryRedirect, status)
+}
+
+func TestOperation_Login3(t *testing.T) {
+	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
+	handler := getHandlerWithConfig(t, login, cfg)
+
+	req, err := http.NewRequest(handler.Method(), login+"?scope=test", bytes.NewBuffer([]byte("")))
+	require.NoError(t, err)
+
+	router := mux.NewRouter()
+	router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
+
+	rr := httptest.NewRecorder()
+
+	router.ServeHTTP(rr, req)
+
+	require.NoError(t, err)
+	require.Contains(t, rr.Body.String(), "Temporary Redirect")
+	require.Equal(t, http.StatusTemporaryRedirect, rr.Code)
 }
 
 func TestOperation_Callback(t *testing.T) {
@@ -196,7 +220,7 @@ func TestOperation_Callback_StoreCredential_Error(t *testing.T) {
 
 func TestOperation_CreateCredential_Error(t *testing.T) {
 	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}})
-	vc, err := svc.createCredential([]byte(""))
+	vc, err := svc.createCredential([]byte(""), &token.Introspection{})
 	require.Error(t, err)
 	require.Nil(t, vc)
 	require.Contains(t, err.Error(), "unexpected end of JSON input")
@@ -237,7 +261,7 @@ func TestOperation_GetCMSData_InvalidURL(t *testing.T) {
 		CMSURL: "xyz:cms"})
 	require.NotNil(t, svc)
 
-	data, err := svc.getCMSData(&oauth2.Token{})
+	data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unsupported protocol scheme")
 	require.Nil(t, data)
@@ -247,7 +271,7 @@ func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
 		CMSURL: "http://cms\\"})
 	require.NotNil(t, svc)
 
-	data, err := svc.getCMSData(&oauth2.Token{})
+	data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid character")
 	require.Nil(t, data)
@@ -257,7 +281,7 @@ func TestOperation_CreateCredential_InvalidURL(t *testing.T) {
 		VCSURL: "xyz:vcs"})
 	require.NotNil(t, svc)
 
-	data, err := svc.createCredential([]byte("{}"))
+	data, err := svc.createCredential([]byte("{}"), &token.Introspection{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unsupported protocol scheme")
 	require.Nil(t, data)
@@ -268,7 +292,7 @@ func TestOperation_CreateCredential_InvalidHTTPRequest(t *testing.T) {
 		VCSURL: "http://vcs\\"})
 	require.NotNil(t, svc)
 
-	data, err := svc.createCredential([]byte("{}"))
+	data, err := svc.createCredential([]byte("{}"), &token.Introspection{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid character")
 	require.Nil(t, data)

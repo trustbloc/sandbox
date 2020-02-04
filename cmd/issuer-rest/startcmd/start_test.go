@@ -50,7 +50,6 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 		args = append(args, clientRedirectURLArg()...)
 		args = append(args, clientIDArg()...)
 		args = append(args, clientSecretArg()...)
-		args = append(args, clientScopesArg()...)
 		args = append(args, []string{flag + introspectionURLFlagName, ""}...)
 		startCmd.SetArgs(args)
 
@@ -69,7 +68,6 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 		args = append(args, clientRedirectURLArg()...)
 		args = append(args, clientIDArg()...)
 		args = append(args, clientSecretArg()...)
-		args = append(args, clientScopesArg()...)
 		args = append(args, tokenIntrospectionURLArg()...)
 		args = append(args, []string{flag + tlsCertFileFlagName, ""}...)
 		startCmd.SetArgs(args)
@@ -89,7 +87,6 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 		args = append(args, clientRedirectURLArg()...)
 		args = append(args, clientIDArg()...)
 		args = append(args, clientSecretArg()...)
-		args = append(args, clientScopesArg()...)
 		args = append(args, tokenIntrospectionURLArg()...)
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, []string{flag + tlsKeyFileFlagName, ""}...)
@@ -110,7 +107,6 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 		args = append(args, clientRedirectURLArg()...)
 		args = append(args, clientIDArg()...)
 		args = append(args, clientSecretArg()...)
-		args = append(args, clientScopesArg()...)
 		args = append(args, tokenIntrospectionURLArg()...)
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, tlsKeyFileArg()...)
@@ -132,7 +128,6 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 		args = append(args, clientRedirectURLArg()...)
 		args = append(args, clientIDArg()...)
 		args = append(args, clientSecretArg()...)
-		args = append(args, clientScopesArg()...)
 		args = append(args, tokenIntrospectionURLArg()...)
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, tlsKeyFileArg()...)
@@ -155,7 +150,6 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 		args = append(args, clientRedirectURLArg()...)
 		args = append(args, clientIDArg()...)
 		args = append(args, clientSecretArg()...)
-		args = append(args, clientScopesArg()...)
 		args = append(args, tokenIntrospectionURLArg()...)
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, tlsKeyFileArg()...)
@@ -263,7 +257,7 @@ func TestStartCmdWithMissingClientScopesArg(t *testing.T) {
 
 	err := startCmd.Execute()
 	require.Contains(t, err.Error(),
-		"Neither client-scopes (command line flag) nor OAUTH2_ISSUER_CLIENT_SCOPES (environment variable) have been set.")
+		"Neither introspect-url (command line flag) nor OAUTH2_ENDPOINT_TOKEN_INTROSPECTION_URL (environment variable) have been set.") //nolint:lll
 }
 
 func TestStartCmdValidArgs(t *testing.T) {
@@ -295,9 +289,6 @@ func TestStartCmdValidArgsEnvVar(t *testing.T) {
 	require.Nil(t, err)
 
 	err = os.Setenv(clientSecretEnvKey, "secret")
-	require.Nil(t, err)
-
-	err = os.Setenv(clientScopesEnvKey, "scopes")
 	require.Nil(t, err)
 
 	err = os.Setenv(introspectionURLEnvKey, "endpoint/introspect")
@@ -343,7 +334,6 @@ func getValidArgs() []string {
 	args = append(args, clientRedirectURLArg()...)
 	args = append(args, clientIDArg()...)
 	args = append(args, clientSecretArg()...)
-	args = append(args, clientScopesArg()...)
 	args = append(args, tokenIntrospectionURLArg()...)
 	args = append(args, tlsCertFileArg()...)
 	args = append(args, tlsKeyFileArg()...)
@@ -376,10 +366,6 @@ func clientIDArg() []string {
 
 func clientSecretArg() []string {
 	return []string{flag + clientSecretFlagName, "secret"}
-}
-
-func clientScopesArg() []string {
-	return []string{flag + clientScopesFlagName, "openid"}
 }
 
 func tokenIntrospectionURLArg() []string {
