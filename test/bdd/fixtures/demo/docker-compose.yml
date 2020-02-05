@@ -173,6 +173,26 @@ services:
       - ../keys/tls:/etc/tls
     command: start
 
+  router.agent.example.com:
+    container_name: router.agent.example.com
+    image: ${ARIES_AGENT_REST_IMAGE}:${ARIES_AGENT_REST_IMAGE_TAG}
+    environment:
+      - ARIESD_API_HOST=${DIDCOMM_ROUTER_HOST}:${DIDCOMM_ROUTER_API_PORT}
+      - ARIESD_INBOUND_HOST=${HTTP_SCHEME}@${DIDCOMM_ROUTER_HOST}:${DIDCOMM_ROUTER_HTTP_INBOUND_PORT},${WS_SCHEME}@${DIDCOMM_ROUTER_HOST}:${DIDCOMM_ROUTER_WS_INBOUND_PORT}
+      - ARIESD_INBOUND_HOST_EXTERNAL=${HTTP_SCHEME}@http://router.agent.example.com:${DIDCOMM_ROUTER_HTTP_INBOUND_PORT},${WS_SCHEME}@ws://router.agent.example.com:${DIDCOMM_ROUTER_WS_INBOUND_PORT}
+      - ARIESD_DB_PATH=${DIDCOMM_ROUTER_DB_PATH}
+      - ARIESD_DEFAULT_LABEL=trustbloc-router-agent
+      - ARIESD_OUTBOUND_TRANSPORT=${HTTP_SCHEME},${WS_SCHEME}
+      - ARIESD_AUTO_ACCEPT=true
+      - VIRTUAL_HOST=router.trustbloc.local
+      - VIRTUAL_PORT=${DIDCOMM_ROUTER_API_PORT}
+      - VIRTUAL_PROTO=http
+    ports:
+      - ${DIDCOMM_ROUTER_HTTP_INBOUND_PORT}:${DIDCOMM_ROUTER_HTTP_INBOUND_PORT}
+      - ${DIDCOMM_ROUTER_WS_INBOUND_PORT}:${DIDCOMM_ROUTER_WS_INBOUND_PORT}
+      - ${DIDCOMM_ROUTER_API_PORT}:${DIDCOMM_ROUTER_API_PORT}
+    command: start
+
   nginx-proxy:
     image: jwilder/nginx-proxy
     ports:
