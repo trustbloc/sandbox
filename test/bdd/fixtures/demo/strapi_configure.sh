@@ -30,7 +30,7 @@ until [ $n -ge 5 ]
 do
    token=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"username":"strapi1","email":"user@strapi.io","password":"strapi"}' \
+   --data '{"username":"strapi","email":"user@strapi.io","password":"strapi"}' \
    http://strapi:1337/admin/auth/local/register | jq -r '.jwt')
    echo "token: $token"
    if [ -n "$token" ]
