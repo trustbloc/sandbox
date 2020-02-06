@@ -1,0 +1,51 @@
+#
+# SecureKey Technologies Inc. All Rights Reserved.
+#
+# Inspired by: https://www.ory.sh/docs/hydra/5min-tutorial
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '3'
+
+services:
+
+  vcs.example.com:
+    container_name: vcs.example.com
+    image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
+    environment:
+      - VC_REST_HOST_URL=0.0.0.0:8070
+      - EDV_REST_HOST_URL=http://edv.example.com:8081
+      - SIDETREE_HOST_URL=http://sidetree-mock:48326/document
+    ports:
+      - 8070:8070
+    entrypoint: ""
+    command:  /bin/sh -c "/tmp/vcs_configure.sh& vc-rest start"
+    volumes:
+      - ../scripts/vcs_configure.sh:/tmp/vcs_configure.sh
+    depends_on:
+      - edv.example.com
+
+  edv.example.com:
+    container_name: edv.example.com
+    image: ${EDV_IMAGE}:${EDV_IMAGE_TAG}
+    environment:
+      - EDV_HOST_URL=0.0.0.0:8081
+    ports:
+      - 8081:8081
+    command: start
+
+  user.agent.example.com:
+    container_name: user.agent.example.com
+    image: ${USER_AGENT_WASM_IMAGE}:${USER_AGENT_WASM_IMAGE_TAG}
+    environment:
+      - HTTP_SERVER_HOST_URL=0.0.0.0:8091
+      - TLS_CERT_FILE=/etc/tls/localhost.crt
+      - TLS_KEY_FILE=/etc/tls/localhost.key
+      - VIRTUAL_HOST=myagent.trustbloc.local
+      - VIRTUAL_PROTO=https
+    ports:
+      - 8091:8091
+    volumes:
+      - ../keys/tls:/etc/tls
+    command: start
