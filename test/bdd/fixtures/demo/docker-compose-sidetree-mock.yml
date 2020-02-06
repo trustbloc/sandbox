@@ -1,0 +1,24 @@
+#
+# SecureKey Technologies Inc. All Rights Reserved.
+#
+# Inspired by: https://www.ory.sh/docs/hydra/5min-tutorial
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '3'
+
+services:
+
+  sidetree:
+    container_name: sidetree-mock
+    image: ${SIDETREE_MOCK_IMAGE}:${SIDETREE_MOCK_IMAGE_TAG}
+    environment:
+      - SIDETREE_MOCK_TLS_CERTIFICATE=//etc/tls/localhost.crt
+      - SIDETREE_MOCK_TLS_KEY=/etc/tls/localhost.key
+      - SIDETREE_MOCK_HOST=0.0.0.0
+      - SIDETREE_MOCK_PORT=48326
+    ports:
+      - 48326:48326
+    volumes:
+      - ../keys/tls:/etc/tls
