@@ -54,11 +54,6 @@ const (
 	clientSecretFlagUsage     = "Client secret for issuer auth2 client."
 	clientSecretEnvKey        = "OAUTH2_ISSUER_CLIENT_SECRET" // #nosec
 
-	clientScopesFlagName      = "client-scopes"
-	clientScopesFlagShorthand = "p"
-	clientScopesFlagUsage     = "Client scopes for issuer auth2 client."
-	clientScopesEnvKey        = "OAUTH2_ISSUER_CLIENT_SCOPES"
-
 	// oauth2 token introspection config flags
 	introspectionURLFlagName      = "introspect-url"
 	introspectionURLFlagShorthand = "i"
@@ -199,7 +194,6 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(clientRedirectURLFlagName, clientRedirectURLFlagShorthand, "", clientRedirectURLFlagUsage)
 	startCmd.Flags().StringP(clientIDFlagName, clientIDFlagShorthand, "", clientIDFlagUsage)
 	startCmd.Flags().StringP(clientSecretFlagName, clientSecretFlagShorthand, "", clientSecretFlagUsage)
-	startCmd.Flags().StringP(clientScopesFlagName, clientScopesFlagShorthand, "", clientScopesFlagUsage)
 	startCmd.Flags().StringP(introspectionURLFlagName, introspectionURLFlagShorthand, "",
 		introspectionURLFlagUsage)
 	startCmd.Flags().StringP(tlsCertFileFlagName, tlsCertFileFlagShorthand, "", tlsCertFileFlagUsage)
@@ -267,16 +261,10 @@ func getOAuth2Config(cmd *cobra.Command) (*oauth2.Config, error) {
 		return nil, err
 	}
 
-	scopes, err := cmdutils.GetUserSetVar(cmd, clientScopesFlagName, clientScopesEnvKey, false)
-	if err != nil {
-		return nil, err
-	}
-
 	config := &oauth2.Config{
 		RedirectURL:  strings.TrimSpace(redirectURL),
 		ClientID:     strings.TrimSpace(clientID),
 		ClientSecret: strings.TrimSpace(secret),
-		Scopes:       strings.Split(strings.TrimSpace(scopes), ","),
 		Endpoint:     hydra,
 	}
 
