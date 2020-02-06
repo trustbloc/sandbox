@@ -1,38 +1,74 @@
 [
-{
-  "id": "resource-server-rule",
-  "upstream": {
-    "url": "http://strapi:1337"
-  },
-  "match": {
-    "url": "http://oathkeeper-proxy:4455/<.*>",
-    "methods": [
-      "GET"
-    ]
-  },
-  "authenticators": [
-    {
-      "handler": "oauth2_introspection",
-      "config": {
-        "required_scope": [
-          "studentcard"
-        ]
-      }
-    }
-  ],
-  "mutators": [
-    {
-      "handler": "header",
-      "config": {
-        "headers": {
-          "X-User": "{{ print .Subject }}",
-          "Authorization": "Bearer {TOKEN}"
+  {
+    "id": "resource-server-rule",
+    "upstream": {
+      "url": "http://strapi:1337"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy:4455/studentcards/<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "StudentCard"
+          ]
         }
       }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
     }
-  ],
-  "authorizer": {
-    "handler": "allow"
+  },
+  {
+    "id": "travelcard-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi:1337"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy:4455/travelcards/<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "TravelCard"
+          ]
+        }
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
   }
-}
 ]

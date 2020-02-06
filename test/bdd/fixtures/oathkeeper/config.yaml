@@ -24,7 +24,8 @@ authenticators:
       introspection_url: http://hydra:4445/oauth2/introspect
       scope_strategy: exact
       required_scope:
-        - studentcard
+        - StudentCard
+        - TravelCard
 
 authorizers:
   allow:
