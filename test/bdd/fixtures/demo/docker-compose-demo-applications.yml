@@ -1,0 +1,51 @@
+#
+# SecureKey Technologies Inc. All Rights Reserved.
+#
+# Inspired by: https://www.ory.sh/docs/hydra/5min-tutorial
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '3'
+
+services:
+
+  issuer.example.com:
+    container_name: issuer.example.com
+    image: ${ISSUER_IMAGE}:latest
+    environment:
+      - ISSUER_HOST_URL=0.0.0.0:5556
+      - OAUTH2_ENDPOINT_AUTH_URL=http://127.0.0.1:4444/oauth2/auth
+      - OAUTH2_ENDPOINT_TOKEN_URL=http://hydra:4444/oauth2/token
+      - OAUTH2_ISSUER_CLIENT_REDIRECT_URL=https://127.0.0.1:5556/callback
+      - OAUTH2_ISSUER_CLIENT_ID=auth-code-client
+      - OAUTH2_ISSUER_CLIENT_SECRET=secret
+      - OAUTH2_ENDPOINT_TOKEN_INTROSPECTION_URL=http://hydra:4445/oauth2/introspect
+      - ISSUER_TLS_CERT_FILE=/etc/tls/localhost.crt
+      - ISSUER_TLS_KEY_FILE=/etc/tls/localhost.key
+      - ISSUER_CMS_URL=http://oathkeeper-proxy:4455
+      - ISSUER_VCS_URL=http://vcs.example.com:8070
+      - ISSUER_VCS_PROFILE=demo
+      - VIRTUAL_HOST=issuer.trustbloc.local
+      - VIRTUAL_PROTO=https
+    ports:
+      - 5556:5556
+    command: start
+    volumes:
+      - ../keys/tls:/etc/tls
+
+  rp.example.com:
+    container_name: rp.example.com
+    image: ${RP_IMAGE}:latest
+    environment:
+      - RP_HOST_URL=0.0.0.0:5557
+      - RP_TLS_CERT_FILE=/etc/tls/localhost.crt
+      - RP_TLS_KEY_FILE=/etc/tls/localhost.key
+      - RP_VCS_URL=http://vcs.example.com:8070
+      - VIRTUAL_HOST=rp.trustbloc.local
+      - VIRTUAL_PROTO=https
+    ports:
+      - 5557:5557
+    command: start
+    volumes:
+      - ../keys/tls:/etc/tls
