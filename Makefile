@@ -2,20 +2,29 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-GO_CMD ?= go
-ISSUER_REST_PATH=cmd/issuer-rest
-RP_REST_PATH=cmd/rp-rest
-STRAPI_DEMO_PATH=cmd/strapi-demo
+GO_CMD          ?= go
+ARCH             = $(shell go env GOARCH)
+ISSUER_REST_PATH = cmd/issuer-rest
+RP_REST_PATH     = cmd/rp-rest
+STRAPI_DEMO_PATH = cmd/strapi-demo
 
 DOCKER_OUTPUT_NS         ?= docker.pkg.github.com
 # Namespace for the issuer image
 ISSUER_REST_IMAGE_NAME   ?= trustbloc/edge-sandbox/issuer-rest
 # Namespace for the ro image
-RP_REST_IMAGE_NAME   ?= trustbloc/edge-sandbox/rp-rest
+RP_REST_IMAGE_NAME       ?= trustbloc/edge-sandbox/rp-rest
 
 # Tool commands (overridable)
 ALPINE_VER ?= 3.10
 GO_VER     ?= 1.13.1
+
+# Fabric tools docker image (overridable)
+FABRIC_TOOLS_IMAGE   ?= hyperledger/fabric-tools
+FABRIC_TOOLS_VERSION ?= 2.0.0-alpha
+FABRIC_TOOLS_TAG     ?= $(ARCH)-$(FABRIC_TOOLS_VERSION)
+
+# This can be a commit hash or a tag (or any git ref)
+export FABRIC_CLI_EXT_VERSION ?= 3fd66894726c1afcd904413dcfa3b4d586ea6c92
 
 .PHONY: all
 all: checks unit-test
@@ -39,6 +48,11 @@ unit-test:
 demo-start: clean issuer-rest-docker rp-rest-docker generate-test-keys
 	@scripts/sandbox_start.sh
 
+.PHONY: demo-start-with-sidetree-fabric
+demo-start-with-sidetree-fabric: export START_SIDETREE_FABRIC=true
+demo-start-with-sidetree-fabric: clean issuer-rest-docker rp-rest-docker generate-test-keys populate-fixtures docker-thirdparty fabric-cli
+	@scripts/sandbox_start.sh
+
 .PHONY: demo-stop
 demo-stop:
 	@scripts/sandbox_stop.sh
@@ -58,16 +72,16 @@ trustbloc-local-remove:
 .PHONY: issuer-rest
 issuer-rest:
 	@echo "Building issuer-rest"
-	@mkdir -p ./build/bin/issuer
-	@cp -r ${ISSUER_REST_PATH}/static ./build/bin/issuer
-	@cd ${ISSUER_REST_PATH} && go build -o ../../build/bin/issuer/issuer-rest main.go
+	@mkdir -p ./.build/bin/issuer
+	@cp -r ${ISSUER_REST_PATH}/static ./.build/bin/issuer
+	@cd ${ISSUER_REST_PATH} && go build -o ../../.build/bin/issuer/issuer-rest main.go
 
 .PHONY: rp-rest
 rp-rest:
 	@echo "Building rp-rest"
-	@mkdir -p ./build/bin/rp
-	@cp -r ${RP_REST_PATH}/static ./build/bin/rp
-	@cd ${RP_REST_PATH} && go build -o ../../build/bin/rp/rp-rest main.go
+	@mkdir -p ./.build/bin/rp
+	@cp -r ${RP_REST_PATH}/static ./.build/bin/rp
+	@cd ${RP_REST_PATH} && go build -o ../../.build/bin/rp/rp-rest main.go
 
 .PHONY: issuer-rest-docker
 issuer-rest-docker:
@@ -92,11 +106,43 @@ generate-test-keys: clean
 		--entrypoint "/opt/workspace/edge-sandbox/scripts/generate_test_keys.sh" \
 		frapsoft/openssl
 
+
+.PHONY: docker-thirdparty
+docker-thirdparty:
+	docker pull couchdb:2.2.0
+	docker pull hyperledger/fabric-orderer:$(ARCH)-2.0.0-alpha
+
+.PHONY: crypto-gen
+crypto-gen:
+	@echo "Generating crypto directory ..."
+	@docker run -i \
+		-v /$(abspath .):/opt/workspace/edge-sandbox -u $(shell id -u):$(shell id -g) \
+		$(FABRIC_TOOLS_IMAGE):$(FABRIC_TOOLS_TAG) \
+		//bin/bash -c "FABRIC_VERSION_DIR=fabric /opt/workspace/edge-sandbox/scripts/generate_crypto.sh"
+
+.PHONY: channel-config-gen
+channel-config-gen:
+	@echo "Generating test channel configuration transactions and blocks ..."
+	@docker run -i \
+		-v /$(abspath .):/opt/workspace/edge-sandbox -u $(shell id -u):$(shell id -g) \
+		$(FABRIC_TOOLS_IMAGE):$(FABRIC_TOOLS_TAG) \
+		//bin/bash -c "FABRIC_VERSION_DIR=fabric/ /opt/workspace/edge-sandbox/scripts/generate_channeltx.sh"
+
+.PHONY: populate-fixtures
+populate-fixtures: clean
+	@scripts/populate-fixtures.sh -f
+
+fabric-cli:
+	@scripts/build_fabric_cli.sh
+
 .PHONY: clean
 clean: clean-build
 
 .PHONY: clean-build
 clean-build:
-	@rm -Rf ./build
+	@rm -Rf ./.build
+	@rm -Rf ./coverage.txt
 	@rm -Rf ./test/bdd/fixtures/keys
 	@rm -Rf ./test/bdd/fixtures/oathkeeper/rules/resource-server.json
+	@rm -Rf ./test/bdd/fixtures/fabric/channel
+	@rm -Rf ./test/bdd/fixtures/fabric/crypto-config
