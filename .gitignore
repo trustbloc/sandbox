@@ -36,3 +36,4 @@ test/bdd/fixtures/oathkeeper/rules/resource-server.json
 .build
 test/bdd/fixtures/fabric/crypto-config/
 test/bdd/fixtures/fabric/channel/
+.fabriccli

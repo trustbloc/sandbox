@@ -14,7 +14,7 @@ services:
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8070
       - EDV_REST_HOST_URL=http://edv.example.com:8081
-      - SIDETREE_HOST_URL=http://sidetree-mock:48326/document
+      - SIDETREE_HOST_URL=${SIDETREE_HOST_URL}
     ports:
       - 8070:8070
     entrypoint: ""
