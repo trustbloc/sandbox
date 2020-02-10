@@ -24,6 +24,6 @@ RUN make issuer-rest
 
 
 FROM alpine:${ALPINE_VER} as base
-COPY --from=edge-sandbox /opt/workspace/edge-sandbox/build/bin/issuer /usr/local/bin
+COPY --from=edge-sandbox /opt/workspace/edge-sandbox/.build/bin/issuer /usr/local/bin
 WORKDIR /usr/local/bin
 ENTRYPOINT ["issuer-rest"]
