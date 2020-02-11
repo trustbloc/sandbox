@@ -9,14 +9,17 @@ package operation
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/skip2/go-qrcode"
 	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/edge-sandbox/pkg/internal/common/support"
@@ -26,6 +29,7 @@ import (
 const (
 	login    = "/login"
 	callback = "/callback"
+	retrieve = "/retrieve"
 )
 
 // Handler http handler for each controller API endpoint
@@ -44,6 +48,7 @@ type Operation struct {
 	vcsURL        string
 	vcsProfile    string
 	receiveVCHTML string
+	qrCodeHTML    string
 }
 
 // Config defines configuration for issuer operations
@@ -54,11 +59,17 @@ type Config struct {
 	VCSURL        string
 	VCSProfile    string
 	ReceiveVCHTML string
+	QRCodeHTML    string
 }
 
 // vc struct used to return vc data to html
 type vc struct {
 	Data string `json:"data"`
+}
+
+type qr struct {
+	Image string
+	URL   string
 }
 
 type tokenIssuer interface {
@@ -79,6 +90,7 @@ func New(config *Config) *Operation {
 		cmsURL:        config.CMSURL,
 		vcsURL:        config.VCSURL,
 		vcsProfile:    config.VCSProfile,
+		qrCodeHTML:    config.QRCodeHTML,
 		receiveVCHTML: config.ReceiveVCHTML}
 	svc.registerHandler()
 
@@ -127,8 +139,7 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 	cred, err := c.createCredential(data, info)
 	if err != nil {
 		log.Error(err)
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to create credential: %s", err.Error()))
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create credential: %s", err.Error()))
 
 		return
 	}
@@ -136,8 +147,41 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 	err = c.storeCredential(cred)
 	if err != nil {
 		log.Error(err)
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to store credential: %s", err.Error()))
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	t, err := template.ParseFiles(c.qrCodeHTML)
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to load html: %s", err.Error()))
+
+		return
+	}
+
+	q, err := generateQRCode(cred, r.URL.Host)
+	if err != nil {
+		log.Error(fmt.Sprintf("failed to generate qr code : %s", err.Error()))
+		return
+	}
+
+	if err := t.Execute(w, q); err != nil {
+		log.Error(fmt.Sprintf("failed execute qr html template: %s", err.Error()))
+	}
+}
+
+// RetrieveVC for retrieving the VC via link and QRCode
+func (c *Operation) RetrieveVC(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+
+	cred, err := c.retrieveCredential(id)
+	if err != nil {
+		log.Error(err)
 		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to store credential: %s", err.Error()))
+			fmt.Sprintf("failed to retrieve credential: %s", err.Error()))
 
 		return
 	}
@@ -152,9 +196,57 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := t.Execute(w, vc{Data: string(cred)}); err != nil {
+	// retrieve credential returns the strings with back slashes, to render the response as string without slashes
+	cr, err := strconv.Unquote(string(cred))
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("unable to unqote credential: %s", err.Error()))
+
+		return
+	}
+
+	if err := t.Execute(w, vc{Data: cr}); err != nil {
 		log.Error(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
+}
+
+func generateQRCode(cred []byte, host string) (*qr, error) {
+	var vcMap map[string]interface{}
+
+	var img []byte
+
+	err := json.Unmarshal(cred, &vcMap)
+	if err != nil {
+		return nil, fmt.Errorf("generate QR Code unmarshalling failed: %s", err)
+	}
+
+	vcID, ok := vcMap["id"].(string)
+	if !ok {
+		return nil, fmt.Errorf("unable to assert vc ID field type as string")
+	}
+
+	retrieveURL := host + retrieve + "?" + "id=" + trimQuote(vcID)
+
+	img, err = qrcode.Encode(retrieveURL, qrcode.Medium, 256)
+	if err != nil {
+		return nil, fmt.Errorf("generate QR Code encoding failed: %s", err)
+	}
+
+	image := base64.StdEncoding.EncodeToString(img)
+
+	return &qr{Image: image, URL: retrieveURL}, nil
+}
+
+func trimQuote(s string) string {
+	if len(s) > 0 && s[0] == '"' {
+		s = s[1:]
+	}
+
+	if len(s) > 0 && s[len(s)-1] == '"' {
+		s = s[:len(s)-1]
+	}
+
+	return s
 }
 
 func (c *Operation) getCMSURL(info *token.Introspection) string {
@@ -228,6 +320,24 @@ func (c *Operation) storeCredential(cred []byte) error {
 
 	return nil
 }
+
+func (c *Operation) retrieveCredential(id string) ([]byte, error) {
+	r, err := http.NewRequest("GET", c.vcsURL+"/retrieve", nil)
+	if err != nil {
+		return nil, fmt.Errorf("retrieve credential get request failed %s", err)
+	}
+
+	q := r.URL.Query()
+	q.Add("id", id)
+	q.Add("profile", c.vcsProfile)
+
+	r.URL.RawQuery = q.Encode()
+
+	httpClient := http.DefaultClient
+
+	return sendHTTPRequest(r, httpClient, http.StatusOK)
+}
+
 func prepareStoreVCRequest(cred []byte, profile string) ([]byte, error) {
 	storeVCRequest := storeVC{
 		Credential: string(cred),
@@ -281,6 +391,7 @@ func (c *Operation) registerHandler() {
 	c.handlers = []Handler{
 		support.NewHTTPHandler(login, http.MethodGet, c.Login),
 		support.NewHTTPHandler(callback, http.MethodGet, c.Callback),
+		support.NewHTTPHandler(retrieve, http.MethodGet, c.RetrieveVC),
 	}
 }
 
