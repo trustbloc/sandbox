@@ -210,6 +210,7 @@ func startIssuer(parameters *issuerParameters) error {
 		CMSURL:        parameters.cmsURL,
 		VCSURL:        parameters.vcsURL,
 		VCSProfile:    parameters.vcsProfile,
+		QRCodeHTML:    "static/qr.html",
 		ReceiveVCHTML: "static/receiveVC.html"}
 
 	issuerService, err := issuer.New(cfg)

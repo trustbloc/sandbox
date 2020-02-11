@@ -1,0 +1,25 @@
+
+<!--
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+SPDX-License-Identifier: Apache-2.0
+ -->
+
+<!doctype html>
+<html class="no-js" lang="">
+<head>
+    <title>QR Code</title>
+</head>
+<body>
+<h1>QR Code for your Verifiable Credential</h1>
+<div class="margin-body-log-in-worker">
+    <div class="row">
+        <div class="col-4 col-sm-4 col-md-3 col-xl-2 center">
+            <img src="data:image/png;base64,{{.Image}}" class="img-fluid image-dashboard" />
+        </div>
+        <a href={{.URL}}>
+            Retrieve Verifiable Credential
+        </a>
+    </div>
+</div>
+</body>
+</html>
