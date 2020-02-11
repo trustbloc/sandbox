@@ -109,7 +109,7 @@ func TestOperation_Callback(t *testing.T) {
 	defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
 	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name()}
+		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name()}
 	handler := getHandlerWithConfig(t, callback, cfg)
 
 	_, status, err := handleRequest(handler, headers, callback)
@@ -125,6 +125,107 @@ func TestOperation_Callback(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, http.StatusInternalServerError, status)
 	require.Contains(t, body.String(), "unable to load html")
+}
+
+func TestOperation_RetrieveVC(t *testing.T) {
+	headers := make(map[string]string)
+	headers["Authorization"] = authHeader
+
+	file, err := ioutil.TempFile("", "*.html")
+	require.NoError(t, err)
+
+	defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+	t.Run("retrieve credential success", func(t *testing.T) {
+		router := mux.NewRouter()
+
+		router.HandleFunc("/retrieve", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusOK)
+			_, err := writer.Write([]byte(`"credential"`))
+			if err != nil {
+				panic(err)
+			}
+		})
+
+		vcs := httptest.NewServer(router)
+
+		defer vcs.Close()
+
+		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name()}
+
+		handler := getHandlerWithConfig(t, retrieve, cfg)
+		_, status, err := handleRequest(handler, headers, retrieve)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusOK, status)
+	})
+	t.Run("retrieve credential error", func(t *testing.T) {
+		router := mux.NewRouter()
+
+		router.HandleFunc("/retrieve", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusInternalServerError)
+		})
+
+		vcs := httptest.NewServer(router)
+
+		defer vcs.Close()
+
+		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name()}
+		handler := getHandlerWithConfig(t, retrieve, cfg)
+
+		_, status, err := handleRequest(handler, headers, retrieve)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusInternalServerError, status)
+	})
+}
+
+func TestOperation_GenerateQRCode(t *testing.T) {
+	t.Run("qr code success", func(t *testing.T) {
+		qr, err := generateQRCode([]byte(`{"id":"test"}`), "host")
+		require.NoError(t, err)
+		require.NotNil(t, qr)
+	})
+	t.Run("qr code error", func(t *testing.T) {
+		qr, err := generateQRCode([]byte(`{"name":chan int}`), "host")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "generate QR Code unmarshalling failed")
+		require.Nil(t, qr)
+	})
+}
+
+func TestOperation_RetrieveCredential(t *testing.T) {
+	t.Run("retrieve credential success", func(t *testing.T) {
+		vcs := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintln(w, "ok")
+		}))
+		defer vcs.Close()
+		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}, VCSURL: vcs.URL})
+		cred, err := svc.retrieveCredential("test")
+		require.NoError(t, err)
+		require.NotNil(t, cred)
+	})
+	t.Run("retrieve credential  error invalid url ", func(t *testing.T) {
+		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			VCSURL: "%%&^$"})
+		cred, err := svc.retrieveCredential("test")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid URL escape")
+		require.Nil(t, cred)
+	})
+	t.Run("retrieve credential error incorrect status", func(t *testing.T) {
+		vcs := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusCreated)
+			fmt.Fprintln(w, "{}")
+		}))
+		defer vcs.Close()
+		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}, VCSURL: vcs.URL})
+		cred, err := svc.retrieveCredential("test")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "201 Created")
+		require.Nil(t, cred)
+	})
 }
 
 func TestOperation_Callback_ExchangeCodeError(t *testing.T) {
