@@ -30,6 +30,8 @@ const (
 	login    = "/login"
 	callback = "/callback"
 	retrieve = "/retrieve"
+
+	credentialContext = "https://www.w3.org/2018/credentials/v1"
 )
 
 // Handler http handler for each controller API endpoint
@@ -273,6 +275,7 @@ func (c *Operation) prepareCreateCredentialRequest(data []byte, info *token.Intr
 	delete(subject, "updated_at")
 
 	req := &createCredential{
+		Context: []string{credentialContext},
 		Subject: subject,
 		Type:    []string{"VerifiableCredential", info.Scope},
 		Profile: c.vcsProfile,
@@ -411,6 +414,7 @@ func (c *Operation) GetRESTHandlers() []Handler {
 
 // createCredential input data for edge service issuer rest api
 type createCredential struct {
+	Context []string               `json:"@context"`
 	Subject map[string]interface{} `json:"credentialSubject"`
 	Type    []string               `json:"type,omitempty"`
 	Profile string                 `json:"profile,omitempty"`
