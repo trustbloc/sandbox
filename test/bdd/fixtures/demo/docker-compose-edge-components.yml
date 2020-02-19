@@ -13,6 +13,7 @@ services:
     image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8070
+      - VC_REST_HOST_URL_EXTERNAL=http://localhost:8070
       - EDV_REST_HOST_URL=http://edv.example.com:8081
       - SIDETREE_HOST_URL=${SIDETREE_HOST_URL}
     ports:
