@@ -414,6 +414,85 @@ func TestOperation_SendHTTPRequest_WrongStatus(t *testing.T) {
 	require.Nil(t, data)
 }
 
+func TestRevokeVC(t *testing.T) {
+	t.Run("test error from parse form", func(t *testing.T) {
+		svc := New(&Config{})
+
+		rr := httptest.NewRecorder()
+		svc.revokeVC(rr, &http.Request{Method: http.MethodPost})
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to parse form")
+	})
+
+	t.Run("test error from create http request", func(t *testing.T) {
+		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			VCSURL: "http://vcs\\"})
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+		m := make(map[string][]string)
+		m["vcDataInput"] = []string{"vc"}
+		svc.revokeVC(rr, &http.Request{Form: m})
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to create new http request")
+	})
+
+	t.Run("test error from http post", func(t *testing.T) {
+		svc := New(&Config{})
+
+		rr := httptest.NewRecorder()
+		m := make(map[string][]string)
+		m["vcDataInput"] = []string{"vc"}
+		svc.revokeVC(rr, &http.Request{Form: m})
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to update vc status")
+	})
+
+	t.Run("test vc html not exist", func(t *testing.T) {
+		router := mux.NewRouter()
+		router.HandleFunc(vcsUpdateStatusEndpoint, func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusOK)
+		})
+
+		vcs := httptest.NewServer(router)
+
+		defer vcs.Close()
+
+		svc := New(&Config{VCHTML: "", VCSURL: vcs.URL})
+
+		rr := httptest.NewRecorder()
+		m := make(map[string][]string)
+		m["vcDataInput"] = []string{"vc"}
+		svc.revokeVC(rr, &http.Request{Form: m})
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to load html")
+	})
+
+	t.Run("test success", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+		router := mux.NewRouter()
+		router.HandleFunc(vcsUpdateStatusEndpoint, func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusOK)
+		})
+
+		vcs := httptest.NewServer(router)
+
+		defer vcs.Close()
+
+		svc := New(&Config{VCHTML: file.Name(), VCSURL: vcs.URL})
+
+		rr := httptest.NewRecorder()
+		m := make(map[string][]string)
+		m["vcDataInput"] = []string{"vc"}
+
+		svc.revokeVC(rr, &http.Request{Form: m})
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+}
+
 func handleRequest(handler Handler, headers map[string]string, path string) (*bytes.Buffer, int, error) { //nolint:lll
 	req, err := http.NewRequest(handler.Method(), path, bytes.NewBuffer([]byte("")))
 	if err != nil {
