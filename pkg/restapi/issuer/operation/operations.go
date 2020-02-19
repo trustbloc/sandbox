@@ -30,8 +30,11 @@ const (
 	login    = "/login"
 	callback = "/callback"
 	retrieve = "/retrieve"
+	revoke   = "/revoke"
 
 	credentialContext = "https://www.w3.org/2018/credentials/v1"
+
+	vcsUpdateStatusEndpoint = "/updateStatus"
 )
 
 // Handler http handler for each controller API endpoint
@@ -51,6 +54,7 @@ type Operation struct {
 	vcsProfile    string
 	receiveVCHTML string
 	qrCodeHTML    string
+	vcHTML        string
 }
 
 // Config defines configuration for issuer operations
@@ -62,10 +66,12 @@ type Config struct {
 	VCSProfile    string
 	ReceiveVCHTML string
 	QRCodeHTML    string
+	VCHTML        string
 }
 
 // vc struct used to return vc data to html
 type vc struct {
+	Msg  string `json:"msg"`
 	Data string `json:"data"`
 }
 
@@ -93,14 +99,15 @@ func New(config *Config) *Operation {
 		vcsURL:        config.VCSURL,
 		vcsProfile:    config.VCSProfile,
 		qrCodeHTML:    config.QRCodeHTML,
-		receiveVCHTML: config.ReceiveVCHTML}
+		receiveVCHTML: config.ReceiveVCHTML,
+		vcHTML:        config.VCHTML}
 	svc.registerHandler()
 
 	return svc
 }
 
-// Login using oauth2, will redirect to Auth Code URL
-func (c *Operation) Login(w http.ResponseWriter, r *http.Request) {
+// login using oauth2, will redirect to Auth Code URL
+func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 	u := c.tokenIssuer.AuthCodeURL(w)
 
 	scope := r.URL.Query()["scope"]
@@ -111,8 +118,8 @@ func (c *Operation) Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 }
 
-// Callback for oauth2 login
-func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
+// callback for oauth2 login
+func (c *Operation) callback(w http.ResponseWriter, r *http.Request) {
 	tk, err := c.tokenIssuer.Exchange(r)
 	if err != nil {
 		log.Error(err)
@@ -175,8 +182,8 @@ func (c *Operation) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// RetrieveVC for retrieving the VC via link and QRCode
-func (c *Operation) RetrieveVC(w http.ResponseWriter, r *http.Request) {
+// retrieveVC for retrieving the VC via link and QRCode
+func (c *Operation) retrieveVC(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 
 	cred, err := c.retrieveCredential(id)
@@ -208,6 +215,58 @@ func (c *Operation) RetrieveVC(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := t.Execute(w, vc{Data: cr}); err != nil {
+		log.Error(fmt.Sprintf("failed execute html template: %s", err.Error()))
+	}
+}
+
+// revokeVC
+func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to parse form: %s", err.Error()))
+
+		return
+	}
+
+	reqBytes, err := prepareUpdateCredentialStatusRequest(r.Form.Get("vcDataInput"),
+		"Revoked", "Disciplinary action")
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to prepare update credential status request: %s", err.Error()))
+
+		return
+	}
+
+	req, err := http.NewRequest("POST", c.vcsURL+vcsUpdateStatusEndpoint,
+		bytes.NewBuffer(reqBytes))
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create new http request: %s", err.Error()))
+
+		return
+	}
+
+	httpClient := http.DefaultClient
+
+	_, err = sendHTTPRequest(req, httpClient, http.StatusOK)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to update vc status: %s", err.Error()))
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	t, err := template.ParseFiles(c.vcHTML)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to load html: %s", err.Error()))
+
+		return
+	}
+
+	if err := t.Execute(w, vc{Msg: "VC is revoked", Data: r.Form.Get("vcDataInput")}); err != nil {
 		log.Error(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
 }
@@ -350,6 +409,16 @@ func prepareStoreVCRequest(cred []byte, profile string) ([]byte, error) {
 	return json.Marshal(storeVCRequest)
 }
 
+func prepareUpdateCredentialStatusRequest(cred, status, statusReason string) ([]byte, error) {
+	request := updateCredentialStatusRequest{
+		Credential:   cred,
+		Status:       status,
+		StatusReason: statusReason,
+	}
+
+	return json.Marshal(request)
+}
+
 func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) ([]byte, error) {
 	url := c.getCMSURL(info)
 
@@ -392,9 +461,10 @@ func sendHTTPRequest(req *http.Request, client *http.Client, status int) ([]byte
 func (c *Operation) registerHandler() {
 	// Add more protocol endpoints here to expose them as controller API endpoints
 	c.handlers = []Handler{
-		support.NewHTTPHandler(login, http.MethodGet, c.Login),
-		support.NewHTTPHandler(callback, http.MethodGet, c.Callback),
-		support.NewHTTPHandler(retrieve, http.MethodGet, c.RetrieveVC),
+		support.NewHTTPHandler(login, http.MethodGet, c.login),
+		support.NewHTTPHandler(callback, http.MethodGet, c.callback),
+		support.NewHTTPHandler(retrieve, http.MethodGet, c.retrieveVC),
+		support.NewHTTPHandler(revoke, http.MethodPost, c.revokeVC),
 	}
 }
 
@@ -418,6 +488,13 @@ type createCredential struct {
 	Subject map[string]interface{} `json:"credentialSubject"`
 	Type    []string               `json:"type,omitempty"`
 	Profile string                 `json:"profile,omitempty"`
+}
+
+// updateCredentialStatusRequest request struct for updating vc status
+type updateCredentialStatusRequest struct {
+	Credential   string `json:"credential"`
+	Status       string `json:"status"`
+	StatusReason string `json:"statusReason"`
 }
 
 type storeVC struct {

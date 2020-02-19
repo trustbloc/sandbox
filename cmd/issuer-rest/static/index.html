@@ -10,6 +10,8 @@ SPDX-License-Identifier: Apache-2.0
     <title>Issuer</title>
     <link rel="stylesheet" type="text/css"
           href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
+    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
 </head>
 
 <body>
@@ -30,9 +32,53 @@ SPDX-License-Identifier: Apache-2.0
                 </a>
             </div>
         </div>
+        <div class="row">
+            <button id='revokeVCBtn'>Revoke VC</button>
+            <form method="post" id="vcForm" action="/revoke">
+                <input type="hidden" name="vcDataInput" id="vcDataInput">
+            </form>
+        </div>
     </div>
 </main>
 
 </body>
+
+<script>
+    installHandler()
+        .catch(e => console.error('Error in installHandler:', e));
+
+    async function installHandler() {
+        console.log('Loading polyfill...');
+        try {
+            await credentialHandlerPolyfill.loadOnce();
+        } catch(e) {
+            console.error('Error in loadOnce:', e);
+        }
+    }
+
+    function ready(fn) {
+        if (document.readyState !== 'loading'){
+            fn();
+        } else {
+            document.addEventListener('DOMContentLoaded', fn);
+        }
+    }
+
+    async function onClickGet() {
+        const credentialQuery = JSON.parse('{"web": {"VerifiablePresentation": {}}}');
+        const result = await navigator.credentials.get(credentialQuery);
+        if(!result) {
+            alert("null result");
+            return;
+        }
+        document.getElementById('vcDataInput').value=result.data
+        document.getElementById('vcForm').submit()
+    }
+
+    ready(() => {
+        document.getElementById('revokeVCBtn').addEventListener('click', onClickGet);
+    })
+
+</script>
 
 </html>

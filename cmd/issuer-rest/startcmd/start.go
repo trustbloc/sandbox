@@ -211,7 +211,8 @@ func startIssuer(parameters *issuerParameters) error {
 		VCSURL:        parameters.vcsURL,
 		VCSProfile:    parameters.vcsProfile,
 		QRCodeHTML:    "static/qr.html",
-		ReceiveVCHTML: "static/receiveVC.html"}
+		ReceiveVCHTML: "static/receiveVC.html",
+		VCHTML:        "static/vc.html"}
 
 	issuerService, err := issuer.New(cfg)
 	if err != nil {
