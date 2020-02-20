@@ -171,7 +171,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	q, err := generateQRCode(cred, r.URL.Host)
+	q, err := generateQRCode(cred, r.Host)
 	if err != nil {
 		log.Error(fmt.Sprintf("failed to generate qr code : %s", err.Error()))
 		return
@@ -286,7 +286,7 @@ func generateQRCode(cred []byte, host string) (*qr, error) {
 		return nil, fmt.Errorf("unable to assert vc ID field type as string")
 	}
 
-	retrieveURL := host + retrieve + "?" + "id=" + trimQuote(vcID)
+	retrieveURL := "https://" + host + retrieve + "?" + "id=" + trimQuote(vcID)
 
 	img, err = qrcode.Encode(retrieveURL, qrcode.Medium, 256)
 	if err != nil {
