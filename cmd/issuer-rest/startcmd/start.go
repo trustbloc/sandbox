@@ -222,7 +222,10 @@ func startIssuer(parameters *issuerParameters) error {
 	handlers := issuerService.GetOperations()
 	router := mux.NewRouter()
 
-	router.Handle("/", http.FileServer(http.Dir("static")))
+	fs := http.FileServer(http.Dir("static"))
+	router.PathPrefix("/reader/").Handler(fs)
+
+	router.Handle("/", fs)
 
 	for _, handler := range handlers {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
