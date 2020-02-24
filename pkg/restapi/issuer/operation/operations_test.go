@@ -48,12 +48,17 @@ func TestOperation_Login(t *testing.T) {
 	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
 	handler := getHandlerWithConfig(t, login, cfg)
 
-	buff, status, err := handleRequest(handler, nil, login)
+	buff, status, err := handleRequest(handler, nil, login, true)
+	require.NoError(t, err)
+	require.Contains(t, buff.String(), "vcs profile is empty")
+	require.Equal(t, http.StatusBadRequest, status)
+
+	buff, status, err = handleRequest(handler, nil, login+"?vcsProfile=vc-issuer-1", true)
 	require.NoError(t, err)
 	require.Contains(t, buff.String(), "Temporary Redirect")
 	require.Equal(t, http.StatusTemporaryRedirect, status)
 
-	buff, status, err = handleRequest(handler, nil, login+"?scope=test")
+	buff, status, err = handleRequest(handler, nil, login+"?scope=test&vcsProfile=vc-issuer-1", true)
 	require.NoError(t, err)
 	require.Contains(t, buff.String(), "Temporary Redirect")
 	require.Equal(t, http.StatusTemporaryRedirect, status)
@@ -63,7 +68,7 @@ func TestOperation_Login3(t *testing.T) {
 	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
 	handler := getHandlerWithConfig(t, login, cfg)
 
-	req, err := http.NewRequest(handler.Method(), login+"?scope=test", bytes.NewBuffer([]byte("")))
+	req, err := http.NewRequest(handler.Method(), login+"?scope=test&vcsProfile=vc-issuer-1", bytes.NewBuffer([]byte("")))
 	require.NoError(t, err)
 
 	router := mux.NewRouter()
@@ -112,16 +117,26 @@ func TestOperation_Callback(t *testing.T) {
 		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name()}
 	handler := getHandlerWithConfig(t, callback, cfg)
 
-	_, status, err := handleRequest(handler, headers, callback)
+	_, status, err := handleRequest(handler, headers, callback, true)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, status)
+
+	// test ledger cookie not found
+	cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name()}
+	handler = getHandlerWithConfig(t, callback, cfg)
+
+	body, status, err := handleRequest(handler, headers, callback, false)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusBadRequest, status)
+	require.Contains(t, body.String(), "failed to get cookie")
 
 	// test html not exist
 	cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: ""}
 	handler = getHandlerWithConfig(t, callback, cfg)
 
-	body, status, err := handleRequest(handler, headers, callback)
+	body, status, err = handleRequest(handler, headers, callback, true)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusInternalServerError, status)
 	require.Contains(t, body.String(), "unable to load html")
@@ -155,7 +170,7 @@ func TestOperation_RetrieveVC(t *testing.T) {
 			VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name()}
 
 		handler := getHandlerWithConfig(t, retrieve, cfg)
-		_, status, err := handleRequest(handler, headers, retrieve)
+		_, status, err := handleRequest(handler, headers, retrieve, true)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, status)
 	})
@@ -174,9 +189,33 @@ func TestOperation_RetrieveVC(t *testing.T) {
 			VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name()}
 		handler := getHandlerWithConfig(t, retrieve, cfg)
 
-		_, status, err := handleRequest(handler, headers, retrieve)
+		_, status, err := handleRequest(handler, headers, retrieve, true)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusInternalServerError, status)
+	})
+	t.Run("cookie not found", func(t *testing.T) {
+		router := mux.NewRouter()
+
+		router.HandleFunc("/retrieve", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusOK)
+			_, err := writer.Write([]byte(`"credential"`))
+			if err != nil {
+				panic(err)
+			}
+		})
+
+		vcs := httptest.NewServer(router)
+
+		defer vcs.Close()
+
+		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name()}
+
+		handler := getHandlerWithConfig(t, retrieve, cfg)
+		body, status, err := handleRequest(handler, headers, retrieve, false)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusBadRequest, status)
+		require.Contains(t, body.String(), "failed to get cookie")
 	})
 }
 
@@ -202,14 +241,14 @@ func TestOperation_RetrieveCredential(t *testing.T) {
 		}))
 		defer vcs.Close()
 		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}, VCSURL: vcs.URL})
-		cred, err := svc.retrieveCredential("test")
+		cred, err := svc.retrieveCredential("test", "")
 		require.NoError(t, err)
 		require.NotNil(t, cred)
 	})
 	t.Run("retrieve credential  error invalid url ", func(t *testing.T) {
 		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 			VCSURL: "%%&^$"})
-		cred, err := svc.retrieveCredential("test")
+		cred, err := svc.retrieveCredential("test", "")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid URL escape")
 		require.Nil(t, cred)
@@ -221,7 +260,7 @@ func TestOperation_RetrieveCredential(t *testing.T) {
 		}))
 		defer vcs.Close()
 		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}, VCSURL: vcs.URL})
-		cred, err := svc.retrieveCredential("test")
+		cred, err := svc.retrieveCredential("test", "")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "201 Created")
 		require.Nil(t, cred)
@@ -236,7 +275,7 @@ func TestOperation_Callback_ExchangeCodeError(t *testing.T) {
 
 	handler := handlerLookup(t, svc, callback)
 
-	body, status, err := handleRequest(handler, nil, callback)
+	body, status, err := handleRequest(handler, nil, callback, true)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusBadRequest, status)
 	require.Contains(t, body.String(), "failed to exchange code for token")
@@ -253,7 +292,7 @@ func TestOperation_Callback_TokenIntrospectionError(t *testing.T) {
 	require.NotNil(t, svc)
 
 	handler := handlerLookup(t, svc, callback)
-	body, status, err := handleRequest(handler, headers, callback)
+	body, status, err := handleRequest(handler, headers, callback, true)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusBadRequest, status)
 	require.Contains(t, body.String(), "failed to get token info")
@@ -268,7 +307,7 @@ func TestOperation_Callback_GetCMSData_Error(t *testing.T) {
 		CMSURL: "cms"}
 	handler := getHandlerWithConfig(t, callback, cfg)
 
-	data, status, err := handleRequest(handler, headers, callback)
+	data, status, err := handleRequest(handler, headers, callback, true)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusBadRequest, status)
 	require.Contains(t, data.String(), "unsupported protocol scheme")
@@ -287,7 +326,7 @@ func TestOperation_Callback_CreateCredential_Error(t *testing.T) {
 		CMSURL: cms.URL, VCSURL: "vcs"}
 	handler := getHandlerWithConfig(t, callback, cfg)
 
-	data, status, err := handleRequest(handler, headers, callback)
+	data, status, err := handleRequest(handler, headers, callback, true)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusInternalServerError, status)
 	require.Contains(t, data.String(), "unsupported protocol scheme")
@@ -313,7 +352,7 @@ func TestOperation_Callback_StoreCredential_Error(t *testing.T) {
 		CMSURL: cms.URL, VCSURL: vcs.URL}
 	handler := getHandlerWithConfig(t, callback, cfg)
 
-	data, status, err := handleRequest(handler, headers, callback)
+	data, status, err := handleRequest(handler, headers, callback, true)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusInternalServerError, status)
 	require.Contains(t, data.String(), "failed to store credential")
@@ -321,7 +360,7 @@ func TestOperation_Callback_StoreCredential_Error(t *testing.T) {
 
 func TestOperation_CreateCredential_Error(t *testing.T) {
 	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}})
-	vc, err := svc.createCredential([]byte(""), &token.Introspection{})
+	vc, err := svc.createCredential([]byte(""), &token.Introspection{}, "")
 	require.Error(t, err)
 	require.Nil(t, vc)
 	require.Contains(t, err.Error(), "unexpected end of JSON input")
@@ -335,13 +374,13 @@ func TestOperation_StoreCredential(t *testing.T) {
 		}))
 		defer vcs.Close()
 		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}, VCSURL: vcs.URL})
-		err := svc.storeCredential([]byte(testCredentialRequest))
+		err := svc.storeCredential([]byte(testCredentialRequest), "")
 		require.NoError(t, err)
 	})
 	t.Run("store credential error invalid url ", func(t *testing.T) {
 		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 			VCSURL: "%%&^$"})
-		err := svc.storeCredential([]byte(testCredentialRequest))
+		err := svc.storeCredential([]byte(testCredentialRequest), "")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid URL escape")
 	})
@@ -352,7 +391,7 @@ func TestOperation_StoreCredential(t *testing.T) {
 		}))
 		defer vcs.Close()
 		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}, VCSURL: vcs.URL})
-		err := svc.storeCredential([]byte(testCredentialRequest))
+		err := svc.storeCredential([]byte(testCredentialRequest), "")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "201 Created")
 	})
@@ -382,7 +421,7 @@ func TestOperation_CreateCredential_InvalidURL(t *testing.T) {
 		VCSURL: "xyz:vcs"})
 	require.NotNil(t, svc)
 
-	data, err := svc.createCredential([]byte("{}"), &token.Introspection{})
+	data, err := svc.createCredential([]byte("{}"), &token.Introspection{}, "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unsupported protocol scheme")
 	require.Nil(t, data)
@@ -393,7 +432,7 @@ func TestOperation_CreateCredential_InvalidHTTPRequest(t *testing.T) {
 		VCSURL: "http://vcs\\"})
 	require.NotNil(t, svc)
 
-	data, err := svc.createCredential([]byte("{}"), &token.Introspection{})
+	data, err := svc.createCredential([]byte("{}"), &token.Introspection{}, "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid character")
 	require.Nil(t, data)
@@ -493,7 +532,7 @@ func TestRevokeVC(t *testing.T) {
 	})
 }
 
-func handleRequest(handler Handler, headers map[string]string, path string) (*bytes.Buffer, int, error) { //nolint:lll
+func handleRequest(handler Handler, headers map[string]string, path string, addCookie bool) (*bytes.Buffer, int, error) { //nolint:lll
 	req, err := http.NewRequest(handler.Method(), path, bytes.NewBuffer([]byte("")))
 	if err != nil {
 		return nil, 0, err
@@ -501,6 +540,10 @@ func handleRequest(handler Handler, headers map[string]string, path string) (*by
 
 	for k, v := range headers {
 		req.Header.Add(k, v)
+	}
+
+	if addCookie {
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
 	}
 
 	router := mux.NewRouter()
