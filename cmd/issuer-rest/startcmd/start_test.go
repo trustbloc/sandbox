@@ -139,29 +139,6 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 		require.Error(t, err)
 		require.Equal(t, "vcs-url value is empty", err.Error())
 	})
-
-	t.Run("test blank vcs profile name arg", func(t *testing.T) {
-		startCmd := GetStartCmd(&mockServer{})
-
-		var args []string
-		args = append(args, hostURLArg()...)
-		args = append(args, endpointAuthURLArg()...)
-		args = append(args, endpointTokenURLArg()...)
-		args = append(args, clientRedirectURLArg()...)
-		args = append(args, clientIDArg()...)
-		args = append(args, clientSecretArg()...)
-		args = append(args, tokenIntrospectionURLArg()...)
-		args = append(args, tlsCertFileArg()...)
-		args = append(args, tlsKeyFileArg()...)
-		args = append(args, cmsURLArg()...)
-		args = append(args, vcsURLArg()...)
-		args = append(args, []string{flag + vcsProfileFlagName, ""}...)
-		startCmd.SetArgs(args)
-
-		err := startCmd.Execute()
-		require.Error(t, err)
-		require.Equal(t, "vcs-profile value is empty", err.Error())
-	})
 }
 
 func TestStartCmdWithMissingHostArg(t *testing.T) {
@@ -303,9 +280,6 @@ func TestStartCmdValidArgsEnvVar(t *testing.T) {
 	err = os.Setenv(vcsURLEnvKey, "vcs")
 	require.Nil(t, err)
 
-	err = os.Setenv(vcsProfileEnvKey, "profile")
-	require.Nil(t, err)
-
 	err = os.Setenv(tlsKeyFileEnvKey, "key")
 	require.Nil(t, err)
 
@@ -339,7 +313,6 @@ func getValidArgs() []string {
 	args = append(args, tlsKeyFileArg()...)
 	args = append(args, cmsURLArg()...)
 	args = append(args, vcsURLArg()...)
-	args = append(args, vcsProfileArg()...)
 
 	return args
 }
@@ -386,8 +359,4 @@ func cmsURLArg() []string {
 
 func vcsURLArg() []string {
 	return []string{flag + vcsURLFlagName, "vcs"}
-}
-
-func vcsProfileArg() []string {
-	return []string{flag + vcsProfileFlagName, "profile"}
 }
