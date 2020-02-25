@@ -7,4 +7,5 @@
 
 apk --no-cache add curl
 
-curl -d '{"name":"demo", "did":"did:demo:abc", "uri":"http://demo.com", "signatureType":"Ed25519Signature2018", "creator":"did:demo:abc#key1" }' -H "Content-Type: application/json" -X POST http://vcs.example.com:8070/profile
+curl -d '{"name":"vc-issuer-1", "uri":"http://vc-issuer-1.com", "signatureType":"Ed25519Signature2018"}' -H "Content-Type: application/json" -X POST http://vcs.example.com:8070/profile
+curl -d '{"name":"vc-issuer-2", "uri":"http://vc-issuer-2.com", "signatureType":"Ed25519Signature2018", "DID":"did:v1:test:nym:z6MkhLbRigh9utJNCaiEAdkqktz4r7yVBFDeaeqCeT7pRFnF","DIDPrivateKey":"5dF8yAW7hjLkJsfMXKqTPdDZUT56dX7Jq7TdXEtUEHHt2YUFAE34nQwyPCEp5XdWCKPSxs69xXqozsNh6MoJTmz5"}' -H "Content-Type: application/json" -X POST http://vcs.example.com:8070/profile

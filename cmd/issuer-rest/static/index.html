@@ -19,15 +19,22 @@ SPDX-License-Identifier: Apache-2.0
 <main>
     <div class="container">
         <div class="row">
+            <label for="vcsProfile">Profile:</label>
+            <select id="vcsProfile" style="display:block">
+                <option value="vc-issuer-1">vc-issuer-1</option>
+                <option value="vc-issuer-2">vc-issuer-2</option>
+            </select>
+        </div>
+        <div class="row">
             <div class="btn white darken-6 col s4">
-                <a href="/login?scope=StudentCard" style="text-transform:none">
+                <a href="#" onclick="redirectURL('StudentCard');return false;" style="text-transform:none">
                     Issue Student Card
                 </a>
             </div>
         </div>
         <div class="row">
             <div class="btn white darken-6 col s4">
-                <a href="/login?scope=TravelCard" style="text-transform:none">
+                <a onclick="redirectURL('TravelCard');return false;" style="text-transform:none">
                     Issue Travel Card
                 </a>
             </div>
@@ -86,6 +93,11 @@ SPDX-License-Identifier: Apache-2.0
     ready(() => {
         document.getElementById('revokeVCBtn').addEventListener('click', onClickGet);
     })
+
+    function redirectURL(scope) {
+        const vcsProfile=document.getElementById('vcsProfile').value
+        window.location= "/login?scope="+scope+"&vcsProfile="+vcsProfile;
+    }
 
 </script>
 

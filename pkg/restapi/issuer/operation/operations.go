@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
@@ -35,6 +36,8 @@ const (
 	credentialContext = "https://www.w3.org/2018/credentials/v1"
 
 	vcsUpdateStatusEndpoint = "/updateStatus"
+
+	vcsProfileCookie = "vcsProfile"
 )
 
 // Handler http handler for each controller API endpoint
@@ -51,7 +54,6 @@ type Operation struct {
 	tokenResolver tokenResolver
 	cmsURL        string
 	vcsURL        string
-	vcsProfile    string
 	receiveVCHTML string
 	qrCodeHTML    string
 	vcHTML        string
@@ -63,7 +65,6 @@ type Config struct {
 	TokenResolver tokenResolver
 	CMSURL        string
 	VCSURL        string
-	VCSProfile    string
 	ReceiveVCHTML string
 	QRCodeHTML    string
 	VCHTML        string
@@ -97,7 +98,6 @@ func New(config *Config) *Operation {
 		tokenResolver: config.TokenResolver,
 		cmsURL:        config.CMSURL,
 		vcsURL:        config.VCSURL,
-		vcsProfile:    config.VCSProfile,
 		qrCodeHTML:    config.QRCodeHTML,
 		receiveVCHTML: config.ReceiveVCHTML,
 		vcHTML:        config.VCHTML}
@@ -115,11 +115,31 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 		u += "&scope=" + scope[0]
 	}
 
+	vcsProfile := r.URL.Query()["vcsProfile"]
+	if len(vcsProfile) == 0 {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("vcs profile is empty"))
+
+		return
+	}
+
+	expire := time.Now().AddDate(0, 0, 1)
+	cookie := http.Cookie{Name: vcsProfileCookie, Value: vcsProfile[0], Expires: expire}
+	http.SetCookie(w, &cookie)
+
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 }
 
 // callback for oauth2 login
-func (c *Operation) callback(w http.ResponseWriter, r *http.Request) {
+func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint: funlen
+	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get cookie: %s", err.Error()))
+
+		return
+	}
+
 	tk, err := c.tokenIssuer.Exchange(r)
 	if err != nil {
 		log.Error(err)
@@ -145,7 +165,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cred, err := c.createCredential(data, info)
+	cred, err := c.createCredential(data, info, vcsProfileCookie.Value)
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create credential: %s", err.Error()))
@@ -153,7 +173,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.storeCredential(cred)
+	err = c.storeCredential(cred, vcsProfileCookie.Value)
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to store credential: %s", err.Error()))
@@ -186,7 +206,16 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) {
 func (c *Operation) retrieveVC(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 
-	cred, err := c.retrieveCredential(id)
+	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get cookie: %s", err.Error()))
+
+		return
+	}
+
+	cred, err := c.retrieveCredential(id, vcsProfileCookie.Value)
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -318,7 +347,8 @@ func (c *Operation) getCMSURL(info *token.Introspection) string {
 	return c.cmsURL + "/" + strings.ToLower(info.Scope) + "s/" + userID
 }
 
-func (c *Operation) prepareCreateCredentialRequest(data []byte, info *token.Introspection) ([]byte, error) {
+func (c *Operation) prepareCreateCredentialRequest(data []byte, info *token.Introspection,
+	vcsProfile string) ([]byte, error) {
 	var subject map[string]interface{}
 
 	err := json.Unmarshal(data, &subject)
@@ -337,14 +367,14 @@ func (c *Operation) prepareCreateCredentialRequest(data []byte, info *token.Intr
 		Context: []string{credentialContext},
 		Subject: subject,
 		Type:    []string{"VerifiableCredential", info.Scope},
-		Profile: c.vcsProfile,
+		Profile: vcsProfile,
 	}
 
 	return json.Marshal(req)
 }
 
-func (c *Operation) createCredential(subject []byte, info *token.Introspection) ([]byte, error) {
-	body, err := c.prepareCreateCredentialRequest(subject, info)
+func (c *Operation) createCredential(subject []byte, info *token.Introspection, ledgerType string) ([]byte, error) {
+	body, err := c.prepareCreateCredentialRequest(subject, info, ledgerType)
 
 	if err != nil {
 		return nil, err
@@ -361,8 +391,8 @@ func (c *Operation) createCredential(subject []byte, info *token.Introspection) 
 	return sendHTTPRequest(req, httpClient, http.StatusCreated)
 }
 
-func (c *Operation) storeCredential(cred []byte) error {
-	storeVCBytes, err := prepareStoreVCRequest(cred, c.vcsProfile)
+func (c *Operation) storeCredential(cred []byte, vcsProfile string) error {
+	storeVCBytes, err := prepareStoreVCRequest(cred, vcsProfile)
 	if err != nil {
 		return err
 	}
@@ -383,7 +413,7 @@ func (c *Operation) storeCredential(cred []byte) error {
 	return nil
 }
 
-func (c *Operation) retrieveCredential(id string) ([]byte, error) {
+func (c *Operation) retrieveCredential(id, vcsProfile string) ([]byte, error) {
 	r, err := http.NewRequest("GET", c.vcsURL+"/retrieve", nil)
 	if err != nil {
 		return nil, fmt.Errorf("retrieve credential get request failed %s", err)
@@ -391,7 +421,7 @@ func (c *Operation) retrieveCredential(id string) ([]byte, error) {
 
 	q := r.URL.Query()
 	q.Add("id", id)
-	q.Add("profile", c.vcsProfile)
+	q.Add("profile", vcsProfile)
 
 	r.URL.RawQuery = q.Encode()
 
@@ -484,10 +514,12 @@ func (c *Operation) GetRESTHandlers() []Handler {
 
 // createCredential input data for edge service issuer rest api
 type createCredential struct {
-	Context []string               `json:"@context"`
-	Subject map[string]interface{} `json:"credentialSubject"`
-	Type    []string               `json:"type,omitempty"`
-	Profile string                 `json:"profile,omitempty"`
+	Context       []string               `json:"@context"`
+	Subject       map[string]interface{} `json:"credentialSubject"`
+	Type          []string               `json:"type,omitempty"`
+	Profile       string                 `json:"profile,omitempty"`
+	DID           string                 `json:"did,omitempty"`
+	DIDPrivateKey string                 `json:"didPrivateKey,omitempty"`
 }
 
 // updateCredentialStatusRequest request struct for updating vc status
