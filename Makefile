@@ -135,6 +135,10 @@ populate-fixtures: clean
 fabric-cli:
 	@scripts/build_fabric_cli.sh
 
+create-veres-did: clean
+	@mkdir -p .build
+	@scripts/create_veres_did.sh
+
 .PHONY: clean
 clean: clean-build
 
