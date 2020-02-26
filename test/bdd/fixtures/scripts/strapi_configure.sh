@@ -37,7 +37,7 @@ do
    then
      break
    fi
-   n=$[$n+1]
+   n=$((n+1))
    sleep 5
 done
 
