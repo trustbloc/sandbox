@@ -191,7 +191,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 		return
 	}
 
-	q, err := generateQRCode(cred, r.Host)
+	q, err := generateQRCode(cred, r.Host, vcsProfileCookie.Value)
 	if err != nil {
 		log.Error(fmt.Sprintf("failed to generate qr code : %s", err.Error()))
 		return
@@ -205,17 +205,9 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 // retrieveVC for retrieving the VC via link and QRCode
 func (c *Operation) retrieveVC(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
+	profile := r.URL.Query().Get("profile")
 
-	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
-	if err != nil {
-		log.Error(err)
-		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to get cookie: %s", err.Error()))
-
-		return
-	}
-
-	cred, err := c.retrieveCredential(id, vcsProfileCookie.Value)
+	cred, err := c.retrieveCredential(id, profile)
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -300,7 +292,7 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func generateQRCode(cred []byte, host string) (*qr, error) {
+func generateQRCode(cred []byte, host, profile string) (*qr, error) {
 	var vcMap map[string]interface{}
 
 	var img []byte
@@ -311,11 +303,12 @@ func generateQRCode(cred []byte, host string) (*qr, error) {
 	}
 
 	vcID, ok := vcMap["id"].(string)
+
 	if !ok {
 		return nil, fmt.Errorf("unable to assert vc ID field type as string")
 	}
 
-	retrieveURL := "https://" + host + retrieve + "?" + "id=" + trimQuote(vcID)
+	retrieveURL := "https://" + host + retrieve + "?" + "profile=" + profile + "&" + "id=" + trimQuote(vcID)
 
 	img, err = qrcode.Encode(retrieveURL, qrcode.Medium, 256)
 	if err != nil {
