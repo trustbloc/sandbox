@@ -97,3 +97,15 @@ services:
     volumes:
       - ../keys/tls:/etc/nginx/certs
       - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  shared.couchdb:
+    container_name: shared.couchdb
+    image: ${COUCHDB_FIXTURE_IMAGE}:${COUCHDB_FIXTURE_TAG}
+    ports:
+      - 5984:5984
+    environment:
+      - DB_URL=http://localhost:5984/member_db
+      - COUCHDB_USER=${COUCHDB_USERNAME}
+      - COUCHDB_PASSWORD=${COUCHDB_PASSWORD}
+    volumes:
+      - ../couchDB/config.ini:/opt/couchdb/etc/local.d/config.ini
