@@ -30,6 +30,9 @@ services:
     image: ${EDV_IMAGE}:${EDV_IMAGE_TAG}
     environment:
       - EDV_HOST_URL=0.0.0.0:8081
+      - EDV_DATABASE_TYPE=couchdb
+      - EDV_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - EDV_DATABASE_PREFIX=edv
     ports:
       - 8081:8081
     command: start
