@@ -11,7 +11,7 @@ STRAPI_DEMO_PATH = cmd/strapi-demo
 DOCKER_OUTPUT_NS         ?= docker.pkg.github.com
 # Namespace for the issuer image
 ISSUER_REST_IMAGE_NAME   ?= trustbloc/edge-sandbox/issuer-rest
-# Namespace for the ro image
+# Namespace for the rp image
 RP_REST_IMAGE_NAME       ?= trustbloc/edge-sandbox/rp-rest
 
 # Tool commands (overridable)
@@ -24,7 +24,7 @@ FABRIC_TOOLS_VERSION ?= 2.0.0-alpha
 FABRIC_TOOLS_TAG     ?= $(ARCH)-$(FABRIC_TOOLS_VERSION)
 
 # This can be a commit hash or a tag (or any git ref)
-export FABRIC_CLI_EXT_VERSION ?= 3fd66894726c1afcd904413dcfa3b4d586ea6c92
+export FABRIC_CLI_EXT_VERSION ?= v0.1.2
 
 .PHONY: all
 all: checks unit-test
