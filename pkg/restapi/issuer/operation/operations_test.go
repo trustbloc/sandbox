@@ -193,40 +193,16 @@ func TestOperation_RetrieveVC(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, http.StatusInternalServerError, status)
 	})
-	t.Run("cookie not found", func(t *testing.T) {
-		router := mux.NewRouter()
-
-		router.HandleFunc("/retrieve", func(writer http.ResponseWriter, request *http.Request) {
-			writer.WriteHeader(http.StatusOK)
-			_, err := writer.Write([]byte(`"credential"`))
-			if err != nil {
-				panic(err)
-			}
-		})
-
-		vcs := httptest.NewServer(router)
-
-		defer vcs.Close()
-
-		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-			VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name()}
-
-		handler := getHandlerWithConfig(t, retrieve, cfg)
-		body, status, err := handleRequest(handler, headers, retrieve, false)
-		require.NoError(t, err)
-		require.Equal(t, http.StatusBadRequest, status)
-		require.Contains(t, body.String(), "failed to get cookie")
-	})
 }
 
 func TestOperation_GenerateQRCode(t *testing.T) {
 	t.Run("qr code success", func(t *testing.T) {
-		qr, err := generateQRCode([]byte(`{"id":"test"}`), "host")
+		qr, err := generateQRCode([]byte(`{"id":"test"}`), "host", "profile")
 		require.NoError(t, err)
 		require.NotNil(t, qr)
 	})
 	t.Run("qr code error", func(t *testing.T) {
-		qr, err := generateQRCode([]byte(`{"name":chan int}`), "host")
+		qr, err := generateQRCode([]byte(`{"name":chan int}`), "host", "profile")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "generate QR Code unmarshalling failed")
 		require.Nil(t, qr)
