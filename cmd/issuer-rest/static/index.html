@@ -48,10 +48,12 @@ SPDX-License-Identifier: Apache-2.0
         </div>
 
         <div class="row">
-            <button id='revokeVCBtn'>Revoke VC</button>
+            <div class="btn white darken-6 col s4">
+            <a id='revokeVCBtn' style="text-transform:none">Revoke VC</a>
             <form method="post" id="vcForm" action="/revoke">
                 <input type="hidden" name="vcDataInput" id="vcDataInput">
             </form>
+            </div>
         </div>
     </div>
 </main>
