@@ -117,7 +117,9 @@ func createFlags(startCmd *cobra.Command) {
 
 func startRP(parameters *rpParameters) error {
 	cfg := &operation.Config{
-		VCHTML: "static/vc.html", VCSURL: parameters.vcServiceURL}
+		VCHTML: "static/vc.html",
+		VPHTML: "static/vp.html",
+		VCSURL: parameters.vcServiceURL}
 
 	rpService, err := rp.New(cfg)
 	if err != nil {
@@ -127,7 +129,10 @@ func startRP(parameters *rpParameters) error {
 	handlers := rpService.GetOperations()
 	router := mux.NewRouter()
 
-	router.Handle("/", http.FileServer(http.Dir("static")))
+	fs := http.FileServer(http.Dir("static"))
+	router.PathPrefix("/reader/").Handler(fs)
+
+	router.Handle("/", fs)
 
 	for _, handler := range handlers {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
