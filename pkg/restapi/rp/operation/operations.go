@@ -20,9 +20,13 @@ import (
 )
 
 const (
-	verifyVC            = "/verifyVC"
 	httpContentTypeJSON = "application/json"
-	vcsVerifyEndpoint   = "/verify"
+
+	// edge-service endpoint to verify credential
+	verifyVC = "/verify"
+
+	// edge-service endpoint to verify presentation
+	verifyVP = "/verifyPresentation"
 )
 
 // Handler http handler for each controller API endpoint
@@ -40,6 +44,7 @@ type httpClient interface {
 type Operation struct {
 	handlers []Handler
 	vcHTML   string
+	vpHTML   string
 	vcsURL   string
 	client   httpClient
 }
@@ -47,11 +52,12 @@ type Operation struct {
 // Config defines configuration for rp operations
 type Config struct {
 	VCHTML string
+	VPHTML string
 	VCSURL string
 }
 
-// verifyCredentialResponse describes verify credential response
-type verifyCredentialResponse struct {
+// verifyResponse describes verify credential response
+type verifyResponse struct {
 	Verified bool   `json:"verified"`
 	Message  string `json:"message"`
 }
@@ -64,7 +70,10 @@ type vc struct {
 // New returns rp operation instance
 func New(config *Config) *Operation {
 	svc := &Operation{
-		vcHTML: config.VCHTML, vcsURL: config.VCSURL, client: &http.Client{}}
+		vcHTML: config.VCHTML,
+		vpHTML: config.VPHTML,
+		vcsURL: config.VCSURL,
+		client: &http.Client{}}
 	svc.registerHandler()
 
 	return svc
@@ -79,33 +88,51 @@ func (c *Operation) verifyVC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respData, err := c.httpPost(
-		c.vcsURL+vcsVerifyEndpoint, httpContentTypeJSON, []byte(r.Form.Get("vcDataInput")))
-	if err != nil {
-		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to verify vc: %s", err.Error()))
+	c.verify(verifyVC, "vcDataInput", c.vcHTML, w, r)
+}
+
+// verifyVP
+func (c *Operation) verifyVP(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to parse form: %s", err.Error()))
 
 		return
 	}
 
-	response := verifyCredentialResponse{}
+	c.verify(verifyVP, "vpDataInput", c.vpHTML, w, r)
+}
+
+// verify function verifies the input data and parse the response to provided template
+func (c *Operation) verify(endpoint, inputData, htmlTemplate string, w http.ResponseWriter, r *http.Request) {
+	respData, err := c.httpPost(
+		c.vcsURL+endpoint, httpContentTypeJSON, []byte(r.Form.Get(inputData)))
+
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to verify: %s", err.Error()))
+
+		return
+	}
+
+	response := verifyResponse{}
 	if errUnmarshal := json.Unmarshal([]byte(respData), &response); errUnmarshal != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to unmarshal vc: %s", errUnmarshal.Error()))
+			fmt.Sprintf("failed to unmarshal: %s", errUnmarshal.Error()))
 
 		return
 	}
 
 	if !response.Verified {
 		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to verify vc: %s", response.Message))
+			fmt.Sprintf("failed to verify : %s", response.Message))
 
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	t, err := template.ParseFiles(c.vcHTML)
+	t, err := template.ParseFiles(htmlTemplate)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("unable to load html: %s", err.Error()))
@@ -113,7 +140,7 @@ func (c *Operation) verifyVC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := t.Execute(w, vc{Data: r.Form.Get("vcDataInput")}); err != nil {
+	if err := t.Execute(w, vc{Data: r.Form.Get(inputData)}); err != nil {
 		log.Error(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
 }
@@ -160,7 +187,10 @@ func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg s
 // registerHandler register handlers to be exposed from this service as REST API endpoints
 func (c *Operation) registerHandler() {
 	// Add more protocol endpoints here to expose them as controller API endpoints
-	c.handlers = []Handler{support.NewHTTPHandler(verifyVC, http.MethodPost, c.verifyVC)}
+	c.handlers = []Handler{
+		support.NewHTTPHandler(verifyVC, http.MethodPost, c.verifyVC),
+		support.NewHTTPHandler(verifyVP, http.MethodPost, c.verifyVP),
+	}
 }
 
 // GetRESTHandlers get all controller API handler available for this service

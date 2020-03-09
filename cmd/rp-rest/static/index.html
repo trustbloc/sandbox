@@ -8,17 +8,33 @@ SPDX-License-Identifier: Apache-2.0
 <html lang="en">
 <head>
     <title>RP</title>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
     <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
     <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
 </head>
 
 <body>
-<div>
-    <button id='getVCBtn'>Get VC</button>
-    <form method="post" id="vcForm" action="/verifyVC">
-        <input type="hidden" name="vcDataInput" id="vcDataInput">
-    </form>
+<div class="section"></div>
+<main>
+    <div class="container">
+      <div class="row">
+        <div class="btn white darken-6 col s3">
+            <a id='getVCBtn' style="text-transform:none">Get VC</a>
+            <form method="post" id="vcForm" action="/verify">
+             <input type="hidden" name="vcDataInput" id="vcDataInput">
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="btn white darken-6 col s3">
+        <a href="reader/qrReader.html" style="text-transform:none">
+            Verifier KIOSK
+        </a>
+        </div>
+    </div>
 </div>
+</main>
 </body>
 
 <script>
