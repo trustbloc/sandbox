@@ -12,11 +12,12 @@ services:
     container_name: sidetree-mock
     image: ${SIDETREE_MOCK_IMAGE}:${SIDETREE_MOCK_IMAGE_TAG}
     environment:
-      - SIDETREE_MOCK_TLS_CERTIFICATE=//etc/tls/localhost.crt
+      - SIDETREE_MOCK_TLS_CERTIFICATE=/etc/tls/localhost.crt
       - SIDETREE_MOCK_TLS_KEY=/etc/tls/localhost.key
       - SIDETREE_MOCK_HOST=0.0.0.0
-      - SIDETREE_MOCK_PORT=48326
+      - SIDETREE_MOCK_PORT=80
+      - SIDETREE_MOCK_DID_NAMESPACE=did:bloc:sidetree-mock
     ports:
-      - 48326:48326
+      - 80:80
     volumes:
       - ../keys/tls:/etc/tls
