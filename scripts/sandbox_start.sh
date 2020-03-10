@@ -20,8 +20,9 @@ cd test/bdd && go test
 
 sidetreeCompseFile='-f docker-compose-sidetree-mock.yml'
 if [ "$START_SIDETREE_FABRIC" = true ] ; then
+    echo "integration with sidetree fabric will not work until we add well-known file in sidetree peer"
+    exit -1
     setupFabric &
-    export SIDETREE_HOST_URL="http://peer0.org1.example.com:48326/document"
     sidetreeCompseFile='-f docker-compose-sidetree-fabric.yml'
 fi
 dockerComposeFiles="-f docker-compose-third-party.yml -f docker-compose-router.yml -f docker-compose-edge-components.yml -f docker-compose-demo-applications.yml -f docker-compose-universal-resolver.yml $sidetreeCompseFile"
