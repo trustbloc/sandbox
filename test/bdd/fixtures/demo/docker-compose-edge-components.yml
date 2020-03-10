@@ -15,7 +15,7 @@ services:
       - VC_REST_HOST_URL=0.0.0.0:8070
       - VC_REST_HOST_URL_EXTERNAL=http://localhost:8070
       - EDV_REST_HOST_URL=http://edv.example.com:8081
-      - SIDETREE_HOST_URL=${SIDETREE_HOST_URL}
+      - BLOC_DOMAIN=sidetree-mock:80
       - UNIVERSAL_RESOLVER_HOST_URL=http://uni-resolver-web:8080/1.0/identifiers
     ports:
       - 8070:8070
@@ -51,4 +51,14 @@ services:
       - 8091:8091
     volumes:
       - ../keys/tls:/etc/tls
+    command: start
+
+
+  bloc.did.method.example.com:
+    container_name: bloc.did.method.example.com
+    image: ${BLOC_DID_METHOD_IMAGE}:${BLOC_DID_METHOD_IMAGE_TAG}
+    environment:
+      - DID_METHOD_HOST_URL=0.0.0.0:8060
+    ports:
+      - 8060:8060
     command: start
