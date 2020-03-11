@@ -15,7 +15,7 @@ services:
       - VC_REST_HOST_URL=0.0.0.0:8070
       - VC_REST_HOST_URL_EXTERNAL=http://localhost:8070
       - EDV_REST_HOST_URL=http://edv.example.com:8081
-      - BLOC_DOMAIN=sidetree-mock:80
+      - BLOC_DOMAIN=testnet.trustbloc.local:80
       - UNIVERSAL_RESOLVER_HOST_URL=http://uni-resolver-web:8080/1.0/identifiers
     ports:
       - 8070:8070
