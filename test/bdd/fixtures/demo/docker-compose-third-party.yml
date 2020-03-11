@@ -109,3 +109,5 @@ services:
       - COUCHDB_PASSWORD=${COUCHDB_PASSWORD}
     volumes:
       - ../couchDB/config.ini:/opt/couchdb/etc/local.d/config.ini
+    logging:
+      driver: none
