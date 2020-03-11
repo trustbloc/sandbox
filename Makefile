@@ -45,7 +45,7 @@ unit-test:
 	@scripts/check_unit.sh
 
 .PHONY: demo-start
-demo-start: clean issuer-rest-docker rp-rest-docker generate-test-keys
+demo-start: clean generate-test-config issuer-rest-docker rp-rest-docker generate-test-keys
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-start-with-sidetree-fabric
@@ -139,6 +139,10 @@ create-veres-did: clean
 	@mkdir -p .build
 	@scripts/create_veres_did.sh
 
+.PHONY: generate-test-config
+generate-test-config: clean
+	@scripts/generate_test_config.sh
+
 .PHONY: clean
 clean: clean-build
 
@@ -150,3 +154,5 @@ clean-build:
 	@rm -Rf ./test/bdd/fixtures/oathkeeper/rules/resource-server.json
 	@rm -Rf ./test/bdd/fixtures/fabric/channel
 	@rm -Rf ./test/bdd/fixtures/fabric/crypto-config
+	@rm -Rf ./test/bdd/fixtures/discovery-server/config
+	@rm -Rf ./test/bdd/fixtures/stakeholder-server/config
