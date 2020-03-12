@@ -1,0 +1,44 @@
+<! ––
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+––>
+
+<html lang="en">
+<head>
+	<title>My College</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" >
+    <link type="text/css" rel="stylesheet" href="/../css/college.css" >
+</head>
+<body>
+<div class="navHolder"><div class="nav"></div></div>
+<div class="bannerHolder">
+<div class="banner">
+    <div class="bannerText">
+        <h1>QUALITY HIGHER EDUCATION</h1>
+        <h2>At our college, you will find:</h2>
+        <ul>
+            <li class="offerList">Small Classes</li>
+            <li class="offerList">Academic Programs</li>
+        </ul>
+    </div>
+    <div class="apllyNow" id="issueCard">
+        <a href="/login?scope=StudentCard" id="issueStudentCard"><img src="/../images/college/apply.png" width="320" height="56"></a>
+    </div>
+</div>
+</div>
+<div class="subHolder"><div class="sub"></div></div>
+<div class="footerHolder"><div class="footer"></div></div>
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script type="text/javascript">
+const urlParams = new URLSearchParams(window.location.search);
+const querystring = urlParams.get('vcsProfile');
+    $('#issueStudentCard').each(function(){
+        var href = $(this).attr('href');
+        href += (href.match(/\?/) ? '&' : '?') + "vcsProfile" + "=" + querystring;
+        $(this).attr('href', href);
+    });
+</script>
+</body>
+</html>

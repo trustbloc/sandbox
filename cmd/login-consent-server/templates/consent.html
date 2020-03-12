@@ -1,34 +1,78 @@
 <!--
 Copyright SecureKey Technologies Inc. All Rights Reserved.
+
 SPDX-License-Identifier: Apache-2.0
  -->
 
+<!DOCTYPE html>
 <html>
+<head>
+    <title>Consent Page</title>
 
-<head><title>Consent Page</title></head>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <style>
+        [type="checkbox"].filled-in+span:after{
+            background-color: #1976d2 !important;
+            border: 2px solid #e0e0e0 !important;
+        }
+        [type="checkbox"].filled-in:not(:checked)+span:after {
+            border: 2px solid #0d0d0d !important;
+            background-color: #ffffff !important;
+        }
+        .section {
+            padding-top: 24rem;
+            padding-bottom: 3rem;
+        }
+        label {
+            font-size: .8rem;
+            color: #0d0d0d;
+        }
+    </style>
+</head>
 
 <body>
-<h1>An application requests access to your data!</h1>
-<form action="" method="POST">
-    <input type="hidden" name="challenge" value="a92c5d477a844767afcc7b209c67935f">
-    <p>Hi {{.User}}, application <strong>{{.ClientID}}</strong> wants access resources on your behalf and to:</p>
-    {{range $element := .Scope}}
-        <input type="checkbox" id="{{$element}}" value="{{$element}}" name="grant_scope" checked>
-        <label for="{{$element}}">{{$element}}</label>
-    <br/>
-    {{end}}
-    <br>
-    <p>Do you want to be asked next time when this application wants to access your data? The application will
-        not be able to ask for more permissions without your consent.</p>
-    <ul></ul>
-    <p>
-        <input type="checkbox" id="remember" name="remember" value="1">
-        <label for="remember">Do not ask me again</label>
-    </p>
-    <input type="hidden" name="challenge" value="{{.Challenge}}">
-    <button type="submit" name="submit" id="accept" value="accept" >Allow access</button>
-    <button type="submit" name="submit" id="reject" value="reject" >Deny access</button>
-    </p>
+<div class="row">
+    <div class="col s12 m15">
+        <div class="card grey lighten-4">
+            <div class="card-content blue-text text-darken-2">
+                <span class="card-title">An application requests access to your data</span>
+            </div>
+            <div class="card-action">
+                <form action="" method="POST">
+                    <p>Hi {{.User}}, application <strong>{{.ClientID}}</strong> wants access resources on your behalf and to:</p>
+                        {{range $element := .Scope}}
+                       <label>
+                        <input type="checkbox" class="filled-in" id="{{$element}}" value="{{$element}}" name="grant_scope" checked="checked" />
+                        <span for="{{$element}}">{{$element}}</span>
+                        <br/>
+                        {{end}}
+                        </label>
+                    <div class="section" style="padding-top: 0.5rem;"></div>
+                    <p>The application will not be able to ask for more permissions without your consent.</p>
+                    <label>
+                            <input type="checkbox" value="remember" class="filled-in" id="remember"/>
+                            <span>Do not ask me again</span>
+                    </label>
+                    <p>
+                    <input type="hidden" name="challenge" value="{{.Challenge}}">
+                    <button type="submit" name="submit" id="accept" class='col s1  btn-large waves-effect blue darken-2' value="accept" >Allow access</button>
+                    <button type="submit" name="submit" id="reject" class='col s1  btn-large waves-effect blue darken-2'  style='margin-left:1%' value="reject" >Deny access</button>
+                     <p>
+                  <div class="section" style="padding-top: 1rem;"></div>
+                </p>
+                </form>
+            </div>
+
+        </div>
+        <div class="section"></div>
+        <footer class="page-footer grey lighten-4" style="text-align:center; display: flex;min-height: 20vh; flex-direction: column;">
+            <p class="blue-text text-darken-2">  &copy; Copyright SecureKey Technologies Inc. & TrustBloc contributors.</p>
+            <a href="https://github.com/trustbloc/edge-sandbox">Github</a>
+        </footer>
+    </div>
+
+
+</div>
 </form>
 </body>
 </html>
