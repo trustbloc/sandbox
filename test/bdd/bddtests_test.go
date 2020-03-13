@@ -89,6 +89,7 @@ func FeatureContext(s *godog.Suite) {
 	bddtests.NewCommonSteps(fabricTestCtx).RegisterSteps(s)
 	NewOffLedgerSteps(fabricTestCtx).RegisterSteps(s)
 	NewFabricCLISteps(fabricTestCtx).RegisterSteps(s)
+	NewFileHandlerSteps(fabricTestCtx).RegisterSteps(s)
 }
 
 func initBDDConfig() {

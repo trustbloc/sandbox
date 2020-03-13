@@ -1,9 +1,11 @@
+
 {
   "MspID": "general",
   "Apps": [
     {
-      "AppName": "did:sidetree",
+      "AppName": "did:bloc:peer0.org1.example.com",
       "Version": "1",
+      "Tags": ["sidetree"],
       "Config": "file://./did-sidetree-config.yaml",
       "Format": "yaml",
       "Components": [
@@ -11,7 +13,24 @@
           "Name": "protocol",
           "Version": "1.0",
           "Config": "file://./did-sidetree-protocol-v1_0.json",
-          "Format": "json"
+          "Format": "json",
+          "Tags": ["sidetree"]
+        }
+      ]
+    },
+    {
+      "AppName": "file:idx",
+      "Version": "1",
+      "Tags": ["sidetree"],
+      "Config": "file://./file-server-config.yaml",
+      "Format": "yaml",
+      "Components": [
+        {
+          "Name": "protocol",
+          "Version": "1.0",
+          "Config": "file://./did-sidetree-protocol-v1_0.json",
+          "Format": "json",
+          "Tags": ["sidetree"]
         }
       ]
     }
