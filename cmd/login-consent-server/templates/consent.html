@@ -1,0 +1,35 @@
+<! ––
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+––>
+
+<html>
+
+<head><title>Consent Page</title></head>
+
+<body>
+<h1>An application requests access to your data!</h1>
+<form action="" method="POST">
+    <input type="hidden" name="challenge" value="a92c5d477a844767afcc7b209c67935f">
+    <p>Hi {{.User}}, application <strong>{{.ClientID}}</strong> wants access resources on your behalf and to:</p>
+    {{range $element := .Scope}}
+        <input type="checkbox" id="{{$element}}" value="{{$element}}" name="grant_scope" checked>
+        <label for="{{$element}}">{{$element}}</label>
+    <br/>
+    {{end}}
+    <br>
+    <p>Do you want to be asked next time when this application wants to access your data? The application will
+        not be able to ask for more permissions without your consent.</p>
+    <ul></ul>
+    <p>
+        <input type="checkbox" id="remember" name="remember" value="1">
+        <label for="remember">Do not ask me again</label>
+    </p>
+    <input type="hidden" name="challenge" value="{{.Challenge}}">
+    <button type="submit" name="submit" id="accept" value="accept" >Allow access</button>
+    <button type="submit" name="submit" id="reject" value="reject" >Deny access</button>
+    </p>
+</form>
+</body>
+</html>

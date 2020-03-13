@@ -7,12 +7,15 @@ ARCH             = $(shell go env GOARCH)
 ISSUER_REST_PATH = cmd/issuer-rest
 RP_REST_PATH     = cmd/rp-rest
 STRAPI_DEMO_PATH = cmd/strapi-demo
+LOGIN_CONSENT_PATH = cmd/login-consent-server
 
 DOCKER_OUTPUT_NS         ?= docker.pkg.github.com
 # Namespace for the issuer image
 ISSUER_REST_IMAGE_NAME   ?= trustbloc/edge-sandbox/issuer-rest
 # Namespace for the rp image
 RP_REST_IMAGE_NAME       ?= trustbloc/edge-sandbox/rp-rest
+# Namespace for the login consent server image
+LOGIN_CONSENT_SEVER_IMAGE_NAME   ?= trustbloc/edge-sandbox/login-consent-server
 
 # Tool commands (overridable)
 ALPINE_VER ?= 3.10
@@ -45,12 +48,12 @@ unit-test:
 	@scripts/check_unit.sh
 
 .PHONY: demo-start
-demo-start: clean generate-test-config issuer-rest-docker rp-rest-docker generate-test-keys
+demo-start: clean generate-test-config issuer-rest-docker rp-rest-docker login-consent-server-docker generate-test-keys
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-start-with-sidetree-fabric
 demo-start-with-sidetree-fabric: export START_SIDETREE_FABRIC=true
-demo-start-with-sidetree-fabric: clean issuer-rest-docker rp-rest-docker generate-test-keys populate-fixtures docker-thirdparty fabric-cli
+demo-start-with-sidetree-fabric: clean issuer-rest-docker rp-rest-docker login-consent-server-docker generate-test-keys populate-fixtures docker-thirdparty fabric-cli
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-stop
@@ -83,6 +86,13 @@ rp-rest:
 	@cp -r ${RP_REST_PATH}/static ./.build/bin/rp
 	@cd ${RP_REST_PATH} && go build -o ../../.build/bin/rp/rp-rest main.go
 
+.PHONY: login-consent-server
+login-consent-server:
+	@echo "Building login-consent-server"
+	@mkdir -p ./.build/bin/login-consent
+	@cp -r ${LOGIN_CONSENT_PATH}/templates ./.build/bin/login-consent
+	@cd ${LOGIN_CONSENT_PATH} && go build -o ../../.build/bin/login-consent/server main.go
+
 .PHONY: issuer-rest-docker
 issuer-rest-docker:
 	@echo "Building issuer rest docker image"
@@ -94,6 +104,13 @@ issuer-rest-docker:
 rp-rest-docker:
 	@echo "Building rp rest docker image"
 	@docker build -f ./images/rp-rest/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(RP_REST_IMAGE_NAME):latest \
+	--build-arg GO_VER=$(GO_VER) \
+	--build-arg ALPINE_VER=$(ALPINE_VER) .
+
+.PHONY: login-consent-server-docker
+login-consent-server-docker:
+	@echo "Building login consent server docker image"
+	@docker build -f ./images/login-consent-server/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(LOGIN_CONSENT_SEVER_IMAGE_NAME):latest \
 	--build-arg GO_VER=$(GO_VER) \
 	--build-arg ALPINE_VER=$(ALPINE_VER) .
 

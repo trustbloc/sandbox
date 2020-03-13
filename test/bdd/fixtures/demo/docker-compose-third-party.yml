@@ -9,7 +9,8 @@ version: '3'
 services:
 
   hydra:
-    image: oryd/hydra:v1.2.1-alpine
+    container_name: hydra
+    image: oryd/hydra:v1.3.2-alpine
     ports:
       - "4444:4444" # Public port
       - "4445:4445" # Admin port
@@ -19,9 +20,9 @@ services:
     environment:
       - DSN=mysql://user:secret@secret(mysql:3306)/mysql?max_conns=20&max_idle_conns=4
       - URLS_SELF_ISSUER=http://127.0.0.1:4444
-      - URLS_CONSENT=http://127.0.0.1:3000/consent
-      - URLS_LOGIN=http://127.0.0.1:3000/login
-      - URLS_LOGOUT=http://127.0.0.1:3000/logout
+      - URLS_CONSENT=http://127.0.0.1:3300/consent
+      - URLS_LOGIN=http://127.0.0.1:3300/login
+      - URLS_LOGOUT=http://127.0.0.1:3300/logout
       - DSN=memory
       - SECRETS_SYSTEM=testSecretsSystem
       - OIDC_SUBJECT_TYPES_SUPPORTED=public,pairwise
@@ -31,14 +32,6 @@ services:
       - ../scripts/hydra_configure.sh:/tmp/hydra_configure.sh
     depends_on:
       - mysql
-
-  consent:
-    environment:
-      - HYDRA_ADMIN_URL=http://hydra:4445
-    image: oryd/hydra-login-consent-node:v1.0.0-rc.10
-    ports:
-      - "3000:3000"
-    restart: unless-stopped
 
   oathkeeper-proxy:
     image: oryd/oathkeeper:v0.35.1-alpine
@@ -111,3 +104,13 @@ services:
       - ../couchDB/config.ini:/opt/couchdb/etc/local.d/config.ini
     logging:
       driver: none
+
+  consent.login.com:
+    container_name: consent.login.com
+    image: ${CONSENT_LOGIN_SERVER_IMAGE}:latest
+    environment:
+      - ADMIN_URL=http://hydra:4445
+      - SERVE_PORT=3300
+      - SKIP_SSL_CHECK=true
+    ports:
+      - 3300:3300
