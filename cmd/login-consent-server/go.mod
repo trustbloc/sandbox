@@ -9,4 +9,5 @@ go 1.13
 require (
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/ory/hydra-client-go v1.3.2
+	github.com/stretchr/testify v1.4.0
 )
