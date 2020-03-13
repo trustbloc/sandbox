@@ -9,13 +9,12 @@ go 1.13
 require (
 	github.com/cucumber/godog v0.8.1
 	github.com/hyperledger/fabric-protos-go v0.0.0
-	github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20191219180315-e1055f391525 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/viper v1.3.2
-	github.com/trustbloc/fabric-peer-test-common v0.1.2-0.20200213155832-06af5163b73f
+	github.com/trustbloc/fabric-peer-test-common v0.1.3-0.20200310134247-41a6ac5712d9
+	github.com/trustbloc/sidetree-core-go v0.1.3-0.20200306222551-b9976a89a854
+
 )
 
-replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.2-0.20200205170340-c69bba6d7b81
-
-replace github.com/hyperledger/fabric-sdk-go => github.com/hyperledger/fabric-sdk-go v1.0.0-beta1.0.20200203184105-5f7f0b025d89
+replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.2

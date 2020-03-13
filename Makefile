@@ -53,7 +53,7 @@ demo-start: clean generate-test-config issuer-rest-docker rp-rest-docker login-c
 
 .PHONY: demo-start-with-sidetree-fabric
 demo-start-with-sidetree-fabric: export START_SIDETREE_FABRIC=true
-demo-start-with-sidetree-fabric: clean issuer-rest-docker rp-rest-docker login-consent-server-docker generate-test-keys populate-fixtures docker-thirdparty fabric-cli
+demo-start-with-sidetree-fabric: clean generate-test-config issuer-rest-docker rp-rest-docker login-consent-server-docker generate-test-keys populate-fixtures docker-thirdparty fabric-cli
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-stop
