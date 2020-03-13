@@ -23,7 +23,7 @@ function convert_file_osx() {
 
 pwd=`pwd`
 
-configs=( test/bdd/fixtures/discovery-config/sidetree-mock)
+configs=( test/bdd/fixtures/discovery-config/sidetree-mock test/bdd/fixtures/discovery-config/sidetree-fabric)
 
 # processes config data files using provided function, to generate config files for bdd tests
 function process_files() {
