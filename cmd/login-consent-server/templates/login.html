@@ -1,0 +1,29 @@
+<! ––
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+––>
+
+<html>
+<head><title>Login Page</title></head>
+
+<body>
+<h1>Please log in</h1>
+<form action="/login" method="POST">
+    <input type="hidden" name="challenge" value="{{.login_challenge}}">
+    <table style="">
+        <tr>
+            <td><input type="email" id="email" name="email" placeholder="email@foobar.com"></td>
+            <td>(it's "foo@bar.com")</td>
+        </tr>
+        <tr>
+            <td><input type="password" id="password" name="password"></td>
+            <td>(it's "foobar")</td>
+        </tr>
+    </table>
+    <input type="checkbox" id="remember" name="remember" value="1">
+    <label for="remember">Remember me</label><br>
+    <input type="submit" id="accept" value="Log in">
+</form>
+</body>
+</html>
