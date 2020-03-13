@@ -6,6 +6,10 @@
 
 client:
 
+  # Which organization does this application instance belong to? The value must be the name of an org
+  # defined under "organizations"
+  organization: peerorg2
+
   logging:
     level: info
 
@@ -94,8 +98,8 @@ channels:
 # list of participating organizations in this network
 #
 organizations:
-  peerorg1:
-    mspid: Org1MSP
+  peerorg2:
+    mspid: Org2MSP
 
 #
 # List of peers to send various requests to, including endorsement, query

@@ -4,8 +4,13 @@
   },
   "Namespaces": [
     {
-      "Namespace": "did:sidetree",
+      "Namespace": "did:bloc:peer0.org1.example.com",
       "BasePath": "/document"
+    },
+    {
+      "DocType": "FILE_INDEX",
+      "Namespace": "file:idx",
+      "BasePath": "/file"
     }
   ]
 }
