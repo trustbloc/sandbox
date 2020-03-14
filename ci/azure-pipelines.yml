@@ -4,6 +4,8 @@
 
 
 name: $(SourceBranchName)-$(Date:yyyyMMdd).$(Rev:r)
+trigger:
+  - master
 pr:
   - master
 
