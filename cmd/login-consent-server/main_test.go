@@ -8,6 +8,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"net/http"
 	"net/http/httptest"
@@ -50,6 +52,61 @@ func TestConsent_New(t *testing.T) {
 			require.NotNil(t, server.loginTemplate)
 			require.NotNil(t, server.consentTemplate)
 			require.True(t, server.skipSSLCheck)
+		})
+	}
+}
+
+func TestConsent_buildConsentServer(t *testing.T) {
+	tests := []struct {
+		name string
+		env  map[string]string
+		err  string
+	}{
+		{
+			name: "initialize without required ENV variables",
+			env:  map[string]string{},
+			err:  "admin URL is required",
+		},
+		{
+			name: "initialize with only required ENV variables",
+			env: map[string]string{
+				adminURLEnvKey: "sampleURL",
+			},
+		},
+		{
+			name: "initialize with invalid ski ssl check ENV variable",
+			env: map[string]string{
+				adminURLEnvKey:     "sampleURL",
+				skipSSLCheckEnvKey: "InVaLid",
+			},
+		},
+		{
+			name: "initialize with valid ENV variables",
+			env: map[string]string{
+				adminURLEnvKey:     "sampleURL",
+				skipSSLCheckEnvKey: "true",
+			},
+		},
+	}
+
+	t.Parallel()
+
+	for _, test := range tests {
+		tc := test
+		t.Run(tc.name, func(t *testing.T) {
+			for k, v := range tc.env {
+				require.NoError(t, os.Setenv(k, v))
+			}
+
+			server, err := buildConsentServer()
+			if tc.err != "" {
+				require.Contains(t, err.Error(), tc.err)
+			} else {
+				require.NotNil(t, server)
+				require.NotNil(t, server.hydraClient)
+				require.NotNil(t, server.loginTemplate)
+				require.NotNil(t, server.consentTemplate)
+			}
 		})
 	}
 }
@@ -160,7 +217,7 @@ func TestConsentServer_Login(t *testing.T) {
 
 func TestConsentServer_Consent(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		if req.RequestURI == "/oauth2/auth/requests/consent/accept" {
+		if strings.HasPrefix(req.RequestURI, "/oauth2/auth/requests/consent/") {
 			fmt.Fprint(res, `{"redirect_to":"sampleURL"}`)
 		}
 		res.WriteHeader(http.StatusOK)
@@ -217,6 +274,15 @@ func TestConsentServer_Consent(t *testing.T) {
 			method:   http.MethodPost,
 			form: map[string][]string{
 				"submit": {"accept"},
+			},
+			responseStatus: http.StatusOK,
+		},
+		{
+			name:     "/consent POST accept consent value",
+			adminURL: testServer.URL,
+			method:   http.MethodPost,
+			form: map[string][]string{
+				"submit": {"reject"},
 			},
 			responseStatus: http.StatusOK,
 		},
