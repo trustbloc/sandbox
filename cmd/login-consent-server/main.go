@@ -243,11 +243,14 @@ func (c *consentServer) showConsentPage(w http.ResponseWriter, req *http.Request
 	}
 
 	fullData := map[string]interface{}{
-		"User":       consentRequest.Payload.Subject,
-		"ClientName": consentRequest.Payload.Client.ClientName,
-		"ClientID":   consentRequest.Payload.Client.ClientID,
-		"Challenge":  consentRqstParams.ConsentChallenge,
-		"Scope":      consentRequest.Payload.RequestedScope,
+		"User":      consentRequest.Payload.Subject,
+		"Challenge": consentRqstParams.ConsentChallenge,
+		"Scope":     consentRequest.Payload.RequestedScope,
+	}
+
+	if consentRequest.Payload.Client != nil {
+		fullData["ClientName"] = consentRequest.Payload.Client.ClientName
+		fullData["ClientID"] = consentRequest.Payload.Client.ClientID
 	}
 
 	err = c.consentTemplate.Execute(w, fullData)
