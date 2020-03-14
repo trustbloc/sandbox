@@ -40,3 +40,11 @@ PKGS=`go list github.com/trustbloc/edge-sandbox/cmd/rp-rest/... 2> /dev/null | \
 go test $PKGS -count=1 -race -coverprofile=profile.out -covermode=atomic -timeout=10m
 amend_coverage_file
 cd "$pwd" || exit
+
+# Running login-consent unit tests
+cd cmd/login-consent-server
+PKGS=`go list github.com/trustbloc/edge-sandbox/cmd/login-consent-server/... 2> /dev/null | \
+                                                 grep -v /mocks`
+go test $PKGS -count=1 -race -coverprofile=profile.out -covermode=atomic -timeout=10m
+amend_coverage_file
+cd "$pwd" || exit
