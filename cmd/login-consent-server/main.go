@@ -35,14 +35,27 @@ const (
 )
 
 func main() {
-	adminURL := os.Getenv(adminURLEnvKey)
-	if adminURL == "" {
-		panic("admin URL is required")
+	c, err := buildConsentServer()
+	if err != nil {
+		panic(err)
 	}
 
 	port := os.Getenv(servePortEnvKey)
 	if port == "" {
 		panic("port to be served not provided")
+	}
+
+	// Hydra login and consent handlers
+	http.HandleFunc("/login", c.login)
+	http.HandleFunc("/consent", c.consent)
+
+	fmt.Println(http.ListenAndServe(":"+port, nil))
+}
+
+func buildConsentServer() (*consentServer, error) {
+	adminURL := os.Getenv(adminURLEnvKey)
+	if adminURL == "" {
+		return nil, fmt.Errorf("admin URL is required")
 	}
 
 	var skipSSLCheck bool
@@ -57,16 +70,7 @@ func main() {
 		}
 	}
 
-	c, err := newConsentServer(adminURL, skipSSLCheck)
-	if err != nil {
-		panic(err)
-	}
-
-	// Hydra login and consent handlers
-	http.HandleFunc("/login", c.login)
-	http.HandleFunc("/consent", c.consent)
-
-	fmt.Println(http.ListenAndServe(":"+port, nil))
+	return newConsentServer(adminURL, skipSSLCheck)
 }
 
 // newConsentServer returns new login consent server instance
