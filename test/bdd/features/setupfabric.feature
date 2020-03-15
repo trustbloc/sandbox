@@ -36,9 +36,9 @@ Feature:
     And we wait 10 seconds
 
     # Upload .well-known files
-    When client sends request to "http://localhost:80/.well-known/did-bloc" to upload file "fixtures/discovery-config/sidetree-fabric/config/consortium.json" with content type "application/json"
+    When client sends request to "http://localhost:80/.well-known/did-trustbloc" to upload file "fixtures/discovery-config/sidetree-fabric/config/consortium.json" with content type "application/json"
     Then the ID of the file is saved to variable "wellKnownTrustblocID"
-    When client sends request to "http://localhost:80/.well-known/did-bloc" to upload file "fixtures/discovery-config/sidetree-fabric/config/peer0.org1.example.com.json" with content type "application/json"
+    When client sends request to "http://localhost:80/.well-known/did-trustbloc" to upload file "fixtures/discovery-config/sidetree-fabric/config/peer0.org1.example.com.json" with content type "application/json"
     Then the ID of the file is saved to variable "wellKnownOrg1ID"
     # Create the .well-known file index Sidetree document
     Given variable "wellKnownIndexFile" is assigned the JSON value '{"consortium.json":"${wellKnownTrustblocID}","peer0.org1.example.com.json":"${wellKnownOrg1ID}"}'
@@ -46,14 +46,14 @@ Feature:
     Then the ID of the returned document is saved to variable "wellKnownIndexID"
 
     # Update the ledger config to point to the index file documents
-    Given variable "fileHandlerConfig" is assigned the JSON value '{"Handlers":[{"Description":"Consortium .wellknown files","BasePath":"/.well-known/did-bloc","ChaincodeName":"files","Collection":"consortium","IndexNamespace":"file:idx","IndexDocID":"${wellKnownIndexID}"}]}'
+    Given variable "fileHandlerConfig" is assigned the JSON value '{"Handlers":[{"Description":"Consortium .wellknown files","BasePath":"/.well-known/did-trustbloc","ChaincodeName":"files","Collection":"consortium","IndexNamespace":"file:idx","IndexDocID":"${wellKnownIndexID}"}]}'
     And variable "org1ConfigUpdate" is assigned the JSON value '{"MspID":"Org1MSP","Peers":[{"PeerID":"peer0.org1.example.com","Apps":[{"AppName":"file-handler","Version":"1","Config":"${fileHandlerConfig}","Format":"json"}]},{"PeerID":"peer1.org1.example.com","Apps":[{"AppName":"file-handler","Version":"1","Config":"${fileHandlerConfig}","Format":"json"}]}]}'
     And variable "org2ConfigUpdate" is assigned the JSON value '{"MspID":"Org2MSP","Peers":[{"PeerID":"peer0.org2.example.com","Apps":[{"AppName":"file-handler","Version":"1","Config":"${fileHandlerConfig}","Format":"json"}]},{"PeerID":"peer1.org2.example.com","Apps":[{"AppName":"file-handler","Version":"1","Config":"${fileHandlerConfig}","Format":"json"}]}]}'
     And fabric-cli is executed with args "ledgerconfig update --config ${org1ConfigUpdate} --noprompt"
     And fabric-cli is executed with args "ledgerconfig update --config ${org2ConfigUpdate} --noprompt"
 
     # Resolve .well-known files
-    When client sends request to "http://localhost:48626/.well-known/did-bloc/consortium.json" to retrieve file
+    When client sends request to "http://localhost:48626/.well-known/did-trustbloc/consortium.json" to retrieve file
     Then the retrieved file contains "payload"
-    When client sends request to "http://localhost:48626/.well-known/did-bloc/peer0.org1.example.com.json" to retrieve file
+    When client sends request to "http://localhost:48626/.well-known/did-trustbloc/peer0.org1.example.com.json" to retrieve file
     Then the retrieved file contains "payload"

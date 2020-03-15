@@ -2,7 +2,7 @@
   "Handlers": [
     {
       "Description": "Consortium .wellknown files",
-      "BasePath": "/.well-known/did-bloc",
+      "BasePath": "/.well-known/did-trustbloc",
       "ChaincodeName": "files",
       "Collection": "consortium",
       "IndexNamespace": "file:idx",
