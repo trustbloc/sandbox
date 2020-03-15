@@ -16,7 +16,7 @@ services:
       - SIDETREE_MOCK_TLS_KEY=/etc/tls/localhost.key
       - SIDETREE_MOCK_HOST=0.0.0.0
       - SIDETREE_MOCK_PORT=48326
-      - SIDETREE_MOCK_DID_NAMESPACE=did:bloc:testnet.trustbloc.local
+      - SIDETREE_MOCK_DID_NAMESPACE=did:trustbloc:testnet.trustbloc.local
     ports:
       - 48326:48326
     volumes:
@@ -32,7 +32,7 @@ services:
     ports:
       - 80:80
     volumes:
-      - ../discovery-config/sidetree-mock/config:/web/.well-known/did-bloc
+      - ../discovery-config/sidetree-mock/config:/web/.well-known/did-trustbloc
 
 
   stakeholder.one:
@@ -45,4 +45,4 @@ services:
     ports:
       - "8088:8088"
     volumes:
-      - ../discovery-config/sidetree-mock/config:/web/.well-known/did-bloc
+      - ../discovery-config/sidetree-mock/config:/web/.well-known/did-trustbloc
