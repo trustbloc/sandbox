@@ -6,6 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 <!DOCTYPE html>
 <html lang="en">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
 <style>
     pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
     .string { color: green; }
@@ -13,17 +14,27 @@ SPDX-License-Identifier: Apache-2.0
     .boolean { color: blue; }
     .null { color: magenta; }
     .key { color: red; }
+    .tabs .tab a {
+        color: #1976d2;
+        background-color: #f5f5f5;
+    }
 </style>
 <head>
-    <title>RP</title>
+    <title>Verify VP</title>
 </head>
 <body>
+<ul id="tabs-swipe-demo" class="tabs">
+    <li class="tab col "><a href="/">Verifier HomePage</a></li>
+</ul>
 <div>
-    <h1>VP is verified</h1>
+    <h5>VP is verified</h5>
     <br>
     <pre id="vpDataJSON"></pre>
-    <br>
-    <a href="reader/qrReader.html">Go Back to Scanner</a>
+    <div class="section"></div>
+    <footer class="page-footer grey lighten-4" style="text-align:center; display: flex;min-height: 20vh; flex-direction: column;">
+        <p class="blue-text text-darken-2">  &copy; Copyright SecureKey Technologies Inc. & TrustBloc contributors.</p>
+        <a href="https://github.com/trustbloc/edge-sandbox">Github</a>
+    </footer>
 </div>
 </body>
 <script>

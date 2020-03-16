@@ -1,6 +1,7 @@
 
 <!--
 Copyright SecureKey Technologies Inc. All Rights Reserved.
+
 SPDX-License-Identifier: Apache-2.0
  -->
 
@@ -8,18 +9,41 @@ SPDX-License-Identifier: Apache-2.0
 <html class="no-js" lang="">
 <head>
     <title>QR Code</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
+    <style>
+        .section {
+            padding-top: 6rem;
+            padding-bottom: 3rem;
+        }
+        .tabs .tab a {
+            color: #1976d2;
+            background-color: #f5f5f5;
+        }
+    </style>
 </head>
 <body>
-<h1>QR Code for your Verifiable Credential</h1>
-<div class="margin-body-log-in-worker">
+<ul id="tabs-swipe-demo" class="tabs">
+    <li class="tab col "><a href="/">Issuer HomePage</a></li>
+</ul>
+</br>
+<div class="card-panel">
     <div class="row">
-        <div class="col-4 col-sm-4 col-md-3 col-xl-2 center">
-            <img src="data:image/png;base64,{{.Image}}" class="img-fluid image-dashboard" />
+        <div class="col-8 col-sm-4 col-md-3 col-xl-2">
+            <img src="data:image/png;base64,{{.Image}}" style="width: 550px; height: 550px"/>
         </div>
-        <a href={{.URL}}>
-            Retrieve Verifiable Credential
+        <a class="col s1  btn-small waves-effect blue darken-2" style='margin-left:2%' href="data:image/png;base64,{{.Image}}" download>
+           Download
+        </a>
+
+        <a  class="col s2  btn-small waves-effect blue darken-2" style='margin-left:0.5%' href={{.URL}} >Retrieve Credential
         </a>
     </div>
 </div>
+<div class="section"></div>
+<footer class="page-footer grey lighten-4" style="text-align:center; display: flex;min-height: 20vh; flex-direction: column;">
+    <p class="blue-text text-darken-2">  &copy; Copyright SecureKey Technologies Inc. & TrustBloc contributors.</p>
+    <a href="https://github.com/trustbloc/edge-sandbox">Github</a>
+</footer>
+
 </body>
 </html>

@@ -208,7 +208,12 @@ func startIssuer(parameters *issuerParameters) error {
 	router := mux.NewRouter()
 
 	fs := http.FileServer(http.Dir("static"))
+
 	router.PathPrefix("/reader/").Handler(fs)
+	router.PathPrefix("/view/").Handler(fs)
+	router.PathPrefix("/css/").Handler(fs)
+	router.PathPrefix("/images/").Handler(fs)
+	router.PathPrefix("/js/").Handler(fs)
 
 	router.Handle("/", fs)
 

@@ -6,6 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 <!DOCTYPE html>
 <html lang="en">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
 <style>
     pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
     .string { color: green; }
@@ -13,11 +14,18 @@ SPDX-License-Identifier: Apache-2.0
     .boolean { color: blue; }
     .null { color: magenta; }
     .key { color: red; }
+    .tabs .tab a {
+        color: #1976d2;
+        background-color: #f5f5f5;
+    }
 </style>
 <head>
     <title>RP</title>
 </head>
 <body>
+<ul id="tabs-swipe-demo" class="tabs">
+    <li class="tab col "><a href="/">Issuer HomePage</a></li>
+</ul>
 <div>
     <h1>{{.Msg}}</h1>
     <br>
