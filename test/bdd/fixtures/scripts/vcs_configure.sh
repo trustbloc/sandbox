@@ -19,7 +19,7 @@ do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
    --data '{"name":"vc-issuer-1", "uri":"http://vc-issuer-1.com", "signatureType":"Ed25519Signature2018"}' \
-   http://vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
+   http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile issuer1 response is: $responseCreatedTime"
 
    if [ -n "$responseCreatedTime" ]
@@ -40,7 +40,7 @@ do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
    --data '{"name":"vc-issuer-2", "uri":"http://vc-issuer-2.com", "signatureType":"Ed25519Signature2018", "did":"did:v1:test:nym:z6MkiJFtehU8FcTu6hAKiBEzzD5LfZHRR9wiiyJCgkbCZ6XN","didPrivateKey":"4Gn9Ttw6Lf3oFBFqJNNdLFMc4mUbbpCYLNSQFGAxaLBXiJ6DuZpJ8qsZGaHqwyBptxJMEB8nFiqHDZ419XHHxudY"}' \
-   http://vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
+   http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile issuer2 response is: $responseCreatedTime"
 
    if [ -n "$responseCreatedTime" ]
