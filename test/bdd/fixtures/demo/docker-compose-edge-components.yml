@@ -8,8 +8,8 @@ version: '3'
 
 services:
 
-  vcs.example.com:
-    container_name: vcs.example.com
+  issuer.vcs.example.com:
+    container_name: issuer.vcs.example.com
     image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8070
@@ -17,12 +17,29 @@ services:
       - EDV_REST_HOST_URL=http://edv.example.com:8081
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - UNIVERSAL_RESOLVER_HOST_URL=http://uni-resolver-web:8080/1.0/identifiers
+      - VC_REST_MODE=issuer
     ports:
       - 8070:8070
     entrypoint: ""
     command:  /bin/sh -c "/tmp/vcs_configure.sh& vc-rest start"
     volumes:
       - ../scripts/vcs_configure.sh:/tmp/vcs_configure.sh
+    depends_on:
+      - edv.example.com
+
+
+  rp.vcs.example.com:
+    container_name: rp.vcs.example.com
+    image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
+    environment:
+      - VC_REST_HOST_URL=0.0.0.0:8069
+      - VC_REST_HOST_URL_EXTERNAL=http://localhost:8069
+      - EDV_REST_HOST_URL=http://edv.example.com:8081
+      - BLOC_DOMAIN=${BLOC_DOMAIN}
+      - UNIVERSAL_RESOLVER_HOST_URL=http://uni-resolver-web:8080/1.0/identifiers
+      - VC_REST_MODE=verifier
+    ports:
+      - 8069:8069
     depends_on:
       - edv.example.com
 

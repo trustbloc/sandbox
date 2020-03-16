@@ -22,7 +22,7 @@ services:
       - ISSUER_TLS_CERT_FILE=/etc/tls/localhost.crt
       - ISSUER_TLS_KEY_FILE=/etc/tls/localhost.key
       - ISSUER_CMS_URL=http://oathkeeper-proxy:4455
-      - ISSUER_VCS_URL=http://vcs.example.com:8070
+      - ISSUER_VCS_URL=http://issuer.vcs.example.com:8070
       - VIRTUAL_HOST=issuer.trustbloc.local
       - VIRTUAL_PROTO=https
     ports:
@@ -38,7 +38,7 @@ services:
       - RP_HOST_URL=0.0.0.0:5557
       - RP_TLS_CERT_FILE=/etc/tls/localhost.crt
       - RP_TLS_KEY_FILE=/etc/tls/localhost.key
-      - RP_VCS_URL=http://vcs.example.com:8070
+      - RP_VCS_URL=http://rp.vcs.example.com:8069
       - VIRTUAL_HOST=rp.trustbloc.local
       - VIRTUAL_PROTO=https
     ports:
