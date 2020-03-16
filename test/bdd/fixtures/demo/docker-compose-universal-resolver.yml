@@ -9,8 +9,9 @@ version: '3'
 services:
 
   uni-resolver-web:
-    image: universalresolver/uni-resolver-web:latest
+    image: universalresolver/uni-resolver-web:0.1.0
     ports:
       - "8080:8080"
     volumes:
       - ../universalresolver/config.json:/opt/uni-resolver-java/uni-resolver-web/config.json
+      - ../scripts/run-uni-resolver-web.sh:/opt/uni-resolver-java/uni-resolver-web/docker/run-uni-resolver-web.sh
