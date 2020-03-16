@@ -4,103 +4,71 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 ––>
 
-<html>
-
+<html lang="en">
 <head>
     <title>Issuer</title>
-    <link rel="stylesheet" type="text/css"
-          href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
-    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
-    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" >
+    <link rel="icon" type="images/x-icon" href="images/favicon.png" >
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
+    <style>
+        ul.dropdown-content.select-dropdown li span {
+            color: #1976d2 ;
+        }
+        .waves-effect.waves-blue .waves-ripple {
+            /* The alpha value allows the text and background color
+            of the button to still show through. */
+            background-color: rgba(3, 45, 121, 0.65);
+        }
+        .section {
+            padding-top: 24rem;
+            padding-bottom: 3rem;
+        }
+    </style>
 </head>
-
 <body>
-<div class="section"></div>
-<main>
-    <div class="container">
-        <div class="row">
-            <label for="vcsProfile">Profile:</label>
-            <select id="vcsProfile" style="display:block">
-                <option value="vc-issuer-1">vc-issuer-1</option>
-                <option value="vc-issuer-2">vc-issuer-2</option>
+
+<div class="card-panel grey lighten-4">
+    <h1 class="blue-text text-darken-2" style="text-align:center" >Issuer</h1>
+</div>
+
+<div class="row">
+    <div class="col s5" style="width:420px; margin:0 0 0 40%;">
+        <div class="input-field col s12" >
+            <select id = "profile">
+                <option value="vc-issuer-1" id="vci1" selected>VC-Issuer-1</option>
+                <option value="vc-issuer-2"id="vci2">VC-Issuer-2</option>
             </select>
         </div>
-        <div class="row">
-            <div class="btn white darken-6 col s4">
-                <a href="#" onclick="redirectURL('StudentCard');return false;" style="text-transform:none">
-                    Issue Student Card
-                </a>
-            </div>
-        </div>
-        <div class="row">
-            <div class="btn white darken-6 col s4">
-                <a onclick="redirectURL('TravelCard');return false;" style="text-transform:none">
-                    Issue Travel Card
-                </a>
-            </div>
-        </div>
-        <div class="row">
-        <div class="btn white darken-6 col s4">
-            <a href="reader/qrReader.html" style="text-transform:none">
-                Scan Barcode
-            </a>
-        </div>
-        </div>
-
-        <div class="row">
-            <div class="btn white darken-6 col s4">
-            <a id='revokeVCBtn' style="text-transform:none">Revoke VC</a>
-            <form method="post" id="vcForm" action="/revoke">
-                <input type="hidden" name="vcDataInput" id="vcDataInput">
-            </form>
-            </div>
+        <br>
+        <div class="input-field col s12">
+            <select id="chooseOption">
+                <option value="" disabled selected>Choose Action</option>
+                <option value="studentCard" id="studentCard">Issue HighTech College Card</option>
+                <option value="travelCard"id="travelCard">Issue VIP Travel Card</option>
+                <option value="kiosk"id="kiosk">Issuer Kiosk</option>
+                <option value="revokeCard"id="revokeVCBtn">Revoke Credential</option>
+            </select>
         </div>
     </div>
-</main>
+</div>
 
+<form id="demoSetupForm"  action="" style="text-align:center">
+    <input type="radio" id="vcsProfile" name="vcsProfile" value="vc-issuer-1" checked hidden>
+    <input type="submit"id="formSubmit" class="btn-large waves-light blue darken-2" value="Start the Demo">
+</form>
+<div class="section"></div>
+<footer class="page-footer grey lighten-4" style="text-align:center; display: flex;min-height: 20vh; flex-direction: column;">
+    <p class="blue-text text-darken-2">  &copy; Copyright SecureKey Technologies Inc. & TrustBloc contributors.</p>
+    <a href="https://github.com/trustbloc/edge-sandbox">Github</a>
+</footer>
+</div>
+<br>
+<div>
+    <span id="message" style="color:#D8000C;background-color: #FFD2D2; width:320px; margin:0 0 0 45%;" hidden></span>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="js/action.js"></script>
 </body>
-
-<script>
-    installHandler()
-        .catch(e => console.error('Error in installHandler:', e));
-
-    async function installHandler() {
-        console.log('Loading polyfill...');
-        try {
-            await credentialHandlerPolyfill.loadOnce();
-        } catch(e) {
-            console.error('Error in loadOnce:', e);
-        }
-    }
-
-    function ready(fn) {
-        if (document.readyState !== 'loading'){
-            fn();
-        } else {
-            document.addEventListener('DOMContentLoaded', fn);
-        }
-    }
-
-    async function onClickGet() {
-        const credentialQuery = JSON.parse('{"web": {"VerifiablePresentation": {}}}');
-        const result = await navigator.credentials.get(credentialQuery);
-        if(!result) {
-            alert("null result");
-            return;
-        }
-        document.getElementById('vcDataInput').value=result.data
-        document.getElementById('vcForm').submit()
-    }
-
-    ready(() => {
-        document.getElementById('revokeVCBtn').addEventListener('click', onClickGet);
-    })
-
-    function redirectURL(scope) {
-        const vcsProfile=document.getElementById('vcsProfile').value
-        window.location= "/login?scope="+scope+"&vcsProfile="+vcsProfile;
-    }
-
-</script>
-
 </html>

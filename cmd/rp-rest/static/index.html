@@ -7,34 +7,55 @@ SPDX-License-Identifier: Apache-2.0
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>RP</title>
-    <link rel="stylesheet" type="text/css"
-          href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
+    <title>Verifier</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" >
+    <link rel="icon" type="images/x-icon" href="images/favicon.png" >
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
     <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
     <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+    <style>
+        .section {
+            padding-top: 32rem;
+            padding-bottom: 3rem;
+        }
+    </style>
+    <script>
+    FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+
+</script>
 </head>
 
 <body>
-<div class="section"></div>
-<main>
-    <div class="container">
-      <div class="row">
-        <div class="btn white darken-6 col s3">
-            <a id='getVCBtn' style="text-transform:none">Get VC</a>
+
+<div class="card-panel grey lighten-4">
+	<h1 class="blue-text text-darken-2" style="text-align:center" >Verifier</h1>
+</div>
+
+<div class="wrap">
+    <div>
+        <div class="btnWrap">
+            <button id="getVCBtn" class="waves-effect waves btn-large blue darken-2" style=" width:400px; margin:0 0 0 40%">Get VC</button>
             <form method="post" id="vcForm" action="/verify">
-             <input type="hidden" name="vcDataInput" id="vcDataInput">
+                <input type="hidden" name="vcDataInput" id="vcDataInput">
             </form>
         </div>
-    </div>
-    <div class="row">
-        <div class="btn white darken-6 col s3">
-        <a href="reader/qrReader.html" style="text-transform:none">
-            Verifier KIOSK
-        </a>
+        <br>
+        <div class="btnWrap">
+                <a href="reader/qrReader.html" class="waves-effect waves btn-large blue darken-2" style=" width:400px; margin:0 0 0 40%">
+                    Verifier KIOSK
+                </a>
+            </div>
         </div>
     </div>
 </div>
-</main>
+<div class="section"></div>
+<footer class="page-footer grey lighten-4" style="text-align:center; display: flex;min-height: 20vh; flex-direction: column;">
+    <p class="blue-text text-darken-2">  &copy; Copyright SecureKey Technologies Inc. & TrustBloc contributors.</p>
+    <a href="https://github.com/trustbloc/edge-sandbox">Github</a>
+</footer>
 </body>
 
 <script>
@@ -74,5 +95,4 @@ SPDX-License-Identifier: Apache-2.0
     })
 
 </script>
-
 </html>

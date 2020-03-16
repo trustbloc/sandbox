@@ -137,7 +137,7 @@ func TestConsentServer_Login(t *testing.T) {
 			adminURL:       testServer.URL,
 			method:         http.MethodGet,
 			url:            "?login_challenge=12345",
-			responseHTML:   []string{"<head><title>Login Page</title></head>", `name="challenge" value="12345"`},
+			responseHTML:   []string{"<title>Login Page</title>", `name="challenge" value="12345"`},
 			responseStatus: http.StatusOK,
 		},
 		{
@@ -240,7 +240,7 @@ func TestConsentServer_Consent(t *testing.T) {
 			adminURL:       testServer.URL,
 			method:         http.MethodGet,
 			url:            "?consent_challenge=12345",
-			responseHTML:   []string{"<head><title>Consent Page</title></head>"},
+			responseHTML:   []string{"<title>Consent Page</title>"},
 			responseStatus: http.StatusOK,
 		},
 		{
