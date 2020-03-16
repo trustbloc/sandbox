@@ -15,7 +15,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -226,16 +225,7 @@ func (c *Operation) retrieveVC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// retrieve credential returns the strings with back slashes, to render the response as string without slashes
-	cr, err := strconv.Unquote(string(cred))
-	if err != nil {
-		log.Error(err)
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("unable to unqote credential: %s", err.Error()))
-
-		return
-	}
-
-	if err := t.Execute(w, vc{Data: cr}); err != nil {
+	if err := t.Execute(w, vc{Data: string(cred)}); err != nil {
 		log.Error(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
 }
