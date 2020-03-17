@@ -12,6 +12,7 @@ bddtest:
       anchorTxPath:
         peerorg1: "./fixtures/fabric/channel/mychannelOrg1MSPanchors.tx"
         peerorg2: "./fixtures/fabric/channel/mychannelOrg2MSPanchors.tx"
+        peerorg3: "./fixtures/fabric/channel/mychannelOrg3MSPanchors.tx"
     yourchannel:
       txPath: "./fixtures/fabric/channel/yourchannel.tx"
       anchorTxPath:
@@ -181,6 +182,18 @@ channels:
         ledgerQuery: true
         eventSource: true
 
+      peer0.org3.example.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+
+      peer1.org3.example.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+
   yourchannel:
     orderers:
       - orderer.example.com
@@ -210,6 +223,17 @@ channels:
         ledgerQuery: true
         eventSource: true
 
+      peer0.org3.example.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+
+      peer1.org3.example.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
 
 orderers:
   orderer.example.com:
@@ -270,6 +294,26 @@ organizations:
     peers:
       - peer0.org2.example.com
       - peer1.org2.example.com
+
+    # [Optional]. Certificate Authorities issue certificates for identification purposes in a Fabric based
+    # network. Typically certificates provisioning is done in a separate process outside of the
+    # runtime network. Fabric-CA is a special certificate authority that provides a REST APIs for
+    # dynamic certificate management (enroll, revoke, re-enroll). The following section is only for
+    # Fabric-CA servers.
+    certificateAuthorities:
+
+  peerorg3:
+    mspid: Org3MSP
+
+    # Needed to load users crypto keys and certs for this org (absolute path or relative to global crypto path, DEV mode)
+    # for PROD with no cert access through volume mappings, use 'users' and embed user certs/keys directly, do not use 'cryptoPath'
+    # for DEV mode, cryptoPath below works as an alternative
+    #cryptoPath:  fixtures/channel/crypto-config/peerOrganizations/org2.example.com/users/{userName}@org2.example.com/msp
+    cryptoPath:  peerOrganizations/org3.example.com/users/{username}@org3.example.com/msp
+
+    peers:
+      - peer0.org3.example.com
+      - peer1.org3.example.com
 
     # [Optional]. Certificate Authorities issue certificates for identification purposes in a Fabric based
     # network. Typically certificates provisioning is done in a separate process outside of the
@@ -348,6 +392,29 @@ peers:
       # Certificate location absolute path
       path: ${PROJECT_PATH}/test/bdd/fixtures/fabric/crypto-config/peerOrganizations/org2.example.com/tlsca/tlsca.org2.example.com-cert.pem
 
+  peer0.org3.example.com:
+    # this URL is used to send endorsement and query requests
+    url: localhost:9051
+
+    grpcOptions:
+      ssl-target-name-override: peer0.org3.example.com
+
+    tlsCACerts:
+      # Certificate location absolute path
+      path: ${PROJECT_PATH}/test/bdd/fixtures/fabric/crypto-config/peerOrganizations/org3.example.com/tlsca/tlsca.org3.example.com-cert.pem
+
+  peer1.org3.example.com:
+    # this URL is used to send endorsement and query requests
+    url: localhost:9151
+
+    grpcOptions:
+      ssl-target-name-override: peer1.org3.example.com
+
+    tlsCACerts:
+      # Certificate location absolute path
+      path: ${PROJECT_PATH}/test/bdd/fixtures/fabric/crypto-config/peerOrganizations/org3.example.com/tlsca/tlsca.org3.example.com-cert.pem
+
+
 entityMatchers:
   peer:
     - pattern: peer0.org1.example.com:(\d+)
@@ -365,6 +432,14 @@ entityMatchers:
     - pattern: peer1.org2.example.com:(\d+)
       urlSubstitutionExp: localhost:8151
       mappedHost: peer1.org2.example.com
+
+    - pattern: peer0.org3.example.com:(\d+)
+      urlSubstitutionExp: localhost:9051
+      mappedHost: peer0.org3.example.com
+
+    - pattern: peer1.org3.example.com:(\d+)
+      urlSubstitutionExp: localhost:9151
+      mappedHost: peer1.org3.example.com
 
   orderer:
     - pattern: (\w+).example.(\w+)

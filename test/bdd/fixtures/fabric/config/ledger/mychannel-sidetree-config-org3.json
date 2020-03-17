@@ -1,0 +1,16 @@
+{
+  "Monitor": {
+    "Period": "3s"
+  },
+  "Namespaces": [
+    {
+      "Namespace": "did:trustbloc:peer0.org1.example.com",
+      "BasePath": "/document"
+    },
+    {
+      "DocType": "FILE_INDEX",
+      "Namespace": "file:idx",
+      "BasePath": "/file"
+    }
+  ]
+}
