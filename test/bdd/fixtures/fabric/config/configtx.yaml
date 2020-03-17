@@ -130,6 +130,45 @@ Organizations:
         Port: 7051
 
 
+  - &Org3
+    # DefaultOrg defines the organization which is used in the sampleconfig
+    # of the fabric.git development environment
+    Name: Org3MSP
+
+    # ID to load the MSP definition as
+    ID: Org3MSP
+
+    MSPDir: ../crypto-config/peerOrganizations/org3.example.com/msp
+
+    # Policies defines the set of policies at this level of the config tree
+    # For organization policies, their canonical path is usually
+    #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('Org3MSP.member')"
+        # If your MSP is configured with the new NodeOUs, you might
+        # want to use a more specific rule like the following:
+        # Rule: "OR('Org2MSP.admin', 'Org2MSP.peer')"
+      Writers:
+        Type: Signature
+        Rule: "OR('Org3MSP.member')"
+        # If your MSP is configured with the new NodeOUs, you might
+        # want to use a more specific rule like the following:
+        # Rule: "OR('Org2MSP.admin', 'Org2MSP.client'')"
+      Admins:
+        Type: Signature
+        Rule: "OR('Org3MSP.admin')"
+
+    AnchorPeers:
+      # AnchorPeers defines the location of peers which can be used
+      # for cross org gossip communication.  Note, this value is only
+      # encoded in the genesis block in the Application section context
+      - Host: peer0.org3.example.com
+        Port: 7051
+      - Host: peer1.org3.example.com
+        Port: 7051
+
 
 ################################################################################
 #
@@ -370,9 +409,12 @@ Application: &ApplicationDefaults
     Org2MemberPolicy:
       Type: Signature
       Rule: "OR('Org2MSP.member')"
-    Org1Org2MemberPolicy:
+    Org3MemberPolicy:
       Type: Signature
-      Rule: "OR('Org1MSP.member','Org2MSP.member')"
+      Rule: "OR('Org3MSP.member')"
+    Org1Org2Org3MemberPolicy:
+      Type: Signature
+      Rule: "OR('Org1MSP.member','Org2MSP.member','Org3MSP.member')"
 
   # Capabilities describes the application level capabilities, see the
   # dedicated Capabilities section elsewhere in this file for a full
@@ -423,7 +465,7 @@ Channel: &ChannelDefaults
 ################################################################################
 Profiles:
 
-  TwoOrgsOrdererGenesis:
+  ThreeOrgsOrdererGenesis:
     <<: *ChannelDefaults
     Orderer:
       <<: *OrdererDefaults
@@ -436,7 +478,8 @@ Profiles:
         Organizations:
           - *Org1
           - *Org2
-  TwoOrgsChannel:
+          - *Org3
+  ThreeOrgsChannel:
     Consortium: SampleConsortium
     <<: *ChannelDefaults
     Application:
@@ -444,5 +487,6 @@ Profiles:
       Organizations:
         - *Org1
         - *Org2
+        - *Org3
       Capabilities:
         <<: *ApplicationCapabilities

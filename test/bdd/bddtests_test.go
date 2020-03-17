@@ -78,8 +78,10 @@ func FeatureContext(s *godog.Suite) {
 	peersMspID["peer1.org1.example.com"] = "Org1MSP"
 	peersMspID["peer0.org2.example.com"] = "Org2MSP"
 	peersMspID["peer1.org2.example.com"] = "Org2MSP"
+	peersMspID["peer0.org3.example.com"] = "Org3MSP"
+	peersMspID["peer1.org3.example.com"] = "Org3MSP"
 
-	fabricTestCtx, err := bddtests.NewBDDContext([]string{"peerorg1", "peerorg2"},
+	fabricTestCtx, err := bddtests.NewBDDContext([]string{"peerorg1", "peerorg2", "peerorg3"},
 		"orderer.example.com", "./fixtures/fabric/config/sdk-client/",
 		"config.yaml", peersMspID, "", "")
 	if err != nil {
