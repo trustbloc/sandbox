@@ -17,6 +17,7 @@ fi
 declare -a peerOrgs=(
     "org1.example.com"
     "org2.example.com"
+    "org3.example.com"
 )
 
 echo Clearing old crypto directory ...
