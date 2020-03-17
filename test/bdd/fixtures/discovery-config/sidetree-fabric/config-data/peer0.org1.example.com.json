@@ -8,7 +8,9 @@
     "http://peer0.org1.example.com:80/document",
     "http://peer1.org1.example.com:48326/document",
     "http://peer0.org2.example.com:48326/document",
-    "http://peer1.org2.example.com:48326/document"
+    "http://peer1.org2.example.com:48326/document",
+    "http://peer0.org3.example.com:48326/document",
+    "http://peer1.org3.example.com:48326/document"
   ],
   "previous": ""
 }

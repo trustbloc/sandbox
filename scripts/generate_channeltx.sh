@@ -16,7 +16,7 @@ if [ -z "$FABRIC_VERSION_DIR" ]; then
 fi
 
 declare -a twoOrgChannels=("mychannel" "yourchannel")
-declare -a orgs=("Org1MSP" "Org2MSP")
+declare -a orgs=("Org1MSP" "Org2MSP" "Org3MSP")
 
 FIXTURES_CHANNEL_PATH=${FIXTURES_PATH}${FABRIC_VERSION_DIR}${CHANNEL_DIR}
 export FABRIC_CFG_PATH=${FIXTURES_PATH}${FABRIC_VERSION_DIR}${CONFIG_DIR}
@@ -26,19 +26,19 @@ echo "Generating channel fixtures into ${FIXTURES_CHANNEL_PATH}"
 mkdir -p "${FIXTURES_CHANNEL_PATH}"
 
 echo "Generating Orderer Genesis block"
-$CONFIGTXGEN_CMD -profile TwoOrgsOrdererGenesis -outputBlock "${FIXTURES_CHANNEL_PATH}"/twoorgs.genesis.block -channelID twoorgs
+$CONFIGTXGEN_CMD -profile ThreeOrgsOrdererGenesis -outputBlock "${FIXTURES_CHANNEL_PATH}"/twoorgs.genesis.block -channelID twoorgs
 
 
 for i in "${twoOrgChannels[@]}"
 do
-   echo "Generating TwoOrgsChannel artifacts for channel: $i"
+   echo "Generating ThreeOrgsChannel artifacts for channel: $i"
 
    echo "Generating channel configuration transaction"
-   $CONFIGTXGEN_CMD -profile TwoOrgsChannel -outputCreateChannelTx "${FIXTURES_CHANNEL_PATH}"/"${i}".tx -channelID "$i"
+   $CONFIGTXGEN_CMD -profile ThreeOrgsChannel -outputCreateChannelTx "${FIXTURES_CHANNEL_PATH}"/"${i}".tx -channelID "$i"
 
    for j in "${orgs[@]}"
    do
      echo "Generating anchor peer update for org $j"
-     $CONFIGTXGEN_CMD -profile TwoOrgsChannel -outputAnchorPeersUpdate "${FIXTURES_CHANNEL_PATH}"/"${i}""${j}"anchors.tx -channelID "$i" -asOrg "$j"
+     $CONFIGTXGEN_CMD -profile ThreeOrgsChannel -outputAnchorPeersUpdate "${FIXTURES_CHANNEL_PATH}"/"${i}""${j}"anchors.tx -channelID "$i" -asOrg "$j"
    done
 done
