@@ -62,6 +62,7 @@ services:
       - HTTP_SERVER_HOST_URL=0.0.0.0:8091
       - TLS_CERT_FILE=/etc/tls/localhost.crt
       - TLS_KEY_FILE=/etc/tls/localhost.key
+      - ARIESD_DB_NAMESPACE=edge-sandbox
       - VIRTUAL_HOST=myagent.trustbloc.local
       - VIRTUAL_PROTO=https
     ports:
