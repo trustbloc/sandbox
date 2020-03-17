@@ -1,3 +1,6 @@
-jquery.min.js filter=lfs diff=lfs merge=lfs -text
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 *.png filter=lfs diff=lfs merge=lfs -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
