@@ -1,3 +1,47 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:7b6a94aafa70084055e9cbc7f441f9cfdce1c29c8332ddc4b4d39689ac9d6ee8
-size 1340
+/*
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ */
+
+$(document).ready(function () {
+
+    var profileVal = $('#vcsProfile').val()
+    var actionRequested = $('#actionRequested').val()
+    $formSubmit =	$('#formSubmit');
+
+    $('select').not('disabled').formSelect();
+
+    $('#profile').on('change', function(){
+        if($(this).val() != ""){
+            $('#vcsProfile').val($(this).val());
+        }else{
+            $('#vcsProfile').val('');
+        }
+    });
+
+    $('#chooseOption').on('change', function(){
+        if($(this).val() != ""){
+            $('#actionRequested').val($(this).val());
+        }else{
+            $('#actionRequested').val('');
+        }
+    });
+
+
+    $('#demoSetupForm').submit(function() {
+        if ($('#chooseOption').val() == "studentCard") {
+            $('#demoSetupForm').attr('action', 'view/college.html');
+        } else if ($('#chooseOption').val() == "travelCard") {
+            $('#demoSetupForm').attr('action', 'view/travel.html');
+        } else if ($('#chooseOption').val() == "kiosk") {
+            $('#demoSetupForm').attr('action', 'reader/qrReader.html');
+        } else if ($('#chooseOption').val() == "revokeCard") {
+            $('#demoSetupForm').attr('action', 'view/revoke.html');
+        } else {
+            $('#message').text("Profile or Action is not selected").show().fadeOut(2000);
+            event.preventDefault();
+        }
+    });
+});
+
