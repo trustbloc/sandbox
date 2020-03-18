@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -43,6 +44,9 @@ const testCredentialRequest = `{
   },
   "profile": "test"
 }`
+
+const foo = `{"id":1,"userid":"100","name":"Foo Bar","email":"foo@bar.com"}`
+const jsonArray = `[{}]`
 
 func TestOperation_Login(t *testing.T) {
 	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
@@ -85,7 +89,11 @@ func TestOperation_Login3(t *testing.T) {
 
 func TestOperation_Callback(t *testing.T) {
 	cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "{}")
+		if strings.Contains(r.URL.String(), "users") {
+			fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+		} else {
+			fmt.Fprintln(w, jsonArray)
+		}
 	}))
 	defer cms.Close()
 
@@ -291,7 +299,7 @@ func TestOperation_Callback_GetCMSData_Error(t *testing.T) {
 
 func TestOperation_Callback_CreateCredential_Error(t *testing.T) {
 	cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "{}")
+		fmt.Fprintln(w, jsonArray)
 	}))
 	defer cms.Close()
 
@@ -310,7 +318,7 @@ func TestOperation_Callback_CreateCredential_Error(t *testing.T) {
 
 func TestOperation_Callback_StoreCredential_Error(t *testing.T) {
 	cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "{}")
+		fmt.Fprintln(w, jsonArray)
 	}))
 	defer cms.Close()
 
@@ -332,14 +340,6 @@ func TestOperation_Callback_StoreCredential_Error(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, http.StatusInternalServerError, status)
 	require.Contains(t, data.String(), "failed to store credential")
-}
-
-func TestOperation_CreateCredential_Error(t *testing.T) {
-	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}})
-	vc, err := svc.createCredential([]byte(""), &token.Introspection{}, "")
-	require.Error(t, err)
-	require.Nil(t, vc)
-	require.Contains(t, err.Error(), "unexpected end of JSON input")
 }
 
 func TestOperation_StoreCredential(t *testing.T) {
@@ -382,6 +382,7 @@ func TestOperation_GetCMSData_InvalidURL(t *testing.T) {
 	require.Contains(t, err.Error(), "unsupported protocol scheme")
 	require.Nil(t, data)
 }
+
 func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
 	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 		CMSURL: "http://cms\\"})
@@ -392,26 +393,128 @@ func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
 	require.Contains(t, err.Error(), "invalid character")
 	require.Nil(t, data)
 }
-func TestOperation_CreateCredential_InvalidURL(t *testing.T) {
-	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		VCSURL: "xyz:vcs"})
-	require.NotNil(t, svc)
+func TestOperation_CreateCredential_Errors(t *testing.T) {
+	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
 
-	data, err := svc.createCredential([]byte("{}"), &token.Introspection{}, "")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "unsupported protocol scheme")
-	require.Nil(t, data)
+	var subject map[string]interface{} = make(map[string]interface{})
+	subject["id"] = "1"
+
+	t.Run("unsupported protocol scheme", func(t *testing.T) {
+		cfg.VCSURL = "xyz:vcs"
+		svc := New(cfg)
+		require.NotNil(t, svc)
+
+		data, err := svc.createCredential(subject, &token.Introspection{}, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "unsupported protocol scheme")
+		require.Nil(t, data)
+	})
+	t.Run("invalid http request", func(t *testing.T) {
+		cfg.VCSURL = "http://vcs\\"
+		svc := New(cfg)
+		require.NotNil(t, svc)
+
+		data, err := svc.createCredential(subject, &token.Introspection{}, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid character")
+		require.Nil(t, data)
+	})
+	t.Run("invalid subject map - contains channel", func(t *testing.T) {
+		subject["invalid"] = make(chan int, 2)
+		svc := New(cfg)
+		require.NotNil(t, svc)
+
+		data, err := svc.createCredential(subject, &token.Introspection{}, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "unsupported type: chan int")
+		require.Nil(t, data)
+	})
 }
 
-func TestOperation_CreateCredential_InvalidHTTPRequest(t *testing.T) {
-	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		VCSURL: "http://vcs\\"})
-	require.NotNil(t, svc)
+func TestOperation_GetCMSUser(t *testing.T) {
+	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
 
-	data, err := svc.createCredential([]byte("{}"), &token.Introspection{}, "")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "invalid character")
-	require.Nil(t, data)
+	t.Run("test success", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+		}))
+		defer cms.Close()
+
+		cfg.CMSURL = cms.URL
+		svc := New(cfg)
+		require.NotNil(t, svc)
+
+		data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
+		require.NoError(t, err)
+		require.Equal(t, data["email"], "foo@bar.com")
+	})
+	t.Run("no user found", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintln(w, "[]")
+		}))
+		defer cms.Close()
+
+		cfg.CMSURL = cms.URL
+		svc := New(cfg)
+		require.NotNil(t, svc)
+
+		data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "user not found")
+		require.Nil(t, data)
+	})
+}
+
+func TestOperation_UnmarshalUser(t *testing.T) {
+	t.Run("test success", func(t *testing.T) {
+		user, err := unmarshalUser([]byte(fmt.Sprintf("[%s]", foo)))
+		require.NoError(t, err)
+		require.Equal(t, user.Email, "foo@bar.com")
+	})
+	t.Run("json unmarshal error", func(t *testing.T) {
+		data, err := unmarshalUser([]byte("invalid"))
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid character")
+		require.Nil(t, data)
+	})
+	t.Run("user not found", func(t *testing.T) {
+		data, err := unmarshalUser([]byte("[]"))
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "user not found")
+		require.Nil(t, data)
+	})
+	t.Run("multiple users error", func(t *testing.T) {
+		data, err := unmarshalUser([]byte(fmt.Sprintf("[{},{}]")))
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "multiple users found")
+		require.Nil(t, data)
+	})
+}
+
+func TestOperation_UnmarshalSubject(t *testing.T) {
+	t.Run("test success", func(t *testing.T) {
+		data, err := unmarshalSubject([]byte(`[{"email":"foo@bar.com"}]`))
+		require.NoError(t, err)
+		require.Equal(t, data["email"], "foo@bar.com")
+	})
+	t.Run("json unmarshal error", func(t *testing.T) {
+		data, err := unmarshalSubject([]byte("invalid"))
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid character")
+		require.Nil(t, data)
+	})
+	t.Run("record not found", func(t *testing.T) {
+		data, err := unmarshalSubject([]byte("[]"))
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "record not found")
+		require.Nil(t, data)
+	})
+	t.Run("multiple records error", func(t *testing.T) {
+		data, err := unmarshalSubject([]byte(fmt.Sprintf("[{},{}]")))
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "multiple records found")
+		require.Nil(t, data)
+	})
 }
 
 func TestOperation_SendHTTPRequest_WrongStatus(t *testing.T) {

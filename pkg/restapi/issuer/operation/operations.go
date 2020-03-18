@@ -11,6 +11,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -156,15 +157,15 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 		return
 	}
 
-	data, err := c.getCMSData(tk, info)
+	subject, err := c.getCMSData(tk, info)
 	if err != nil {
 		log.Error(err)
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get user cms data: %s", err.Error()))
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get cms data: %s", err.Error()))
 
 		return
 	}
 
-	cred, err := c.createCredential(data, info, vcsProfileCookie.Value)
+	cred, err := c.createCredential(subject, info, vcsProfileCookie.Value)
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create credential: %s", err.Error()))
@@ -322,29 +323,71 @@ func trimQuote(s string) string {
 	return s
 }
 
-func (c *Operation) getCMSURL(info *token.Introspection) string {
-	// we have only one user for now ...
-	userID := "1"
+func (c *Operation) getCMSUser(tk *oauth2.Token, info *token.Introspection) (*cmsUser, error) {
+	userURL := c.cmsURL + "/users?email=" + info.Subject
 
-	// scope StudentCard matches studentcards in CMS etc.
-	return c.cmsURL + "/" + strings.ToLower(info.Scope) + "s/" + userID
-}
+	httpClient := c.tokenIssuer.Client(context.Background(), tk)
 
-func (c *Operation) prepareCreateCredentialRequest(data []byte, info *token.Introspection,
-	vcsProfile string) ([]byte, error) {
-	var subject map[string]interface{}
-
-	err := json.Unmarshal(data, &subject)
+	req, err := http.NewRequest("GET", userURL, nil)
 	if err != nil {
 		return nil, err
 	}
 
+	userBytes, err := sendHTTPRequest(req, httpClient, http.StatusOK)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalUser(userBytes)
+}
+
+func unmarshalUser(userBytes []byte) (*cmsUser, error) {
+	var users []cmsUser
+
+	err := json.Unmarshal(userBytes, &users)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(users) == 0 {
+		return nil, errors.New("user not found")
+	}
+
+	if len(users) > 1 {
+		return nil, errors.New("multiple users found")
+	}
+
+	return &users[0], nil
+}
+
+func unmarshalSubject(data []byte) (map[string]interface{}, error) {
+	var subjects []map[string]interface{}
+
+	err := json.Unmarshal(data, &subjects)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(subjects) == 0 {
+		return nil, errors.New("record not found")
+	}
+
+	if len(subjects) > 1 {
+		return nil, errors.New("multiple records found")
+	}
+
+	return subjects[0], nil
+}
+
+func (c *Operation) prepareCreateCredentialRequest(subject map[string]interface{}, info *token.Introspection,
+	vcsProfile string) ([]byte, error) {
 	// remove cms id, add name as id (will be replaced by DID)
 	subject["id"] = subject["name"]
 
 	// remove cms specific fields
 	delete(subject, "created_at")
 	delete(subject, "updated_at")
+	delete(subject, "userid")
 
 	req := &createCredential{
 		Context: []string{credentialContext},
@@ -356,15 +399,13 @@ func (c *Operation) prepareCreateCredentialRequest(data []byte, info *token.Intr
 	return json.Marshal(req)
 }
 
-func (c *Operation) createCredential(subject []byte, info *token.Introspection, ledgerType string) ([]byte, error) {
+func (c *Operation) createCredential(subject map[string]interface{}, info *token.Introspection, ledgerType string) ([]byte, error) { //nolint: lll
 	body, err := c.prepareCreateCredentialRequest(subject, info, ledgerType)
-
 	if err != nil {
 		return nil, err
 	}
 
 	req, err := http.NewRequest("POST", c.vcsURL+"/credential", bytes.NewBuffer(body))
-
 	if err != nil {
 		return nil, err
 	}
@@ -432,8 +473,14 @@ func prepareUpdateCredentialStatusRequest(cred, status, statusReason string) ([]
 	return json.Marshal(request)
 }
 
-func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) ([]byte, error) {
-	url := c.getCMSURL(info)
+func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) (map[string]interface{}, error) {
+	user, err := c.getCMSUser(tk, info)
+	if err != nil {
+		return nil, err
+	}
+
+	// scope StudentCard matches studentcards in CMS etc.
+	url := c.cmsURL + "/" + strings.ToLower(info.Scope) + "s?userid=" + user.UserID
 
 	httpClient := c.tokenIssuer.Client(context.Background(), tk)
 
@@ -442,7 +489,12 @@ func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) ([]b
 		return nil, err
 	}
 
-	return sendHTTPRequest(req, httpClient, http.StatusOK)
+	subjectBytes, err := sendHTTPRequest(req, httpClient, http.StatusOK)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalSubject(subjectBytes)
 }
 
 func sendHTTPRequest(req *http.Request, client *http.Client, status int) ([]byte, error) {
@@ -515,4 +567,10 @@ type updateCredentialStatusRequest struct {
 type storeVC struct {
 	Credential string `json:"credential"`
 	Profile    string `json:"profile,omitempty"`
+}
+
+type cmsUser struct {
+	UserID string `json:"userid"`
+	Name   string `json:"name"`
+	Email  string `json:"email"`
 }
