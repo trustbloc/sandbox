@@ -13,11 +13,12 @@ services:
     image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8070
-      - VC_REST_HOST_URL_EXTERNAL=http://localhost:8070
+      - VC_REST_HOST_URL_EXTERNAL=http://issuer.vcs.example.com:8070
       - EDV_REST_HOST_URL=http://edv.example.com:8081
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - UNIVERSAL_RESOLVER_HOST_URL=http://uni-resolver-web:8080/1.0/identifiers
       - VC_REST_MODE=issuer
+      - DATABASE_TYPE=mem
     ports:
       - 8070:8070
     entrypoint: ""
@@ -33,11 +34,12 @@ services:
     image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8069
-      - VC_REST_HOST_URL_EXTERNAL=http://localhost:8069
+      - VC_REST_HOST_URL_EXTERNAL=http://rp.vcs.example.com:8069
       - EDV_REST_HOST_URL=http://edv.example.com:8081
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - UNIVERSAL_RESOLVER_HOST_URL=http://uni-resolver-web:8080/1.0/identifiers
       - VC_REST_MODE=verifier
+      - DATABASE_TYPE=mem
     entrypoint: ""
     command:  /bin/sh -c "vc-rest start"
     ports:
