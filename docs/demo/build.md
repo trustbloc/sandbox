@@ -66,6 +66,6 @@ Open [user agent register wallet](https://127.0.0.1:8091/RegisterWallet) and fol
 
 ## Demo
 
-To create student card verifiable credential open [issuer home page](https://127.0.0.1:5556/) and follow the links.
+To create student card verifiable credential open [issuer home page](https://127.0.0.1:5556/) and follow the links. You can login as our pre-defined user foo@bar.com or set-up your own user using Strapi admin application.
 
 After creating student card verifiable credential open [rp home page](https://127.0.0.1:5557/) and follow the links.

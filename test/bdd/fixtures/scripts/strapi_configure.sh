@@ -7,18 +7,23 @@
 
 apk --no-cache add curl jq
 
+# generate the user api and model
+GENERATE_USERAPI_COMMAND="strapi generate:api users UserID:string Name:string Email:string"
+
+$GENERATE_USERAPI_COMMAND
+
 # generate the student cards api and model
-GENERATE_STUDENTAPI_COMMAND="strapi generate:api studentcards StudentID:string Name:string Email:string University:string Semester:string"
+GENERATE_STUDENTAPI_COMMAND="strapi generate:api studentcards UserID:string StudentID:string Name:string Email:string University:string Semester:string"
 
 $GENERATE_STUDENTAPI_COMMAND
 
 # generate the transcript api and model
-GENERATE_TRANSCRIPT_COMMAND="strapi generate:api transcripts StudentID:string Name:string University:string Course:string Status:string TotalCredits:string"
+GENERATE_TRANSCRIPT_COMMAND="strapi generate:api transcripts UserID:string StudentID:string Name:string University:string Course:string Status:string TotalCredits:string"
 
 $GENERATE_TRANSCRIPT_COMMAND
 
 # generate the travel card api and model
-GENERATE_TRAVELCARD_COMMAND="strapi generate:api travelcards TravelCardID:string Name:string Sex:string Country:string DOB:string IssueDate:string CardExpires:string"
+GENERATE_TRAVELCARD_COMMAND="strapi generate:api travelcards UserID:string TravelCardID:string Name:string Sex:string Country:string DOB:string IssueDate:string CardExpires:string"
 
 $GENERATE_TRAVELCARD_COMMAND
 
@@ -47,10 +52,21 @@ if [ -z "$token" ]
      exit
 fi
 
-# Add student card data
+# Add user data
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{"studentid":"1234568","name":"Foo","email":"foo@bar.com","university":"Faber College","semester":"3"}' \
+   --data '{"userid":"100","name":"Foo Bar","email":"foo@bar.com"}' \
+   http://strapi:1337/users | jq  -r ".error")
+# check for error
+if [ "$result" != "null" ]
+   then
+        echo "error insert user data in strapi: $result"
+fi
+
+# Add student card data for above created user
+result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
+   --request POST \
+   --data '{"userid":"100","studentid":"1234568","name":"Foo","email":"foo@bar.com","university":"Faber College","semester":"3"}' \
    http://strapi:1337/studentcards | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]
@@ -58,10 +74,10 @@ if [ "$result" != "null" ]
         echo "error insert studentcards data in strapi: $result"
 fi
 
-# Add transcripts data
+# Add transcripts data for above created user
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{"studentid":"323456898","name":"Foo","university":"Faber College","status":"graduated","totalcredits":"100","course":"Bachelors in Computing Science"}' \
+   --data '{"userid":"100","studentid":"323456898","name":"Foo","university":"Faber College","status":"graduated","totalcredits":"100","course":"Bachelors in Computing Science"}' \
    http://strapi:1337/transcripts | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]
@@ -69,10 +85,10 @@ if [ "$result" != "null" ]
         echo "error insert studentcards data in strapi: $result"
 fi
 
-# Add travel card data
+# Add travel card data for above created user
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{"travelcardid":"123-456-765","name":"Foo","sex":"M","country":"Canada","dob":"12-06-1989","issuedate":"01-06-2018","cardexpires":"01-06-2023"}' \
+   --data '{"userid":"100","travelcardid":"123-456-765","name":"Foo","sex":"M","country":"Canada","dob":"12-06-1989","issuedate":"01-06-2018","cardexpires":"01-06-2023"}' \
    http://strapi:1337/travelcards | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]
@@ -81,7 +97,6 @@ if [ "$result" != "null" ]
 fi
 
 echo "STRAPI SETUP IS COMPLETED"
-
 
 # Copy token to oathkeeper
 sed -e "s/{TOKEN}/$token/g" /oathkeeper/rules/resource-server-template.json > /oathkeeper/rules/resource-server.json
