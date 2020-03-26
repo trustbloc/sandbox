@@ -16,6 +16,8 @@ ISSUER_REST_IMAGE_NAME   ?= trustbloc/edge-sandbox/issuer-rest
 RP_REST_IMAGE_NAME       ?= trustbloc/edge-sandbox/rp-rest
 # Namespace for the login consent server image
 LOGIN_CONSENT_SEVER_IMAGE_NAME   ?= trustbloc/edge-sandbox/login-consent-server
+# ELEMENT API SIDETREE REQUEST URL
+DID_ELEMENT_SIDETREE_REQUEST_URL ?= https://element-did.com/api/v1/sidetree/requests
 
 # Tool commands (overridable)
 ALPINE_VER ?= 3.10
@@ -155,6 +157,11 @@ fabric-cli:
 create-veres-did: clean
 	@mkdir -p .build
 	@scripts/create_veres_did.sh
+
+create-element-did: clean
+	@mkdir -p .build
+	@cp scripts/create-element-did.js .build/
+	@REQUEST_URL=$(DID_ELEMENT_SIDETREE_REQUEST_URL) scripts/create_element_did.sh
 
 .PHONY: generate-test-config
 generate-test-config: clean
