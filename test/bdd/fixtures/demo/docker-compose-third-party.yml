@@ -83,13 +83,14 @@ services:
     logging:
       driver: "none"
 
-  nginx-proxy:
-    image: jwilder/nginx-proxy
-    ports:
-      - "${TRUSTBLOC_LOCAL_HTTPS_PORT:-8443}:443"
-    volumes:
-      - ../keys/tls:/etc/nginx/certs
-      - /var/run/docker.sock:/tmp/docker.sock:ro
+# TODO enable nginx-proxy after complete tls integration
+#  nginx-proxy:
+#    image: jwilder/nginx-proxy
+#    ports:
+#      - "${TRUSTBLOC_LOCAL_HTTPS_PORT:-8443}:443"
+#    volumes:
+#      - ../keys/tls:/etc/nginx/certs
+#      - /var/run/docker.sock:/tmp/docker.sock:ro
 
   shared.couchdb:
     container_name: shared.couchdb
