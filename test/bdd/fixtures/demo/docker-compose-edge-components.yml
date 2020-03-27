@@ -67,6 +67,7 @@ services:
       - TLS_CERT_FILE=/etc/tls/localhost.crt
       - TLS_KEY_FILE=/etc/tls/localhost.key
       - ARIESD_DB_NAMESPACE=edge-sandbox
+      - BLOC_DOMAIN=${BLOC_DOMAIN}
       - VIRTUAL_HOST=myagent.trustbloc.local
       - VIRTUAL_PROTO=https
     ports:
