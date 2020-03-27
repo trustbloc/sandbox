@@ -27,13 +27,16 @@ services:
     container_name: testnet.trustbloc.local
     image: halverneus/static-file-server:latest
     environment:
-      - PORT=80
+      - PORT=443
       - FOLDER=/web
+      - CORS=true
+      - TLS_CERT=/etc/tls/localhost.crt
+      - TLS_KEY=/etc/tls/localhost.key
     ports:
-      - 80:80
+      - 443:443
     volumes:
       - ../discovery-config/sidetree-mock/config:/web/.well-known/did-trustbloc
-
+      - ../keys/tls:/etc/tls
 
   stakeholder.one:
     container_name: stakeholder.one
@@ -42,7 +45,11 @@ services:
     environment:
       - PORT=8088
       - FOLDER=/web
+      - CORS=true
+      - TLS_CERT=/etc/tls/localhost.crt
+      - TLS_KEY=/etc/tls/localhost.key
     ports:
       - "8088:8088"
     volumes:
       - ../discovery-config/sidetree-mock/config:/web/.well-known/did-trustbloc
+      - ../keys/tls:/etc/tls
