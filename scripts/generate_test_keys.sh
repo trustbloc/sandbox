@@ -19,7 +19,10 @@ extendedKeyUsage = serverAuth
 keyUsage = Digital Signature, Key Encipherment
 subjectAltName = @alt_names
 [alt_names]
-DNS.1 = localhost" >> "$localhostSSLConf"
+DNS.1 = localhost
+DNS.2 = testnet.trustbloc.local
+DNS.3 = stakeholder.one
+DNS.4 = sidetree-mock" >> "$localhostSSLConf"
 
 trustblocSSLConf=$(mktemp)
 echo "subjectKeyIdentifier=hash
