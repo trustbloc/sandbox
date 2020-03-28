@@ -212,7 +212,7 @@ func startIssuer(parameters *issuerParameters) error {
 	router.PathPrefix("/reader/").Handler(fs)
 	router.PathPrefix("/view/").Handler(fs)
 	router.PathPrefix("/css/").Handler(fs)
-	router.PathPrefix("/images/").Handler(fs)
+	router.PathPrefix("/img/").Handler(fs)
 	router.PathPrefix("/js/").Handler(fs)
 
 	router.Handle("/", fs)

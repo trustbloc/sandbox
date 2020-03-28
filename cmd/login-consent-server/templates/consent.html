@@ -8,11 +8,12 @@ SPDX-License-Identifier: Apache-2.0
 <html>
 <head>
     <title>Consent Page</title>
+    <link rel="icon" type="images/x-icon" href="img/logo.png" >
 
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <style>
         [type="checkbox"].filled-in+span:after{
-            background-color: #1976d2 !important;
+            background-color: #71bd46 !important;
             border: 2px solid #e0e0e0 !important;
         }
         [type="checkbox"].filled-in:not(:checked)+span:after {
@@ -27,14 +28,26 @@ SPDX-License-Identifier: Apache-2.0
             font-size: .8rem;
             color: #0d0d0d;
         }
+        body {
+            background-image: url("img/header-bg.jpg");
+            background-size: cover;
+            background-repeat: no-repeat;
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        main {
+            flex: 1 0 auto;
+        }
     </style>
 </head>
 
 <body>
-<div class="row">
-    <div class="col s12 m15">
+<br><br>
+<div class="container">
+    <div class="col">
         <div class="card grey lighten-4">
-            <div class="card-content blue-text text-darken-2">
+            <div class="card-content green-text text-darken-2">
                 <span class="card-title">An application requests access to your data</span>
             </div>
             <div class="card-action">
@@ -55,8 +68,8 @@ SPDX-License-Identifier: Apache-2.0
                     </label>
                     <p>
                     <input type="hidden" name="challenge" value="{{.Challenge}}">
-                    <button type="submit" name="submit" id="accept" class='col s1  btn-large waves-effect blue darken-2' value="accept" >Allow access</button>
-                    <button type="submit" name="submit" id="reject" class='col s1  btn-large waves-effect blue darken-2'  style='margin-left:1%' value="reject" >Deny access</button>
+                    <button type="submit" name="submit" id="accept" class='col s1  btn-large waves-effect green darken-2' value="accept" >Allow access</button>
+                    <button type="submit" name="submit" id="reject" class='col s1  btn-large waves-effect green darken-2'  style='margin-left:1%' value="reject" >Deny access</button>
                      <p>
                   <div class="section" style="padding-top: 1rem;"></div>
                 </p>
@@ -65,9 +78,8 @@ SPDX-License-Identifier: Apache-2.0
 
         </div>
         <div class="section"></div>
-        <footer class="page-footer grey lighten-4" style="text-align:center; display: flex;min-height: 20vh; flex-direction: column;">
-            <p class="blue-text text-darken-2">  &copy; Copyright SecureKey Technologies Inc. & TrustBloc contributors.</p>
-            <a href="https://github.com/trustbloc/edge-sandbox">Github</a>
+        <footer style="position:fixed;bottom:0;left:0;width:100%;">
+            <h6 class="center-align" style="color:grey"> Copyright &copy; Trustbloc by  <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> </h6>
         </footer>
     </div>
 

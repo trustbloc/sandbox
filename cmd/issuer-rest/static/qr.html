@@ -8,42 +8,90 @@ SPDX-License-Identifier: Apache-2.0
 <!doctype html>
 <html class="no-js" lang="">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="images/x-icon" href="img/logo.png" >
     <title>QR Code</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
-    <style>
-        .section {
-            padding-top: 6rem;
-            padding-bottom: 3rem;
-        }
-        .tabs .tab a {
-            color: #1976d2;
-            background-color: #f5f5f5;
-        }
-    </style>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Favicons
+        ================================================== -->
+    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="img/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="img/apple-touch-icon-114x114.png">
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" type="text/css"  href="css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="fonts/font-awesome/css/font-awesome.css">
+
+    <!-- Stylesheet
+        ================================================== -->
+    <link rel="stylesheet" type="text/css"  href="css/style.css">
+    <link href='http://fonts.googleapis.com/css?family=Lato:400,700,900,300' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,800,600,300' rel='stylesheet' type='text/css'>
+    <script type="text/javascript" src="js/modernizr.custom.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
 </head>
 <body>
-<ul id="tabs-swipe-demo" class="tabs">
-    <li class="tab col "><a href="/">Issuer HomePage</a></li>
-</ul>
-</br>
-<div class="card-panel">
-    <div class="row">
-        <div class="col-8 col-sm-4 col-md-3 col-xl-2">
-            <img src="data:image/png;base64,{{.Image}}" style="width: 550px; height: 550px"/>
+<header class="text-center" name="qr">
+    <!-- Navigation
+        ==========================================-->
+    <nav id="menu" class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header" style="text-align:center">
+                <a class="navbar-brand" href="/">Issuer</a> </div>
+            <!-- /.navbar-collapse -->
         </div>
-        <a class="col s1  btn-small waves-effect blue darken-2" style='margin-left:2%' href="data:image/png;base64,{{.Image}}" download>
-           Download
-        </a>
+        <!-- /.container-fluid -->
+    </nav>
+    <div class="intro-text">
+        <div id="team-section">
+            <div class="container">
+                <div class="section-title">
+                    <h5>
+                        <strong>QR Code to retrieve your credential</strong>
+                    </h5>
+                    <br>
+                    <img class="img-fluid" src="data:image/png;base64,{{.Image}}"/>
+                    <div class="clearfix"></div>
+                    <br>
+                    <div>
+                        <a  class="btn btn-default btn-lg page-scroll" href={{.URL}} >Retrieve Credential
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
 
-        <a  class="col s2  btn-small waves-effect blue darken-2" style='margin-left:0.5%' href={{.URL}} >Retrieve Credential
-        </a>
+<div id="footer">
+    <div class="container">
+        <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github"></i></a>
+        Copyright &copy; Trustbloc by  <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
     </div>
 </div>
-<div class="section"></div>
-<footer class="page-footer grey lighten-4" style="text-align:center; display: flex;min-height: 20vh; flex-direction: column;">
-    <p class="blue-text text-darken-2">  &copy; Copyright SecureKey Technologies Inc. & TrustBloc contributors.</p>
-    <a href="https://github.com/trustbloc/edge-sandbox">Github</a>
-</footer>
 
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.1.11.1.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script type="text/javascript" src="js/bootstrap.js"></script>
+<script type="text/javascript" src="js/jquery.prettyPhoto.js"></script>
+<script type="text/javascript" src="js/jquery.isotope.js"></script>
+<!-- Javascripts
+    ================================================== -->
+<script type="text/javascript" src="js/main.js"></script>
 </body>
 </html>
