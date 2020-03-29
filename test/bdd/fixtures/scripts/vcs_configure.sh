@@ -70,3 +70,22 @@ do
    n=$((n+1))
    sleep 5
 done
+
+n=0
+maxAttempts=20
+until [ $n -ge $maxAttempts ]
+do
+   responseCreatedTime=$(curl --header "Content-Type: application/json" \
+   --request POST \
+   --data '{"name":"vc-issuer-4", "uri":"http://vc-issuer-4.com", "signatureType":"Ed25519Signature2018", "did":"did:sov:danube:CDEabPCipwE51bg7KF9yXt","didPrivateKey":"22WXAJuENXAZUKZuRceBP3S6G5mrbah9WvNxRan23HvLZ7kHMBMvZoAqAwbBo9WhkYdKVa11cCySH9m2HRmFXeaq","signatureRepresentation":0}' \
+   http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
+   echo "'created' field from profile issuer4 response is: $responseCreatedTime"
+
+   if [ -n "$responseCreatedTime" ]
+   then
+      break
+   fi
+   echo "Invalid 'created' field from issuer4 response when trying to create a profile (attempt $((n+1))/$maxAttempts)."
+   n=$((n+1))
+   sleep 5
+done
