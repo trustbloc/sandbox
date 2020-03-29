@@ -40,7 +40,8 @@ SPDX-License-Identifier: Apache-2.0
 </head>
 
 <style>
-    pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
+    pre {outline: 1px solid #777777; padding: 2px; margin: 2px;
+        border: 2px solid #464441; font-size:10px; text-align: left}
     .string { color: green; }
     .number { color: darkorange; }
     .boolean { color: blue; }
@@ -50,13 +51,6 @@ SPDX-License-Identifier: Apache-2.0
         color: #1976d2;
         background-color: #f5f5f5;
     }
-    @media only screen and (min-width : 1061px) {
-        #toast-container {
-            min-width: 100%;
-            bottom: 0%;
-            top: 0%;
-            right: 0%;
-            left: 0%;} }
     .alert-fixed {
         position:fixed;
         top: 0px;
@@ -65,38 +59,50 @@ SPDX-License-Identifier: Apache-2.0
         z-index:9999;
         border-radius:0px
     }
+    @media (min-width: 1200px) {
+        .container {
+            width: 1170px;
+        }
+    }
 </style>
-
 <body>
-<header class="text-center" name="receive">
-
-    <!-- Navigation
+<!-- Navigation
     ==========================================-->
-    <nav id="menu" class="navbar navbar-default navbar-fixed-top">
-        <div class="container">
-            <!-- Brand and toggle get grouped for better mobile display -->
-            <div class="navbar-header">
-                <a class="navbar-brand" href="/">Issuer</a> </div>
-            <!-- /.navbar-collapse -->
+<nav id="menu" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
+            <a class="navbar-brand" href="/">Issuer</a> </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/" class="page-scroll" style="text-transform: capitalize">Home</a></li>
+            </ul>
         </div>
-        <!-- /.container-fluid -->
-    </nav>
-    <br>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container-fluid -->
+</nav>
+
+<header class="text-center" name="receive">
     <div class="intro-text">
             <div class="container">
                     <textarea id="vcDataTextArea" style="display:none;">{{.Data}}</textarea>
-                    <pre id="vcDataJSON" style="text-align:left;"></pre>
+                    <pre id="vcDataJSON"></pre>
+                    <br>
                     <button id='storeVCBtn' class='btn btn-default btn-lg page-scroll'>Store VC in Wallet</button>
         </div>
     </div>
 
-<div class="alert alert-success alert-fixed alert-dismissable" role="alert" id="SuccessAlert">
-    <strong>Success!</strong> credential is saved successfully.
+<div class="alert alert-success alert-fixed alert-dismissable" role="alert" id="success-alert">
+    <strong>Success!</strong> Credential is saved successfully.
     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
 </div>
-<div class="alert alert-danger alert-fixed alert-dismissable" role="alert" id="ErrorAlert">
+<div class="alert alert-danger alert-fixed alert-dismissable" role="alert" id="error-alert">
     <strong>Oops!</strong> operation is cancelled or something went wrong.
     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
         <span aria-hidden="true">&times;</span>
@@ -104,7 +110,7 @@ SPDX-License-Identifier: Apache-2.0
 </div>
 <div id="footer">
     <div class="container">
-        <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github"></i></a>
+        <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github-square"></i></a>
         Copyright &copy; Trustbloc by  <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
     </div>
 </div>
@@ -146,15 +152,21 @@ SPDX-License-Identifier: Apache-2.0
             return;
         }
         if (result.data == "success"){
-            $("#SuccessAlert").show()
+            $("#success-alert").show()
+            $("#success-alert").fadeTo(2000, 500).slideUp(500, function() {
+                $("#success-alert").slideUp(500);
+            });
         }else {
-            $("#ErrorAlert").show()
+            $("#error-alert").show()
+            $("#error-alert").fadeTo(2000, 500).slideUp(500, function() {
+                $("#error-alert").slideUp(500);
+            });
         }
 
     }
     ready(() => {
-        $("#SuccessAlert").hide()
-        $("#ErrorAlert").hide()
+        $("#success-alert").hide()
+        $("#error-alert").hide()
         document.getElementById("vcDataJSON").innerHTML = syntaxHighlight(JSON.stringify(JSON.parse({{.Data}}), undefined, 4));
         document.getElementById('storeVCBtn').addEventListener('click', onClickReceive);
     })

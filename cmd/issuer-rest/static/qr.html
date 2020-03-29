@@ -15,13 +15,6 @@ SPDX-License-Identifier: Apache-2.0
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <!-- Favicons
-        ================================================== -->
-    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="img/apple-touch-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="img/apple-touch-icon-114x114.png">
-
     <!-- Bootstrap -->
     <link rel="stylesheet" type="text/css"  href="css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="fonts/font-awesome/css/font-awesome.css">
@@ -42,25 +35,32 @@ SPDX-License-Identifier: Apache-2.0
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 </head>
+<!-- Navigation
+    ==========================================-->
+<nav id="menu" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
+            <a class="navbar-brand" href="/">Issuer</a> </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/" class="page-scroll" style="text-transform: capitalize">Home</a></li>
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container-fluid -->
+</nav>
 <body>
 <header class="text-center" name="qr">
-    <!-- Navigation
-        ==========================================-->
-    <nav id="menu" class="navbar navbar-default navbar-fixed-top">
-        <div class="container">
-            <!-- Brand and toggle get grouped for better mobile display -->
-            <div class="navbar-header" style="text-align:center">
-                <a class="navbar-brand" href="/">Issuer</a> </div>
-            <!-- /.navbar-collapse -->
-        </div>
-        <!-- /.container-fluid -->
-    </nav>
     <div class="intro-text">
-        <div id="team-section">
-            <div class="container">
-                <div class="section-title">
+            <div class="container" style="padding-bottom:280px">
                     <h5>
-                        <strong>QR Code to retrieve your credential</strong>
+                        <strong style="text-transform:capitalize">QR Code to retrieve credential</strong>
+
                     </h5>
                     <br>
                     <img class="img-fluid" src="data:image/png;base64,{{.Image}}"/>
@@ -69,19 +69,18 @@ SPDX-License-Identifier: Apache-2.0
                     <div>
                         <a  class="btn btn-default btn-lg page-scroll" href={{.URL}} >Retrieve Credential
                         </a>
-                    </div>
-                </div>
-            </div>
+    </div>
+        </div>
+    </div>
+    <div id="footer">
+        <div class="container">
+            <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github-square"></i></a>
+            Copyright &copy; Trustbloc by  <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
         </div>
     </div>
 </header>
 
-<div id="footer">
-    <div class="container">
-        <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github"></i></a>
-        Copyright &copy; Trustbloc by  <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
-    </div>
-</div>
+
 
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
@@ -89,7 +88,6 @@ SPDX-License-Identifier: Apache-2.0
 <!-- Include all compiled plugins (below), or include individual files as needed -->
 <script type="text/javascript" src="js/bootstrap.js"></script>
 <script type="text/javascript" src="js/jquery.prettyPhoto.js"></script>
-<script type="text/javascript" src="js/jquery.isotope.js"></script>
 <!-- Javascripts
     ================================================== -->
 <script type="text/javascript" src="js/main.js"></script>

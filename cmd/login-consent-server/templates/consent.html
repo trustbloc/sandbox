@@ -41,7 +41,6 @@ SPDX-License-Identifier: Apache-2.0
         }
     </style>
 </head>
-
 <body>
 <br><br>
 <div class="container">
@@ -68,8 +67,8 @@ SPDX-License-Identifier: Apache-2.0
                     </label>
                     <p>
                     <input type="hidden" name="challenge" value="{{.Challenge}}">
-                    <button type="submit" name="submit" id="accept" class='col s1  btn-large waves-effect green darken-2' value="accept" >Allow access</button>
-                    <button type="submit" name="submit" id="reject" class='col s1  btn-large waves-effect green darken-2'  style='margin-left:1%' value="reject" >Deny access</button>
+                    <button type="submit" name="submit" id="accept" class='col s1  btn-large waves-effect green darken-2' value="accept" style="text-transform:capitalize">Allow access</button>
+                    <button type="submit" name="submit" id="reject" class='col s1  btn-large waves-effect green darken-2'  style='margin-left:1%; text-transform:capitalize' value="reject" >Deny access</button>
                      <p>
                   <div class="section" style="padding-top: 1rem;"></div>
                 </p>
@@ -79,7 +78,9 @@ SPDX-License-Identifier: Apache-2.0
         </div>
         <div class="section"></div>
         <footer style="position:fixed;bottom:0;left:0;width:100%;">
-            <h6 class="center-align" style="color:grey"> Copyright &copy; Trustbloc by  <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> </h6>
+            <h6 class="center-align" style="color:grey"> <a href="https://github.com/trustbloc/edge-sandbox">Github</a> Copyright &copy; Trustbloc by
+                <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
+            </h6>
         </footer>
     </div>
 

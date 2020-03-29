@@ -3,7 +3,6 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-
 body, html {
 	font-family: 'Open Sans', sans-serif;
 	text-rendering: optimizeLegibility !important;
@@ -124,11 +123,11 @@ hr {
 	background-color: #FFF;
 }
 .section-title {
-	padding-bottom: 20px;
+	padding-bottom: 50px;
 }
 /* Home Style */
 header {
-	background: url(../img/header-bg.jpg) no-repeat bottom center;
+	background: url(../img/services-bg.jpg) no-repeat bottom center;
 	background-size: cover;
 	color: #cfcfcf;
 	position: relative;

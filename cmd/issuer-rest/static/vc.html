@@ -15,13 +15,6 @@ SPDX-License-Identifier: Apache-2.0
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <!-- Favicons
-        ================================================== -->
-    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="img/apple-touch-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="img/apple-touch-icon-114x114.png">
-
     <!-- Bootstrap -->
     <link rel="stylesheet" type="text/css"  href="css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="fonts/font-awesome/css/font-awesome.css">
@@ -43,7 +36,8 @@ SPDX-License-Identifier: Apache-2.0
     <![endif]-->
 </head>
 <style>
-    pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
+    pre {outline: 1px solid #777777; padding: 2px; margin: 2px;
+        border: 2px solid #464441; font-size:10px; text-align: left}
     .string { color: green; }
     .number { color: darkorange; }
     .boolean { color: blue; }
@@ -53,41 +47,47 @@ SPDX-License-Identifier: Apache-2.0
         color: #1976d2;
         background-color: #f5f5f5;
     }
+    @media (min-width: 1200px) {
+        .container {
+            width: 1170px;
+        }
+    }
 </style>
+<!-- Navigation
+    ==========================================-->
+<nav id="menu" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
+            <a class="navbar-brand" href="/">Issuer</a> </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/" class="page-scroll" style="text-transform: capitalize">Home</a></li>
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container-fluid -->
+</nav>
 <body>
 <header class="text-center" name="receive">
-
-    <!-- Navigation
-    ==========================================-->
-    <nav id="menu" class="navbar navbar-default navbar-fixed-top">
-        <div class="container">
-            <!-- Brand and toggle get grouped for better mobile display -->
-            <div class="navbar-header">
-                <a class="navbar-brand" href="/">Issuer</a> </div>
-            <!-- /.navbar-collapse -->
-        </div>
-        <!-- /.container-fluid -->
-    </nav>
-    <br>
     <div class="intro-text">
-        <div id="team-section">
             <div class="container">
-                <div class="section-title">
-
-                    <h1>{{.Msg}}</h1>
+                    <h3>{{.Msg}}</h3>
                     <br>
-                    <pre id="vcDataJSON" style="text-align:center"></pre>
+                    <pre id="vcDataJSON"></pre>
                 </div>
-            </div>
-        </div>
     </div>
-</header>
 <div id="footer">
     <div class="container">
-        <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github"></i></a>
+        <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github-square"></i></a>
         Copyright &copy; Trustbloc by  <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
     </div>
 </div>
+</header>
 </body>
 
 <script>

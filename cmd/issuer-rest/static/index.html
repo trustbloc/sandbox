@@ -13,13 +13,8 @@ SPDX-License-Identifier: Apache-2.0
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <!-- Favicons
-        ================================================== -->
-    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
-
     <!-- Bootstrap -->
     <link rel="stylesheet" type="text/css"  href="css/bootstrap.css">
-    <link rel="stylesheet" type="text/css" href="fonts/font-awesome/css/font-awesome.css">
 
     <!-- Stylesheet
         ================================================== -->
@@ -37,9 +32,27 @@ SPDX-License-Identifier: Apache-2.0
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 </head>
+<!-- Navigation
+    ==========================================-->
+<nav id="menu" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
+            <a class="navbar-brand" href="/">Issuer</a> </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/" class="page-scroll" style="text-transform: capitalize">Home</a></li>
+            </ul>
+        </div>
+    </div>
+    <!-- /.container-fluid -->
+</nav>
 <body>
 <!-- Header -->
-<header class="text-center" name="home">
+<header class="text-center" name="home" style="padding-bottom:280px">
     <div class="intro-text">
         <h1>Welcome to <span class="color">Issuer</span></h1>
             <div class="section-title">
@@ -75,7 +88,7 @@ SPDX-License-Identifier: Apache-2.0
 </header>
 <div id="footer" class="text-center">
     <div class="container">
-        <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github"></i></a>
+        <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-envelope-o"></i></a>
         Copyright &copy; Trustbloc by  <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
     </div>
 </div>
@@ -86,7 +99,6 @@ SPDX-License-Identifier: Apache-2.0
 <!-- Include all compiled plugins (below), or include individual files as needed -->
 <script type="text/javascript" src="js/bootstrap.js"></script>
 <script type="text/javascript" src="js/jquery.prettyPhoto.js"></script>
-<script type="text/javascript" src="js/jquery.isotope.js"></script>
 <script type="text/javascript" src="js/action.js"></script>
 <!-- Javascripts
     ================================================== -->

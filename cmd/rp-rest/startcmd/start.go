@@ -131,6 +131,9 @@ func startRP(parameters *rpParameters) error {
 
 	fs := http.FileServer(http.Dir("static"))
 	router.PathPrefix("/reader/").Handler(fs)
+	router.PathPrefix("/css/").Handler(fs)
+	router.PathPrefix("/img/").Handler(fs)
+	router.PathPrefix("/js/").Handler(fs)
 
 	router.Handle("/", fs)
 
