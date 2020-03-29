@@ -12,13 +12,13 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
 	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/issuer"
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/issuer/operation"
 	tokenIssuer "github.com/trustbloc/edge-sandbox/pkg/token/issuer"
 	tokenResolver "github.com/trustbloc/edge-sandbox/pkg/token/resolver"
-	cmdutils "github.com/trustbloc/edge-sandbox/pkg/utils/cmd"
 )
 
 const (
@@ -94,7 +94,11 @@ type HTTPServer struct{}
 
 // ListenAndServe starts the server using the standard Go HTTP server implementation.
 func (s *HTTPServer) ListenAndServe(host, certFile, keyFile string, router http.Handler) error {
-	return http.ListenAndServeTLS(host, certFile, keyFile, router)
+	if certFile != "" && keyFile != "" {
+		return http.ListenAndServeTLS(host, certFile, keyFile, router)
+	}
+
+	return http.ListenAndServe(host, router)
 }
 
 type issuerParameters struct {
@@ -123,7 +127,7 @@ func createStartCmd(srv server) *cobra.Command {
 		Short: "Start issuer",
 		Long:  "Start issuer",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			hostURL, err := cmdutils.GetUserSetVar(cmd, hostURLFlagName, hostURLEnvKey, false)
+			hostURL, err := cmdutils.GetUserSetVarFromString(cmd, hostURLFlagName, hostURLEnvKey, false)
 			if err != nil {
 				return err
 			}
@@ -133,27 +137,30 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
-			tokenIntrospectionURL, err := cmdutils.GetUserSetVar(cmd, introspectionURLFlagName, introspectionURLEnvKey, false)
+			tokenIntrospectionURL, err := cmdutils.GetUserSetVarFromString(cmd, introspectionURLFlagName,
+				introspectionURLEnvKey, false)
 			if err != nil {
 				return err
 			}
 
-			tlsCertFile, err := cmdutils.GetUserSetVar(cmd, tlsCertFileFlagName, tlsCertFileEnvKey, false)
+			tlsCertFile, err := cmdutils.GetUserSetVarFromString(cmd, tlsCertFileFlagName,
+				tlsCertFileEnvKey, true)
 			if err != nil {
 				return err
 			}
 
-			tlsKeyFile, err := cmdutils.GetUserSetVar(cmd, tlsKeyFileFlagName, tlsKeyFileEnvKey, false)
+			tlsKeyFile, err := cmdutils.GetUserSetVarFromString(cmd, tlsKeyFileFlagName,
+				tlsKeyFileEnvKey, true)
 			if err != nil {
 				return err
 			}
 
-			cmsURL, err := cmdutils.GetUserSetVar(cmd, cmsURLFlagName, cmsURLEnvKey, false)
+			cmsURL, err := cmdutils.GetUserSetVarFromString(cmd, cmsURLFlagName, cmsURLEnvKey, false)
 			if err != nil {
 				return err
 			}
 
-			vcsURL, err := cmdutils.GetUserSetVar(cmd, vcsURLFlagName, vcsURLEnvKey, false)
+			vcsURL, err := cmdutils.GetUserSetVarFromString(cmd, vcsURLFlagName, vcsURLEnvKey, false)
 			if err != nil {
 				return err
 			}
@@ -225,12 +232,12 @@ func startIssuer(parameters *issuerParameters) error {
 }
 
 func getOAuth2Config(cmd *cobra.Command) (*oauth2.Config, error) {
-	authURL, err := cmdutils.GetUserSetVar(cmd, endpointAuthURLFlagName, endpointAuthURLEnvKey, false)
+	authURL, err := cmdutils.GetUserSetVarFromString(cmd, endpointAuthURLFlagName, endpointAuthURLEnvKey, false)
 	if err != nil {
 		return nil, err
 	}
 
-	tokenURL, err := cmdutils.GetUserSetVar(cmd, endpointTokenURLFlagName, endpointTokenURLEnvKey, false)
+	tokenURL, err := cmdutils.GetUserSetVarFromString(cmd, endpointTokenURLFlagName, endpointTokenURLEnvKey, false)
 	if err != nil {
 		return nil, err
 	}
@@ -241,17 +248,17 @@ func getOAuth2Config(cmd *cobra.Command) (*oauth2.Config, error) {
 		AuthStyle: 2, // basic
 	}
 
-	redirectURL, err := cmdutils.GetUserSetVar(cmd, clientRedirectURLFlagName, clientRedirectURLEnvKey, false)
+	redirectURL, err := cmdutils.GetUserSetVarFromString(cmd, clientRedirectURLFlagName, clientRedirectURLEnvKey, false)
 	if err != nil {
 		return nil, err
 	}
 
-	clientID, err := cmdutils.GetUserSetVar(cmd, clientIDFlagName, clientIDEnvKey, false)
+	clientID, err := cmdutils.GetUserSetVarFromString(cmd, clientIDFlagName, clientIDEnvKey, false)
 	if err != nil {
 		return nil, err
 	}
 
-	secret, err := cmdutils.GetUserSetVar(cmd, clientSecretFlagName, clientSecretEnvKey, false)
+	secret, err := cmdutils.GetUserSetVarFromString(cmd, clientSecretFlagName, clientSecretEnvKey, false)
 	if err != nil {
 		return nil, err
 	}

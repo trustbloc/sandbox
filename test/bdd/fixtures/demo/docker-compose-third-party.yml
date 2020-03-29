@@ -20,8 +20,11 @@ services:
     environment:
       - DSN=mysql://user:secret@secret(mysql:3306)/mysql?max_conns=20&max_idle_conns=4
       - URLS_SELF_ISSUER=http://127.0.0.1:4444
+      # TODO Add tls config for consent login https://github.com/trustbloc/edge-sandbox/issues/177
       - URLS_CONSENT=http://127.0.0.1:3300/consent
+      # TODO Add tls config for consent login https://github.com/trustbloc/edge-sandbox/issues/177
       - URLS_LOGIN=http://127.0.0.1:3300/login
+      # TODO Add tls config for consent login https://github.com/trustbloc/edge-sandbox/issues/177
       - URLS_LOGOUT=http://127.0.0.1:3300/logout
       - DSN=memory
       - SECRETS_SYSTEM=testSecretsSystem
@@ -32,6 +35,8 @@ services:
       - ../scripts/hydra_configure.sh:/tmp/hydra_configure.sh
     depends_on:
       - mysql
+    networks:
+      - demo-net
 
   oathkeeper-proxy:
     image: oryd/oathkeeper:v0.35.1-alpine
@@ -48,6 +53,8 @@ services:
     restart: on-failure
     volumes:
       - ../oathkeeper:/oathkeeper
+    networks:
+      - demo-net
 
   strapi:
     container_name: strapi
@@ -69,6 +76,8 @@ services:
       - ../oathkeeper:/oathkeeper
     depends_on:
       - mysql
+    networks:
+      - demo-net
 
   mysql:
     container_name: mysql
@@ -82,15 +91,22 @@ services:
       MYSQL_ROOT_PASSWORD: secret
     logging:
       driver: "none"
+    networks:
+      - demo-net
 
-# TODO enable nginx-proxy after complete tls integration
-#  nginx-proxy:
-#    image: jwilder/nginx-proxy
-#    ports:
-#      - "${TRUSTBLOC_LOCAL_HTTPS_PORT:-8443}:443"
-#    volumes:
-#      - ../keys/tls:/etc/nginx/certs
-#      - /var/run/docker.sock:/tmp/docker.sock:ro
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - "443:443"
+    volumes:
+      - ../keys/tls:/etc/nginx/certs
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      demo-net:
+        aliases:
+          - testnet.trustbloc.local
+          - stakeholder-one.trustbloc.local
+          - sidetree-mock.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb
@@ -105,13 +121,22 @@ services:
       - ../couchDB/config.ini:/opt/couchdb/etc/local.d/config.ini
     logging:
       driver: none
+    networks:
+      - demo-net
 
   consent.login.com:
     container_name: consent.login.com
     image: ${CONSENT_LOGIN_SERVER_IMAGE}:latest
     environment:
+      # TODO Add tls config for hydra http client in consent login https://github.com/trustbloc/edge-sandbox/issues/179
       - ADMIN_URL=http://hydra:4445
       - SERVE_PORT=3300
       - SKIP_SSL_CHECK=true
     ports:
       - 3300:3300
+    networks:
+      - demo-net
+
+networks:
+  demo-net:
+    driver: bridge
