@@ -15,6 +15,8 @@ services:
     volumes:
       - ../universalresolver/config.json:/opt/uni-resolver-java/uni-resolver-web/config.json
       - ../scripts/run-uni-resolver-web.sh:/opt/uni-resolver-java/uni-resolver-web/docker/run-uni-resolver-web.sh
+    networks:
+      - demo-net
 
   driver-did-sov:
     image: universalresolver/driver-did-sov:latest
@@ -25,3 +27,5 @@ services:
       uniresolver_driver_did_sov_walletName: ${UNIRESOLVER_DRIVER_DID_SOV_WALLETNAME}
     ports:
       - "8082:8080"
+    networks:
+      - demo-net

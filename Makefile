@@ -54,7 +54,7 @@ unit-test:
 	@scripts/check_unit.sh
 
 .PHONY: demo-start
-demo-start: clean generate-test-config issuer-rest-docker rp-rest-docker login-consent-server-docker generate-test-keys
+demo-start: clean generate-test-config issuer-rest-docker rp-rest-docker login-consent-server-docker trustbloc-local-setup
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-start-with-sidetree-fabric
@@ -179,7 +179,6 @@ clean: clean-build
 clean-build:
 	@rm -Rf ./.build
 	@rm -Rf ./coverage.txt
-	@rm -Rf ./test/bdd/fixtures/keys
 	@rm -Rf ./test/bdd/fixtures/oathkeeper/rules/resource-server.json
 	@rm -Rf ./test/bdd/fixtures/fabric/channel
 	@rm -Rf ./test/bdd/fixtures/fabric/crypto-config
