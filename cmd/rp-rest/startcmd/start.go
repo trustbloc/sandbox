@@ -12,10 +12,10 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
 
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/rp"
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/rp/operation"
-	cmdutils "github.com/trustbloc/edge-sandbox/pkg/utils/cmd"
 )
 
 const (
@@ -49,7 +49,11 @@ type HTTPServer struct{}
 
 // ListenAndServe starts the server using the standard Go HTTP server implementation.
 func (s *HTTPServer) ListenAndServe(host, certFile, keyFile string, router http.Handler) error {
-	return http.ListenAndServeTLS(host, certFile, keyFile, router)
+	if certFile != "" && keyFile != "" {
+		return http.ListenAndServeTLS(host, certFile, keyFile, router)
+	}
+
+	return http.ListenAndServe(host, router)
 }
 
 type rpParameters struct {
@@ -75,22 +79,22 @@ func createStartCmd(srv server) *cobra.Command {
 		Short: "Start rp",
 		Long:  "Start rp",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			hostURL, err := cmdutils.GetUserSetVar(cmd, hostURLFlagName, hostURLEnvKey, false)
+			hostURL, err := cmdutils.GetUserSetVarFromString(cmd, hostURLFlagName, hostURLEnvKey, false)
 			if err != nil {
 				return err
 			}
 
-			tlsCertFile, err := cmdutils.GetUserSetVar(cmd, tlsCertFileFlagName, tlsCertFileEnvKey, false)
+			tlsCertFile, err := cmdutils.GetUserSetVarFromString(cmd, tlsCertFileFlagName, tlsCertFileEnvKey, true)
 			if err != nil {
 				return err
 			}
 
-			tlsKeyFile, err := cmdutils.GetUserSetVar(cmd, tlsKeyFileFlagName, tlsKeyFileEnvKey, false)
+			tlsKeyFile, err := cmdutils.GetUserSetVarFromString(cmd, tlsKeyFileFlagName, tlsKeyFileEnvKey, true)
 			if err != nil {
 				return err
 			}
 
-			vcServiceURL, err := cmdutils.GetUserSetVar(cmd, vcsURLFlagName, vcsURLEnvKey, false)
+			vcServiceURL, err := cmdutils.GetUserSetVarFromString(cmd, vcsURLFlagName, vcsURLEnvKey, false)
 			if err != nil {
 				return err
 			}

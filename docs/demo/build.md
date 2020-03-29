@@ -11,12 +11,18 @@ Run the following command using your newly generated personal token:
 ```
 docker login -u <username> -p <github token with read:packages and repo permission> docker.pkg.github.com
 ```
-
 ## Prerequisites (for running tests and demos)
 - Go 1.13
 - Docker
 - Docker-Compose
 - Make
+
+# Setup CA and hostnames
+Run trustbloc-local-setup(`make trustbloc-local-setup`) this target will generate:
+
+- TLS CA located in ~/.trustbloc-local/sandbox/trustbloc-dev-ca.crt (you need to import in cert chain)
+
+- Hosts entries located in ~/.trustbloc-local/sandbox/hosts (you need copy it to /etc/hosts)
 
 ## Targets
 ```
@@ -62,10 +68,10 @@ You can verify student card data setup by logging in to [admin console](http://l
 
 After you have started sandbox components using 'make demo-start' register user wallet using following step:
 
-Open [user agent register wallet](https://127.0.0.1:8091/RegisterWallet) and follow the links.
+Open [user agent register wallet](https://myagent.trustbloc.local/RegisterWallet) and follow the links.
 
 ## Demo
 
-To create student card verifiable credential open [issuer home page](https://127.0.0.1:5556/) and follow the links. You can login as our pre-defined user foo@bar.com or set-up your own user using Strapi admin application.
+To create student card verifiable credential open [issuer home page](https://issuer.trustbloc.local/) and follow the links. You can login as our pre-defined user foo@bar.com or set-up your own user using Strapi admin application.
 
-After creating student card verifiable credential open [rp home page](https://127.0.0.1:5557/) and follow the links.
+After creating student card verifiable credential open [rp home page](https://rp.trustbloc.local/) and follow the links.
