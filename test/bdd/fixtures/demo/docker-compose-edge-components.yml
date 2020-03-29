@@ -13,9 +13,12 @@ services:
     image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8070
+      # TODO Add tls config for vcs http client https://github.com/trustbloc/edge-sandbox/issues/176
       - VC_REST_HOST_URL_EXTERNAL=http://issuer.vcs.example.com:8070
+      # TODO Add tls config for edv http client https://github.com/trustbloc/edv/issues/45
       - EDV_REST_HOST_URL=http://edv.example.com:8081
       - BLOC_DOMAIN=${BLOC_DOMAIN}
+      # TODO Add tls config for universalResolverVDRI https://github.com/trustbloc/edge-service/issues/166
       - UNIVERSAL_RESOLVER_HOST_URL=http://uni-resolver-web:8080/1.0/identifiers
       - VC_REST_MODE=issuer
       - DATABASE_TYPE=mem
@@ -29,16 +32,20 @@ services:
       - ../keys/tls:/etc/tls
     depends_on:
       - edv.example.com
-
+    networks:
+      - demo-net
 
   rp.vcs.example.com:
     container_name: rp.vcs.example.com
     image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8069
+      # TODO Add tls config for vcs http client https://github.com/trustbloc/edge-sandbox/issues/176
       - VC_REST_HOST_URL_EXTERNAL=http://rp.vcs.example.com:8069
+      # TODO Add tls config for edv http client https://github.com/trustbloc/edv/issues/45
       - EDV_REST_HOST_URL=http://edv.example.com:8081
       - BLOC_DOMAIN=${BLOC_DOMAIN}
+      # TODO Add tls config for universalResolverVDRI https://github.com/trustbloc/edge-service/issues/166
       - UNIVERSAL_RESOLVER_HOST_URL=http://uni-resolver-web:8080/1.0/identifiers
       - VC_REST_MODE=verifier
       - DATABASE_TYPE=mem
@@ -51,6 +58,8 @@ services:
       - 8069:8069
     depends_on:
       - edv.example.com
+    networks:
+      - demo-net
 
   edv.example.com:
     container_name: edv.example.com
@@ -58,29 +67,30 @@ services:
     environment:
       - EDV_HOST_URL=0.0.0.0:8081
       - EDV_DATABASE_TYPE=couchdb
+      # TODO Add tls config for couchdb http client https://github.com/trustbloc/edv/issues/46
       - EDV_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - EDV_DATABASE_PREFIX=edv
     ports:
       - 8081:8081
     command: start
+    networks:
+      - demo-net
 
   user.agent.example.com:
     container_name: user.agent.example.com
     image: ${USER_AGENT_WASM_IMAGE}:${USER_AGENT_WASM_IMAGE_TAG}
     environment:
       - HTTP_SERVER_HOST_URL=0.0.0.0:8091
-      - TLS_CERT_FILE=/etc/tls/localhost.crt
-      - TLS_KEY_FILE=/etc/tls/localhost.key
       - ARIESD_DB_NAMESPACE=edge-sandbox
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - VIRTUAL_HOST=myagent.trustbloc.local
-      - VIRTUAL_PROTO=https
     ports:
       - 8091:8091
     volumes:
       - ../keys/tls:/etc/tls
     command: start
-
+    networks:
+      - demo-net
 
   trustbloc.did.method.example.com:
     container_name: trustbloc.did.method.example.com
@@ -93,3 +103,5 @@ services:
     command: start
     volumes:
       - ../keys/tls:/etc/tls
+    networks:
+      - demo-net

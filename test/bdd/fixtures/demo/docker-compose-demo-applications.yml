@@ -13,36 +13,40 @@ services:
     image: ${ISSUER_IMAGE}:latest
     environment:
       - ISSUER_HOST_URL=0.0.0.0:5556
+      # TODO Add tls config for hydra http client https://github.com/trustbloc/edge-sandbox/issues/174
       - OAUTH2_ENDPOINT_AUTH_URL=http://127.0.0.1:4444/oauth2/auth
+      # TODO Add tls config for hydra http client https://github.com/trustbloc/edge-sandbox/issues/174
       - OAUTH2_ENDPOINT_TOKEN_URL=http://hydra:4444/oauth2/token
-      - OAUTH2_ISSUER_CLIENT_REDIRECT_URL=https://127.0.0.1:5556/callback
+      - OAUTH2_ISSUER_CLIENT_REDIRECT_URL=https://issuer.trustbloc.local/callback
       - OAUTH2_ISSUER_CLIENT_ID=auth-code-client
       - OAUTH2_ISSUER_CLIENT_SECRET=secret
+      # TODO Add tls config for hydra http client https://github.com/trustbloc/edge-sandbox/issues/174
       - OAUTH2_ENDPOINT_TOKEN_INTROSPECTION_URL=http://hydra:4445/oauth2/introspect
-      - ISSUER_TLS_CERT_FILE=/etc/tls/localhost.crt
-      - ISSUER_TLS_KEY_FILE=/etc/tls/localhost.key
+      # TODO Add tls config for cms http client https://github.com/trustbloc/edge-sandbox/issues/175
       - ISSUER_CMS_URL=http://oathkeeper-proxy:4455
+      # TODO Add tls config for vcs http client https://github.com/trustbloc/edge-sandbox/issues/176
       - ISSUER_VCS_URL=http://issuer.vcs.example.com:8070
       - VIRTUAL_HOST=issuer.trustbloc.local
-      - VIRTUAL_PROTO=https
     ports:
       - 5556:5556
     command: start
     volumes:
       - ../keys/tls:/etc/tls
+    networks:
+      - demo-net
 
   rp.example.com:
     container_name: rp.example.com
     image: ${RP_IMAGE}:latest
     environment:
       - RP_HOST_URL=0.0.0.0:5557
-      - RP_TLS_CERT_FILE=/etc/tls/localhost.crt
-      - RP_TLS_KEY_FILE=/etc/tls/localhost.key
+      # TODO Add tls config for vcs http client https://github.com/trustbloc/edge-sandbox/issues/176
       - RP_VCS_URL=http://rp.vcs.example.com:8069
       - VIRTUAL_HOST=rp.trustbloc.local
-      - VIRTUAL_PROTO=https
     ports:
       - 5557:5557
     command: start
     volumes:
       - ../keys/tls:/etc/tls
+    networks:
+      - demo-net

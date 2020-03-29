@@ -12,31 +12,34 @@ services:
     container_name: sidetree-mock
     image: ${SIDETREE_MOCK_IMAGE}:${SIDETREE_MOCK_IMAGE_TAG}
     environment:
-      - SIDETREE_MOCK_TLS_CERTIFICATE=/etc/tls/localhost.crt
-      - SIDETREE_MOCK_TLS_KEY=/etc/tls/localhost.key
       - SIDETREE_MOCK_HOST=0.0.0.0
       - SIDETREE_MOCK_PORT=48326
       - SIDETREE_MOCK_DID_NAMESPACE=did:trustbloc:testnet.trustbloc.local
+      - VIRTUAL_HOST=sidetree-mock.trustbloc.local
+      - VIRTUAL_PORT=48326
     ports:
       - 48326:48326
     volumes:
       - ../keys/tls:/etc/tls
-
+    networks:
+      - demo-net
 
   static-file-server:
-    container_name: testnet.trustbloc.local
+    container_name: static-file-server
     image: halverneus/static-file-server:latest
     environment:
-      - PORT=443
+      - PORT=8089
       - FOLDER=/web
       - CORS=true
-      - TLS_CERT=/etc/tls/localhost.crt
-      - TLS_KEY=/etc/tls/localhost.key
+      - VIRTUAL_HOST=testnet.trustbloc.local
+      - VIRTUAL_PORT=8089
     ports:
-      - 443:443
+      - 8089:8089
     volumes:
       - ../discovery-config/sidetree-mock/config:/web/.well-known/did-trustbloc
       - ../keys/tls:/etc/tls
+    networks:
+      - demo-net
 
   stakeholder.one:
     container_name: stakeholder.one
@@ -46,10 +49,12 @@ services:
       - PORT=8088
       - FOLDER=/web
       - CORS=true
-      - TLS_CERT=/etc/tls/localhost.crt
-      - TLS_KEY=/etc/tls/localhost.key
+      - VIRTUAL_HOST=stakeholder-one.trustbloc.local
+      - VIRTUAL_PORT=8088
     ports:
       - "8088:8088"
     volumes:
       - ../discovery-config/sidetree-mock/config:/web/.well-known/did-trustbloc
       - ../keys/tls:/etc/tls
+    networks:
+      - demo-net
