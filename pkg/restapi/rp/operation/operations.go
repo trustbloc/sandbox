@@ -8,6 +8,7 @@ package operation
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -51,9 +52,10 @@ type Operation struct {
 
 // Config defines configuration for rp operations
 type Config struct {
-	VCHTML string
-	VPHTML string
-	VCSURL string
+	VCHTML    string
+	VPHTML    string
+	VCSURL    string
+	TLSConfig *tls.Config
 }
 
 // verifyResponse describes verify credential response
@@ -73,7 +75,7 @@ func New(config *Config) *Operation {
 		vcHTML: config.VCHTML,
 		vpHTML: config.VPHTML,
 		vcsURL: config.VCSURL,
-		client: &http.Client{}}
+		client: &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}}}
 	svc.registerHandler()
 
 	return svc

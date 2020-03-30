@@ -27,5 +27,7 @@ services:
       uniresolver_driver_did_sov_walletName: ${UNIRESOLVER_DRIVER_DID_SOV_WALLETNAME}
     ports:
       - "8082:8080"
+    logging:
+      driver: none
     networks:
       - demo-net

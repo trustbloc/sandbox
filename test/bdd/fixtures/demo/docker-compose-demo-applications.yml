@@ -24,8 +24,8 @@ services:
       - OAUTH2_ENDPOINT_TOKEN_INTROSPECTION_URL=http://hydra:4445/oauth2/introspect
       # TODO Add tls config for cms http client https://github.com/trustbloc/edge-sandbox/issues/175
       - ISSUER_CMS_URL=http://oathkeeper-proxy:4455
-      # TODO Add tls config for vcs http client https://github.com/trustbloc/edge-sandbox/issues/176
-      - ISSUER_VCS_URL=http://issuer.vcs.example.com:8070
+      - ISSUER_VCS_URL=https://issuer-vcs.trustbloc.local
+      - ISSUER_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - VIRTUAL_HOST=issuer.trustbloc.local
     ports:
       - 5556:5556
@@ -40,8 +40,8 @@ services:
     image: ${RP_IMAGE}:latest
     environment:
       - RP_HOST_URL=0.0.0.0:5557
-      # TODO Add tls config for vcs http client https://github.com/trustbloc/edge-sandbox/issues/176
-      - RP_VCS_URL=http://rp.vcs.example.com:8069
+      - RP_VCS_URL=https://rp-vcs.trustbloc.local
+      - RP_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - VIRTUAL_HOST=rp.trustbloc.local
     ports:
       - 5557:5557
