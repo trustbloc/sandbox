@@ -8,7 +8,6 @@ package operation
 
 import (
 	"bytes"
-	"context"
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
@@ -87,7 +86,7 @@ type qr struct {
 type tokenIssuer interface {
 	AuthCodeURL(w http.ResponseWriter) string
 	Exchange(r *http.Request) (*oauth2.Token, error)
-	Client(ctx context.Context, t *oauth2.Token) *http.Client
+	Client(t *oauth2.Token) *http.Client
 }
 
 type tokenResolver interface {
@@ -328,7 +327,7 @@ func trimQuote(s string) string {
 func (c *Operation) getCMSUser(tk *oauth2.Token, info *token.Introspection) (*cmsUser, error) {
 	userURL := c.cmsURL + "/users?email=" + info.Subject
 
-	httpClient := c.tokenIssuer.Client(context.Background(), tk)
+	httpClient := c.tokenIssuer.Client(tk)
 
 	req, err := http.NewRequest("GET", userURL, nil)
 	if err != nil {
@@ -478,7 +477,7 @@ func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) (map
 	// scope StudentCard matches studentcards in CMS etc.
 	url := c.cmsURL + "/" + strings.ToLower(info.Scope) + "s?userid=" + user.UserID
 
-	httpClient := c.tokenIssuer.Client(context.Background(), tk)
+	httpClient := c.tokenIssuer.Client(tk)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

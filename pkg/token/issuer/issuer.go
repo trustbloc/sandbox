@@ -9,6 +9,7 @@ package issuer
 import (
 	"context"
 	"crypto/rand"
+	"crypto/tls"
 	"encoding/base64"
 	"errors"
 	"net/http"
@@ -27,14 +28,31 @@ const (
 	stateValueLength    = 16 // minutes
 )
 
+// Option configures the issuer
+type Option func(opts *Issuer)
+
+// WithTLSConfig option is for definition of secured HTTP transport using a tls.Config instance
+func WithTLSConfig(tlsConfig *tls.Config) Option {
+	return func(opts *Issuer) {
+		opts.tlsConfig = tlsConfig
+	}
+}
+
 // Issuer implements token issuing
 type Issuer struct {
 	oauthConfig *oauth2.Config
+	tlsConfig   *tls.Config
 }
 
 // New creates new token issuer
-func New(oauthConfig *oauth2.Config) *Issuer {
-	return &Issuer{oauthConfig: oauthConfig}
+func New(oauthConfig *oauth2.Config, opts ...Option) *Issuer {
+	issuer := &Issuer{oauthConfig: oauthConfig}
+
+	for _, opt := range opts {
+		opt(issuer)
+	}
+
+	return issuer
 }
 
 // AuthCodeURL returns a URL to OAuth 2.0 provider's consent page
@@ -59,7 +77,7 @@ func (i *Issuer) Exchange(r *http.Request) (*oauth2.Token, error) {
 	}
 
 	// exchange code for token
-	token, err := i.oauthConfig.Exchange(context.Background(), r.FormValue(codeFormKey))
+	token, err := i.oauthConfig.Exchange(i.createContext(), r.FormValue(codeFormKey))
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +86,8 @@ func (i *Issuer) Exchange(r *http.Request) (*oauth2.Token, error) {
 }
 
 // Client returns an HTTP client using the provided token.
-func (i *Issuer) Client(ctx context.Context, t *oauth2.Token) *http.Client {
+func (i *Issuer) Client(t *oauth2.Token) *http.Client {
+	ctx := i.createContext()
 	return oauth2.NewClient(ctx, i.oauthConfig.TokenSource(ctx, t))
 }
 
@@ -89,4 +108,14 @@ func generateStateOauthCookie(w http.ResponseWriter) string {
 	http.SetCookie(w, &cookie)
 
 	return state
+}
+
+func (i *Issuer) createContext() context.Context {
+	ctx := context.Background()
+	tr := &http.Transport{
+		TLSClientConfig: i.tlsConfig,
+	}
+	httpClient := &http.Client{Transport: tr}
+
+	return context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 }

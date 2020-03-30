@@ -260,15 +260,17 @@ func startIssuer(parameters *issuerParameters) error {
 		return err
 	}
 
+	tlsConfig := &tls.Config{RootCAs: rootCAs}
+
 	cfg := &operation.Config{
-		TokenIssuer:   tokenIssuer.New(parameters.oauth2Config),
-		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL),
+		TokenIssuer:   tokenIssuer.New(parameters.oauth2Config, tokenIssuer.WithTLSConfig(tlsConfig)),
+		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL, tokenResolver.WithTLSConfig(tlsConfig)),
 		CMSURL:        parameters.cmsURL,
 		VCSURL:        parameters.vcsURL,
 		QRCodeHTML:    "static/qr.html",
 		ReceiveVCHTML: "static/receiveVC.html",
 		VCHTML:        "static/vc.html",
-		TLSConfig:     &tls.Config{RootCAs: rootCAs}}
+		TLSConfig:     tlsConfig}
 
 	issuerService, err := issuer.New(cfg)
 	if err != nil {
