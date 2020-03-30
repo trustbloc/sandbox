@@ -9,6 +9,7 @@ package operation
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -57,6 +58,7 @@ type Operation struct {
 	receiveVCHTML string
 	qrCodeHTML    string
 	vcHTML        string
+	httpClient    *http.Client
 }
 
 // Config defines configuration for issuer operations
@@ -68,6 +70,7 @@ type Config struct {
 	ReceiveVCHTML string
 	QRCodeHTML    string
 	VCHTML        string
+	TLSConfig     *tls.Config
 }
 
 // vc struct used to return vc data to html
@@ -100,7 +103,8 @@ func New(config *Config) *Operation {
 		vcsURL:        config.VCSURL,
 		qrCodeHTML:    config.QRCodeHTML,
 		receiveVCHTML: config.ReceiveVCHTML,
-		vcHTML:        config.VCHTML}
+		vcHTML:        config.VCHTML,
+		httpClient:    &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}}}
 	svc.registerHandler()
 
 	return svc
@@ -258,9 +262,7 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpClient := http.DefaultClient
-
-	_, err = sendHTTPRequest(req, httpClient, http.StatusOK)
+	_, err = sendHTTPRequest(req, c.httpClient, http.StatusOK)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusBadRequest,
 			fmt.Sprintf("failed to update vc status: %s", err.Error()))
@@ -410,9 +412,7 @@ func (c *Operation) createCredential(subject map[string]interface{}, info *token
 		return nil, err
 	}
 
-	httpClient := http.DefaultClient
-
-	return sendHTTPRequest(req, httpClient, http.StatusCreated)
+	return sendHTTPRequest(req, c.httpClient, http.StatusCreated)
 }
 
 func (c *Operation) storeCredential(cred []byte, vcsProfile string) error {
@@ -427,9 +427,7 @@ func (c *Operation) storeCredential(cred []byte, vcsProfile string) error {
 		return err
 	}
 
-	httpClient := http.DefaultClient
-
-	_, err = sendHTTPRequest(storeReq, httpClient, http.StatusOK)
+	_, err = sendHTTPRequest(storeReq, c.httpClient, http.StatusOK)
 	if err != nil {
 		return err
 	}
@@ -449,9 +447,7 @@ func (c *Operation) retrieveCredential(id, vcsProfile string) ([]byte, error) {
 
 	r.URL.RawQuery = q.Encode()
 
-	httpClient := http.DefaultClient
-
-	return sendHTTPRequest(r, httpClient, http.StatusOK)
+	return sendHTTPRequest(r, c.httpClient, http.StatusOK)
 }
 
 func prepareStoreVCRequest(cred []byte, profile string) ([]byte, error) {

@@ -13,8 +13,7 @@ services:
     image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8070
-      # TODO Add tls config for vcs http client https://github.com/trustbloc/edge-sandbox/issues/176
-      - VC_REST_HOST_URL_EXTERNAL=http://issuer.vcs.example.com:8070
+      - VC_REST_HOST_URL_EXTERNAL=https://issuer-vcs.trustbloc.local
       # TODO Add tls config for edv http client https://github.com/trustbloc/edv/issues/45
       - EDV_REST_HOST_URL=http://edv.example.com:8081
       - BLOC_DOMAIN=${BLOC_DOMAIN}
@@ -23,6 +22,7 @@ services:
       - VC_REST_MODE=issuer
       - DATABASE_TYPE=mem
       - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - VIRTUAL_HOST=issuer-vcs.trustbloc.local
     ports:
       - 8070:8070
     entrypoint: ""
@@ -40,8 +40,7 @@ services:
     image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8069
-      # TODO Add tls config for vcs http client https://github.com/trustbloc/edge-sandbox/issues/176
-      - VC_REST_HOST_URL_EXTERNAL=http://rp.vcs.example.com:8069
+      - VC_REST_HOST_URL_EXTERNAL=https://rp-vcs.trustbloc.local
       # TODO Add tls config for edv http client https://github.com/trustbloc/edv/issues/45
       - EDV_REST_HOST_URL=http://edv.example.com:8081
       - BLOC_DOMAIN=${BLOC_DOMAIN}
@@ -50,6 +49,7 @@ services:
       - VC_REST_MODE=verifier
       - DATABASE_TYPE=mem
       - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - VIRTUAL_HOST=rp-vcs.trustbloc.local
     entrypoint: ""
     command:  /bin/sh -c "vc-rest start"
     volumes:

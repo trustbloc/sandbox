@@ -40,33 +40,6 @@ func TestStartCmdContents(t *testing.T) {
 }
 
 func TestStartCmdWithBlankArg(t *testing.T) {
-	t.Run("test blank tls cert arg", func(t *testing.T) {
-		startCmd := GetStartCmd(&mockServer{})
-
-		var args []string
-		args = append(args, hostURLArg()...)
-		args = append(args, []string{flag + tlsCertFileFlagName, ""}...)
-		startCmd.SetArgs(args)
-
-		err := startCmd.Execute()
-		require.Error(t, err)
-		require.Equal(t, "tls-cert-file value is empty", err.Error())
-	})
-
-	t.Run("test blank tls cert arg", func(t *testing.T) {
-		startCmd := GetStartCmd(&mockServer{})
-
-		var args []string
-		args = append(args, hostURLArg()...)
-		args = append(args, tlsCertFileArg()...)
-		args = append(args, []string{flag + tlsKeyFileFlagName, ""}...)
-		startCmd.SetArgs(args)
-
-		err := startCmd.Execute()
-		require.Error(t, err)
-		require.Equal(t, "tls-key-file value is empty", err.Error())
-	})
-
 	t.Run("test blank vcs service url arg", func(t *testing.T) {
 		startCmd := GetStartCmd(&mockServer{})
 
@@ -105,19 +78,9 @@ func TestStartCmdValidArgs(t *testing.T) {
 func TestStartCmdValidArgsEnvVar(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
-	err := os.Setenv(hostURLEnvKey, "localhost:8080")
-	require.Nil(t, err)
+	setEnvVars(t)
 
-	err = os.Setenv(tlsCertFileEnvKey, "cert")
-	require.Nil(t, err)
-
-	err = os.Setenv(tlsKeyFileEnvKey, "key")
-	require.Nil(t, err)
-
-	err = os.Setenv(vcsURLEnvKey, "localhost:8081")
-	require.Nil(t, err)
-
-	err = startCmd.Execute()
+	err := startCmd.Execute()
 	require.Nil(t, err)
 }
 
@@ -142,6 +105,32 @@ func getValidArgs() []string {
 	args = append(args, vcsServiceURLArg()...)
 
 	return args
+}
+
+func TestTLSSystemCertPoolInvalidArgsEnvVar(t *testing.T) {
+	startCmd := GetStartCmd(&mockServer{})
+
+	setEnvVars(t)
+
+	require.NoError(t, os.Setenv(tlsSystemCertPoolEnvKey, "wrongvalue"))
+
+	err := startCmd.Execute()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid syntax")
+}
+
+func setEnvVars(t *testing.T) {
+	err := os.Setenv(hostURLEnvKey, "localhost:8080")
+	require.Nil(t, err)
+
+	err = os.Setenv(tlsCertFileEnvKey, "cert")
+	require.Nil(t, err)
+
+	err = os.Setenv(tlsKeyFileEnvKey, "key")
+	require.Nil(t, err)
+
+	err = os.Setenv(vcsURLEnvKey, "localhost:8081")
+	require.Nil(t, err)
 }
 
 func hostURLArg() []string {
