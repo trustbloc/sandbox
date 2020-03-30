@@ -20,8 +20,7 @@ services:
       - OAUTH2_ISSUER_CLIENT_SECRET=secret
       # will access hydra admin as http because nginx-proxy doesn't support multiple ports per virtual host
       - OAUTH2_ENDPOINT_TOKEN_INTROSPECTION_URL=http://hydra:4445/oauth2/introspect
-      # TODO Add tls config for cms http client https://github.com/trustbloc/edge-sandbox/issues/175
-      - ISSUER_CMS_URL=http://oathkeeper-proxy:4455
+      - ISSUER_CMS_URL=https://oathkeeper-proxy.trustbloc.local
       - ISSUER_VCS_URL=https://issuer-vcs.trustbloc.local
       - ISSUER_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - VIRTUAL_HOST=issuer.trustbloc.local
