@@ -50,7 +50,9 @@ services:
     environment:
       - LOG_LEVEL=debug
       - PORT=4455
-      - ISSUER_URL=http://localhost:4455/
+      - ISSUER_URL=https://oathkeeper-proxy.trustbloc.local
+      - VIRTUAL_HOST=oathkeeper-proxy.trustbloc.local
+      - VIRTUAL_PORT=4455
     restart: on-failure
     volumes:
       - ../oathkeeper:/oathkeeper
@@ -111,6 +113,7 @@ services:
           - issuer-vcs.trustbloc.local
           - rp-vcs.trustbloc.local
           - hydra.trustbloc.local
+          - oathkeeper-proxy.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb

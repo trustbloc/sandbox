@@ -5,7 +5,7 @@
       "url": "http://strapi:1337"
     },
     "match": {
-      "url": "http://oathkeeper-proxy:4455/users<.*>",
+      "url": "http://oathkeeper-proxy.trustbloc.local/users<.*>",
       "methods": [
         "GET"
       ]
@@ -40,7 +40,7 @@
       "url": "http://strapi:1337"
     },
     "match": {
-      "url": "http://oathkeeper-proxy:4455/studentcards<.*>",
+      "url": "http://oathkeeper-proxy.trustbloc.local/studentcards<.*>",
       "methods": [
         "GET"
       ]
@@ -76,7 +76,7 @@
       "url": "http://strapi:1337"
     },
     "match": {
-      "url": "http://oathkeeper-proxy:4455/travelcards<.*>",
+      "url": "http://oathkeeper-proxy.trustbloc.local/travelcards<.*>",
       "methods": [
         "GET"
       ]
