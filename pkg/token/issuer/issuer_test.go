@@ -8,7 +8,7 @@ package issuer
 
 import (
 	"bytes"
-	"context"
+	"crypto/tls"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -16,6 +16,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 )
+
+func TestOpts(t *testing.T) {
+	tokenIssuer := New(nil, WithTLSConfig(&tls.Config{ServerName: "name"}))
+	require.NotNil(t, tokenIssuer.tlsConfig)
+}
 
 func TestIssuer_AuthCodeURL(t *testing.T) {
 	tokenIssuer := New(&oauth2.Config{})
@@ -28,7 +33,7 @@ func TestIssuer_AuthCodeURL(t *testing.T) {
 func TestIssuer_Client(t *testing.T) {
 	tokenIssuer := New(&oauth2.Config{})
 
-	c := tokenIssuer.Client(context.Background(), &oauth2.Token{})
+	c := tokenIssuer.Client(&oauth2.Token{})
 	require.NotNil(t, c)
 }
 

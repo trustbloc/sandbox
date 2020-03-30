@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package resolver
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,6 +16,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 )
+
+func TestOpts(t *testing.T) {
+	tokenIssuer := New("", WithTLSConfig(&tls.Config{ServerName: "name"}))
+	require.NotNil(t, tokenIssuer.httpClient.Transport)
+}
 
 func TestResolver_Resolve(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
