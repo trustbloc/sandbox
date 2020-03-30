@@ -58,45 +58,6 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 		require.Equal(t, "introspect-url value is empty", err.Error())
 	})
 
-	t.Run("test blank tls cert arg", func(t *testing.T) {
-		startCmd := GetStartCmd(&mockServer{})
-
-		var args []string
-		args = append(args, hostURLArg()...)
-		args = append(args, endpointAuthURLArg()...)
-		args = append(args, endpointTokenURLArg()...)
-		args = append(args, clientRedirectURLArg()...)
-		args = append(args, clientIDArg()...)
-		args = append(args, clientSecretArg()...)
-		args = append(args, tokenIntrospectionURLArg()...)
-		args = append(args, []string{flag + tlsCertFileFlagName, ""}...)
-		startCmd.SetArgs(args)
-
-		err := startCmd.Execute()
-		require.Error(t, err)
-		require.Equal(t, "tls-cert-file value is empty", err.Error())
-	})
-
-	t.Run("test blank tls cert arg", func(t *testing.T) {
-		startCmd := GetStartCmd(&mockServer{})
-
-		var args []string
-		args = append(args, hostURLArg()...)
-		args = append(args, endpointAuthURLArg()...)
-		args = append(args, endpointTokenURLArg()...)
-		args = append(args, clientRedirectURLArg()...)
-		args = append(args, clientIDArg()...)
-		args = append(args, clientSecretArg()...)
-		args = append(args, tokenIntrospectionURLArg()...)
-		args = append(args, tlsCertFileArg()...)
-		args = append(args, []string{flag + tlsKeyFileFlagName, ""}...)
-		startCmd.SetArgs(args)
-
-		err := startCmd.Execute()
-		require.Error(t, err)
-		require.Equal(t, "tls-key-file value is empty", err.Error())
-	})
-
 	t.Run("test blank cms url arg", func(t *testing.T) {
 		startCmd := GetStartCmd(&mockServer{})
 
@@ -250,6 +211,25 @@ func TestStartCmdValidArgs(t *testing.T) {
 func TestStartCmdValidArgsEnvVar(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
+	setEnvVars(t)
+
+	err := startCmd.Execute()
+	require.Nil(t, err)
+}
+
+func TestTLSSystemCertPoolInvalidArgsEnvVar(t *testing.T) {
+	startCmd := GetStartCmd(&mockServer{})
+
+	setEnvVars(t)
+
+	require.NoError(t, os.Setenv(tlsSystemCertPoolEnvKey, "wrongvalue"))
+
+	err := startCmd.Execute()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid syntax")
+}
+
+func setEnvVars(t *testing.T) {
 	err := os.Setenv(hostURLEnvKey, "localhost:8080")
 	require.Nil(t, err)
 
@@ -281,9 +261,6 @@ func TestStartCmdValidArgsEnvVar(t *testing.T) {
 	require.Nil(t, err)
 
 	err = os.Setenv(tlsKeyFileEnvKey, "key")
-	require.Nil(t, err)
-
-	err = startCmd.Execute()
 	require.Nil(t, err)
 }
 
