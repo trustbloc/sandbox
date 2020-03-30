@@ -8,7 +8,6 @@ package operation
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -675,7 +674,7 @@ func (m *mockTokenIssuer) Exchange(r *http.Request) (*oauth2.Token, error) {
 	return &oauth2.Token{}, nil
 }
 
-func (m *mockTokenIssuer) Client(ctx context.Context, t *oauth2.Token) *http.Client {
+func (m *mockTokenIssuer) Client(t *oauth2.Token) *http.Client {
 	return http.DefaultClient
 }
 
