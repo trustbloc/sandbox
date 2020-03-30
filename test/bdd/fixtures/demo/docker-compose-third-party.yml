@@ -107,6 +107,8 @@ services:
           - testnet.trustbloc.local
           - stakeholder-one.trustbloc.local
           - sidetree-mock.trustbloc.local
+          - issuer-vcs.trustbloc.local
+          - rp-vcs.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb

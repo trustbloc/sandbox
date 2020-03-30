@@ -7,12 +7,15 @@ SPDX-License-Identifier: Apache-2.0
 package startcmd
 
 import (
+	"crypto/tls"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
+	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/issuer"
@@ -83,6 +86,17 @@ const (
 	vcsURLFlagShorthand = "v"
 	vcsURLFlagUsage     = "VC Service URL. Format: HostName:Port."
 	vcsURLEnvKey        = "ISSUER_VCS_URL"
+
+	tlsSystemCertPoolFlagName  = "tls-systemcertpool"
+	tlsSystemCertPoolFlagUsage = "Use system certificate pool." +
+		" Possible values [true] [false]. Defaults to false if not set." +
+		" Alternatively, this can be set with the following environment variable: " + tlsSystemCertPoolEnvKey
+	tlsSystemCertPoolEnvKey = "ISSUER_TLS_SYSTEMCERTPOOL"
+
+	tlsCACertsFlagName  = "tls-cacerts"
+	tlsCACertsFlagUsage = "Comma-Separated list of ca certs path." +
+		" Alternatively, this can be set with the following environment variable: " + tlsCACertsEnvKey
+	tlsCACertsEnvKey = "ISSUER_TLS_CACERTS"
 )
 
 type server interface {
@@ -110,6 +124,15 @@ type issuerParameters struct {
 	tlsKeyFile            string
 	cmsURL                string
 	vcsURL                string
+	tlsSystemCertPool     bool
+	tlsCACerts            []string
+}
+
+type tlsConfig struct {
+	certFile       string
+	keyFile        string
+	systemCertPool bool
+	caCerts        []string
 }
 
 // GetStartCmd returns the Cobra start command.
@@ -143,18 +166,6 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
-			tlsCertFile, err := cmdutils.GetUserSetVarFromString(cmd, tlsCertFileFlagName,
-				tlsCertFileEnvKey, true)
-			if err != nil {
-				return err
-			}
-
-			tlsKeyFile, err := cmdutils.GetUserSetVarFromString(cmd, tlsKeyFileFlagName,
-				tlsKeyFileEnvKey, true)
-			if err != nil {
-				return err
-			}
-
 			cmsURL, err := cmdutils.GetUserSetVarFromString(cmd, cmsURLFlagName, cmsURLEnvKey, false)
 			if err != nil {
 				return err
@@ -165,20 +176,64 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			tlsConfg, err := getTLS(cmd)
+			if err != nil {
+				return err
+			}
+
 			parameters := &issuerParameters{
 				srv:                   srv,
 				hostURL:               strings.TrimSpace(hostURL),
 				oauth2Config:          oauth2Config,
 				tokenIntrospectionURL: strings.TrimSpace(tokenIntrospectionURL),
-				tlsCertFile:           tlsCertFile,
-				tlsKeyFile:            tlsKeyFile,
+				tlsCertFile:           tlsConfg.certFile,
+				tlsKeyFile:            tlsConfg.keyFile,
 				cmsURL:                strings.TrimSpace(cmsURL),
 				vcsURL:                strings.TrimSpace(vcsURL),
+				tlsSystemCertPool:     tlsConfg.systemCertPool,
+				tlsCACerts:            tlsConfg.caCerts,
 			}
 
 			return startIssuer(parameters)
 		},
 	}
+}
+
+func getTLS(cmd *cobra.Command) (*tlsConfig, error) {
+	tlsCertFile, err := cmdutils.GetUserSetVarFromString(cmd, tlsCertFileFlagName,
+		tlsCertFileEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsKeyFile, err := cmdutils.GetUserSetVarFromString(cmd, tlsKeyFileFlagName,
+		tlsKeyFileEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsSystemCertPoolString, err := cmdutils.GetUserSetVarFromString(cmd, tlsSystemCertPoolFlagName,
+		tlsSystemCertPoolEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsSystemCertPool := false
+	if tlsSystemCertPoolString != "" {
+		tlsSystemCertPool, err = strconv.ParseBool(tlsSystemCertPoolString)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	tlsCACerts, err := cmdutils.GetUserSetVarFromArrayString(cmd, tlsCACertsFlagName,
+		tlsCACertsEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tlsConfig{certFile: tlsCertFile,
+		keyFile: tlsKeyFile, systemCertPool: tlsSystemCertPool, caCerts: tlsCACerts}, nil
 }
 
 func createFlags(startCmd *cobra.Command) {
@@ -194,9 +249,17 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(tlsKeyFileFlagName, tlsKeyFileFlagShorthand, "", tlsKeyFileFlagUsage)
 	startCmd.Flags().StringP(cmsURLFlagName, cmsURLFlagShorthand, "", cmsURLFlagUsage)
 	startCmd.Flags().StringP(vcsURLFlagName, vcsURLFlagShorthand, "", vcsURLFlagUsage)
+	startCmd.Flags().BoolP(tlsSystemCertPoolFlagName, "", false,
+		tlsSystemCertPoolFlagUsage)
+	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
 }
 
 func startIssuer(parameters *issuerParameters) error {
+	rootCAs, err := tlsutils.GetCertPool(parameters.tlsSystemCertPool, parameters.tlsCACerts)
+	if err != nil {
+		return err
+	}
+
 	cfg := &operation.Config{
 		TokenIssuer:   tokenIssuer.New(parameters.oauth2Config),
 		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL),
@@ -204,7 +267,8 @@ func startIssuer(parameters *issuerParameters) error {
 		VCSURL:        parameters.vcsURL,
 		QRCodeHTML:    "static/qr.html",
 		ReceiveVCHTML: "static/receiveVC.html",
-		VCHTML:        "static/vc.html"}
+		VCHTML:        "static/vc.html",
+		TLSConfig:     &tls.Config{RootCAs: rootCAs}}
 
 	issuerService, err := issuer.New(cfg)
 	if err != nil {

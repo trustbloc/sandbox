@@ -7,12 +7,15 @@ SPDX-License-Identifier: Apache-2.0
 package startcmd
 
 import (
+	"crypto/tls"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
+	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/rp"
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/rp/operation"
@@ -38,6 +41,17 @@ const (
 	vcsURLFlagName  = "vcs-url"
 	vcsURLFlagUsage = "VC Service URL. Format: HostName:Port."
 	vcsURLEnvKey    = "RP_VCS_URL"
+
+	tlsSystemCertPoolFlagName  = "tls-systemcertpool"
+	tlsSystemCertPoolFlagUsage = "Use system certificate pool." +
+		" Possible values [true] [false]. Defaults to false if not set." +
+		" Alternatively, this can be set with the following environment variable: " + tlsSystemCertPoolEnvKey
+	tlsSystemCertPoolEnvKey = "RP_TLS_SYSTEMCERTPOOL"
+
+	tlsCACertsFlagName  = "tls-cacerts"
+	tlsCACertsFlagUsage = "Comma-Separated list of ca certs path." +
+		" Alternatively, this can be set with the following environment variable: " + tlsCACertsEnvKey
+	tlsCACertsEnvKey = "RP_TLS_CACERTS"
 )
 
 type server interface {
@@ -57,11 +71,20 @@ func (s *HTTPServer) ListenAndServe(host, certFile, keyFile string, router http.
 }
 
 type rpParameters struct {
-	srv          server
-	hostURL      string
-	tlsCertFile  string
-	tlsKeyFile   string
-	vcServiceURL string
+	srv               server
+	hostURL           string
+	tlsCertFile       string
+	tlsKeyFile        string
+	vcServiceURL      string
+	tlsSystemCertPool bool
+	tlsCACerts        []string
+}
+
+type tlsConfig struct {
+	certFile       string
+	keyFile        string
+	systemCertPool bool
+	caCerts        []string
 }
 
 // GetStartCmd returns the Cobra start command.
@@ -84,27 +107,24 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
-			tlsCertFile, err := cmdutils.GetUserSetVarFromString(cmd, tlsCertFileFlagName, tlsCertFileEnvKey, true)
-			if err != nil {
-				return err
-			}
-
-			tlsKeyFile, err := cmdutils.GetUserSetVarFromString(cmd, tlsKeyFileFlagName, tlsKeyFileEnvKey, true)
-			if err != nil {
-				return err
-			}
-
 			vcServiceURL, err := cmdutils.GetUserSetVarFromString(cmd, vcsURLFlagName, vcsURLEnvKey, false)
 			if err != nil {
 				return err
 			}
 
+			tlsConfg, err := getTLS(cmd)
+			if err != nil {
+				return err
+			}
+
 			parameters := &rpParameters{
-				srv:          srv,
-				hostURL:      strings.TrimSpace(hostURL),
-				tlsCertFile:  tlsCertFile,
-				tlsKeyFile:   tlsKeyFile,
-				vcServiceURL: vcServiceURL,
+				srv:               srv,
+				hostURL:           strings.TrimSpace(hostURL),
+				tlsCertFile:       tlsConfg.certFile,
+				tlsKeyFile:        tlsConfg.keyFile,
+				vcServiceURL:      vcServiceURL,
+				tlsSystemCertPool: tlsConfg.systemCertPool,
+				tlsCACerts:        tlsConfg.caCerts,
 			}
 
 			return startRP(parameters)
@@ -112,18 +132,64 @@ func createStartCmd(srv server) *cobra.Command {
 	}
 }
 
+func getTLS(cmd *cobra.Command) (*tlsConfig, error) {
+	tlsCertFile, err := cmdutils.GetUserSetVarFromString(cmd, tlsCertFileFlagName,
+		tlsCertFileEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsKeyFile, err := cmdutils.GetUserSetVarFromString(cmd, tlsKeyFileFlagName,
+		tlsKeyFileEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsSystemCertPoolString, err := cmdutils.GetUserSetVarFromString(cmd, tlsSystemCertPoolFlagName,
+		tlsSystemCertPoolEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsSystemCertPool := false
+	if tlsSystemCertPoolString != "" {
+		tlsSystemCertPool, err = strconv.ParseBool(tlsSystemCertPoolString)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	tlsCACerts, err := cmdutils.GetUserSetVarFromArrayString(cmd, tlsCACertsFlagName,
+		tlsCACertsEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tlsConfig{certFile: tlsCertFile,
+		keyFile: tlsKeyFile, systemCertPool: tlsSystemCertPool, caCerts: tlsCACerts}, nil
+}
+
 func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(hostURLFlagName, hostURLFlagShorthand, "", hostURLFlagUsage)
 	startCmd.Flags().StringP(tlsCertFileFlagName, "", "", tlsCertFileFlagUsage)
 	startCmd.Flags().StringP(tlsKeyFileFlagName, "", "", tlsKeyFileFlagUsage)
 	startCmd.Flags().StringP(vcsURLFlagName, "", "", vcsURLFlagUsage)
+	startCmd.Flags().BoolP(tlsSystemCertPoolFlagName, "", false,
+		tlsSystemCertPoolFlagUsage)
+	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
 }
 
 func startRP(parameters *rpParameters) error {
+	rootCAs, err := tlsutils.GetCertPool(parameters.tlsSystemCertPool, parameters.tlsCACerts)
+	if err != nil {
+		return err
+	}
+
 	cfg := &operation.Config{
-		VCHTML: "static/vc.html",
-		VPHTML: "static/vp.html",
-		VCSURL: parameters.vcServiceURL}
+		VCHTML:    "static/vc.html",
+		VPHTML:    "static/vp.html",
+		VCSURL:    parameters.vcServiceURL,
+		TLSConfig: &tls.Config{RootCAs: rootCAs}}
 
 	rpService, err := rp.New(cfg)
 	if err != nil {
