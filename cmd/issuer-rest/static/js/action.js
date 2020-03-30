@@ -10,8 +10,6 @@ $(document).ready(function () {
     var actionRequested = $('#actionRequested').val()
     $formSubmit =	$('#formSubmit');
 
-    $('select').not('disabled').formSelect();
-
     $('#profile').on('change', function(){
         if($(this).val() != ""){
             $('#vcsProfile').val($(this).val());

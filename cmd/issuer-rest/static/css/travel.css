@@ -40,7 +40,7 @@ h3 {
     margin:12px;
 }
 li {
-    list-style-image:url(../images/travel/list.png);
+    list-style-image:url(../img/travel/list.png);
     line-height:30px;
     color:#fff;
     font-size:16px;
@@ -93,21 +93,21 @@ li {
 }
 .header {
     height:163px;
-    background: url(../images/header.png) no-repeat;
+    background: url(../img/header.png) no-repeat;
 }
 .nav {
     height:93px;
-    background:url(../images/travel/nav-travel.png) no-repeat;
+    background:url(../img/travel/nav-travel.png) no-repeat;
 }
 .footer {
     height:400px;
-    background:url(../images/travel/footer.png) no-repeat;
+    background:url(../img/travel/footer.png) no-repeat;
 }
 .bannerLeft {
     float:left;
     width:455px;
     height:370px;
-    background:url(../images/travel/banner.png) right bottom no-repeat;
+    background:url(../img/travel/banner.png) right bottom no-repeat;
 }
 .bannerRight {
     float:right;
@@ -115,15 +115,15 @@ li {
 }
 .sub {
     height:336px;
-    background:url(../images/travel/sub.png) no-repeat;
+    background:url(../img/travel/sub.png) no-repeat;
 }
 .sub1 {
     height:423px;
-    background:url(../images/travel/sub1.png) no-repeat;
+    background:url(../img/travel/sub1.png) no-repeat;
 }
 .sub2 {
     height:600px;
-    background:url(../images/travel/sub2.png) no-repeat;
+    background:url(../img/travel/sub2.png) no-repeat;
 }
 .bannerText {
     padding: 20px 0 0 50px;
