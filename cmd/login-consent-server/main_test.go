@@ -41,7 +41,7 @@ func TestConsent_New(t *testing.T) {
 	for _, test := range tests {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
-			server, err := newConsentServer(tc.adminURL, true)
+			server, err := newConsentServer(tc.adminURL, false, []string{})
 			if tc.err != "" {
 				require.Contains(t, err.Error(), tc.err)
 				return
@@ -51,7 +51,6 @@ func TestConsent_New(t *testing.T) {
 			require.NotNil(t, server.hydraClient)
 			require.NotNil(t, server.loginTemplate)
 			require.NotNil(t, server.consentTemplate)
-			require.True(t, server.skipSSLCheck)
 		})
 	}
 }
@@ -74,17 +73,28 @@ func TestConsent_buildConsentServer(t *testing.T) {
 			},
 		},
 		{
-			name: "initialize with invalid ski ssl check ENV variable",
+			name: "initialize with invalid tls system cert pool ENV variable",
 			env: map[string]string{
-				adminURLEnvKey:     "sampleURL",
-				skipSSLCheckEnvKey: "InVaLid",
+				adminURLEnvKey:          "sampleURL",
+				tlsSystemCertPoolEnvKey: "InVaLid",
 			},
+			err: "invalid value",
+		},
+		{
+			name: "initialize with invalid tls system cert pool ENV variable",
+			env: map[string]string{
+				adminURLEnvKey:          "sampleURL",
+				tlsSystemCertPoolEnvKey: "false",
+				tlsCACertsEnvKey:        "certs",
+			},
+			err: "failed to read cert",
 		},
 		{
 			name: "initialize with valid ENV variables",
 			env: map[string]string{
-				adminURLEnvKey:     "sampleURL",
-				skipSSLCheckEnvKey: "true",
+				adminURLEnvKey:          "sampleURL",
+				tlsSystemCertPoolEnvKey: "true",
+				tlsCACertsEnvKey:        "",
 			},
 		},
 	}
@@ -186,7 +196,7 @@ func TestConsentServer_Login(t *testing.T) {
 	for _, test := range tests {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
-			server, err := newConsentServer(tc.adminURL, true)
+			server, err := newConsentServer(tc.adminURL, false, []string{})
 			require.NotNil(t, server)
 			require.NoError(t, err)
 
@@ -293,7 +303,7 @@ func TestConsentServer_Consent(t *testing.T) {
 	for _, test := range tests {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
-			server, err := newConsentServer(tc.adminURL, true)
+			server, err := newConsentServer(tc.adminURL, false, []string{})
 			require.NotNil(t, server)
 			require.NoError(t, err)
 

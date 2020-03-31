@@ -19,8 +19,6 @@ services:
       - VIRTUAL_PORT=48326
     ports:
       - 48326:48326
-    volumes:
-      - ../keys/tls:/etc/tls
     networks:
       - demo-net
 
