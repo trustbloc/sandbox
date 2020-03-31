@@ -14,8 +14,7 @@ services:
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8070
       - VC_REST_HOST_URL_EXTERNAL=https://issuer-vcs.trustbloc.local
-      # TODO Add tls config for edv http client https://github.com/trustbloc/edv/issues/45
-      - EDV_REST_HOST_URL=http://edv.example.com:8081
+      - EDV_REST_HOST_URL=https://edv.trustbloc.local
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       # TODO Add tls config for universalResolverVDRI https://github.com/trustbloc/edge-service/issues/166
       - UNIVERSAL_RESOLVER_HOST_URL=http://uni-resolver-web:8080/1.0/identifiers
@@ -41,8 +40,7 @@ services:
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8069
       - VC_REST_HOST_URL_EXTERNAL=https://rp-vcs.trustbloc.local
-      # TODO Add tls config for edv http client https://github.com/trustbloc/edv/issues/45
-      - EDV_REST_HOST_URL=http://edv.example.com:8081
+      - EDV_REST_HOST_URL=https://edv.trustbloc.local
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       # TODO Add tls config for universalResolverVDRI https://github.com/trustbloc/edge-service/issues/166
       - UNIVERSAL_RESOLVER_HOST_URL=http://uni-resolver-web:8080/1.0/identifiers
@@ -70,6 +68,7 @@ services:
       # TODO Add tls config for couchdb http client https://github.com/trustbloc/edv/issues/46
       - EDV_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - EDV_DATABASE_PREFIX=edv
+      - VIRTUAL_HOST=edv.trustbloc.local
     ports:
       - 8081:8081
     command: start
