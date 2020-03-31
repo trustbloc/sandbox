@@ -50,6 +50,8 @@ func main() {
 	http.HandleFunc("/login", c.login)
 	http.HandleFunc("/consent", c.consent)
 
+	http.Handle("/img/", http.FileServer(http.Dir("templates")))
+
 	fmt.Println(http.ListenAndServe(":"+port, nil))
 }
 

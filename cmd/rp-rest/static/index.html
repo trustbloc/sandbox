@@ -3,60 +3,130 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
  -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Verifier</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" >
-    <link rel="icon" type="images/x-icon" href="images/favicon.png" >
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" type="text/css"  href="css/bootstrap.css">
+
+    <!-- Stylesheet
+        ================================================== -->
+    <link rel="stylesheet" type="text/css"  href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="css/prettyPhoto.css">
+    <link href='http://fonts.googleapis.com/css?family=Lato:400,700,900,300' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,800,600,300' rel='stylesheet' type='text/css'>
+    <script type="text/javascript" src="js/modernizr.custom.js"></script>
     <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
     <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
-    <style>
-        .section {
-            padding-top: 32rem;
-            padding-bottom: 3rem;
-        }
-    </style>
-    <script>
-    FontAwesomeConfig = {
-        searchPseudoElements: true
-    }
 
-</script>
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
 </head>
-
 <body>
+<!-- Navigation
+    ==========================================-->
+<nav id="menu" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
+            <a class="navbar-brand" href="/">Verifier</a> </div>
 
-<div class="card-panel grey lighten-4">
-	<h1 class="blue-text text-darken-2" style="text-align:center" >Verifier</h1>
-</div>
-
-<div class="wrap">
-    <div>
-        <div class="btnWrap">
-            <button id="getVCBtn" class="waves-effect waves btn-large blue darken-2" style=" width:400px; margin:0 0 0 40%">Get VC</button>
-            <form method="post" id="vcForm" action="/verify">
-                <input type="hidden" name="vcDataInput" id="vcDataInput">
-            </form>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/" class="page-scroll" style="text-transform: capitalize">Home</a></li>
+            </ul>
         </div>
-        <br>
-        <div class="btnWrap">
-                <a href="reader/qrReader.html" class="waves-effect waves btn-large blue darken-2" style=" width:400px; margin:0 0 0 40%">
-                    Verifier KIOSK
-                </a>
+    </div>
+</nav>
+
+<!-- Header -->
+<header class="text-center" name="home">
+    <div class="intro-text" style="padding-bottom: 0px">
+        <h1>Welcome to <span class="color">Verifier</span></h1>
+        <p>Choose your options</p>
+    </div>
+
+    <!-- Portfolio Section -->
+    <div class="container" style="padding-bottom:270px"> <!-- Container -->
+        <div class="categories">
+            <div class="clearfix"></div>
+        </div>
+        <div class="row">
+            <div class="portfolio-items">
+                <div class="col-sm-6 col-md-3 col-lg-3 web">
+                    <div class="portfolio-item">
+                        <div class="hover-bg">
+                            <button id="getVCBtn">
+                                <div class="hover-text">
+                                    <h4>Get VC</h4>
+                                    <small>Verfiable Credential</small>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <img src="img/portfolio/03.png" class="img-responsive"></button>
+                        <form method="post" id="vcForm" action="/verify">
+                            <input type="hidden" name="vcDataInput" id="vcDataInput">
+                        </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3 col-lg-3 app">
+                    <div class="portfolio-item">
+                        <div class="hover-bg"> <a href="img/portfolio/02.jpg" rel="prettyPhoto">
+                                <div class="hover-text">
+                                    <h4>Get VP</h4>
+                                    <small>Get VP directly from Chapi</small>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <img src="img/portfolio/02.jpg" class="img-responsive" alt="Coming soon..."> </a> </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3 col-lg-3 web">
+                    <div class="portfolio-item">
+                        <div class="hover-bg"> <a href="reader/qrReader.html">
+                                <div class="hover-text">
+                                    <h4>Scan Barcode</h4>
+                                    <small>Verifiable Presentation</small>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <img src="img/portfolio/01.jpg" class="img-responsive" alt="Scan Barcode"> </a> </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3 col-lg-3 web">
+                    <div class="portfolio-item">
+                        <div class="hover-bg"> <a href="img/portfolio/04.png" rel="prettyPhoto">
+                                <div class="hover-text">
+                                    <h4>DID Authentication</h4>
+                                    <small>DID Authentication</small>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <img src="img/portfolio/04.png" class="img-responsive" alt="Coming soon..."> </a> </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
-</div>
-<div class="section"></div>
-<footer class="page-footer grey lighten-4" style="text-align:center; display: flex;min-height: 20vh; flex-direction: column;">
-    <p class="blue-text text-darken-2">  &copy; Copyright SecureKey Technologies Inc. & TrustBloc contributors.</p>
-    <a href="https://github.com/trustbloc/edge-sandbox">Github</a>
-</footer>
-</body>
+    <div id="footer">
+        <div class="container">
+            <div class="container">
+                <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github"></i></a>
+                Copyright &copy; Trustbloc by  <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
+            </div>
+        </div>
+    </div>
+</header>
 
 <script>
     installHandler()
@@ -95,4 +165,16 @@ SPDX-License-Identifier: Apache-2.0
     })
 
 </script>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.1.11.1.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script type="text/javascript" src="js/bootstrap.js"></script>
+<script type="text/javascript" src="js/SmoothScroll.js"></script>
+<script type="text/javascript" src="js/jquery.prettyPhoto.js"></script>
+
+<!-- Javascripts
+    ================================================== -->
+<script type="text/javascript" src="js/main.js"></script>
+</body>
 </html>
