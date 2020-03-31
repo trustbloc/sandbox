@@ -120,6 +120,7 @@ services:
           - rp-vcs.trustbloc.local
           - hydra.trustbloc.local
           - oathkeeper-proxy.trustbloc.local
+          - edv.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb
