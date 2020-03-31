@@ -9,12 +9,12 @@ version: '3'
 services:
 
   hydra:
-    container_name: hydra
+    container_name: hydra.trustbloc.local
     image: oryd/hydra:v1.3.2-alpine
     ports:
       - "4444:4444" # Public port
       - "4445:4445" # Admin port
-    command:  /bin/sh -c "hydra migrate sql --read-from-env --yes;tmp/hydra_configure.sh& hydra serve all --dangerous-force-http"
+    command:  /bin/sh -c "hydra migrate sql --read-from-env --yes;tmp/hydra_configure.sh& hydra serve all"
     entrypoint: ""
     environment:
       - DSN=mysql://root:secret@tcp(mysql:3306)/mysql?max_conns=20&max_idle_conns=4
@@ -28,15 +28,15 @@ services:
       - SECRETS_SYSTEM=testSecretsSystem
       - OIDC_SUBJECT_TYPES_SUPPORTED=public,pairwise
       - OIDC_SUBJECT_TYPE_PAIRWISE_SALT=testSecretsSystem
-      #- SERVE_TLS_KEY_PATH=/etc/tls/trustbloc.local.key
-      #- SERVE_TLS_CERT_PATH=/etc/tls/trustbloc.local.crt
+      - SERVE_TLS_KEY_PATH=/etc/tls/trustbloc.local.key
+      - SERVE_TLS_CERT_PATH=/etc/tls/trustbloc.local.crt
       - VIRTUAL_HOST=hydra.trustbloc.local
       - VIRTUAL_PORT=4444
-      #- VIRTUAL_PROTO=https
+      - VIRTUAL_PROTO=https
     restart: unless-stopped
     volumes:
       - ../scripts/hydra_configure.sh:/tmp/hydra_configure.sh
-      #- ../keys/tls:/etc/tls
+      - ../keys/tls:/etc/tls
     depends_on:
       - mysql
     networks:
@@ -46,10 +46,12 @@ services:
     image: oryd/oathkeeper:v0.35.1-alpine
     ports:
       - "4455:4455"
-    depends_on:
-      - hydra
-    command:
-      serve proxy --config /oathkeeper/config.yaml
+    # will add self-signed certificate to the “trusted list” because oathkeeper doesn't trust self-signed certificate
+    # https://github.com/ory/oathkeeper/issues/181
+    # remove it when using real certificate
+    command:  /bin/sh -c "cp /etc/tls/trustbloc-dev-ca.crt /usr/local/share/ca-certificates/;update-ca-certificates;oathkeeper serve proxy --config /oathkeeper/config.yaml"
+    user: root
+    entrypoint: ""
     environment:
       - LOG_LEVEL=debug
       - PORT=4455
@@ -59,6 +61,7 @@ services:
     restart: on-failure
     volumes:
       - ../oathkeeper:/oathkeeper
+      - ../keys/tls:/etc/tls
     networks:
       - demo-net
 
@@ -138,8 +141,8 @@ services:
     container_name: consent.login.com
     image: ${CONSENT_LOGIN_SERVER_IMAGE}:latest
     environment:
-      # will access hydra admin as http because nginx-proxy doesn't support multiple ports per virtual host
-      - ADMIN_URL=http://hydra:4445
+      # will access hydra admin through container directly because nginx-proxy doesn't support multiple ports per virtual host
+      - ADMIN_URL=https://hydra.trustbloc.local:4445
       - SERVE_PORT=3300
       - TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
     ports:
