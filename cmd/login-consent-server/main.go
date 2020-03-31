@@ -9,6 +9,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"strings"
 
 	"html/template"
 	"net/http"
@@ -18,16 +19,17 @@ import (
 	"time"
 
 	"github.com/go-openapi/strfmt"
-
 	"github.com/ory/hydra-client-go/client"
 	"github.com/ory/hydra-client-go/client/admin"
 	"github.com/ory/hydra-client-go/models"
+	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 )
 
 const (
-	adminURLEnvKey     = "ADMIN_URL"
-	servePortEnvKey    = "SERVE_PORT"
-	skipSSLCheckEnvKey = "SKIP_SSL_CHECK"
+	adminURLEnvKey          = "ADMIN_URL"
+	servePortEnvKey         = "SERVE_PORT"
+	tlsSystemCertPoolEnvKey = "TLS_SYSTEMCERTPOOL"
+	tlsCACertsEnvKey        = "TLS_CACERTS"
 
 	loginHTML   = "./templates/login.html"
 	consentHTML = "./templates/consent.html"
@@ -61,23 +63,31 @@ func buildConsentServer() (*consentServer, error) {
 		return nil, fmt.Errorf("admin URL is required")
 	}
 
-	var skipSSLCheck bool
+	var tlsSystemCertPool bool
 
-	skipSSLCheckVal := os.Getenv(skipSSLCheckEnvKey)
-	if skipSSLCheckVal != "" {
+	tlsSystemCertPoolVal := os.Getenv(tlsSystemCertPoolEnvKey)
+	if tlsSystemCertPoolVal != "" {
 		var err error
 
-		skipSSLCheck, err = strconv.ParseBool(skipSSLCheckVal)
+		tlsSystemCertPool, err = strconv.ParseBool(tlsSystemCertPoolVal)
 		if err != nil {
-			fmt.Printf("Invalid value (%s) suppiled for `%s`, switching to default false", skipSSLCheckVal, skipSSLCheckEnvKey)
+			return nil, fmt.Errorf("invalid value (%s) suppiled for `%s`, switching to default false",
+				tlsSystemCertPoolVal, tlsSystemCertPoolEnvKey)
 		}
 	}
 
-	return newConsentServer(adminURL, skipSSLCheck)
+	var tlsCACerts []string
+
+	tlsCACertsVal := os.Getenv(tlsCACertsEnvKey)
+	if tlsCACertsVal != "" {
+		tlsCACerts = strings.Split(tlsCACertsVal, ",")
+	}
+
+	return newConsentServer(adminURL, tlsSystemCertPool, tlsCACerts)
 }
 
 // newConsentServer returns new login consent server instance
-func newConsentServer(adminURL string, skipSSLCheck bool) (*consentServer, error) {
+func newConsentServer(adminURL string, tlsSystemCertPool bool, tlsCACerts []string) (*consentServer, error) {
 	u, err := url.Parse(adminURL)
 	if err != nil {
 		return nil, err
@@ -93,12 +103,17 @@ func newConsentServer(adminURL string, skipSSLCheck bool) (*consentServer, error
 		return nil, err
 	}
 
+	rootCAs, err := tlsutils.GetCertPool(tlsSystemCertPool, tlsCACerts)
+	if err != nil {
+		return nil, err
+	}
+
 	return &consentServer{
 		hydraClient: client.NewHTTPClientWithConfig(nil,
 			&client.TransportConfig{Schemes: []string{u.Scheme}, Host: u.Host, BasePath: u.Path}),
 		loginTemplate:   loginTemplate,
 		consentTemplate: consentTemplate,
-		skipSSLCheck:    skipSSLCheck,
+		httpClient:      &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: rootCAs}}},
 	}, nil
 }
 
@@ -107,7 +122,7 @@ type consentServer struct {
 	hydraClient     *client.OryHydra
 	loginTemplate   *template.Template
 	consentTemplate *template.Template
-	skipSSLCheck    bool
+	httpClient      *http.Client
 }
 
 func (c *consentServer) login(w http.ResponseWriter, req *http.Request) {
@@ -186,15 +201,7 @@ func (c *consentServer) acceptLoginRequest(w http.ResponseWriter, req *http.Requ
 		return
 	}
 
-	httpclient := &http.Client{}
-	if c.skipSSLCheck {
-		// #nosec
-		httpclient.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-	}
-
-	loginRqstParams := admin.NewGetLoginRequestParamsWithHTTPClient(httpclient)
+	loginRqstParams := admin.NewGetLoginRequestParamsWithHTTPClient(c.httpClient)
 	loginRqstParams.SetTimeout(timeout)
 	loginRqstParams.LoginChallenge = challenge[0]
 
@@ -206,7 +213,7 @@ func (c *consentServer) acceptLoginRequest(w http.ResponseWriter, req *http.Requ
 		return
 	}
 
-	loginOKRequest := admin.NewAcceptLoginRequestParamsWithHTTPClient(httpclient)
+	loginOKRequest := admin.NewAcceptLoginRequestParamsWithHTTPClient(c.httpClient)
 
 	b := &models.AcceptLoginRequest{
 		Subject: &username[0],
@@ -228,16 +235,8 @@ func (c *consentServer) acceptLoginRequest(w http.ResponseWriter, req *http.Requ
 }
 
 func (c *consentServer) showConsentPage(w http.ResponseWriter, req *http.Request) {
-	httpclient := &http.Client{}
-	if c.skipSSLCheck {
-		// #nosec
-		httpclient.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-	}
-
 	// get the consent request
-	consentRqstParams := admin.NewGetConsentRequestParamsWithHTTPClient(httpclient)
+	consentRqstParams := admin.NewGetConsentRequestParamsWithHTTPClient(c.httpClient)
 	consentRqstParams.SetTimeout(timeout)
 	consentRqstParams.ConsentChallenge = req.URL.Query().Get("consent_challenge")
 
@@ -268,15 +267,7 @@ func (c *consentServer) showConsentPage(w http.ResponseWriter, req *http.Request
 }
 
 func (c *consentServer) acceptConsentRequest(w http.ResponseWriter, req *http.Request) {
-	httpclient := &http.Client{}
-	if c.skipSSLCheck {
-		// #nosec
-		httpclient.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-	}
-
-	getConsentRequest := admin.NewGetConsentRequestParamsWithHTTPClient(httpclient)
+	getConsentRequest := admin.NewGetConsentRequestParamsWithHTTPClient(c.httpClient)
 	getConsentRequest.SetTimeout(timeout)
 	getConsentRequest.ConsentChallenge = req.URL.Query().Get("consent_challenge")
 
@@ -296,7 +287,7 @@ func (c *consentServer) acceptConsentRequest(w http.ResponseWriter, req *http.Re
 		HandledAt:                strfmt.DateTime(time.Now()),
 	}
 
-	consentOKRequest := admin.NewAcceptConsentRequestParamsWithHTTPClient(httpclient)
+	consentOKRequest := admin.NewAcceptConsentRequestParamsWithHTTPClient(c.httpClient)
 	consentOKRequest.SetBody(b)
 	consentOKRequest.SetTimeout(timeout)
 	consentOKRequest.ConsentChallenge = req.URL.Query().Get("consent_challenge")
@@ -313,15 +304,7 @@ func (c *consentServer) acceptConsentRequest(w http.ResponseWriter, req *http.Re
 }
 
 func (c *consentServer) rejectConsentRequest(w http.ResponseWriter, req *http.Request) {
-	httpclient := &http.Client{}
-	if c.skipSSLCheck {
-		// #nosec
-		httpclient.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-	}
-
-	consentDeniedRequest := admin.NewRejectConsentRequestParamsWithHTTPClient(httpclient)
+	consentDeniedRequest := admin.NewRejectConsentRequestParamsWithHTTPClient(c.httpClient)
 
 	b := &models.RejectRequest{
 		Error:            "access_denied",
