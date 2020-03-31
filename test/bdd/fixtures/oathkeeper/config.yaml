@@ -21,7 +21,8 @@ authenticators:
     enabled: true
 
     config:
-      introspection_url: http://hydra:4445/oauth2/introspect
+      # will access hydra admin through container directly because nginx-proxy doesn't support multiple ports per virtual host
+      introspection_url: https://hydra.trustbloc.local:4445/oauth2/introspect
       scope_strategy: exact
       required_scope:
         - StudentCard
