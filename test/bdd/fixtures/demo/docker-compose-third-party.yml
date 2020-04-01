@@ -15,7 +15,6 @@ services:
       - "4444:4444" # Public port
       - "4445:4445" # Admin port
     command:  /bin/sh -c "hydra migrate sql --read-from-env --yes;tmp/hydra_configure.sh& hydra serve all"
-    user: root
     entrypoint: ""
     environment:
       - DSN=mysql://root:secret@tcp(mysql:3306)/mysql?max_conns=20&max_idle_conns=4
