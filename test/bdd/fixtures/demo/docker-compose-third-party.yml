@@ -121,6 +121,7 @@ services:
           - hydra.trustbloc.local
           - oathkeeper-proxy.trustbloc.local
           - edv.trustbloc.local
+          - uni-resolver-web.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb
