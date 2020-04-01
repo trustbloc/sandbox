@@ -13,9 +13,11 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
+	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/vc/operation"
 
 	"github.com/trustbloc/edge-sandbox/pkg/internal/common/support"
 )
@@ -23,11 +25,13 @@ import (
 const (
 	httpContentTypeJSON = "application/json"
 
-	// edge-service endpoint to verify credential
-	verifyVC = "/verify"
+	// api paths
+	verifyVCPath = "/verify"
+	verifyVPPath = "/verifyPresentation"
 
-	// edge-service endpoint to verify presentation
-	verifyVP = "/verifyPresentation"
+	// edge-service verifier endpoints
+	verifyCredentialEndpoint   = "/verifier/credentials"
+	verifyPresentationEndpoint = "/verifier/presentations"
 )
 
 // Handler http handler for each controller API endpoint
@@ -58,12 +62,6 @@ type Config struct {
 	TLSConfig *tls.Config
 }
 
-// verifyResponse describes verify credential response
-type verifyResponse struct {
-	Verified bool   `json:"verified"`
-	Message  string `json:"message"`
-}
-
 // vc struct used to return vc data to html
 type vc struct {
 	Data string `json:"data"`
@@ -90,7 +88,19 @@ func (c *Operation) verifyVC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.verify(verifyVC, "vcDataInput", c.vcHTML, w, r)
+	inputData := "vcDataInput"
+	// TODO https://github.com/trustbloc/edge-sandbox/issues/194 RP Verifier - Support to configure
+	//  checks for Credential and Presentation verifications
+	checks := []string{"proof", "status"}
+
+	req := edgesvcops.CredentialsVerificationRequest{
+		Credential: []byte(r.Form.Get(inputData)),
+		Opts: &edgesvcops.CredentialsVerificationOptions{
+			Checks: checks,
+		},
+	}
+
+	c.verify(verifyCredentialEndpoint, req, inputData, c.vcHTML, w, r)
 }
 
 // verifyVP
@@ -102,32 +112,58 @@ func (c *Operation) verifyVP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.verify(verifyVP, "vpDataInput", c.vpHTML, w, r)
+	inputData := "vpDataInput"
+	// TODO https://github.com/trustbloc/edge-sandbox/issues/194 RP Verifier - Support to configure
+	//  checks for Credential and Presentation verifications
+	checks := []string{"proof"}
+
+	req := edgesvcops.VerifyPresentationRequest{
+		Presentation: []byte(r.Form.Get(inputData)),
+		Opts: &edgesvcops.VerifyPresentationOptions{
+			Checks: checks,
+		},
+	}
+
+	c.verify(verifyPresentationEndpoint, req, inputData, c.vpHTML, w, r)
 }
 
 // verify function verifies the input data and parse the response to provided template
-func (c *Operation) verify(endpoint, inputData, htmlTemplate string, w http.ResponseWriter, r *http.Request) {
-	respData, err := c.httpPost(
-		c.vcsURL+endpoint, httpContentTypeJSON, []byte(r.Form.Get(inputData)))
-
+func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, htmlTemplate string,
+	w http.ResponseWriter, r *http.Request) {
+	reqBytes, err := json.Marshal(verifyReq)
 	if err != nil {
-		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to verify: %s", err.Error()))
-
-		return
-	}
-
-	response := verifyResponse{}
-	if errUnmarshal := json.Unmarshal([]byte(respData), &response); errUnmarshal != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to unmarshal: %s", errUnmarshal.Error()))
+			fmt.Sprintf("failed to unmarshal request : %s", err.Error()))
 
 		return
 	}
 
-	if !response.Verified {
+	resp, httpErr := c.client.Post(c.vcsURL+endpoint, httpContentTypeJSON, bytes.NewBuffer(reqBytes))
+	if httpErr != nil {
 		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to verify : %s", response.Message))
+			fmt.Sprintf("failed to verify: %s", httpErr.Error()))
+
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		failedMsg := ""
+
+		respBytes, respErr := ioutil.ReadAll(resp.Body)
+		if respErr != nil {
+			failedMsg = fmt.Sprintf("failed to read response body: %s", respErr)
+		} else {
+			failedMsg = string(respBytes)
+		}
+
+		defer func() {
+			e := resp.Body.Close()
+			if e != nil {
+				log.Errorf("closing response body failed: %v", e)
+			}
+		}()
+
+		c.writeErrorResponse(w, resp.StatusCode, fmt.Sprintf("failed to verify: %s", failedMsg))
 
 		return
 	}
@@ -147,34 +183,6 @@ func (c *Operation) verify(endpoint, inputData, htmlTemplate string, w http.Resp
 	}
 }
 
-func (c *Operation) httpPost(url, commContentType string, data []byte) (string, error) {
-	resp, err := c.client.Post(url, commContentType, bytes.NewBuffer(data))
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("received unsuccessful POST HTTP status from "+
-			"[%s, %v]", url, resp.StatusCode)
-	}
-
-	defer func() {
-		e := resp.Body.Close()
-		if e != nil {
-			log.Errorf("closing response body failed: %v", e)
-		}
-	}()
-
-	buf := new(bytes.Buffer)
-
-	_, e := buf.ReadFrom(resp.Body)
-	if e != nil {
-		return "", e
-	}
-
-	return buf.String(), nil
-}
-
 // writeResponse writes interface value to response
 func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg string) {
 	log.Error(msg)
@@ -190,8 +198,8 @@ func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg s
 func (c *Operation) registerHandler() {
 	// Add more protocol endpoints here to expose them as controller API endpoints
 	c.handlers = []Handler{
-		support.NewHTTPHandler(verifyVC, http.MethodPost, c.verifyVC),
-		support.NewHTTPHandler(verifyVP, http.MethodPost, c.verifyVP),
+		support.NewHTTPHandler(verifyVCPath, http.MethodPost, c.verifyVC),
+		support.NewHTTPHandler(verifyVPPath, http.MethodPost, c.verifyVP),
 	}
 }
 
