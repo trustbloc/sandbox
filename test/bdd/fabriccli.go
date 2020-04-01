@@ -43,12 +43,12 @@ func (cli *FabricCLI) Exec(args ...string) (string, error) {
 
 	err := cmd.Start()
 	if err != nil {
-		return er.String(), errors.Errorf("%s: %s", err, er.Bytes())
+		return "", errors.New(out.String())
 	}
 
 	err = cmd.Wait()
 	if err != nil {
-		return er.String(), errors.Errorf("%s: %s", err, er.Bytes())
+		return "", errors.New(out.String())
 	}
 
 	return out.String(), nil

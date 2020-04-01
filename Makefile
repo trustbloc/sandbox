@@ -33,7 +33,7 @@ FABRIC_TOOLS_VERSION ?= 2.0.0-alpha
 FABRIC_TOOLS_TAG     ?= $(ARCH)-$(FABRIC_TOOLS_VERSION)
 
 # This can be a commit hash or a tag (or any git ref)
-export FABRIC_CLI_EXT_VERSION ?= v0.1.2
+export FABRIC_CLI_EXT_VERSION ?= 9226b1d234a9e36545509540a2a8a21013ac3190
 
 .PHONY: all
 all: checks unit-test
@@ -59,7 +59,7 @@ demo-start: clean generate-test-config issuer-rest-docker rp-rest-docker login-c
 
 .PHONY: demo-start-with-sidetree-fabric
 demo-start-with-sidetree-fabric: export START_SIDETREE_FABRIC=true
-demo-start-with-sidetree-fabric: clean generate-test-config issuer-rest-docker rp-rest-docker login-consent-server-docker generate-test-keys populate-fixtures docker-thirdparty fabric-cli
+demo-start-with-sidetree-fabric: clean generate-test-config issuer-rest-docker rp-rest-docker login-consent-server-docker trustbloc-local-setup populate-fixtures docker-thirdparty fabric-cli
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-stop
