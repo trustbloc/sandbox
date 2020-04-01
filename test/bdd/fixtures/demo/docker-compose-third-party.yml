@@ -15,16 +15,14 @@ services:
       - "4444:4444" # Public port
       - "4445:4445" # Admin port
     command:  /bin/sh -c "hydra migrate sql --read-from-env --yes;tmp/hydra_configure.sh& hydra serve all"
+    user: root
     entrypoint: ""
     environment:
       - DSN=mysql://root:secret@tcp(mysql:3306)/mysql?max_conns=20&max_idle_conns=4
       - URLS_SELF_ISSUER=https://hydra.trustbloc.local
-      # TODO Add tls config for consent login https://github.com/trustbloc/edge-sandbox/issues/177
-      - URLS_CONSENT=http://127.0.0.1:3300/consent
-      # TODO Add tls config for consent login https://github.com/trustbloc/edge-sandbox/issues/177
-      - URLS_LOGIN=http://127.0.0.1:3300/login
-      # TODO Add tls config for consent login https://github.com/trustbloc/edge-sandbox/issues/177
-      - URLS_LOGOUT=http://127.0.0.1:3300/logout
+      - URLS_CONSENT=https://consent-login.trustbloc.local/consent
+      - URLS_LOGIN=https://consent-login.trustbloc.local/login
+      - URLS_LOGOUT=https://consent-login.trustbloc.local/logout
       - SECRETS_SYSTEM=testSecretsSystem
       - OIDC_SUBJECT_TYPES_SUPPORTED=public,pairwise
       - OIDC_SUBJECT_TYPE_PAIRWISE_SALT=testSecretsSystem
@@ -122,6 +120,7 @@ services:
           - oathkeeper-proxy.trustbloc.local
           - edv.trustbloc.local
           - uni-resolver-web.trustbloc.local
+          - consent-login.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb
@@ -147,6 +146,7 @@ services:
       - ADMIN_URL=https://hydra.trustbloc.local:4445
       - SERVE_PORT=3300
       - TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - VIRTUAL_HOST=consent-login.trustbloc.local
     ports:
       - 3300:3300
     volumes:

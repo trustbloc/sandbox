@@ -18,4 +18,5 @@ cat > ${SANDBOX_HOME}/hosts <<EOF
 127.0.0.1 myagent.trustbloc.local
 127.0.0.1 router.trustbloc.local
 127.0.0.1 hydra.trustbloc.local
+127.0.0.1 consent-login.trustbloc.local
 EOF
