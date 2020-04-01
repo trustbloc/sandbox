@@ -41,7 +41,8 @@ func (d *FabricCLISteps) installPlugin(path string) error {
 }
 
 func (d *FabricCLISteps) initNetwork() error {
-	logger.Infof("Initializing fabric-cli network. Network name [%s], SDK Config Path [%s]", networkName, sdkConfigPath) //nolint: lll
+	logger.Infof("Initializing fabric-cli network. Network name [%s], SDK Config Path [%s]",
+		networkName, sdkConfigPath)
 
 	err := os.RemoveAll(homeDir)
 	if err != nil {
@@ -57,7 +58,8 @@ func (d *FabricCLISteps) initNetwork() error {
 }
 
 func (d *FabricCLISteps) defineContext(name, channelID, orgID, strPeers, userID string) error {
-	logger.Infof("Defining fabric-cli context [%s] for channel [%s], org [%s], peers %s and User ID [%s]", name, channelID, orgID, strPeers, userID) //nolint: lll
+	logger.Infof("Defining fabric-cli context [%s] for channel [%s], org [%s], peers %s and User ID [%s]",
+		name, channelID, orgID, strPeers, userID)
 
 	peers := strings.Split(strPeers, ",")
 	if len(peers) == 0 {
@@ -112,7 +114,6 @@ func (d *FabricCLISteps) execute(strArgs string) error {
 func (d *FabricCLISteps) RegisterSteps(s *godog.Suite) {
 	s.BeforeScenario(d.BDDContext.BeforeScenario)
 	s.AfterScenario(d.BDDContext.AfterScenario)
-
 	s.Step(`^fabric-cli network is initialized$`, d.initNetwork)
 	s.Step(`^fabric-cli plugin "([^"]*)" is installed$`, d.installPlugin)
 	s.Step(`^fabric-cli context "([^"]*)" is defined on channel "([^"]*)" with org "([^"]*)", peers "([^"]*)" and user "([^"]*)"$`, d.defineContext) //nolint: lll
