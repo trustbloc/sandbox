@@ -9,7 +9,7 @@
       "url": "http://trustbloc.did.method.example.com:8060/resolveDID?did=$1"
     },
     {
-      "pattern": "^(did:trustbloc:peer0.org1.example.com:.+)$",
+      "pattern": "^(did:trustbloc:peer0-org1.trustbloc.local:.+)$",
       "url": "http://trustbloc.did.method.example.com:8060/resolveDID?did=$1"
     },
     {

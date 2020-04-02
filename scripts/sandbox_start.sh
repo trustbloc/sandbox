@@ -21,7 +21,7 @@ cd test/bdd && go test
 sidetreeCompseFile='-f docker-compose-sidetree-mock.yml'
 if [ "$START_SIDETREE_FABRIC" = true ] ; then
     setupFabric &
-    export BLOC_DOMAIN="peer0.org1.example.com"
+    export BLOC_DOMAIN="peer0-org1.trustbloc.local"
     sidetreeCompseFile='-f docker-compose-sidetree-fabric.yml'
 fi
 dockerComposeFiles="-f docker-compose-third-party.yml -f docker-compose-router.yml -f docker-compose-edge-components.yml -f docker-compose-demo-applications.yml -f docker-compose-universal-resolver.yml $sidetreeCompseFile"

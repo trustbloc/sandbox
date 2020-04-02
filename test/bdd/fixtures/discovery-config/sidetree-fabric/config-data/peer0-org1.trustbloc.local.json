@@ -1,0 +1,12 @@
+{
+  "domain": "peer0-org1.trustbloc.local",
+  "did": "did:trustbloc:testnet.trustbloc.local:zQ1234567890987654321",
+  "conf": {
+    "cache": {"max-age": 123456789}
+  },
+  "endpoints": [
+    "https://peer0-org1.trustbloc.local/document",
+    "https://peer1-org1.trustbloc.local/document"
+  ],
+  "previous": ""
+}

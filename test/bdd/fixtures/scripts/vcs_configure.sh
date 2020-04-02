@@ -13,7 +13,7 @@ apk --no-cache add curl jq
 
 
 n=0
-maxAttempts=20
+maxAttempts=30
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
