@@ -6,7 +6,13 @@
   },
   "stakeholders": [
     {
-      "domain": "peer0.org1.example.com"
+      "domain": "peer0-org1.trustbloc.local"
+    },
+    {
+      "domain": "peer0-org2.trustbloc.local"
+    },
+    {
+      "domain": "peer0-org3.trustbloc.local"
     }
   ],
   "previous": ""

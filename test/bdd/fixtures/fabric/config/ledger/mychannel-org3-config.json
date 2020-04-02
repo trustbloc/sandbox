@@ -31,8 +31,14 @@
         {
           "AppName": "file-handler",
           "Version": "1",
-          "Config": "file://./mychannel-filehandler-config-org3.json",
-          "Format": "json"
+          "Components": [
+            {
+              "Name": "/.well-known/did-trustbloc",
+              "Version": "1",
+              "Config": "file://./mychannel-filehandler-wellknown-config.json",
+              "Format": "json"
+            }
+          ]
         }
       ]
     },
@@ -66,8 +72,14 @@
         {
           "AppName": "file-handler",
           "Version": "1",
-          "Config": "file://./mychannel-filehandler-config-org3.json",
-          "Format": "json"
+          "Components": [
+            {
+              "Name": "/.well-known/did-trustbloc",
+              "Version": "1",
+              "Config": "file://./mychannel-filehandler-wellknown-config.json",
+              "Format": "json"
+            }
+          ]
         }
       ]
     }
