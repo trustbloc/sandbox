@@ -27,21 +27,33 @@ import (
 const authHeader = "Bearer ABC"
 
 const testCredentialRequest = `{
-"context":["https://www.w3.org/2018/credentials/examples/v1"],
-"type": [
-    "VerifiableCredential",
-    "UniversityDegreeCredential"
-  ],
-  "credentialSubject": {
-    "id": "did:example:ebfeb1f712ebc6f1c276e12ec21",
-    "degree": {
-      "type": "BachelorDegree",
-      "university": "MIT"
-    },
-    "name": "Jayden Doe",
-    "spouse": "did:example:c276e12ec21ebfeb1f712ebc6f1"
-  },
-  "profile": "test"
+   "context":[
+      "https://www.w3.org/2018/credentials/examples/v1"
+   ],
+   "type":[
+      "VerifiableCredential",
+      "UniversityDegreeCredential"
+   ],
+   "credentialSubject":{
+      "id":"did:example:ebfeb1f712ebc6f1c276e12ec21",
+      "degree":{
+         "type":"BachelorDegree",
+         "university":"MIT"
+      },
+      "name":"Jayden Doe",
+      "spouse":"did:example:c276e12ec21ebfeb1f712ebc6f1"
+   }
+}`
+
+const profileData = `{
+   "name":"issuer",
+   "did":"did:local:abc",
+   "uri":"https://example.com/credentials",
+   "signatureType":"Ed25519Signature2018",
+   "signatureRepresentation":0,
+   "creator":"did:local:abc#key-1",
+   "created":"2020-04-03T17:27:43.012324Z",
+   "didPrivateKey":""
 }`
 
 const foo = `{"id":1,"userid":"100","name":"Foo Bar","email":"foo@bar.com"}`
@@ -100,8 +112,15 @@ func TestOperation_Callback(t *testing.T) {
 	router.HandleFunc("/store", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusOK)
 	})
-	router.HandleFunc("/credential", func(writer http.ResponseWriter, request *http.Request) {
-		writer.WriteHeader(http.StatusCreated)
+	router.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(http.StatusOK)
+		_, err := writer.Write([]byte(profileData))
+		if err != nil {
+			panic(err)
+		}
+	})
+	router.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(http.StatusOK)
 		_, err := writer.Write([]byte(testCredentialRequest))
 		if err != nil {
 			panic(err)
@@ -321,10 +340,23 @@ func TestOperation_Callback_StoreCredential_Error(t *testing.T) {
 	}))
 	defer cms.Close()
 
-	vcs := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusCreated)
-		fmt.Fprintln(w, "{}")
-	}))
+	router := mux.NewRouter()
+	router.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(http.StatusOK)
+		_, err := writer.Write([]byte(profileData))
+		if err != nil {
+			panic(err)
+		}
+	})
+	router.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(http.StatusOK)
+		_, err := writer.Write([]byte(testCredentialRequest))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	vcs := httptest.NewServer(router)
 
 	defer vcs.Close()
 
@@ -419,11 +451,26 @@ func TestOperation_CreateCredential_Errors(t *testing.T) {
 		require.Nil(t, data)
 	})
 	t.Run("invalid subject map - contains channel", func(t *testing.T) {
+		router := mux.NewRouter()
+		router.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusOK)
+			_, err := writer.Write([]byte(profileData))
+			if err != nil {
+				panic(err)
+			}
+		})
+
+		vcs := httptest.NewServer(router)
+
+		defer vcs.Close()
+
+		cfg.VCSURL = vcs.URL
+
 		subject["invalid"] = make(chan int, 2)
 		svc := New(cfg)
 		require.NotNil(t, svc)
 
-		data, err := svc.createCredential(subject, &token.Introspection{}, "")
+		data, err := svc.createCredential(subject, &token.Introspection{}, "issuer")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "unsupported type: chan int")
 		require.Nil(t, data)

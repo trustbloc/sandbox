@@ -19,8 +19,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
+	vcprofile "github.com/trustbloc/edge-service/pkg/doc/vc/profile"
+	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/vc/operation"
 	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/edge-sandbox/pkg/internal/common/support"
@@ -38,6 +42,8 @@ const (
 	vcsUpdateStatusEndpoint = "/updateStatus"
 
 	vcsProfileCookie = "vcsProfile"
+
+	issueCredentialURLFormat = "%s/%s" + "/credentials/issueCredential"
 )
 
 // Handler http handler for each controller API endpoint
@@ -390,14 +396,53 @@ func (c *Operation) prepareCreateCredentialRequest(subject map[string]interface{
 	delete(subject, "updated_at")
 	delete(subject, "userid")
 
-	req := &createCredential{
-		Context: []string{credentialContext},
-		Subject: subject,
-		Type:    []string{"VerifiableCredential", info.Scope},
-		Profile: vcsProfile,
+	profileResponse, err := c.retrieveProfile(vcsProfile)
+	if err != nil {
+		return nil, fmt.Errorf("retrieve profile - name=%s err=%s", vcsProfile, err)
+	}
+
+	issueDate := time.Now().UTC()
+
+	cred := &verifiable.Credential{}
+	cred.Context = []string{credentialContext}
+	cred.Subject = subject
+	cred.Types = []string{"VerifiableCredential", info.Scope}
+	cred.Issued = &issueDate
+	cred.Issuer.ID = profileResponse.DID
+	cred.Issuer.Name = profileResponse.Name
+	cred.ID = profileResponse.URI + "/" + uuid.New().String()
+
+	credBytes, err := json.Marshal(cred)
+	if err != nil {
+		return nil, fmt.Errorf("build credential - err=%s", err)
+	}
+
+	req := edgesvcops.IssueCredentialRequest{
+		Credential: credBytes,
 	}
 
 	return json.Marshal(req)
+}
+
+func (c *Operation) retrieveProfile(profileName string) (*vcprofile.DataProfile, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf(c.vcsURL+"/profile/%s", profileName), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	respBytes, err := sendHTTPRequest(req, c.httpClient, http.StatusOK)
+	if err != nil {
+		return nil, err
+	}
+
+	profileResponse := &vcprofile.DataProfile{}
+
+	err = json.Unmarshal(respBytes, profileResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return profileResponse, nil
 }
 
 func (c *Operation) createCredential(subject map[string]interface{}, info *token.Introspection, ledgerType string) ([]byte, error) { //nolint: lll
@@ -406,12 +451,14 @@ func (c *Operation) createCredential(subject map[string]interface{}, info *token
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", c.vcsURL+"/credential", bytes.NewBuffer(body))
+	endpointURL := fmt.Sprintf(issueCredentialURLFormat, c.vcsURL, ledgerType)
+
+	req, err := http.NewRequest("POST", endpointURL, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
 
-	return sendHTTPRequest(req, c.httpClient, http.StatusCreated)
+	return sendHTTPRequest(req, c.httpClient, http.StatusOK)
 }
 
 func (c *Operation) storeCredential(cred []byte, vcsProfile string) error {
@@ -540,16 +587,6 @@ func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg s
 // GetRESTHandlers get all controller API handler available for this service
 func (c *Operation) GetRESTHandlers() []Handler {
 	return c.handlers
-}
-
-// createCredential input data for edge service issuer rest api
-type createCredential struct {
-	Context       []string               `json:"@context"`
-	Subject       map[string]interface{} `json:"credentialSubject"`
-	Type          []string               `json:"type,omitempty"`
-	Profile       string                 `json:"profile,omitempty"`
-	DID           string                 `json:"did,omitempty"`
-	DIDPrivateKey string                 `json:"didPrivateKey,omitempty"`
 }
 
 // updateCredentialStatusRequest request struct for updating vc status
