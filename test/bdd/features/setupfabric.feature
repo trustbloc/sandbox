@@ -7,10 +7,10 @@
 @setup_fabric
 Feature:
   Scenario: setup fabric
-    Given DCAS collection config "dcas-cfg" is defined for collection "dcas" as policy="OR('Org1MSP.member','Org2MSP.member','Org3MSP.member')", requiredPeerCount=2, maxPeerCount=3, and timeToLive=
-    Given off-ledger collection config "diddoc-cfg" is defined for collection "diddoc" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=1, maxPeerCount=2, and timeToLive=
-    Given off-ledger collection config "fileidx-cfg" is defined for collection "fileidxdoc" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=1, maxPeerCount=2, and timeToLive=
-    Given off-ledger collection config "meta-data-cfg" is defined for collection "meta_data" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=1, maxPeerCount=2, and timeToLive=
+    Given DCAS collection config "dcas-cfg" is defined for collection "dcas" as policy="OR('Org1MSP.member','Org2MSP.member','Org3MSP.member')", requiredPeerCount=1, maxPeerCount=2, and timeToLive=
+    Given off-ledger collection config "diddoc-cfg" is defined for collection "diddoc" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=1, and timeToLive=
+    Given off-ledger collection config "fileidx-cfg" is defined for collection "fileidxdoc" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=1, and timeToLive=
+    Given off-ledger collection config "meta-data-cfg" is defined for collection "meta_data" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=1, and timeToLive=
 
     Given the channel "mychannel" is created and all peers have joined
 
@@ -18,7 +18,7 @@ Feature:
     And "system" chaincode "sidetreetxn_cc" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "AND('Org1MSP.member','Org2MSP.member','Org3MSP.member')" with collection policy "dcas-cfg"
     And "system" chaincode "document" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "OR('Org1MSP.member','Org2MSP.member','Org3MSP.member')" with collection policy "diddoc-cfg,fileidx-cfg,meta-data-cfg"
 
-    Given DCAS collection config "consortium-files-cfg" is defined for collection "consortium" as policy="OR('Org1MSP.member','Org2MSP.member','Org3MSP.member')", requiredPeerCount=2, maxPeerCount=3, and timeToLive=
+    Given DCAS collection config "consortium-files-cfg" is defined for collection "consortium" as policy="OR('Org1MSP.member','Org2MSP.member','Org3MSP.member')", requiredPeerCount=1, maxPeerCount=2, and timeToLive=
     And "system" chaincode "file" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "OR('Org1MSP.member','Org2MSP.member','Org3MSP.member')" with collection policy "consortium-files-cfg"
 
     And fabric-cli network is initialized
