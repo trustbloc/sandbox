@@ -60,7 +60,7 @@ services:
       # metrics config
       - CORE_METRICS_PROVIDER=prometheus
       - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:8080
-      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer
+      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-monitor
       - CORE_SIDETREE_PORT=48326
       # # the following setting starts chaincode containers on the same
       # # bridge network as the peers
@@ -242,7 +242,7 @@ services:
       # metrics config
       - CORE_METRICS_PROVIDER=prometheus
       - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:8080
-      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-monitor
+      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-observer
       - CORE_SIDETREE_PORT=48326
       # # the following setting starts chaincode containers on the same
       # # bridge network as the peers
@@ -363,7 +363,7 @@ services:
       # metrics config
       - CORE_METRICS_PROVIDER=prometheus
       - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:8080
-      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-monitor
+      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-observer
       - CORE_SIDETREE_PORT=48326
       # # the following setting starts chaincode containers on the same
       # # bridge network as the peers
