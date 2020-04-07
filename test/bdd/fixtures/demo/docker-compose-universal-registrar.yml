@@ -1,0 +1,27 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '3'
+
+services:
+  driver-did-v1:
+    image: universalregistrar/driver-did-v1:latest
+    ports:
+      - "9083:9080"
+    networks:
+      - demo-net
+
+  uni-registrar-web:
+    image: universalregistrar/uni-registrar-web:latest
+    environment:
+      - VIRTUAL_HOST=uni-registrar-web.trustbloc.local
+      - VIRTUAL_PORT=9080
+    volumes:
+      - ../universal-registrar/config.json:/opt/uni-registrar-java/uni-registrar-web/config.json
+    ports:
+      - "9080:9080"
+    networks:
+      - demo-net
