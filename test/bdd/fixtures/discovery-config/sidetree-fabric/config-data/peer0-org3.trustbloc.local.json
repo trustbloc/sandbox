@@ -1,7 +1,7 @@
 {
   "domain": "peer0-org3.trustbloc.local",
   "did": "did:trustbloc:testnet.trustbloc.local:zQ1234567890987654321",
-  "conf": {
+  "policy": {
     "cache": {"max-age": 123456789}
   },
   "endpoints": [
