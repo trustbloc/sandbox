@@ -9,10 +9,10 @@ go 1.13
 require (
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.4
-	github.com/hyperledger/aries-framework-go v0.1.3-0.20200401225228-e17df7efdb4b
+	github.com/hyperledger/aries-framework-go v0.1.3-0.20200408183828-f12cbc1b8777
 	github.com/sirupsen/logrus v1.4.2
 	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086
 	github.com/stretchr/testify v1.5.1
-	github.com/trustbloc/edge-service v0.1.3-0.20200407152742-843ad4fec21e
+	github.com/trustbloc/edge-service v0.1.3-0.20200408190925-20e30eadfe99
 	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
 )
