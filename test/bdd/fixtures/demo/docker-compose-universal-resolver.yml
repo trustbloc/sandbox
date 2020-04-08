@@ -9,7 +9,7 @@ version: '3'
 services:
 
   uni-resolver-web:
-    image: universalresolver/uni-resolver-web:0.1.0
+    image: universalresolver/uni-resolver-web:latest
     environment:
       - VIRTUAL_HOST=uni-resolver-web.trustbloc.local
       - VIRTUAL_PORT=8080
