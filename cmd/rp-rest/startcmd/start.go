@@ -174,7 +174,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(tlsCertFileFlagName, "", "", tlsCertFileFlagUsage)
 	startCmd.Flags().StringP(tlsKeyFileFlagName, "", "", tlsKeyFileFlagUsage)
 	startCmd.Flags().StringP(vcsURLFlagName, "", "", vcsURLFlagUsage)
-	startCmd.Flags().BoolP(tlsSystemCertPoolFlagName, "", false,
+	startCmd.Flags().StringP(tlsSystemCertPoolFlagName, "", "",
 		tlsSystemCertPoolFlagUsage)
 	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
 }
