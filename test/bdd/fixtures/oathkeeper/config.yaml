@@ -27,6 +27,7 @@ authenticators:
       required_scope:
         - StudentCard
         - TravelCard
+        - PRCard
 
 authorizers:
   allow:
