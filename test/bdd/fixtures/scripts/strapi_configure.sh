@@ -27,6 +27,11 @@ GENERATE_TRAVELCARD_COMMAND="strapi generate:api travelcards UserID:string Trave
 
 $GENERATE_TRAVELCARD_COMMAND
 
+# generate the pr card api and model
+GENERATE_PRCARD_COMMAND="strapi generate:api prcards UserID:string GivenName:string FamilyName:string Gender:string Image:string ResidentSince:string LPRCategory:string LPRNumber:string BirthCountry:string BirthDate:string"
+
+$GENERATE_PRCARD_COMMAND
+
 sleep 30
 
 # Create admin user
@@ -94,6 +99,17 @@ result=$(curl --header "Content-Type: application/json" --header "Authorization:
 if [ "$result" != "null" ]
    then
         echo "error insert travelcards data in strapi: $result"
+fi
+
+# Add pr card data for above created user
+result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
+   --request POST \
+   --data '{"userid":"100","givenname":"Alice","familyname":"Smith","gender":"Female","image":"data:image/png;base64,iVBORw0KGgo...kJggg==","residentsince":"2015-01-01","lprcategory":"C09","lprnumber":"01-06-2023","birthcountry":"Bahamas","birthdate":"1958-08-17"}' \
+   http://strapi:1337/prcards | jq  -r ".error")
+# check for error
+if [ "$result" != "null" ]
+   then
+        echo "error insert prcards data in strapi: $result"
 fi
 
 echo "STRAPI SETUP IS COMPLETED"
