@@ -21,6 +21,16 @@
       "image": "universalresolver/driver-did-sov",
       "imageProperties": "true",
       "tag": "latest"
+    },
+    {
+      "pattern": "^(did:web:.+)$",
+      "image": "uport/uni-resolver-driver-did-uport",
+      "imagePort": "8081",
+      "tag": "latest"
+    },
+    {
+      "pattern": "^(did:key:.+)$",
+      "url": "https://did-key.web.app/api/dids/$1"
     }
   ]
 }
