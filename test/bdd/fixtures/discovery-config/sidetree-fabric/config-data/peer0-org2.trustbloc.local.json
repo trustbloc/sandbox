@@ -2,7 +2,7 @@
   "domain": "peer0-org2.trustbloc.local",
   "did": "did:trustbloc:testnet.trustbloc.local:zQ1234567890987654321",
   "policy": {
-    "cache": {"max-age": 123456789}
+    "cache": {"max_age": 123456789}
   },
   "endpoints": [
     "https://peer0-org2.trustbloc.local/document",
