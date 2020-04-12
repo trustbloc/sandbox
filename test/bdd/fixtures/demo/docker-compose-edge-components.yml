@@ -18,14 +18,16 @@ services:
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - UNIVERSAL_RESOLVER_HOST_URL=https://uni-resolver-web.trustbloc.local/1.0/identifiers
       - VC_REST_MODE=issuer
-      - DATABASE_TYPE=mem
+      - DATABASE_TYPE=couchdb
+      - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - VC_REST_TLS_SYSTEMCERTPOOL=true
       - VIRTUAL_HOST=issuer-vcs.trustbloc.local
     ports:
       - 8070:8070
     entrypoint: ""
-    command:  /bin/sh -c "/tmp/vcs_configure.sh& vc-rest start"
+    # wait 5 seconds for couchdb to start
+    command:  /bin/sh -c "sleep 5;/tmp/vcs_configure.sh& vc-rest start"
     volumes:
       - ../scripts/vcs_configure.sh:/tmp/vcs_configure.sh
       - ../keys/tls:/etc/tls
@@ -44,11 +46,13 @@ services:
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - UNIVERSAL_RESOLVER_HOST_URL=https://uni-resolver-web.trustbloc.local/1.0/identifiers
       - VC_REST_MODE=verifier
-      - DATABASE_TYPE=mem
+      - DATABASE_TYPE=couchdb
+      - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - VIRTUAL_HOST=rp-vcs.trustbloc.local
     entrypoint: ""
-    command:  /bin/sh -c "vc-rest start"
+    # wait 5 seconds for couchdb to start
+    command:  /bin/sh -c "sleep 5;vc-rest start"
     volumes:
       - ../keys/tls:/etc/tls
     ports:
