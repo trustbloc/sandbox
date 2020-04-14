@@ -458,7 +458,7 @@ func (c *Operation) createCredential(subject map[string]interface{}, info *token
 		return nil, err
 	}
 
-	return sendHTTPRequest(req, c.httpClient, http.StatusOK)
+	return sendHTTPRequest(req, c.httpClient, http.StatusCreated)
 }
 
 func (c *Operation) storeCredential(cred []byte, vcsProfile string) error {

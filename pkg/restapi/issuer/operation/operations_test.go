@@ -120,7 +120,7 @@ func TestOperation_Callback(t *testing.T) {
 		}
 	})
 	router.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
-		writer.WriteHeader(http.StatusOK)
+		writer.WriteHeader(http.StatusCreated)
 		_, err := writer.Write([]byte(testCredentialRequest))
 		if err != nil {
 			panic(err)
@@ -349,7 +349,7 @@ func TestOperation_Callback_StoreCredential_Error(t *testing.T) {
 		}
 	})
 	router.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
-		writer.WriteHeader(http.StatusOK)
+		writer.WriteHeader(http.StatusCreated)
 		_, err := writer.Write([]byte(testCredentialRequest))
 		if err != nil {
 			panic(err)
