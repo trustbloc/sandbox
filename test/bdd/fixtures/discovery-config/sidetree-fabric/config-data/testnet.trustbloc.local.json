@@ -1,5 +1,5 @@
 {
-  "domain": "consortium",
+  "domain": "testnet.trustbloc.local",
   "did": "did:trustbloc:testnet.trustbloc.local:zQ1234567890987654321",
   "policy": {
     "cache": {"max_age": 123456789}

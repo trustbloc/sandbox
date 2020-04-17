@@ -54,9 +54,9 @@ Feature:
     Then the JSON path "id" of the response equals "${fileIdxID}"
 
   # Upload a couple of files and add them to the file index document
-    When fabric-cli is executed with args "file upload --url https://peer0-org1.trustbloc.local/.well-known/did-trustbloc --files ./fixtures/discovery-config/sidetree-fabric/config/consortium.json;./fixtures/discovery-config/sidetree-fabric/config/peer0-org1.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/peer0-org2.trustbloc.local.json;fixtures/discovery-config/sidetree-fabric/config/peer0-org3.trustbloc.local.json --idxurl https://peer0-org1.trustbloc.local/file/${fileIdxID} --pwd pwd1 --nextpwd pwd2 --noprompt"
+    When fabric-cli is executed with args "file upload --url https://peer0-org1.trustbloc.local/.well-known/did-trustbloc --files ./fixtures/discovery-config/sidetree-fabric/config/testnet.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/peer0-org1.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/peer0-org2.trustbloc.local.json;fixtures/discovery-config/sidetree-fabric/config/peer0-org3.trustbloc.local.json --idxurl https://peer0-org1.trustbloc.local/file/${fileIdxID} --pwd pwd1 --nextpwd pwd2 --noprompt"
     Then the JSON path "#" of the response has 4 items
-    And the JSON path "0.Name" of the response equals "consortium.json"
+    And the JSON path "0.Name" of the response equals "peer0-org1.trustbloc.local.json"
     And the JSON path "0.ContentType" of the response equals "application/json"
     And the JSON path "1.Name" of the response equals "peer0-org1.trustbloc.local.json"
     And the JSON path "1.ContentType" of the response equals "application/json"
@@ -68,8 +68,8 @@ Feature:
     Then we wait 10 seconds
 
     # Resolve .well-known files
-    When an HTTP request is sent to "https://peer1-org2.trustbloc.local/.well-known/did-trustbloc/consortium.json"
-    Then response from "https://peer1-org2.trustbloc.local/.well-known/did-trustbloc/consortium.json" to client contains value "payload"
+    When an HTTP request is sent to "https://peer1-org2.trustbloc.local/.well-known/did-trustbloc/testnet.trustbloc.local.json"
+    Then response from "https://peer1-org2.trustbloc.local/.well-known/did-trustbloc/testnet.trustbloc.local.json" to client contains value "payload"
     When an HTTP request is sent to "https://peer0-org3.trustbloc.local/.well-known/did-trustbloc/peer0-org1.trustbloc.local.json"
     Then response from "https://peer0-org3.trustbloc.local/.well-known/did-trustbloc/peer0-org1.trustbloc.local.json" to client contains value "payload"
     When an HTTP request is sent to "https://peer0-org1.trustbloc.local/.well-known/did-trustbloc/peer0-org2.trustbloc.local.json"
