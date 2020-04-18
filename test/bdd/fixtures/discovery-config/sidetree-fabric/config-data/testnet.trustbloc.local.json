@@ -6,13 +6,13 @@
   },
   "members": [
     {
-      "domain": "peer0-org1.trustbloc.local"
+      "domain": "org1.trustbloc.local"
     },
     {
-      "domain": "peer0-org2.trustbloc.local"
+      "domain": "org2.trustbloc.local"
     },
     {
-      "domain": "peer0-org3.trustbloc.local"
+      "domain": "org3.trustbloc.local"
     }
   ],
   "previous": ""

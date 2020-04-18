@@ -3,7 +3,7 @@
   "MspID": "general",
   "Apps": [
     {
-      "AppName": "did:trustbloc:peer0-org1.trustbloc.local",
+      "AppName": "did:trustbloc:testnet.trustbloc.local",
       "Version": "1",
       "Tags": ["sidetree"],
       "Config": "file://./did-sidetree-config.yaml",

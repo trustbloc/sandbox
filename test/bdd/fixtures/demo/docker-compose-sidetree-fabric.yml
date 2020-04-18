@@ -74,7 +74,7 @@ services:
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=${COUCHDB_PASSWORD}
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=shared.couchdb:5984
       - CORE_LEDGER_STATE_DBCONFIG_PARTITIONTYPE=PEER
-      - VIRTUAL_HOST=peer0-org1.trustbloc.local
+      - VIRTUAL_HOST=testnet.trustbloc.local,org1.trustbloc.local,peer0-org1.trustbloc.local
       - VIRTUAL_PORT=48326
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     tty: true
@@ -195,7 +195,7 @@ services:
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=${COUCHDB_PASSWORD}
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=shared.couchdb:5984
       - CORE_LEDGER_STATE_DBCONFIG_PARTITIONTYPE=PEER
-      - VIRTUAL_HOST=peer0-org2.trustbloc.local
+      - VIRTUAL_HOST=peer0-org2.trustbloc.local,org2.trustbloc.local
       - VIRTUAL_PORT=48326
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     tty: true
@@ -316,7 +316,7 @@ services:
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=${COUCHDB_PASSWORD}
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=shared.couchdb:5984
       - CORE_LEDGER_STATE_DBCONFIG_PARTITIONTYPE=PEER
-      - VIRTUAL_HOST=peer0-org3.trustbloc.local
+      - VIRTUAL_HOST=peer0-org3.trustbloc.local,org3.trustbloc.local
       - VIRTUAL_PORT=48326
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     tty: true
@@ -399,50 +399,3 @@ services:
   # builder is only here to create a dependency on the image (not used as part of compose)
   builder:
     image: ${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
-
-  nginx-proxy:
-    image: jwilder/nginx-proxy
-    ports:
-      - "443:443"
-    volumes:
-      - ../keys/tls:/etc/nginx/certs
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-    networks:
-      demo-net:
-        aliases:
-          - testnet.trustbloc.local
-          - stakeholder-one.trustbloc.local
-          - sidetree-mock.trustbloc.local
-          - issuer-vcs.trustbloc.local
-          - rp-vcs.trustbloc.local
-          - hydra.trustbloc.local
-          - oathkeeper-proxy.trustbloc.local
-          - edv.trustbloc.local
-          - uni-resolver-web.trustbloc.local
-          - consent-login.trustbloc.local
-          - peer0-org1.trustbloc.local
-          - peer1-org1.trustbloc.local
-          - peer0-org2.trustbloc.local
-          - peer1-org2.trustbloc.local
-          - peer0-org3.trustbloc.local
-          - peer1-org3.trustbloc.local
-
-  shared.couchdb:
-    container_name: shared.couchdb
-    image: ${COUCHDB_FIXTURE_IMAGE}:${COUCHDB_FIXTURE_TAG}
-    ports:
-      - 5984:5984
-    environment:
-      - DB_URL=http://localhost:5984/member_db
-      - COUCHDB_USER=${COUCHDB_USERNAME}
-      - COUCHDB_PASSWORD=${COUCHDB_PASSWORD}
-    volumes:
-      - ../couchDB/config.ini:/opt/couchdb/etc/local.d/config.ini
-    logging:
-      driver: none
-    networks:
-      - demo-net
-
-networks:
-  demo-net:
-    driver: bridge

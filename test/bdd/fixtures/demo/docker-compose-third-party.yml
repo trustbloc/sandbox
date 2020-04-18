@@ -127,6 +127,9 @@ services:
           - peer1-org2.trustbloc.local
           - peer0-org3.trustbloc.local
           - peer1-org3.trustbloc.local
+          - org1.trustbloc.local
+          - org2.trustbloc.local
+          - org3.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb
