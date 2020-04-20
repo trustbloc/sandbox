@@ -16,7 +16,7 @@ until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"name":"vc-issuer-1", "uri":"http://vc-issuer-1.com", "signatureType":"JsonWebSignature2020", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driver-did-method-rest"}}' \
+   --data '{"name":"vc-issuer-1", "uri":"http://vc-issuer-1.com", "signatureType":"JsonWebSignature2020", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driver-did-method-rest"},"didKeyType":"Ed25519"}' \
    http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile issuer1 response is: $responseCreatedTime"
 
@@ -95,7 +95,7 @@ until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"name":"vc-issuer-interop", "uri":"http://vc-issuer-interop.com", "signatureType":"JsonWebSignature2020", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driver-did-method-rest"},"disableVCStatus":true}' \
+   --data '{"name":"vc-issuer-interop", "uri":"http://vc-issuer-interop.com", "signatureType":"JsonWebSignature2020", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driver-did-method-rest"},"disableVCStatus":true,"didKeyType":"Ed25519"}' \
    http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile issuer-interop response is: $responseCreatedTime"
 
@@ -124,6 +124,46 @@ do
       break
    fi
    echo "Invalid 'created' field from issuer-didkey response when trying to create a profile (attempt $((n+1))/$maxAttempts)."
+
+   n=$((n+1))
+   sleep 5
+done
+
+n=0
+maxAttempts=30
+until [ $n -ge $maxAttempts ]
+do
+   responseCreatedTime=$(curl --header "Content-Type: application/json" \
+   --request POST \
+   --data '{"name":"vc-issuer-p256", "uri":"http://vc-issuer-p256.com", "signatureType":"JsonWebSignature2020", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driver-did-method-rest"},"didKeyType":"P256"}' \
+   http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
+   echo "'created' field from profile issuer-p256 response is: $responseCreatedTime"
+
+   if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]
+   then
+      break
+   fi
+   echo "Invalid 'created' field from issuer-p256 response when trying to create a profile (attempt $((n+1))/$maxAttempts)."
+
+   n=$((n+1))
+   sleep 5
+done
+
+n=0
+maxAttempts=30
+until [ $n -ge $maxAttempts ]
+do
+   responseCreatedTime=$(curl --header "Content-Type: application/json" \
+   --request POST \
+   --data '{"name":"vc-issuer-interop-p256", "uri":"http://vc-issuer-interop-p256.com", "signatureType":"JsonWebSignature2020", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driver-did-method-rest"},"disableVCStatus":true,"didKeyType":"P256"}' \
+   http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
+   echo "'created' field from profile issuer-interop-p256 response is: $responseCreatedTime"
+
+   if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]
+   then
+      break
+   fi
+   echo "Invalid 'created' field from issuer-interop-p256 response when trying to create a profile (attempt $((n+1))/$maxAttempts)."
 
    n=$((n+1))
    sleep 5
