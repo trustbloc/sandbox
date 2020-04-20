@@ -27,8 +27,8 @@ services:
     ports:
       - 8070:8070
     entrypoint: ""
-    # wait 10 seconds for couchdb to start
-    command:  /bin/sh -c "sleep 10;/tmp/vcs_configure.sh& vc-rest start"
+    # wait 20 seconds for couchdb to start
+    command:  /bin/sh -c "sleep 20;/tmp/vcs_configure.sh& vc-rest start"
     volumes:
       - ../scripts/vcs_configure.sh:/tmp/vcs_configure.sh
       - ../keys/tls:/etc/tls
@@ -53,8 +53,8 @@ services:
       - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - VIRTUAL_HOST=rp-vcs.trustbloc.local
     entrypoint: ""
-    # wait 5 seconds for couchdb to start
-    command:  /bin/sh -c "sleep 10;vc-rest start"
+    # wait 20 seconds for couchdb to start
+    command:  /bin/sh -c "sleep 20;vc-rest start"
     volumes:
       - ../keys/tls:/etc/tls
     ports:
@@ -108,8 +108,8 @@ services:
     ports:
       - 8060:8060
     entrypoint: ""
-    # wait 5 seconds for couchdb to start
-    command:  /bin/sh -c "sleep 10;did-method start"
+    # wait 20 seconds for couchdb to start
+    command:  /bin/sh -c "sleep 20;did-method start"
     volumes:
       - ../keys/tls:/etc/tls
     networks:

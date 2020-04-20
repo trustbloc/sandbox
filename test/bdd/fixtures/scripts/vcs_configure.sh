@@ -37,7 +37,7 @@ until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"name":"vc-issuer-2", "uri":"http://vc-issuer-2.com", "signatureType":"Ed25519Signature2018","signatureRepresentation":0,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driver-universalregistrar/driver-did-v1","options": {"ledger": "test", "keytype": "ed25519"}}}' \
+   --data '{"name":"vc-issuer-2", "uri":"http://vc-issuer-2.com", "signatureType":"Ed25519Signature2018","signatureRepresentation":0,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driver-universalregistrar/driver-did-v1","options": {"ledger": "test", "keytype": "ed25519"}},"didKeyType":"Ed25519"}' \
    http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile issuer2 response is: $responseCreatedTime"
 
@@ -56,7 +56,7 @@ until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"name":"vc-issuer-3", "uri":"http://vc-issuer-3.com", "signatureType":"Ed25519Signature2018", "did":"did:elem:EiAWdU2yih6NA2IGnLsDhkErZ8aQX6b8yKt7jHMi-ttFdQ","didPrivateKey":"5AcDTQT7Cdg1gBvz8PQpnH3xEbLCE1VQxAJV5NjVHvNjsZSfn4NaLZ77mapoi4QwZeBhcAA7MQzaFYkzJLfGjNnR","signatureRepresentation":0}' \
+   --data '{"name":"vc-issuer-3", "uri":"http://vc-issuer-3.com", "signatureType":"Ed25519Signature2018", "did":"did:elem:EiAWdU2yih6NA2IGnLsDhkErZ8aQX6b8yKt7jHMi-ttFdQ","didPrivateKey":"5AcDTQT7Cdg1gBvz8PQpnH3xEbLCE1VQxAJV5NjVHvNjsZSfn4NaLZ77mapoi4QwZeBhcAA7MQzaFYkzJLfGjNnR","signatureRepresentation":0,"didKeyType":"Ed25519"}' \
    http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile issuer3 response is: $responseCreatedTime"
 
@@ -75,7 +75,7 @@ until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"name":"vc-issuer-4", "uri":"http://vc-issuer-4.com", "signatureType":"Ed25519Signature2018","signatureRepresentation":0,"uniRegistrar":{"driverURL":"https://uniregistrar.io/1.0/register?driver-universalregistrar/driver-did-sov","options": {"network":"danube"}}}' \
+   --data '{"name":"vc-issuer-4", "uri":"http://vc-issuer-4.com", "signatureType":"Ed25519Signature2018","signatureRepresentation":0,"uniRegistrar":{"driverURL":"https://uniregistrar.io/1.0/register?driver-universalregistrar/driver-did-sov","options": {"network":"danube"}},"didKeyType":"Ed25519"}' \
    http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile issuer4 response is: $responseCreatedTime"
 
@@ -115,7 +115,7 @@ until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"name":"vc-issuer-didkey", "uri":"http://vc-issuer-didkey.com", "signatureType":"Ed25519Signature2018", "did":"did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLt9DoHd","didPrivateKey":"28xXA4NyCQinSJpaZdSuNBM4kR2GqYb8NPqAtZoGCpcRYWBcDXtzVAzpZ9BAfgV334R2FC383fiHaWWWAacRaYGs","signatureRepresentation":1}' \
+   --data '{"name":"vc-issuer-didkey", "uri":"http://vc-issuer-didkey.com", "signatureType":"Ed25519Signature2018", "did":"did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLt9DoHd","didPrivateKey":"28xXA4NyCQinSJpaZdSuNBM4kR2GqYb8NPqAtZoGCpcRYWBcDXtzVAzpZ9BAfgV334R2FC383fiHaWWWAacRaYGs","signatureRepresentation":1,"didKeyType":"Ed25519"}' \
    http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile issuer-didkey response is: $responseCreatedTime"
 
