@@ -28,9 +28,9 @@ services:
       - 8070:8070
     entrypoint: ""
     # wait 20 seconds for couchdb to start
-    command:  /bin/sh -c "sleep 20;/tmp/vcs_configure.sh& vc-rest start"
+    command:  /bin/sh -c "sleep 20;/tmp/scripts/vcs_configure.sh& vc-rest start"
     volumes:
-      - ../scripts/vcs_configure.sh:/tmp/vcs_configure.sh
+      - ../scripts/:/tmp/scripts
       - ../keys/tls:/etc/tls
     depends_on:
       - edv.example.com
