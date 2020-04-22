@@ -61,14 +61,16 @@ SPDX-License-Identifier: Apache-2.0
             <div class="container">
                 <div>
                     <select class="form-control" id = "profile">
-                        <option value="vc-issuer-1" id="vci1" selected>VC-Issuer-1</option>
-                        <option value="vc-issuer-2"id="vci2">VC-Issuer-2</option>
-                        <option value="vc-issuer-3"id="vci3">VC-Issuer-3</option>
-                        <option value="vc-issuer-4"id="vci4">VC-Issuer-4</option>
-                        <option value="vc-issuer-interop"id="vci5">VC-Issuer-interop</option>
-                        <option value="vc-issuer-didkey"id="vci6">VC-Issuer-DIDKey</option>
-                        <option value="vc-issuer-p256"id="vci7">VC-Issuer-P256</option>
-                        <option value="vc-issuer-interop-p256"id="vci8">VC-Issuer-interop-P256</option>
+                        <option value="trustbloc-ed25519signature2018-ed25519" id="vci1" selected>trustbloc-ed25519signature2018-ed25519</option>
+                        <option value="trustbloc-jsonwebsignature2020-ed25519"id="vci2">trustbloc-jsonwebsignature2020-ed25519</option>
+                        <option value="trustbloc-jsonwebsignature2020-p256"id="vci3">trustbloc-jsonwebsignature2020-p256</option>
+                        <option value="interop-ed25519signature2018-ed25519"id="vci4">interop-ed25519signature2018-ed25519</option>
+                        <option value="interop-jsonwebsignature2020-ed25519"id="vci5">interop-jsonwebsignature2020-ed25519</option>
+                        <option value="interop-jsonwebsignature2020-p256"id="vci6">interop-jsonwebsignature2020-p256</option>
+                        <option value="verseone-ed25519signature2018-ed25519"id="vci7">verseone-ed25519signature2018-ed25519</option>
+                        <option value="elem-ed25519signature2018-ed25519"id="vci8">elem-ed25519signature2018-ed25519</option>
+                        <option value="sov-ed25519signature2018-ed25519"id="vci9">sov-ed25519signature2018-ed25519</option>
+                        <option value="didkey-ed25519signature2018-ed25519"id="vci10">didkey-ed25519signature2018-ed25519</option>
                     </select>
                 </div>
                 <br>
@@ -84,7 +86,7 @@ SPDX-License-Identifier: Apache-2.0
                 </div>
                 </br>
                 <form id="demoSetupForm"  action="" style="text-align:center">
-                    <input type="radio" id="vcsProfile" name="vcsProfile" value="vc-issuer-1" checked hidden>
+                    <input type="radio" id="vcsProfile" name="vcsProfile" value="trustbloc-ed25519signature2018-ed25519" checked hidden>
                     <input type="submit"id="formSubmit" class="btn btn-default btn-lg page-scroll" value="Start Demo">
                 </form>
             </div>
