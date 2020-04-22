@@ -104,8 +104,8 @@ github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ
 github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/hyperledger/aries-framework-go v0.1.3-0.20200414232534-822f96340163/go.mod h1:qDWCuZazVnPZVPmaHrqfLWir6NrC/X1SSYO176ff35M=
-github.com/hyperledger/aries-framework-go v0.1.3-0.20200418015014-682fedc8c260 h1:vWOgE903tSFODoemtmM/gqOZ5R72AcExMaw+kBP58b0=
-github.com/hyperledger/aries-framework-go v0.1.3-0.20200418015014-682fedc8c260/go.mod h1:qDWCuZazVnPZVPmaHrqfLWir6NrC/X1SSYO176ff35M=
+github.com/hyperledger/aries-framework-go v0.1.3-0.20200422184723-a297d2a1d3c3 h1:uNTSj7nZrn6wjWk5D85Y8i0o5FNjajpMGmFyS1g1N90=
+github.com/hyperledger/aries-framework-go v0.1.3-0.20200422184723-a297d2a1d3c3/go.mod h1:qDWCuZazVnPZVPmaHrqfLWir6NrC/X1SSYO176ff35M=
 github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/jessevdk/go-flags v0.0.0-20141203071132-1679536dcc89/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
@@ -213,8 +213,8 @@ github.com/teserakt-io/golang-ed25519 v0.0.0-20200315192543-8255be791ce4/go.mod 
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/trustbloc/edge-core v0.1.3-0.20200414220734-842cc197e692 h1:hGMF+YSdep1hpqrzZI6S9p4a5x2poPorunzoeQXByzY=
 github.com/trustbloc/edge-core v0.1.3-0.20200414220734-842cc197e692/go.mod h1:mmgEfSIoNjshnVdxEtPwh2CLs0EaBaaejgI2KNsOEOE=
-github.com/trustbloc/edge-service v0.1.3-0.20200422165500-9c3e067cd165 h1:0qDdl9Ln6XRhgcxoYPQvEXhJQWmyFvthQMftq1+gq/A=
-github.com/trustbloc/edge-service v0.1.3-0.20200422165500-9c3e067cd165/go.mod h1:Cfjr+5xQv0XVU9Cjb61ZqEaZxIYQTlCkIysDLEh6MhE=
+github.com/trustbloc/edge-service v0.1.3-0.20200422192251-aa4623b9e006 h1:+yQUO9vYTgXCWZE9doteUuEy0akCTfryF3jwRk/Cn04=
+github.com/trustbloc/edge-service v0.1.3-0.20200422192251-aa4623b9e006/go.mod h1:LFC36BRzQnYELp88kkRZDl7gw/3/7qIIOYknRuERkjw=
 github.com/trustbloc/edv v0.1.3-0.20200415141634-265a4f01a957 h1:vKslsFlP6HotTBGGoTzFQRlxr6pHvzMhSBMsUz3Avrc=
 github.com/trustbloc/edv v0.1.3-0.20200415141634-265a4f01a957/go.mod h1:v9Rwqvm3ZgsXP60Hjjd2yfhLK3vpAo5g3dfmSTD7N38=
 github.com/trustbloc/sidetree-core-go v0.1.3-0.20200420215423-0c6a32299a30 h1:bd/u3vgi2ZGYBenKTooTV9FiYMfIkhzCTXt/nAUiDmg=
