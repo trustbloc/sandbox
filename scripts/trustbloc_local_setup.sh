@@ -25,4 +25,6 @@ cat > ${SANDBOX_HOME}/hosts <<EOF
 127.0.0.1 peer1-org2.trustbloc.local
 127.0.0.1 peer0-org3.trustbloc.local
 127.0.0.1 peer1-org3.trustbloc.local
+127.0.0.1 stakeholder-one.trustbloc.local
+127.0.0.1 sidetree-mock.trustbloc.local
 EOF

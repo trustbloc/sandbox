@@ -83,4 +83,32 @@ do
    sleep 5
 done
 
+
+## this profile used for w3c test will not show in GUI
+## will be removed soon
+n=0
+maxAttempts=30
+until [ $n -ge $maxAttempts ]
+do
+   responseCreatedTime=$(curl --header "Content-Type: application/json" \
+   --request POST \
+   --data '{"name":"vc-issuer-interop", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driver-did-method-rest"},"disableVCStatus":true,"didKeyType":"Ed25519"}' \
+   http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
+   echo "'created' field from profile vc-issuer-interop response is: $responseCreatedTime"
+
+   if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]
+   then
+      break
+   fi
+   echo "Invalid 'created' field from vc-issuer-interop response when trying to create a profile (attempt $((n+1))/$maxAttempts)."
+
+   n=$((n+1))
+   if [ $n -eq $maxAttempts ]
+   then
+     echo "failed to create vc-issuer-interop profile"
+     exit 1
+   fi
+   sleep 5
+done
+
 echo "Finished adding interop profiles"
