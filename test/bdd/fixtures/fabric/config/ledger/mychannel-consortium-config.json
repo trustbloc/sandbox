@@ -19,6 +19,12 @@
       ]
     },
     {
+      "AppName": "sidetree-dcas",
+      "Version": "1",
+      "Config": "file://./dcas-config.yaml",
+      "Format": "yaml"
+    },
+    {
       "AppName": "file:idx",
       "Version": "1",
       "Tags": ["sidetree"],

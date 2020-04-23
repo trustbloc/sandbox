@@ -26,7 +26,7 @@ vendor
 coverage.txt
 
 
-test/bdd/fixtures/keys/tls
+test/bdd/fixtures/keys/
 
 test/bdd/fixtures/oathkeeper/rules/resource-server.json
 
