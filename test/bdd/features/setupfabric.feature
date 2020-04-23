@@ -7,29 +7,30 @@
 @setup_fabric
 Feature:
   Scenario: setup fabric
-    Given DCAS collection config "dcas-cfg" is defined for collection "dcas" as policy="OR('Org1MSP.member','Org2MSP.member','Org3MSP.member')", requiredPeerCount=1, maxPeerCount=2, and timeToLive=
-    Given off-ledger collection config "diddoc-cfg" is defined for collection "diddoc" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=1, and timeToLive=
-    Given off-ledger collection config "fileidx-cfg" is defined for collection "fileidxdoc" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=1, and timeToLive=
-    Given off-ledger collection config "meta-data-cfg" is defined for collection "meta_data" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=1, and timeToLive=
-
     Given the channel "mychannel" is created and all peers have joined
 
-    And "system" chaincode "configscc" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "AND('Org1MSP.member','Org2MSP.member','Org3MSP.member')" with collection policy ""
-    And "system" chaincode "sidetreetxn_cc" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "AND('Org1MSP.member','Org2MSP.member','Org3MSP.member')" with collection policy "dcas-cfg"
-    And "system" chaincode "document" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "OR('Org1MSP.member','Org2MSP.member','Org3MSP.member')" with collection policy "diddoc-cfg,fileidx-cfg,meta-data-cfg"
+    Then we wait 10 seconds
 
+    Given DCAS collection config "dcas-cfg" is defined for collection "dcas" as policy="OR('Org1MSP.member','Org2MSP.member','Org3MSP.member')", requiredPeerCount=1, maxPeerCount=2, and timeToLive=
+    Given off-ledger collection config "fileidx-cfg" is defined for collection "fileidxdoc" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=0, and timeToLive=
+    Given off-ledger collection config "meta-data-cfg" is defined for collection "meta_data" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=0, and timeToLive=
     Given DCAS collection config "consortium-files-cfg" is defined for collection "consortium" as policy="OR('Org1MSP.member','Org2MSP.member','Org3MSP.member')", requiredPeerCount=1, maxPeerCount=2, and timeToLive=
+    Given off-ledger collection config "diddoc-cfg" is defined for collection "diddoc" as policy="OR('IMPLICIT-ORG.member')", requiredPeerCount=0, maxPeerCount=0, and timeToLive=
+
+    Then "system" chaincode "configscc" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "AND('Org1MSP.member','Org2MSP.member','Org3MSP.member')" with collection policy ""
+    And "system" chaincode "sidetreetxn" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "AND('Org1MSP.member','Org2MSP.member','Org3MSP.member')" with collection policy "dcas-cfg"
+    And "system" chaincode "document" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "OR('Org1MSP.member','Org2MSP.member','Org3MSP.member')" with collection policy "diddoc-cfg,fileidx-cfg,meta-data-cfg"
     And "system" chaincode "file" is instantiated from path "in-process" on the "mychannel" channel with args "" with endorsement policy "OR('Org1MSP.member','Org2MSP.member','Org3MSP.member')" with collection policy "consortium-files-cfg"
+
+    Then we wait 10 seconds
 
     And fabric-cli network is initialized
     And fabric-cli plugin "../../.build/ledgerconfig" is installed
     And fabric-cli plugin "../../.build/file" is installed
-    And fabric-cli context "mychannel" is defined on channel "mychannel" with org "peerorg1", peers "peer0.org1.example.com,peer1.org1.example.com" and user "User1"
-
-    And we wait 10 seconds
+    And fabric-cli context "org1-context" is defined on channel "mychannel" with org "peerorg1", peers "peer0.org1.example.com,peer1.org1.example.com" and user "User1"
 
     # Configure the following Sidetree namespaces on channel 'mychannel'
-    Then fabric-cli context "mychannel" is used
+    Then fabric-cli context "org1-context" is used
     And fabric-cli is executed with args "ledgerconfig update --configfile ./fixtures/fabric/config/ledger/mychannel-consortium-config.json --noprompt"
     And fabric-cli is executed with args "ledgerconfig update --configfile ./fixtures/fabric/config/ledger/mychannel-org1-config.json --noprompt"
     And fabric-cli is executed with args "ledgerconfig update --configfile ./fixtures/fabric/config/ledger/mychannel-org2-config.json --noprompt"
@@ -40,7 +41,7 @@ Feature:
 
 
     # Create a file index document
-    When fabric-cli is executed with args "file createidx --path /.well-known/did-trustbloc --url https://peer0-org1.trustbloc.local/file --recoverypwd pwd1 --nextpwd pwd1 --noprompt"
+    When fabric-cli is executed with args "file createidx --path /.well-known/did-trustbloc --url http://localhost:48326/file --recoverypwd pwd1 --nextpwd pwd1 --recoverykeyfile ./fixtures/keys/public.pem --updatekeyfile ./fixtures/keys/public.pem --noprompt"
     And the JSON path "id" of the response is saved to variable "fileIdxID"
 
     # Update the file handler configuration for the '/content' path with the ID of the file index document
@@ -51,10 +52,10 @@ Feature:
     Then we wait 10 seconds
 
     When an HTTP request is sent to "https://peer0-org1.trustbloc.local/file/${fileIdxID}"
-    Then the JSON path "id" of the response equals "${fileIdxID}"
+    Then the JSON path "didDocument.id" of the response equals "${fileIdxID}"
 
   # Upload a couple of files and add them to the file index document
-    When fabric-cli is executed with args "file upload --url https://peer0-org1.trustbloc.local/.well-known/did-trustbloc --files ./fixtures/discovery-config/sidetree-fabric/config/testnet.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/org1.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/org2.trustbloc.local.json;fixtures/discovery-config/sidetree-fabric/config/org3.trustbloc.local.json --idxurl https://peer0-org1.trustbloc.local/file/${fileIdxID} --pwd pwd1 --nextpwd pwd2 --noprompt"
+    When fabric-cli is executed with args "file upload --url https://peer0-org1.trustbloc.local/.well-known/did-trustbloc --files ./fixtures/discovery-config/sidetree-fabric/config/testnet.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/org1.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/org2.trustbloc.local.json;fixtures/discovery-config/sidetree-fabric/config/org3.trustbloc.local.json --idxurl https://peer0-org1.trustbloc.local/file/${fileIdxID} --pwd pwd1 --nextpwd pwd2  --signingkeyfile ./fixtures/keys/key.pem --noprompt"
     Then the JSON path "#" of the response has 4 items
     And the JSON path "0.Name" of the response equals "testnet.trustbloc.local.json"
     And the JSON path "0.ContentType" of the response equals "application/json"

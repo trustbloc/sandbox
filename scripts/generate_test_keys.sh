@@ -51,4 +51,9 @@ openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/tls/
 openssl req -new -key test/bdd/fixtures/keys/tls/trustbloc.local.key -subj "/C=CA/ST=ON/O=TrustBloc/OU=trustbloc-edge-sandbox/CN=trustbloc.local" -out test/bdd/fixtures/keys/tls/trustbloc.local.csr
 openssl x509 -req -in test/bdd/fixtures/keys/tls/trustbloc.local.csr -CA test/bdd/fixtures/keys/tls/trustbloc-dev-ca.crt -CAkey test/bdd/fixtures/keys/tls/trustbloc-dev-ca.key -CAcreateserial -extfile "$trustblocSSLConf" -out test/bdd/fixtures/keys/tls/trustbloc.local.crt -days 365
 
+
+# generate key pair
+openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/key.pem
+openssl ec -in test/bdd/fixtures/keys/key.pem -pubout -out test/bdd/fixtures/keys/public.pem
+
 echo "done generating edge-sandbox PKI"

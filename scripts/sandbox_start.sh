@@ -20,8 +20,6 @@ cd test/bdd && go test
 
 sidetreeCompseFile='-f docker-compose-sidetree-mock.yml'
 if [ "$START_SIDETREE_FABRIC" = true ] ; then
-    echo "need to update to latest sidetree fabric"
-    exit 1
     setupFabric &
     sidetreeCompseFile='-f docker-compose-sidetree-fabric.yml'
 fi
