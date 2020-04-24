@@ -12,7 +12,7 @@ until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"name":"verseone-ed25519signature2018-ed25519", "uri":"http://example.com", "signatureType":"Ed25519Signature2018","signatureRepresentation":0,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driver-universalregistrar/driver-did-v1","options": {"ledger": "test", "keytype": "ed25519"}},"didKeyType":"Ed25519"}' \
+   --data '{"name":"verseone-ed25519signature2018-ed25519", "uri":"http://example.com", "signatureType":"Ed25519Signature2018","signatureRepresentation":0,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driverId=driver-universalregistrar/driver-did-v1","options": {"ledger": "test", "keytype": "ed25519"}},"didKeyType":"Ed25519"}' \
    http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile verseone-ed25519signature2018-ed25519 response is: $responseCreatedTime"
 
@@ -62,7 +62,7 @@ until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"name":"sov-ed25519signature2018-ed25519", "uri":"http://example.com", "signatureType":"Ed25519Signature2018","signatureRepresentation":0,"uniRegistrar":{"driverURL":"https://uniregistrar.io/1.0/register?driver-universalregistrar/driver-did-sov","options": {"network":"danube"}},"didKeyType":"Ed25519"}' \
+   --data '{"name":"sov-ed25519signature2018-ed25519", "uri":"http://example.com", "signatureType":"Ed25519Signature2018","signatureRepresentation":0,"uniRegistrar":{"driverURL":"https://uniregistrar.io/1.0/register?driverId=driver-universalregistrar/driver-did-sov","options": {"network":"danube"}},"didKeyType":"Ed25519"}' \
    http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile sov-ed25519signature2018-ed25519 response is: $responseCreatedTime"
 
