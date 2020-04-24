@@ -21,6 +21,9 @@ services:
       - DATABASE_TYPE=couchdb
       - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - DATABASE_PREFIX=issuer
+      - KMSSECRETS_DATABASE_TYPE=couchdb
+      - KMSSECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMSSECRETS_DATABASE_PREFIX=issuer
       - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - VC_REST_TLS_SYSTEMCERTPOOL=true
       - VIRTUAL_HOST=issuer-vcs.trustbloc.local
@@ -50,6 +53,9 @@ services:
       - DATABASE_TYPE=couchdb
       - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - DATABASE_PREFIX=verifier
+      - KMSSECRETS_DATABASE_TYPE=couchdb
+      - KMSSECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMSSECRETS_DATABASE_PREFIX=verifier
       - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - VIRTUAL_HOST=rp-vcs.trustbloc.local
     entrypoint: ""
