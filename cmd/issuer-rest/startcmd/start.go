@@ -268,6 +268,7 @@ func startIssuer(parameters *issuerParameters) error {
 		CMSURL:        parameters.cmsURL,
 		VCSURL:        parameters.vcsURL,
 		QRCodeHTML:    "static/qr.html",
+		DIDAuthHTML:   "static/didAuth.html",
 		ReceiveVCHTML: "static/receiveVC.html",
 		VCHTML:        "static/vc.html",
 		TLSConfig:     tlsConfig}

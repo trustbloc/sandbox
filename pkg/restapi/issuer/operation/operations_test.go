@@ -27,13 +27,19 @@ import (
 const authHeader = "Bearer ABC"
 
 const testCredentialRequest = `{
-   "context":[
-      "https://www.w3.org/2018/credentials/examples/v1"
-   ],
+   "@context": [
+		"https://www.w3.org/2018/credentials/v1", 
+		"https://www.w3.org/2018/credentials/examples/v1"
+	],
    "type":[
       "VerifiableCredential",
       "UniversityDegreeCredential"
    ],
+   "issuer": {
+		"id": "did:trustbloc:testnet.trustbloc.local:EiABBmUZ7Jjp-mlxWJInqp3Ak2v82QQtCdIUS5KSTNGq9Q==",
+		"name": "myprofile_ud1"
+	},
+	"issuanceDate": "2020-03-16T22:37:26.544Z",
    "credentialSubject":{
       "id":"did:example:ebfeb1f712ebc6f1c276e12ec21",
       "degree":{
@@ -58,6 +64,22 @@ const profileData = `{
 
 const foo = `{"id":1,"userid":"100","name":"Foo Bar","email":"foo@bar.com"}`
 const jsonArray = `[{}]`
+
+const holder = "did:example.com"
+const authResp = `{
+    "@context": "https://www.w3.org/2018/credentials/v1",
+    "type": "VerifiablePresentation",
+    "holder": "did:example.com",
+    "proof": {
+        "type": "Ed25519Signature2018",
+        "created": "2020-04-21T21:25:18Z",
+        "verificationMethod": "did:example.com#key-1",
+        "proofPurpose": "authentication",
+        "challenge": "3970cad8-14ff-4ac1-ada9-0995c862df2e",
+        "domain": "issuer.interop.transmute.world",
+        "jws": "6wDkNVRBs3zebe_PSIROTN3K8hBfE18ZI-Ieg_9KYI5-sDA"
+    }
+}`
 
 func TestOperation_Login(t *testing.T) {
 	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
@@ -109,19 +131,9 @@ func TestOperation_Callback(t *testing.T) {
 	defer cms.Close()
 
 	router := mux.NewRouter()
-	router.HandleFunc("/store", func(writer http.ResponseWriter, request *http.Request) {
-		writer.WriteHeader(http.StatusOK)
-	})
 	router.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusOK)
 		_, err := writer.Write([]byte(profileData))
-		if err != nil {
-			panic(err)
-		}
-	})
-	router.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
-		writer.WriteHeader(http.StatusCreated)
-		_, err := writer.Write([]byte(testCredentialRequest))
 		if err != nil {
 			panic(err)
 		}
@@ -140,7 +152,8 @@ func TestOperation_Callback(t *testing.T) {
 	defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
 	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name()}
+		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name(),
+		DIDAuthHTML: file.Name()}
 	handler := getHandlerWithConfig(t, callback, cfg)
 
 	_, status, err := handleRequest(handler, headers, callback, true)
@@ -149,7 +162,7 @@ func TestOperation_Callback(t *testing.T) {
 
 	// test ledger cookie not found
 	cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name()}
+		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), DIDAuthHTML: file.Name()}
 	handler = getHandlerWithConfig(t, callback, cfg)
 
 	body, status, err := handleRequest(handler, headers, callback, false)
@@ -166,6 +179,229 @@ func TestOperation_Callback(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, http.StatusInternalServerError, status)
 	require.Contains(t, body.String(), "unable to load html")
+}
+
+func TestOperation_GenerateVC(t *testing.T) {
+	t.Run("generate VC success", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.Contains(r.URL.String(), "users") {
+				fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+			} else {
+				fmt.Fprintln(w, jsonArray)
+			}
+		}))
+		defer cms.Close()
+
+		router := mux.NewRouter()
+		router.HandleFunc("/store", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusOK)
+		})
+
+		router.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusCreated)
+			_, err := writer.Write([]byte(testCredentialRequest))
+			if err != nil {
+				panic(err)
+			}
+		})
+
+		vcs := httptest.NewServer(router)
+
+		defer vcs.Close()
+
+		headers := make(map[string]string)
+		headers["Authorization"] = authHeader
+
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name()}
+
+		svc := New(cfg)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Header = make(map[string][]string)
+		req.Form.Add("cred", testCredentialRequest)
+		req.Form.Add("holder", holder)
+		req.Form.Add("authresp", authResp)
+
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("generate VC - validations", func(t *testing.T) {
+		svc := New(&Config{})
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+		m := make(map[string][]string)
+		req := &http.Request{Form: m}
+		req.Header = make(map[string][]string)
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "named cookie not present")
+
+		rr = httptest.NewRecorder()
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "invalid request argument: invalid 'cred'")
+
+		rr = httptest.NewRecorder()
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+		req.Form.Add("cred", "{}")
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "invalid request argument: invalid 'holder'")
+
+		rr = httptest.NewRecorder()
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+		req.Form.Add("holder", holder)
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "invalid request argument: invalid 'authresp'")
+
+		rr = httptest.NewRecorder()
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+		req.Form.Add("authresp", "{}")
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "credential subject id is not matching with DID auth response")
+
+		rr = httptest.NewRecorder()
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+		req.Form.Set("authresp", authResp)
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to create verifiable credential")
+
+		rr = httptest.NewRecorder()
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+		req.Form.Set("cred", testCredentialRequest)
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to create verifiable credential")
+	})
+
+	t.Run("generate VC - store error", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.Contains(r.URL.String(), "users") {
+				fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+			} else {
+				fmt.Fprintln(w, jsonArray)
+			}
+		}))
+		defer cms.Close()
+
+		router := mux.NewRouter()
+		router.HandleFunc("/store", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusInternalServerError)
+		})
+
+		router.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusCreated)
+			_, err := writer.Write([]byte(testCredentialRequest))
+			if err != nil {
+				panic(err)
+			}
+		})
+
+		vcs := httptest.NewServer(router)
+
+		defer vcs.Close()
+
+		headers := make(map[string]string)
+		headers["Authorization"] = authHeader
+
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name()}
+
+		svc := New(cfg)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Header = make(map[string][]string)
+		req.Form.Add("cred", testCredentialRequest)
+		req.Form.Add("holder", holder)
+		req.Form.Add("authresp", authResp)
+
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to store credential")
+	})
+
+	t.Run("generate VC - template errors", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.Contains(r.URL.String(), "users") {
+				fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+			} else {
+				fmt.Fprintln(w, jsonArray)
+			}
+		}))
+		defer cms.Close()
+
+		router := mux.NewRouter()
+		router.HandleFunc("/store", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusOK)
+		})
+
+		router.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusCreated)
+			_, err := writer.Write([]byte(testCredentialRequest))
+			if err != nil {
+				panic(err)
+			}
+		})
+
+		vcs := httptest.NewServer(router)
+
+		defer vcs.Close()
+
+		headers := make(map[string]string)
+		headers["Authorization"] = authHeader
+
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name()}
+
+		svc := New(cfg)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Header = make(map[string][]string)
+		req.Form.Add("cred", testCredentialRequest)
+		req.Form.Add("holder", holder)
+		req.Form.Add("authresp", authResp)
+
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to load html")
+	})
 }
 
 func TestOperation_RetrieveVC(t *testing.T) {
@@ -334,45 +570,6 @@ func TestOperation_Callback_CreateCredential_Error(t *testing.T) {
 	require.Contains(t, data.String(), "unsupported protocol scheme")
 }
 
-func TestOperation_Callback_StoreCredential_Error(t *testing.T) {
-	cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, jsonArray)
-	}))
-	defer cms.Close()
-
-	router := mux.NewRouter()
-	router.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
-		writer.WriteHeader(http.StatusOK)
-		_, err := writer.Write([]byte(profileData))
-		if err != nil {
-			panic(err)
-		}
-	})
-	router.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
-		writer.WriteHeader(http.StatusCreated)
-		_, err := writer.Write([]byte(testCredentialRequest))
-		if err != nil {
-			panic(err)
-		}
-	})
-
-	vcs := httptest.NewServer(router)
-
-	defer vcs.Close()
-
-	headers := make(map[string]string)
-	headers["Authorization"] = authHeader
-
-	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: cms.URL, VCSURL: vcs.URL}
-	handler := getHandlerWithConfig(t, callback, cfg)
-
-	data, status, err := handleRequest(handler, headers, callback, true)
-	require.NoError(t, err)
-	require.Equal(t, http.StatusInternalServerError, status)
-	require.Contains(t, data.String(), "failed to store credential")
-}
-
 func TestOperation_StoreCredential(t *testing.T) {
 	t.Run("store credential success", func(t *testing.T) {
 		vcs := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -435,7 +632,7 @@ func TestOperation_CreateCredential_Errors(t *testing.T) {
 		svc := New(cfg)
 		require.NotNil(t, svc)
 
-		data, err := svc.createCredential(subject, &token.Introspection{}, "")
+		data, err := svc.createCredential(testCredentialRequest, authResp, holder, "")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "unsupported protocol scheme")
 		require.Nil(t, data)
@@ -445,34 +642,18 @@ func TestOperation_CreateCredential_Errors(t *testing.T) {
 		svc := New(cfg)
 		require.NotNil(t, svc)
 
-		data, err := svc.createCredential(subject, &token.Introspection{}, "")
+		data, err := svc.createCredential(testCredentialRequest, authResp, holder, "")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid character")
 		require.Nil(t, data)
 	})
 	t.Run("invalid subject map - contains channel", func(t *testing.T) {
-		router := mux.NewRouter()
-		router.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
-			writer.WriteHeader(http.StatusOK)
-			_, err := writer.Write([]byte(profileData))
-			if err != nil {
-				panic(err)
-			}
-		})
-
-		vcs := httptest.NewServer(router)
-
-		defer vcs.Close()
-
-		cfg.VCSURL = vcs.URL
-
-		subject["invalid"] = make(chan int, 2)
 		svc := New(cfg)
 		require.NotNil(t, svc)
 
-		data, err := svc.createCredential(subject, &token.Introspection{}, "issuer")
+		data, err := svc.createCredential(testCredentialRequest+",", authResp, holder, "")
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "unsupported type: chan int")
+		require.Contains(t, err.Error(), "invalid character")
 		require.Nil(t, data)
 	})
 }
