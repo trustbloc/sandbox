@@ -13,11 +13,11 @@ SPDX-License-Identifier: Apache-2.0
     <meta name="author" content="">
 
     <!-- Bootstrap -->
-    <link rel="stylesheet" type="text/css"  href="css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
 
     <!-- Stylesheet
         ================================================== -->
-    <link rel="stylesheet" type="text/css"  href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
     <link rel="stylesheet" type="text/css" href="css/prettyPhoto.css">
     <link href='http://fonts.googleapis.com/css?family=Lato:400,700,900,300' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,800,600,300' rel='stylesheet' type='text/css'>
@@ -39,8 +39,10 @@ SPDX-License-Identifier: Apache-2.0
     <div class="container">
         <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
-            <a class="navbar-brand" href="/">Verifier</a> </div>
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1"><span class="sr-only">Toggle navigation</span> <span
+                        class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span></button>
+            <a class="navbar-brand" href="/">Verifier</a></div>
 
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -56,6 +58,7 @@ SPDX-License-Identifier: Apache-2.0
     <div class="intro-text" style="padding-bottom: 0px">
         <h1>Welcome to <span class="color">Verifier</span></h1>
         <p>Choose your options</p>
+        <h4 style="font-size: 24px; font-weight: 600; color: floralwhite;" id ="msg-board"></h4>
     </div>
 
     <!-- Portfolio Section -->
@@ -68,50 +71,58 @@ SPDX-License-Identifier: Apache-2.0
                 <div class="col-sm-6 col-md-3 col-lg-3 web">
                     <div class="portfolio-item">
                         <div class="hover-bg">
-                            <button id="getVCBtn">
-                                <div class="hover-text">
-                                    <h4>Get VC</h4>
-                                    <small>Verfiable Credential</small>
-                                    <div class="clearfix"></div>
-                                </div>
-                                <img src="img/portfolio/03.png" class="img-responsive"></button>
-                        <form method="post" id="vcForm" action="/verify">
-                            <input type="hidden" name="vcDataInput" id="vcDataInput">
-                        </form>
+                            <a href="img/portfolio/03.png" rel="prettyPhoto">
+                                <button id="getVCBtn">
+                                    <div class="hover-text">
+                                        <h4>Get VC</h4>
+                                        <small>Verfiable Credential</small>
+                                        <div class="clearfix"></div>
+                                    </div>
+                                    <img src="img/portfolio/03.png" class="img-responsive" alt="Coming soon...">
+                                </button>
+                                <form method="post" id="vcForm" action="/verify">
+                                    <input type="hidden" name="vcDataInput" id="vcDataInput">
+                                </form>
+                            </a>
                         </div>
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-3 col-lg-3 app">
                     <div class="portfolio-item">
-                        <div class="hover-bg"> <a href="img/portfolio/02.jpg" rel="prettyPhoto">
+                        <div class="hover-bg">
+                            <button id="getVPBtn">
                                 <div class="hover-text">
                                     <h4>Get VP</h4>
                                     <small>Get VP directly from Chapi</small>
                                     <div class="clearfix"></div>
                                 </div>
-                                <img src="img/portfolio/02.jpg" class="img-responsive" alt="Coming soon..."> </a> </div>
+                                <img src="img/portfolio/02.jpg" class="img-responsive" alt="Coming soon..."></button>
+                            <form method="post" id="vpForm" action="/verifyPresentation">
+                                <input type="hidden" name="vpDataInput" id="vpDataInput">
+                            </form>
+                        </div>
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-3 col-lg-3 web">
                     <div class="portfolio-item">
-                        <div class="hover-bg"> <a href="reader/qrReader.html">
+                        <div class="hover-bg"><a href="reader/qrReader.html">
                                 <div class="hover-text">
                                     <h4>Scan Barcode</h4>
                                     <small>Verifiable Presentation</small>
                                     <div class="clearfix"></div>
                                 </div>
-                                <img src="img/portfolio/01.jpg" class="img-responsive" alt="Scan Barcode"> </a> </div>
+                                <img src="img/portfolio/01.jpg" class="img-responsive" alt="Scan Barcode"> </a></div>
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-3 col-lg-3 web">
                     <div class="portfolio-item">
-                        <div class="hover-bg"> <a href="img/portfolio/04.png" rel="prettyPhoto">
+                        <div class="hover-bg"><a href="img/portfolio/04.png" rel="prettyPhoto">
                                 <div class="hover-text">
                                     <h4>DID Authentication</h4>
                                     <small>DID Authentication</small>
                                     <div class="clearfix"></div>
                                 </div>
-                                <img src="img/portfolio/04.png" class="img-responsive" alt="Coming soon..."> </a> </div>
+                                <img src="img/portfolio/04.png" class="img-responsive" alt="Coming soon..."> </a></div>
                     </div>
                 </div>
 
@@ -122,7 +133,7 @@ SPDX-License-Identifier: Apache-2.0
         <div class="container">
             <div class="container">
                 <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github"></i></a>
-                Copyright &copy; Trustbloc by  <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
+                Copyright &copy; Trustbloc by <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
             </div>
         </div>
     </div>
@@ -136,32 +147,61 @@ SPDX-License-Identifier: Apache-2.0
         console.log('Loading polyfill...');
         try {
             await credentialHandlerPolyfill.loadOnce();
-        } catch(e) {
+        } catch (e) {
             console.error('Error in loadOnce:', e);
         }
     }
 
     function ready(fn) {
-        if (document.readyState !== 'loading'){
+        if (document.readyState !== 'loading') {
             fn();
         } else {
             document.addEventListener('DOMContentLoaded', fn);
         }
     }
 
-    async function onClickGet() {
+    async function getVC() {
         const credentialQuery = JSON.parse('{"web": {"VerifiablePresentation": {}}}');
         const result = await navigator.credentials.get(credentialQuery);
-        if(!result) {
-            alert("null result");
+
+        if (!result) {
             return;
         }
-        document.getElementById('vcDataInput').value=result.data
+
+        console.log("webCredential response:", result.data)
+
+        document.getElementById('vcDataInput').value = result.data
         document.getElementById('vcForm').submit()
     }
 
+    async function getVP() {
+        const credentialQuery = JSON.parse('{"web": {"VerifiablePresentation": {}}}');
+        const result = await navigator.credentials.get(credentialQuery);
+
+        if (!result || !result.data) {
+            document.getElementById("msg-board").innerText = "Failed to get presentation from wallet, please try again."
+            return;
+        }
+
+        try {
+            JSON.parse(result.data);
+        } catch (e) {
+            document.getElementById("msg-board").innerText = "Failed to get presentation from wallet, please try again."
+            return;
+        }
+
+        console.log("webCredential response:", result.data)
+        document.getElementById("msg-board").innerText = "Please wait while we verify your presentation."
+        document.getElementById('vpDataInput').value = result.data
+
+        document.getElementById('vpForm').submit()
+    }
+
     ready(() => {
-        document.getElementById('getVCBtn').addEventListener('click', onClickGet);
+        // TODO below button to get VC will be enabled once CHAPI supports it
+        // document.getElementById('getVCBtn').addEventListener('click', getVC);
+
+        document.getElementById('getVPBtn').addEventListener('click', getVP);
     })
 
 </script>

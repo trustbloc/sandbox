@@ -16,6 +16,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -34,6 +35,7 @@ import (
 const (
 	login    = "/login"
 	callback = "/callback"
+	generate = "/generate"
 	retrieve = "/retrieve"
 	revoke   = "/revoke"
 
@@ -62,6 +64,7 @@ type Operation struct {
 	vcsURL        string
 	receiveVCHTML string
 	qrCodeHTML    string
+	didAuthHTML   string
 	vcHTML        string
 	httpClient    *http.Client
 }
@@ -74,6 +77,7 @@ type Config struct {
 	VCSURL        string
 	ReceiveVCHTML string
 	QRCodeHTML    string
+	DIDAuthHTML   string
 	VCHTML        string
 	TLSConfig     *tls.Config
 }
@@ -107,6 +111,7 @@ func New(config *Config) *Operation {
 		cmsURL:        config.CMSURL,
 		vcsURL:        config.VCSURL,
 		qrCodeHTML:    config.QRCodeHTML,
+		didAuthHTML:   config.DIDAuthHTML,
 		receiveVCHTML: config.ReceiveVCHTML,
 		vcHTML:        config.VCHTML,
 		httpClient:    &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}}}
@@ -174,10 +179,63 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 		return
 	}
 
-	cred, err := c.createCredential(subject, info, vcsProfileCookie.Value)
+	cred, err := c.prepareCredential(subject, info, vcsProfileCookie.Value)
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create credential: %s", err.Error()))
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	t, err := template.ParseFiles(c.didAuthHTML)
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to load html: %s", err.Error()))
+
+		return
+	}
+
+	if err := t.Execute(w, map[string]interface{}{
+		"Path": generate + "?" + "profile=" + vcsProfileCookie.Value,
+		"Cred": string(cred),
+	}); err != nil {
+		log.Error(fmt.Sprintf("failed execute qr html template: %s", err.Error()))
+	}
+}
+
+// generateVC for creates VC
+func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
+	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get cookie: %s", err.Error()))
+
+		return
+	}
+
+	err = r.ParseForm()
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to parse request form: %s", err.Error()))
+
+		return
+	}
+
+	err = c.validateForm(r.Form, "cred", "holder", "authresp")
+	if err != nil {
+		log.Errorf("invalid generate credential request: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid request argument: %s", err.Error()))
+
+		return
+	}
+
+	cred, err := c.createCredential(r.Form["cred"][0], r.Form["authresp"][0], r.Form["holder"][0], vcsProfileCookie.Value)
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create verifiable credentiall: %s", err.Error()))
 
 		return
 	}
@@ -386,7 +444,7 @@ func unmarshalSubject(data []byte) (map[string]interface{}, error) {
 	return subjects[0], nil
 }
 
-func (c *Operation) prepareCreateCredentialRequest(subject map[string]interface{}, info *token.Introspection,
+func (c *Operation) prepareCredential(subject map[string]interface{}, info *token.Introspection,
 	vcsProfile string) ([]byte, error) {
 	// remove cms id, add name as id (will be replaced by DID)
 	subject["id"] = subject["name"]
@@ -412,16 +470,7 @@ func (c *Operation) prepareCreateCredentialRequest(subject map[string]interface{
 	cred.Issuer.Name = profileResponse.Name
 	cred.ID = profileResponse.URI + "/" + uuid.New().String()
 
-	credBytes, err := json.Marshal(cred)
-	if err != nil {
-		return nil, fmt.Errorf("build credential - err=%s", err)
-	}
-
-	req := edgesvcops.IssueCredentialRequest{
-		Credential: credBytes,
-	}
-
-	return json.Marshal(req)
+	return json.Marshal(cred)
 }
 
 func (c *Operation) retrieveProfile(profileName string) (*vcprofile.DataProfile, error) {
@@ -445,13 +494,35 @@ func (c *Operation) retrieveProfile(profileName string) (*vcprofile.DataProfile,
 	return profileResponse, nil
 }
 
-func (c *Operation) createCredential(subject map[string]interface{}, info *token.Introspection, ledgerType string) ([]byte, error) { //nolint: lll
-	body, err := c.prepareCreateCredentialRequest(subject, info, ledgerType)
-	if err != nil {
-		return nil, err
+func (c *Operation) createCredential(cred, authResp, holder, id string) ([]byte, error) { //nolint: lll
+	// currently using only holder from authResp
+	// TODO need to validate proof in authResp??
+	if holder == "" || !strings.Contains(authResp, fmt.Sprintf(`"%s"`, holder)) {
+		return nil, fmt.Errorf("credential subject id is not matching with DID auth response")
 	}
 
-	endpointURL := fmt.Sprintf(issueCredentialURLFormat, c.vcsURL, ledgerType)
+	credential, _, err := verifiable.NewCredential([]byte(cred), verifiable.WithDisabledProofCheck())
+	if err != nil {
+		return nil, fmt.Errorf("invalid credential: %w", err)
+	}
+
+	if subject, ok := credential.Subject.(map[string]interface{}); ok {
+		subject["id"] = holder
+	}
+
+	credBytes, err := credential.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get credential bytes: %w", err)
+	}
+
+	body, err := json.Marshal(edgesvcops.IssueCredentialRequest{
+		Credential: credBytes,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal credential")
+	}
+
+	endpointURL := fmt.Sprintf(issueCredentialURLFormat, c.vcsURL, id)
 
 	req, err := http.NewRequest("POST", endpointURL, bytes.NewBuffer(body))
 	if err != nil {
@@ -496,6 +567,16 @@ func (c *Operation) retrieveCredential(id, vcsProfile string) ([]byte, error) {
 	return sendHTTPRequest(r, c.httpClient, http.StatusOK)
 }
 
+func (c *Operation) validateForm(formVals url.Values, keys ...string) error {
+	for _, key := range keys {
+		if _, found := getFormValue(key, formVals); !found {
+			return fmt.Errorf("invalid '%s'", key)
+		}
+	}
+
+	return nil
+}
+
 func prepareStoreVCRequest(cred []byte, profile string) ([]byte, error) {
 	storeVCRequest := storeVC{
 		Credential: string(cred),
@@ -522,11 +603,11 @@ func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) (map
 	}
 
 	// scope StudentCard matches studentcards in CMS etc.
-	url := c.cmsURL + "/" + strings.ToLower(info.Scope) + "s?userid=" + user.UserID
+	u := c.cmsURL + "/" + strings.ToLower(info.Scope) + "s?userid=" + user.UserID
 
 	httpClient := c.tokenIssuer.Client(tk)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -564,6 +645,15 @@ func sendHTTPRequest(req *http.Request, client *http.Client, status int) ([]byte
 	return ioutil.ReadAll(resp.Body)
 }
 
+// getFormValue reads form url value by key
+func getFormValue(k string, vals url.Values) (string, bool) {
+	if cr, ok := vals[k]; ok && len(cr) > 0 {
+		return cr[0], true
+	}
+
+	return "", false
+}
+
 // registerHandler register handlers to be exposed from this service as REST API endpoints
 func (c *Operation) registerHandler() {
 	// Add more protocol endpoints here to expose them as controller API endpoints
@@ -572,6 +662,7 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(callback, http.MethodGet, c.callback),
 		support.NewHTTPHandler(retrieve, http.MethodGet, c.retrieveVC),
 		support.NewHTTPHandler(revoke, http.MethodPost, c.revokeVC),
+		support.NewHTTPHandler(generate, http.MethodPost, c.generateVC),
 	}
 }
 
