@@ -4,6 +4,6 @@
   "policy": {
     "cache": {"max_age": 123456789}
   },
-  "endpoints": ["https://sidetree-mock.trustbloc.local/document"],
+  "endpoints": ["https://sidetree-mock.trustbloc.local/sidetree/0.0.1"],
   "previous": ""
 }
