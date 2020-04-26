@@ -5,8 +5,8 @@
     "cache": {"max_age": 123456789}
   },
   "endpoints": [
-    "https://peer0-org1.trustbloc.local/document",
-    "https://peer1-org1.trustbloc.local/document"
+    "https://peer0-org1.trustbloc.local/sidetree/0.0.1",
+    "https://peer1-org1.trustbloc.local/sidetree/0.0.1"
   ],
   "previous": ""
 }
