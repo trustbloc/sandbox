@@ -39,6 +39,15 @@ Feature:
     # Wait for the Sidetree services to start up on mychannel
     And we wait 10 seconds
 
+    # Check blockchain endpoint
+    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/0.0.1/blockchain/version"
+    Then the JSON path "name" of the response equals "Hyperledger Fabric"
+    And the JSON path "version" of the response equals "2.0.0"
+
+    # Check cas endpoint
+    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/0.0.1/cas/version"
+    Then the JSON path "name" of the response equals "cas"
+    And the JSON path "version" of the response equals "0.1.3"
 
     # Create a file index document
     When fabric-cli is executed with args "file createidx --path /.well-known/did-trustbloc --url http://localhost:48326/file --recoverypwd pwd1 --nextpwd pwd1 --recoverykeyfile ./fixtures/keys/public.pem --updatekeyfile ./fixtures/keys/public.pem --noprompt"
@@ -51,7 +60,7 @@ Feature:
 
     Then we wait 10 seconds
 
-    When an HTTP request is sent to "https://peer0-org1.trustbloc.local/file/${fileIdxID}"
+    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/file/${fileIdxID}"
     Then the JSON path "didDocument.id" of the response equals "${fileIdxID}"
 
   # Upload a couple of files and add them to the file index document
@@ -69,11 +78,11 @@ Feature:
     Then we wait 15 seconds
 
     # Resolve .well-known files
-    When an HTTP request is sent to "https://peer1-org2.trustbloc.local/.well-known/did-trustbloc/testnet.trustbloc.local.json"
+    When an HTTP GET is sent to "https://peer1-org2.trustbloc.local/.well-known/did-trustbloc/testnet.trustbloc.local.json"
     Then response from "https://peer1-org2.trustbloc.local/.well-known/did-trustbloc/testnet.trustbloc.local.json" to client contains value "payload"
-    When an HTTP request is sent to "https://peer0-org3.trustbloc.local/.well-known/did-trustbloc/org1.trustbloc.local.json"
+    When an HTTP GET is sent to "https://peer0-org3.trustbloc.local/.well-known/did-trustbloc/org1.trustbloc.local.json"
     Then response from "https://peer0-org3.trustbloc.local/.well-known/did-trustbloc/org1.trustbloc.local.json" to client contains value "payload"
-    When an HTTP request is sent to "https://peer0-org1.trustbloc.local/.well-known/did-trustbloc/org2.trustbloc.local.json"
+    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/.well-known/did-trustbloc/org2.trustbloc.local.json"
     Then response from "https://peer0-org1.trustbloc.local/.well-known/did-trustbloc/org2.trustbloc.local.json" to client contains value "payload"
-    When an HTTP request is sent to "https://peer1-org1.trustbloc.local/.well-known/did-trustbloc/org3.trustbloc.local.json"
+    When an HTTP GET is sent to "https://peer1-org1.trustbloc.local/.well-known/did-trustbloc/org3.trustbloc.local.json"
     Then response from "https://peer1-org1.trustbloc.local/.well-known/did-trustbloc/org3.trustbloc.local.json" to client contains value "payload"
