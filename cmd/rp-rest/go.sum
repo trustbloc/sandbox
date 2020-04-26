@@ -222,6 +222,7 @@ github.com/trustbloc/edge-service v0.1.3-0.20200423233640-49a7744fb141/go.mod h1
 github.com/trustbloc/edge-service v0.1.3-0.20200424183207-2c4fbbe3b328/go.mod h1:EyjnjGIK1+VIe55ubtYL7i4BsNMnmj9XyP0AeQzKcno=
 github.com/trustbloc/edge-service v0.1.3-0.20200424230952-ef95176c21db/go.mod h1:f8EYj7OmAdCCJ7eJrRKyD4YdijKhnqGxUm0sLpiz3bc=
 github.com/trustbloc/edge-service v0.1.3-0.20200425171606-e4b192e281e0/go.mod h1:IyJDkNqD+aESHchZs5XtGwK8ItLoCuPUC1YUupF5uYk=
+github.com/trustbloc/edge-service v0.1.3-0.20200426153005-69356e989310/go.mod h1:IyJDkNqD+aESHchZs5XtGwK8ItLoCuPUC1YUupF5uYk=
 github.com/trustbloc/edv v0.1.3-0.20200415141634-265a4f01a957 h1:vKslsFlP6HotTBGGoTzFQRlxr6pHvzMhSBMsUz3Avrc=
 github.com/trustbloc/edv v0.1.3-0.20200415141634-265a4f01a957/go.mod h1:v9Rwqvm3ZgsXP60Hjjd2yfhLK3vpAo5g3dfmSTD7N38=
 github.com/trustbloc/sidetree-core-go v0.1.3-0.20200420215423-0c6a32299a30 h1:bd/u3vgi2ZGYBenKTooTV9FiYMfIkhzCTXt/nAUiDmg=
