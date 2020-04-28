@@ -141,9 +141,8 @@ SPDX-License-Identifier: Apache-2.0
     async function onClickReceive() {
         const credentialToStore = document.getElementById('vcDataTextArea').value;
 
-        const credentialType = 'AlumniCredential';
         // Construct the WebCredential wrapper around the credential to be stored
-        const webCredentialWrapper = new WebCredential(credentialType, credentialToStore);
+        const webCredentialWrapper = new WebCredential('VerifiableCredential', JSON.parse(credentialToStore));
         // Use Credential Handler API to store
         result = await navigator.credentials.store(webCredentialWrapper);
         console.log('Result of receiving via store() request:', result);

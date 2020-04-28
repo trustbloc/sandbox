@@ -71,7 +71,6 @@ SPDX-License-Identifier: Apache-2.0
                 <div class="col-sm-6 col-md-3 col-lg-3 web">
                     <div class="portfolio-item">
                         <div class="hover-bg">
-                            <a href="img/portfolio/03.png" rel="prettyPhoto">
                                 <button id="getVCBtn">
                                     <div class="hover-text">
                                         <h4>Get VC</h4>
@@ -83,7 +82,6 @@ SPDX-License-Identifier: Apache-2.0
                                 <form method="post" id="vcForm" action="/verify">
                                     <input type="hidden" name="vcDataInput" id="vcDataInput">
                                 </form>
-                            </a>
                         </div>
                     </div>
                 </div>
@@ -96,7 +94,7 @@ SPDX-License-Identifier: Apache-2.0
                                     <small>Get VP directly from Chapi</small>
                                     <div class="clearfix"></div>
                                 </div>
-                                <img src="img/portfolio/02.jpg" class="img-responsive" alt="Coming soon..."></button>
+                                <img src="img/portfolio/02.jpg" class="img-responsive"></button>
                             <form method="post" id="vpForm" action="/verifyPresentation">
                                 <input type="hidden" name="vpDataInput" id="vpDataInput">
                             </form>
@@ -161,16 +159,23 @@ SPDX-License-Identifier: Apache-2.0
     }
 
     async function getVC() {
-        const credentialQuery = JSON.parse('{"web": {"VerifiablePresentation": {}}}');
+        const credentialQuery = JSON.parse('{"web": {"VerifiableCredential": {}}}');
         const result = await navigator.credentials.get(credentialQuery);
 
-        if (!result) {
+        if (!result || !result.data) {
+            document.getElementById("msg-board").innerText = "Failed to get credential from wallet, please try again."
             return;
         }
 
-        console.log("webCredential response:", result.data)
+        if (!result || !result.data || !result.data.type) {
+            console.log("Received invalid credential from wallet", result.data)
+            document.getElementById("msg-board").innerText = "Failed to get credential from wallet, please try again."
+            return;
+        }
 
-        document.getElementById('vcDataInput').value = result.data
+        console.log("WebCredential response:", result.data)
+        document.getElementById("msg-board").innerText = "Please wait while we verify your credential."
+        document.getElementById('vcDataInput').value = JSON.stringify(result.data)
         document.getElementById('vcForm').submit()
     }
 
@@ -178,29 +183,21 @@ SPDX-License-Identifier: Apache-2.0
         const credentialQuery = JSON.parse('{"web": {"VerifiablePresentation": {}}}');
         const result = await navigator.credentials.get(credentialQuery);
 
-        if (!result || !result.data) {
+        if (!result || !result.data || !result.data.type) {
+            console.log("Received invalid presentation from wallet", result.data)
             document.getElementById("msg-board").innerText = "Failed to get presentation from wallet, please try again."
             return;
         }
 
-        try {
-            JSON.parse(result.data);
-        } catch (e) {
-            document.getElementById("msg-board").innerText = "Failed to get presentation from wallet, please try again."
-            return;
-        }
-
-        console.log("webCredential response:", result.data)
+        console.log("WebCredential response:", result.data)
         document.getElementById("msg-board").innerText = "Please wait while we verify your presentation."
-        document.getElementById('vpDataInput').value = result.data
+        document.getElementById('vpDataInput').value = JSON.stringify(result.data)
 
         document.getElementById('vpForm').submit()
     }
 
     ready(() => {
-        // TODO below button to get VC will be enabled once CHAPI supports it
-        // document.getElementById('getVCBtn').addEventListener('click', getVC);
-
+        document.getElementById('getVCBtn').addEventListener('click', getVC);
         document.getElementById('getVPBtn').addEventListener('click', getVP);
     })
 
