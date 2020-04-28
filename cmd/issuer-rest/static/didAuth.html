@@ -138,16 +138,15 @@ SPDX-License-Identifier: Apache-2.0
             return;
         }
 
-        const resp=JSON.parse(result.data)
-        if (!resp.holder){
-            console.log("invalid DID auth response, no holder info in response")
+        if (!result.data.holder){
+            console.log("invalid DID auth response, failed to get holder info from response", result.data)
             document.getElementById("error-board").innerText = "Authentication failed, please try again."
             return;
         }
 
         document.getElementById("title-board").innerText = "Authentication Successful, please wait."
-        document.getElementById("holder").value = resp.holder
-        document.getElementById("authresp").value = result.data
+        document.getElementById("holder").value = result.data.holder
+        document.getElementById("authresp").value = JSON.stringify(result.data)
         document.getElementById("generate-cred-form").submit();
     }
 
