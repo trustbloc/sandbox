@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-echo "Adding interop profiles"
+echo "Adding issuer interop profiles"
 n=0
 maxAttempts=30
 until [ $n -ge $maxAttempts ]

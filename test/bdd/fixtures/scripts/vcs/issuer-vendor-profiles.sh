@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-echo "Adding vendor profiles"
+echo "Adding issuer vendor profiles"
 
 n=0
 maxAttempts=30
