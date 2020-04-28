@@ -6,7 +6,7 @@
 #
 
 
-echo "Adding trustbloc profiles"
+echo "Adding issuer trustbloc profiles"
 
 
 n=0

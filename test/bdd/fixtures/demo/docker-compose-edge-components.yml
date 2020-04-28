@@ -70,6 +70,36 @@ services:
     networks:
       - demo-net
 
+  holder.vcs.example.com:
+    container_name: holder.vcs.example.com
+    image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
+    environment:
+      - VC_REST_HOST_URL=0.0.0.0:8067
+      - VC_REST_HOST_URL_EXTERNAL=https://holder-vcs.trustbloc.local
+      - EDV_REST_HOST_URL=https://edv.trustbloc.local
+      - BLOC_DOMAIN=${BLOC_DOMAIN}
+      - UNIVERSAL_RESOLVER_HOST_URL=https://uni-resolver-web.trustbloc.local/1.0/identifiers
+      - VC_REST_MODE=holder
+      - DATABASE_TYPE=couchdb
+      - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - DATABASE_PREFIX=holder
+      - KMSSECRETS_DATABASE_TYPE=couchdb
+      - KMSSECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMSSECRETS_DATABASE_PREFIX=holder
+      - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - VIRTUAL_HOST=holder-vcs.trustbloc.local
+    entrypoint: ""
+    # wait 20 seconds for couchdb to start
+    command:  /bin/sh -c "sleep 20;vc-rest start"
+    volumes:
+      - ../keys/tls:/etc/tls
+    ports:
+      - 8067:8067
+    depends_on:
+      - edv.example.com
+    networks:
+      - demo-net
+
   edv.example.com:
     container_name: edv.example.com
     image: ${EDV_IMAGE}:${EDV_IMAGE_TAG}
