@@ -123,7 +123,7 @@ services:
       - ARIESD_DB_NAMESPACE=edge-sandbox
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - VIRTUAL_HOST=myagent.trustbloc.local
-      - ARIESD_HTTP_RESOLVER=trustbloc@https://uni-resolver-web.trustbloc.local/1.0/identifiers
+      - ARIESD_HTTP_RESOLVER=${HTTP_RESOLVER}
     ports:
       - 8091:8091
     volumes:
