@@ -132,20 +132,22 @@ SPDX-License-Identifier: Apache-2.0
         const result = await navigator.credentials.get(credentialQuery);
         console.log("DID auth webcredential response:", result.data)
 
+
         if (!result || !result.data) {
             console.log("Unable to get DID authorization, no response")
             return;
         }
 
-        if (!result.data.holder){
+        const resp=JSON.parse(result.data)
+        if (!resp.holder){
             console.log("invalid DID auth response, no holder info in response")
             document.getElementById("error-board").innerText = "Authentication failed, please try again."
             return;
         }
 
         document.getElementById("title-board").innerText = "Authentication Successful, please wait."
-        document.getElementById("holder").value = result.data.holder
-        document.getElementById("authresp").value = JSON.stringify(result.data)
+        document.getElementById("holder").value = resp.holder
+        document.getElementById("authresp").value = result.data
         document.getElementById("generate-cred-form").submit();
     }
 
