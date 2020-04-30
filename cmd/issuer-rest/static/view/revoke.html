@@ -39,13 +39,21 @@ SPDX-License-Identifier: Apache-2.0
     }
 
     async function onClickGet() {
-        const credentialQuery = JSON.parse('{"web": {"VerifiablePresentation": {}}}');
+        const credentialQuery = JSON.parse('{"web": {"VerifiableCredential": {}}}');
         const result = await navigator.credentials.get(credentialQuery);
-        if(!result) {
-            alert("null result");
+
+        if (!result || !result.data) {
+            document.getElementById("msg-board").innerText = "Failed to get credential from wallet, please try again."
             return;
         }
-        document.getElementById('vcDataInput').value=result.data
+
+        if (!result || !result.data || !result.data.type) {
+            console.log("Received invalid credential from wallet", result.data)
+            document.getElementById("msg-board").innerText = "Failed to get credential from wallet, please try again."
+            return;
+        }
+
+        document.getElementById('vcDataInput').value= JSON.stringify(result.data)
         document.getElementById('vcForm').submit()
     }
 
