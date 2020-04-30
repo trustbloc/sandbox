@@ -47,6 +47,7 @@ services:
       - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
       - CORE_PEER_TLS_ENABLED=true
+      - CORE_SIDETREE_API_TOKENS=fileidx_w=TOKEN_FILEIDX_W
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_CLIENTCERT_FILE=/etc/hyperledger/fabric/tls/server.crt
@@ -108,6 +109,7 @@ services:
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.example.com:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org1.example.com:7051
       - CORE_PEER_TLS_ENABLED=true
+      - CORE_SIDETREE_API_TOKENS=fileidx_w=TOKEN_FILEIDX_W
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_CLIENTCERT_FILE=/etc/hyperledger/fabric/tls/server.crt
@@ -168,6 +170,7 @@ services:
       - CORE_PEER_ADDRESS=peer0.org2.example.com:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.example.com:7051
       - CORE_PEER_TLS_ENABLED=true
+      - CORE_SIDETREE_API_TOKENS=fileidx_w=TOKEN_FILEIDX_W
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_CLIENTCERT_FILE=/etc/hyperledger/fabric/tls/server.crt
@@ -229,6 +232,7 @@ services:
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.example.com:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org2.example.com:7051
       - CORE_PEER_TLS_ENABLED=true
+      - CORE_SIDETREE_API_TOKENS=fileidx_w=TOKEN_FILEIDX_W
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_CLIENTCERT_FILE=/etc/hyperledger/fabric/tls/server.crt
@@ -289,6 +293,7 @@ services:
       - CORE_PEER_ADDRESS=peer0.org3.example.com:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org3.example.com:7051
       - CORE_PEER_TLS_ENABLED=true
+      - CORE_SIDETREE_API_TOKENS=fileidx_w=TOKEN_FILEIDX_W
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_CLIENTCERT_FILE=/etc/hyperledger/fabric/tls/server.crt
@@ -350,6 +355,7 @@ services:
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org3.example.com:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org3.example.com:7051
       - CORE_PEER_TLS_ENABLED=true
+      - CORE_SIDETREE_API_TOKENS=fileidx_w=TOKEN_FILEIDX_W
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_CLIENTCERT_FILE=/etc/hyperledger/fabric/tls/server.crt
