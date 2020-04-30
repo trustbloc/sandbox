@@ -11,7 +11,10 @@
     {
       "DocType": "FILE_INDEX",
       "Namespace": "file:idx",
-      "BasePath": "/file"
+      "BasePath": "/file",
+      "Authorization": {
+        "WriteTokens": ["fileidx_w"]
+      }
     }
   ]
 }

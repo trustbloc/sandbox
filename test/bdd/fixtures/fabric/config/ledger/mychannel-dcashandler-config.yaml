@@ -7,3 +7,7 @@
 basePath: /sidetree/0.0.1/cas
 chaincodeName: sidetreetxn
 collection: dcas
+
+authorization:
+  writeTokens:
+    - cas_w
