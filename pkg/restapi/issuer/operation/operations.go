@@ -46,6 +46,9 @@ const (
 	vcsProfileCookie = "vcsProfile"
 
 	issueCredentialURLFormat = "%s/%s" + "/credentials/issueCredential"
+
+	// contexts
+	trustBlocExampleContext = "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld"
 )
 
 // Handler http handler for each controller API endpoint
@@ -448,6 +451,7 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, info *toke
 	vcsProfile string) ([]byte, error) {
 	// remove cms id, add name as id (will be replaced by DID)
 	subject["id"] = subject["name"]
+	subject["type"] = info.Scope
 
 	// remove cms specific fields
 	delete(subject, "created_at")
@@ -462,7 +466,7 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, info *toke
 	issueDate := time.Now().UTC()
 
 	cred := &verifiable.Credential{}
-	cred.Context = []string{credentialContext}
+	cred.Context = []string{credentialContext, trustBlocExampleContext}
 	cred.Subject = subject
 	cred.Types = []string{"VerifiableCredential", info.Scope}
 	cred.Issued = &issueDate
