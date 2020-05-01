@@ -41,3 +41,9 @@ services:
       - "8083:8081"
     networks:
       - demo-net
+  uni-resolver-did-v1-driver:
+    image: veresone/uni-resolver-did-v1-driver:latest
+    ports:
+      - "8084:8080"
+    networks:
+      - demo-net
