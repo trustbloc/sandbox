@@ -220,10 +220,10 @@ github.com/trustbloc/edge-core v0.1.3-0.20200414220734-842cc197e692 h1:hGMF+YSde
 github.com/trustbloc/edge-core v0.1.3-0.20200414220734-842cc197e692 h1:hGMF+YSdep1hpqrzZI6S9p4a5x2poPorunzoeQXByzY=
 github.com/trustbloc/edge-core v0.1.3-0.20200414220734-842cc197e692/go.mod h1:mmgEfSIoNjshnVdxEtPwh2CLs0EaBaaejgI2KNsOEOE=
 github.com/trustbloc/edge-core v0.1.3-0.20200414220734-842cc197e692/go.mod h1:mmgEfSIoNjshnVdxEtPwh2CLs0EaBaaejgI2KNsOEOE=
-github.com/trustbloc/edge-service v0.1.3-0.20200430233704-85db7e28df27 h1:HiiOnJxs2V7mbVV+P9jZQI3TnJlpkhMCBGVszgO0O8c=
-github.com/trustbloc/edge-service v0.1.3-0.20200430233704-85db7e28df27/go.mod h1:Iq6aVrnFw8n6v/0fcj/EBh6e3sGeeaoKCzPWz7ALU/s=
-github.com/trustbloc/edv v0.1.3-0.20200415141634-265a4f01a957 h1:vKslsFlP6HotTBGGoTzFQRlxr6pHvzMhSBMsUz3Avrc=
-github.com/trustbloc/edv v0.1.3-0.20200415141634-265a4f01a957/go.mod h1:v9Rwqvm3ZgsXP60Hjjd2yfhLK3vpAo5g3dfmSTD7N38=
+github.com/trustbloc/edge-service v0.1.3-0.20200501023442-6b792b170873 h1:PNHQzEH31xDd2hcifJ6q5YALits9ZBOmMK0/flK4et8=
+github.com/trustbloc/edge-service v0.1.3-0.20200501023442-6b792b170873/go.mod h1:KbFQiz6A2lZt7mn6lQa6YFxuCvy4KJbfruRyVlpfC94=
+github.com/trustbloc/edv v0.1.3-0.20200430234942-7eed5374c42e h1:MOFd6qR1hJIKsio6wsCkZpNzBrJNmKebiFIgGeDCqcM=
+github.com/trustbloc/edv v0.1.3-0.20200430234942-7eed5374c42e/go.mod h1:v9Rwqvm3ZgsXP60Hjjd2yfhLK3vpAo5g3dfmSTD7N38=
 github.com/trustbloc/sidetree-core-go v0.1.3-0.20200430203822-5e12db11f149 h1:V1rrqI38qtR8vYQvE4MwNT1GrmkdDigsyP8fMfkxTB4=
 github.com/trustbloc/sidetree-core-go v0.1.3-0.20200430203822-5e12db11f149/go.mod h1:xCuMVdRtXiCghr58Dcd1RW9t0lCDXPPjkSiACzKGaZc=
 github.com/trustbloc/trustbloc-did-method v0.0.0-20200430214705-74c65ca8acc6 h1:GYq5eDXMpUSx183UO8xK11JQBGnGjtXoGhfbK+4vuvo=

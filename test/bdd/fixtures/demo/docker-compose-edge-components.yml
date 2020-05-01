@@ -14,7 +14,7 @@ services:
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8070
       - VC_REST_HOST_URL_EXTERNAL=https://issuer-vcs.trustbloc.local
-      - EDV_REST_HOST_URL=https://edv.trustbloc.local
+      - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - UNIVERSAL_RESOLVER_HOST_URL=https://uni-resolver-web.trustbloc.local/1.0/identifiers
       - VC_REST_MODE=issuer
@@ -46,7 +46,7 @@ services:
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8069
       - VC_REST_HOST_URL_EXTERNAL=https://rp-vcs.trustbloc.local
-      - EDV_REST_HOST_URL=https://edv.trustbloc.local
+      - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - UNIVERSAL_RESOLVER_HOST_URL=https://uni-resolver-web.trustbloc.local/1.0/identifiers
       - VC_REST_MODE=verifier
@@ -76,7 +76,7 @@ services:
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8067
       - VC_REST_HOST_URL_EXTERNAL=https://holder-vcs.trustbloc.local
-      - EDV_REST_HOST_URL=https://edv.trustbloc.local
+      - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - UNIVERSAL_RESOLVER_HOST_URL=https://uni-resolver-web.trustbloc.local/1.0/identifiers
       - VC_REST_MODE=holder
