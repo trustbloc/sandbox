@@ -30,6 +30,7 @@ authenticators:
         - PRCard
         - CertifiedMillTestReport
         - CrudeProductCredential
+        - UniversityDegreeCredential
 
 authorizers:
   allow:
