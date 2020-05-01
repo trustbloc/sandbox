@@ -453,16 +453,21 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, info *toke
 	subject["id"] = ""
 
 	vcContext := []string{credentialContext, trustBlocExampleContext}
-	// get custom context if available
-	if customCtx, ok := subject["customcontext"]; ok {
-		vcContext = getCustomContext(customCtx.(map[string]interface{}))
+	customFields := make(map[string]interface{})
+	// get custom vc data if available
+	if m, ok := subject["vcmetadata"]; ok {
+		if vcMetaData, ok := m.(map[string]interface{}); ok {
+			vcContext = getCustomContext(vcContext, vcMetaData)
+			customFields["name"] = vcMetaData["name"]
+			customFields["description"] = vcMetaData["description"]
+		}
 	}
 
 	// remove cms specific fields
 	delete(subject, "created_at")
 	delete(subject, "updated_at")
 	delete(subject, "userid")
-	delete(subject, "customcontext")
+	delete(subject, "vcmetadata")
 
 	profileResponse, err := c.retrieveProfile(vcsProfile)
 	if err != nil {
@@ -479,18 +484,22 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, info *toke
 	cred.Issuer.ID = profileResponse.DID
 	cred.Issuer.Name = profileResponse.Name
 	cred.ID = profileResponse.URI + "/" + uuid.New().String()
+	cred.CustomFields = customFields
 
 	return json.Marshal(cred)
 }
 
-func getCustomContext(customCtx map[string]interface{}) []string {
-	var result []string
+func getCustomContext(existingContext []string, customCtx map[string]interface{}) []string {
+	if ctx, found := customCtx["@context"]; found {
+		var result []string
+		for _, v := range ctx.([]interface{}) {
+			result = append(result, v.(string))
+		}
 
-	for _, v := range customCtx["@context"].([]interface{}) {
-		result = append(result, v.(string))
+		return result
 	}
 
-	return result
+	return existingContext
 }
 
 func (c *Operation) retrieveProfile(profileName string) (*vcprofile.DataProfile, error) {
