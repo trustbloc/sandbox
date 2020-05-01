@@ -11,6 +11,3 @@ apk --no-cache add curl jq
 /tmp/scripts/vcs/issuer-trustbloc-profiles.sh
 /tmp/scripts/vcs/issuer-interop-profiles.sh
 /tmp/scripts/vcs/issuer-vendor-profiles.sh
-
-# holder profiles
-/tmp/scripts/vcs/holder-interop-profiles.sh
