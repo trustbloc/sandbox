@@ -42,6 +42,11 @@ GENERATE_CMTR_COMMAND="strapi generate:api crudeproductcredentials UserID:string
 
 $GENERATE_CMTR_COMMAND
 
+# generate the universitydegreecredentials and model
+GENERATE_UDC_COMMAND="strapi generate:api universitydegreecredentials UserID:string VcMetadata:json Name:string Spouse:string Degree:json"
+
+$GENERATE_UDC_COMMAND
+
 sleep 30
 
 # Create admin user
@@ -142,6 +147,17 @@ result=$(curl --header "Content-Type: application/json" --header "Authorization:
 if [ "$result" != "null" ]
    then
         echo "error insert crudeproductcredentials data in strapi: $result"
+fi
+
+# Add universitydegreecredentials data for above created user
+result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
+   --request POST \
+   --data '{ "userid":"100", "vcmetadata":{"@context": [ "https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1", "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld" ], "name": "University Degree Credential", "description": "University Degree Credential for Mr.Jayden Doe"}, "name": "Jayden Doe", "spouse": "did:example:c276e12ec21ebfeb1f712ebc6f1", "degree": { "type": "BachelorDegree", "degree": "Bachelor of Science and Arts"} }' \
+   http://strapi:1337/universitydegreecredentials | jq  -r ".error")
+# check for error
+if [ "$result" != "null" ]
+   then
+        echo "error insert universitydegreecredentials data in strapi: $result"
 fi
 
 echo "STRAPI SETUP IS COMPLETED"

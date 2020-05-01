@@ -32,6 +32,8 @@ $(document).ready(function () {
             $('#demoSetupForm').attr('action', 'view/college.html');
         } else if ($('#chooseOption').val() == "travelCard") {
             $('#demoSetupForm').attr('action', 'view/travel.html');
+        } else if ($('#chooseOption').val() == "universityDegree") {
+            $('#demoSetupForm').attr('action', 'view/udc.html');
         } else if ($('#chooseOption').val() == "prCard") {
             $('#demoSetupForm').attr('action', 'view/pr.html');
         } else if ($('#chooseOption').val() == "cmtr") {
