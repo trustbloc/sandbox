@@ -449,14 +449,20 @@ func unmarshalSubject(data []byte) (map[string]interface{}, error) {
 
 func (c *Operation) prepareCredential(subject map[string]interface{}, info *token.Introspection,
 	vcsProfile string) ([]byte, error) {
-	// remove cms id, add name as id (will be replaced by DID)
-	subject["id"] = subject["name"]
-	subject["type"] = info.Scope
+	// will be replaced by DID auth response subject ID
+	subject["id"] = ""
+
+	vcContext := []string{credentialContext, trustBlocExampleContext}
+	// get custom context if available
+	if customCtx, ok := subject["customcontext"]; ok {
+		vcContext = getCustomContext(customCtx.(map[string]interface{}))
+	}
 
 	// remove cms specific fields
 	delete(subject, "created_at")
 	delete(subject, "updated_at")
 	delete(subject, "userid")
+	delete(subject, "customcontext")
 
 	profileResponse, err := c.retrieveProfile(vcsProfile)
 	if err != nil {
@@ -466,7 +472,7 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, info *toke
 	issueDate := time.Now().UTC()
 
 	cred := &verifiable.Credential{}
-	cred.Context = []string{credentialContext, trustBlocExampleContext}
+	cred.Context = vcContext
 	cred.Subject = subject
 	cred.Types = []string{"VerifiableCredential", info.Scope}
 	cred.Issued = &issueDate
@@ -475,6 +481,16 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, info *toke
 	cred.ID = profileResponse.URI + "/" + uuid.New().String()
 
 	return json.Marshal(cred)
+}
+
+func getCustomContext(customCtx map[string]interface{}) []string {
+	var result []string
+
+	for _, v := range customCtx["@context"].([]interface{}) {
+		result = append(result, v.(string))
+	}
+
+	return result
 }
 
 func (c *Operation) retrieveProfile(profileName string) (*vcprofile.DataProfile, error) {

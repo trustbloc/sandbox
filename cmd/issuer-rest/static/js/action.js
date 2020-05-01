@@ -8,32 +8,36 @@ $(document).ready(function () {
 
     var profileVal = $('#vcsProfile').val()
     var actionRequested = $('#actionRequested').val()
-    $formSubmit =	$('#formSubmit');
+    $formSubmit = $('#formSubmit');
 
-    $('#profile').on('change', function(){
-        if($(this).val() != ""){
+    $('#profile').on('change', function () {
+        if ($(this).val() != "") {
             $('#vcsProfile').val($(this).val());
-        }else{
+        } else {
             $('#vcsProfile').val('');
         }
     });
 
-    $('#chooseOption').on('change', function(){
-        if($(this).val() != ""){
+    $('#chooseOption').on('change', function () {
+        if ($(this).val() != "") {
             $('#actionRequested').val($(this).val());
-        }else{
+        } else {
             $('#actionRequested').val('');
         }
     });
 
 
-    $('#demoSetupForm').submit(function() {
+    $('#demoSetupForm').submit(function () {
         if ($('#chooseOption').val() == "studentCard") {
             $('#demoSetupForm').attr('action', 'view/college.html');
         } else if ($('#chooseOption').val() == "travelCard") {
             $('#demoSetupForm').attr('action', 'view/travel.html');
         } else if ($('#chooseOption').val() == "prCard") {
             $('#demoSetupForm').attr('action', 'view/pr.html');
+        } else if ($('#chooseOption').val() == "cmtr") {
+            $('#demoSetupForm').attr('action', 'view/cmtr.html');
+        } else if ($('#chooseOption').val() == "cpr") {
+            $('#demoSetupForm').attr('action', 'view/cpr.html');
         } else if ($('#chooseOption').val() == "kiosk") {
             $('#demoSetupForm').attr('action', 'reader/qrReader.html');
         } else if ($('#chooseOption').val() == "revokeCard") {
