@@ -28,6 +28,8 @@ authenticators:
         - StudentCard
         - TravelCard
         - PRCard
+        - CertifiedMillTestReport
+        - CrudeProductCredential
 
 authorizers:
   allow:

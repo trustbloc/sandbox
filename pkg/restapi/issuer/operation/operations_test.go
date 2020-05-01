@@ -62,7 +62,8 @@ const profileData = `{
    "didPrivateKey":""
 }`
 
-const foo = `{"id":1,"userid":"100","name":"Foo Bar","email":"foo@bar.com"}`
+const foo = `{"id":1,"userid":"100","name":"Foo Bar","email":"foo@bar.com", 
+"customcontext":{"@context": [ "https://www.w3.org/2018/credentials/v1"]}}`
 const jsonArray = `[{}]`
 
 const holder = "did:example.com"
@@ -122,11 +123,7 @@ func TestOperation_Login3(t *testing.T) {
 
 func TestOperation_Callback(t *testing.T) {
 	cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.Contains(r.URL.String(), "users") {
-			fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
-		} else {
-			fmt.Fprintln(w, jsonArray)
-		}
+		fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
 	}))
 	defer cms.Close()
 

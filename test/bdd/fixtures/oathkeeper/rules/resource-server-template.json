@@ -141,5 +141,77 @@
     "authorizer": {
       "handler": "allow"
     }
+  },
+  {
+    "id": "certifiedmilltestreports-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi:1337"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.trustbloc.local/certifiedmilltestreports<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "CertifiedMillTestReport"
+          ]
+        }
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  },
+  {
+    "id": "crudeproductcredential-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi:1337"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.trustbloc.local/crudeproductcredentials<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "CrudeProductCredential"
+          ]
+        }
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
   }
 ]
