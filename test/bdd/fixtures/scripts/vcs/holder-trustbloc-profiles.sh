@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-echo "Adding holder interop profiles"
+echo "Adding holder(trustbloc) profiles"
 
 n=0
 maxAttempts=30

@@ -87,11 +87,13 @@ services:
       - KMSSECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - KMSSECRETS_DATABASE_PREFIX=holder
       - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - VC_REST_TLS_SYSTEMCERTPOOL=true
       - VIRTUAL_HOST=holder-vcs.trustbloc.local
     entrypoint: ""
     # wait 20 seconds for couchdb to start
-    command:  /bin/sh -c "sleep 20;vc-rest start"
+    command:  /bin/sh -c "sleep 20;/tmp/scripts/vcs_holder_configure.sh& vc-rest start"
     volumes:
+      - ../scripts/:/tmp/scripts
       - ../keys/tls:/etc/tls
     ports:
       - 8067:8067
