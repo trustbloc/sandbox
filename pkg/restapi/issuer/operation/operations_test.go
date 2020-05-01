@@ -63,7 +63,7 @@ const profileData = `{
 }`
 
 const foo = `{"id":1,"userid":"100","name":"Foo Bar","email":"foo@bar.com", 
-"customcontext":{"@context": [ "https://www.w3.org/2018/credentials/v1"]}}`
+"vcmetadata":{"@context": [ "https://www.w3.org/2018/credentials/v1"], "name":"foo", "description":"foo bar"}}`
 const jsonArray = `[{}]`
 
 const holder = "did:example.com"
