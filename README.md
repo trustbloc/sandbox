@@ -19,6 +19,7 @@ As a User, I should be able to get the Student Card from the Issuer and present 
 
 ## Demo
 - [Build](docs/demo/build.md)
+- [Playground](docs/demo/sandbox_playground.md)
 
 ## Contributing
 Thank you for your interest in contributing. Please see our [community contribution guidelines](https://github.com/trustbloc/community/blob/master/CONTRIBUTING.md) for more information.
