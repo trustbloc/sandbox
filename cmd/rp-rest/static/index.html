@@ -78,9 +78,8 @@ SPDX-License-Identifier: Apache-2.0
                                 <input type="hidden" name="vcDataInput" id="vcDataInput">
                             </form>
 
-                            <div class="portfolio-info">
-                                <h4>Verify VC</h4>
-                                <p>Get VC from wallet</p>
+                            <div class="portfolio-info" style="padding: 25px;height: 100px">
+                                <p style="font-weight: 600; font-size: 20px">Get your VC directly from wallet</p>
                             </div>
                         </div>
                     </div>
@@ -90,12 +89,20 @@ SPDX-License-Identifier: Apache-2.0
                             <figure id="getVPBtn">
                                 <img src="img/portfolio/2.jpg" class="img-fluid" alt="">
                             </figure>
+
                             <form method="post" id="vpForm" action="/verifyPresentation">
                                 <input type="hidden" name="vpDataInput" id="vpDataInput">
                             </form>
-                            <div class="portfolio-info">
-                                <h4>Verify VP</h4>
-                                <p>Get VP from wallet</p>
+                            <div class="portfolio-info" style="padding: 12px;height: 100px" >
+                                <p style="font-weight: 600; font-size: 21px; margin-bottom: 10px">Choose your credential to verify</p>
+                                <select id="cred-types" class="select-css">
+                                    <option value="studentCard" id="studentCard">HighTech College Card</option>
+                                    <option value="universityDegree" id="universityDegree">University Degree Certificate</option>
+                                    <option value="travelCard"id="travelCard">VIP Travel Card</option>
+                                    <option value="prCard"id="prCard">Permanent Resident Card</option>
+                                    <option value="cmtr"id="cmtr">Certified Mill Test Report</option>
+                                    <option value="cpr"id="cpr">Crude Product Credential</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -109,9 +116,9 @@ SPDX-License-Identifier: Apache-2.0
 
                             </figure>
 
-                            <div class="portfolio-info">
+                            <div class="portfolio-info" style="height: 100px">
                                 <h4>Scanner</h4>
-                                <p>Scan VP QR Code</p>
+                                <p>Scan QR Code of your presentation</p>
                             </div>
                         </div>
                     </div>
@@ -135,6 +142,105 @@ SPDX-License-Identifier: Apache-2.0
 <script>
     installHandler()
         .catch(e => console.error('Error in installHandler:', e));
+
+    const webQueryOpts = {
+        studentCard : { web: {
+                VerifiablePresentation: {
+                    query: [
+                        {
+                            type: "QueryByExample",
+                            credentialQuery: {
+                                reason: "Please present your Student Card",
+                                example: {
+                                    "@context": ["https://www.w3.org/2018/credentials/v1"],
+                                    type: ["StudentCard"]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }},
+        travelCard : { web: {
+                VerifiablePresentation: {
+                    query: [
+                        {
+                            type: "QueryByExample",
+                            credentialQuery: {
+                                reason: "Please present your Travel Card",
+                                example: {
+                                    "@context": ["https://www.w3.org/2018/credentials/v1"],
+                                    type: ["TravelCard"]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }},
+        prCard : { web: {
+                VerifiablePresentation: {
+                    query: [
+                        {
+                            type: "QueryByExample",
+                            credentialQuery: {
+                                reason: "Please present your Permanent Resident Card",
+                                example: {
+                                    "@context": ["https://www.w3.org/2018/credentials/v1"],
+                                    type: ["PermanentResidentCard"]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }},
+        cmtr : { web: {
+                VerifiablePresentation: {
+                    query: [
+                        {
+                            type: "QueryByExample",
+                            credentialQuery: {
+                                reason: "Please present your Certified Mill Test Report",
+                                example: {
+                                    "@context": ["https://www.w3.org/2018/credentials/v1"],
+                                    type: ["CertifiedMillTestReport"]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }},
+        cpr : { web: {
+                VerifiablePresentation: {
+                    query: [
+                        {
+                            type: "QueryByExample",
+                            credentialQuery: {
+                                reason: "Please present your Crude Product Credential",
+                                example: {
+                                    "@context": ["https://www.w3.org/2018/credentials/v1"],
+                                    type: ["CrudeProductCredential"]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }},
+        universityDegree : { web: {
+                VerifiablePresentation: {
+                    query: [
+                        {
+                            type: "QueryByExample",
+                            credentialQuery: {
+                                reason: "Please present your University Degree Credential",
+                                example: {
+                                    "@context": ["https://www.w3.org/2018/credentials/v1"],
+                                    type: ["UniversityDegreeCredential"]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }},
+    }
 
     async function installHandler() {
         console.log('Loading polyfill...');
@@ -175,7 +281,11 @@ SPDX-License-Identifier: Apache-2.0
     }
 
     async function getVP() {
-        const credentialQuery = JSON.parse('{"web": {"VerifiablePresentation": {}}}');
+        var e = document.getElementById("cred-types");
+        var value = e.options[e.selectedIndex].value
+
+        const credentialQuery = webQueryOpts[value];
+        console.log("Sending webcredential query", credentialQuery)
         const result = await navigator.credentials.get(credentialQuery);
 
         if (!result || !result.data || !result.data.type) {
@@ -204,5 +314,32 @@ SPDX-License-Identifier: Apache-2.0
 <!-- Javascripts
     ================================================== -->
 <script type="text/javascript" src="js/main.js"></script>
+<style>
+    .select-css {
+        display: block;
+        font-size: 16px;
+        font-family: sans-serif;
+        font-weight: 700;
+        color: #444;
+        line-height: 1.3;
+        padding: .6em 1.4em .5em .8em;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        margin: 0;
+        border: 1px solid #aaa;
+        box-shadow: 0 1px 0 1px rgba(0,0,0,.04);
+        border-radius: .5em;
+        -moz-appearance: none;
+        -webkit-appearance: none;
+        appearance: none;
+        background-color: #fff;
+        linear-gradient(to bottom, #ffffff 0%,#e5e5e5 100%);
+        background-repeat: no-repeat, repeat;
+        background-position: right .7em top 50%, 0 0;
+        background-size: .65em auto, 100%;
+    }
+
+</style>
 </body>
 </html>
