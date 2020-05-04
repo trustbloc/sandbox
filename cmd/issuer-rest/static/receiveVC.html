@@ -186,7 +186,7 @@ SPDX-License-Identifier: Apache-2.0
             M.toast({html: 'null result', classes: 'red lighten-2'});
             return;
         }
-        if (result.data == "success") {
+        if (result.data) {
             $("#success-alert").show()
             $("#success-alert").fadeTo(2000, 500).slideUp(500, function () {
                 $("#success-alert").slideUp(500);
