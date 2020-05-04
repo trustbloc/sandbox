@@ -27,8 +27,8 @@ GENERATE_TRAVELCARD_COMMAND="strapi generate:api travelcards UserID:string VcMet
 
 $GENERATE_TRAVELCARD_COMMAND
 
-# generate the pr card api and model
-GENERATE_PRCARD_COMMAND="strapi generate:api prcards UserID:string VcMetadata:json Name:string FamilyName:string Gender:string Image:string ResidentSince:string LPRCategory:string LPRNumber:string BirthCountry:string BirthDate:string Type:string"
+# generate the permanent resident card api and model
+GENERATE_PRCARD_COMMAND="strapi generate:api permanentresidentcards UserID:string VcMetadata:json VcCredentialSubject:json"
 
 $GENERATE_PRCARD_COMMAND
 
@@ -119,8 +119,8 @@ fi
 # Add pr card data for above created user
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{"userid":"100", "vcmetadata":{"name": "Permanent Resident Card", "description": "Permanent Resident Card for Foo Smith"}, "name":"Foo","type":"PRCard","familyname":"Smith","gender":"Female","image":"data:image/png;base64,iVBORw0KGgo...kJggg==","residentsince":"2015-01-01","lprcategory":"C09","lprnumber":"01-06-2023","birthcountry":"Bahamas","birthdate":"1958-08-17"}' \
-   http://strapi:1337/prcards | jq  -r ".error")
+   --data '{"userid":"100", "vcmetadata":{"@context": [ "https://www.w3.org/2018/credentials/v1", "https://w3id.org/citizenship/v1" ], "name": "Permanent Resident Card", "description": "Permanent Resident Card of Mr.John Smith"}, "vccredentialsubject": { "birthCountry": "Bahamas", "birthDate": "1958-07-17", "familyName": "SMITH", "gender": "Male", "givenName": "JOHN", "id": "did:trustbloc:testnet.trustbloc.local:EiD6cBirl2gND93LLKQzDMX4XjR3F7W2v4dPJzd8bQpPYQ", "image": "data:image/png;base64,iVBORw0KGgo...kJggg==", "lprCategory": "C09", "lprNumber": "999-999-999", "residentSince": "2015-01-01", "type": [ "Person", "PermanentResident" ] }}' \
+   http://strapi:1337/permanentresidentcards | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]
    then

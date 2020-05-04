@@ -27,7 +27,7 @@ authenticators:
       required_scope:
         - StudentCard
         - TravelCard
-        - PRCard
+        - PermanentResidentCard
         - CertifiedMillTestReport
         - CrudeProductCredential
         - UniversityDegreeCredential
