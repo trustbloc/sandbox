@@ -16,7 +16,7 @@ services:
       - VC_REST_HOST_URL_EXTERNAL=https://issuer-vcs.trustbloc.local
       - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
       - BLOC_DOMAIN=${BLOC_DOMAIN}
-      - UNIVERSAL_RESOLVER_HOST_URL=https://uni-resolver-web.trustbloc.local/1.0/identifiers
+      - UNIVERSAL_RESOLVER_HOST_URL=https://did-resolver.trustbloc.local/1.0/identifiers
       - VC_REST_MODE=issuer
       - DATABASE_TYPE=couchdb
       - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
@@ -48,7 +48,7 @@ services:
       - VC_REST_HOST_URL_EXTERNAL=https://rp-vcs.trustbloc.local
       - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
       - BLOC_DOMAIN=${BLOC_DOMAIN}
-      - UNIVERSAL_RESOLVER_HOST_URL=https://uni-resolver-web.trustbloc.local/1.0/identifiers
+      - UNIVERSAL_RESOLVER_HOST_URL=https://did-resolver.trustbloc.local/1.0/identifiers
       - VC_REST_MODE=verifier
       - DATABASE_TYPE=couchdb
       - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
@@ -78,7 +78,7 @@ services:
       - VC_REST_HOST_URL_EXTERNAL=https://holder-vcs.trustbloc.local
       - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
       - BLOC_DOMAIN=${BLOC_DOMAIN}
-      - UNIVERSAL_RESOLVER_HOST_URL=https://uni-resolver-web.trustbloc.local/1.0/identifiers
+      - UNIVERSAL_RESOLVER_HOST_URL=https://did-resolver.trustbloc.local/1.0/identifiers
       - VC_REST_MODE=holder
       - DATABASE_TYPE=couchdb
       - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
@@ -106,10 +106,9 @@ services:
     image: ${DID_IMAGE}:${DID_IMAGE_TAG}
     environment:
       - DID_REST_HOST_URL=0.0.0.0:8080
-      - DID_REST_HOST_URL_EXTERNAL=https://uni-resolver-web.trustbloc.local
       - DID_REST_CONFIG_FILE=/opt/did-rest/config.json
       - DID_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
-      - VIRTUAL_HOST=uni-resolver-web.trustbloc.local
+      - VIRTUAL_HOST=did-resolver.trustbloc.local
       - VIRTUAL_PORT=8080
     ports:
       - 8080:8080
@@ -118,7 +117,7 @@ services:
       - ../keys/tls:/etc/tls
       - ../did-rest/config.json:/opt/did-rest/config.json
     networks:
-      - demo-net   
+      - demo-net
 
   edv.example.com:
     container_name: edv.example.com

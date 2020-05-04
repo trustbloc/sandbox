@@ -120,6 +120,7 @@ services:
           - edv.trustbloc.local
           - uni-resolver-web.trustbloc.local
           - uni-registrar-web.trustbloc.local
+          - did-resolver.trustbloc.local
           - consent-login.trustbloc.local
           - peer0-org1.trustbloc.local
           - peer1-org1.trustbloc.local

@@ -12,6 +12,9 @@ services:
     image: universalresolver/uni-resolver-web:latest
     ports:
       - "8082:8080"
+    environment:
+      - VIRTUAL_HOST=uni-resolver-web.trustbloc.local
+      - VIRTUAL_PORT=8082
     volumes:
       - ../universal-resolver/config.json:/opt/uni-resolver-java/uni-resolver-web/config.json
       - ../scripts/run-uni-resolver-web.sh:/opt/uni-resolver-java/uni-resolver-web/docker/run-uni-resolver-web.sh
