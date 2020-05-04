@@ -106,3 +106,5 @@ do
    fi
    sleep 5
 done
+
+echo "Finished adding holder(vendor) profiles"
