@@ -67,6 +67,8 @@ const foo = `{"id":1,"userid":"100","name":"Foo Bar","email":"foo@bar.com",
 const jsonArray = `[{}]`
 
 const holder = "did:example.com"
+const domain = "issuer.interop.transmute.world"
+const challenge = "3970cad8-14ff-4ac1-ada9-0995c862df2e"
 const authResp = `{
     "@context": "https://www.w3.org/2018/credentials/v1",
     "type": "VerifiablePresentation",
@@ -227,6 +229,8 @@ func TestOperation_GenerateVC(t *testing.T) {
 		req.Form.Add("cred", testCredentialRequest)
 		req.Form.Add("holder", holder)
 		req.Form.Add("authresp", authResp)
+		req.Form.Add("domain", domain)
+		req.Form.Add("challenge", challenge)
 
 		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
 
@@ -270,12 +274,57 @@ func TestOperation_GenerateVC(t *testing.T) {
 		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
 		req.Form.Add("authresp", "{}")
 		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "invalid request argument: invalid 'domain'")
+
+		rr = httptest.NewRecorder()
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+		req.Form.Add("domain", domain)
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "invalid request argument: invalid 'challenge'")
+
+		rr = httptest.NewRecorder()
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+		req.Form.Add("challenge", challenge)
+		svc.generateVC(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "credential subject id is not matching with DID auth response")
+		require.Contains(t, rr.Body.String(), "DID Auth failed: embedded proof is missing")
 
 		rr = httptest.NewRecorder()
 		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
 		req.Form.Set("authresp", authResp)
+		req.Form.Set("holder", "")
+		req.Form.Set("domain", domain)
+		req.Form.Set("challenge", challenge)
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "DID Auth failed: invalid auth response, invalid holder proof")
+
+		rr = httptest.NewRecorder()
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+		req.Form.Set("authresp", authResp)
+		req.Form.Set("holder", holder)
+		req.Form.Set("domain", "")
+		req.Form.Set("challenge", challenge)
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "DID Auth failed: invalid proof and challenge in response")
+
+		rr = httptest.NewRecorder()
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+		req.Form.Set("authresp", authResp)
+		req.Form.Set("holder", holder)
+		req.Form.Set("domain", domain)
+		req.Form.Set("challenge", "")
+		svc.generateVC(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "DID Auth failed: invalid proof and challenge in response")
+
+		rr = httptest.NewRecorder()
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+		req.Form.Set("authresp", authResp)
+		req.Form.Set("challenge", challenge)
 		svc.generateVC(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to create verifiable credential")
@@ -336,6 +385,8 @@ func TestOperation_GenerateVC(t *testing.T) {
 		req.Form.Add("cred", testCredentialRequest)
 		req.Form.Add("holder", holder)
 		req.Form.Add("authresp", authResp)
+		req.Form.Add("domain", domain)
+		req.Form.Add("challenge", challenge)
 
 		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
 
@@ -392,6 +443,8 @@ func TestOperation_GenerateVC(t *testing.T) {
 		req.Form.Add("cred", testCredentialRequest)
 		req.Form.Add("holder", holder)
 		req.Form.Add("authresp", authResp)
+		req.Form.Add("domain", domain)
+		req.Form.Add("challenge", challenge)
 
 		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
 
@@ -629,7 +682,7 @@ func TestOperation_CreateCredential_Errors(t *testing.T) {
 		svc := New(cfg)
 		require.NotNil(t, svc)
 
-		data, err := svc.createCredential(testCredentialRequest, authResp, holder, "")
+		data, err := svc.createCredential(testCredentialRequest, authResp, holder, domain, challenge, "")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "unsupported protocol scheme")
 		require.Nil(t, data)
@@ -639,7 +692,7 @@ func TestOperation_CreateCredential_Errors(t *testing.T) {
 		svc := New(cfg)
 		require.NotNil(t, svc)
 
-		data, err := svc.createCredential(testCredentialRequest, authResp, holder, "")
+		data, err := svc.createCredential(testCredentialRequest, authResp, holder, domain, challenge, "")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid character")
 		require.Nil(t, data)
@@ -648,7 +701,7 @@ func TestOperation_CreateCredential_Errors(t *testing.T) {
 		svc := New(cfg)
 		require.NotNil(t, svc)
 
-		data, err := svc.createCredential(testCredentialRequest+",", authResp, holder, "")
+		data, err := svc.createCredential(testCredentialRequest+",", authResp, holder, domain, challenge, "")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid character")
 		require.Nil(t, data)

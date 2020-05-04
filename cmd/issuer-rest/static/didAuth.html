@@ -63,12 +63,14 @@ SPDX-License-Identifier: Apache-2.0
     <div class="intro-text">
         <div class="container" style="padding-bottom:490px">
             <div>
-                    <h3 style="font-size: 25px;" id ="title-board">Please authenticate your wallet</h3>
-                    <h4 style="font-size: 20px; color: #8a6d3b;" id ="error-board"></h4>
-                    <form action="{{.Path}}" method="POST" id="generate-cred-form">
+                <h3 style="font-size: 25px;" id="title-board">Please authenticate your wallet</h3>
+                <h4 style="font-size: 20px; color: #8a6d3b;" id="error-board"></h4>
+                <form action="{{.Path}}" method="POST" id="generate-cred-form">
                     <input type="hidden" name="cred" value="{{.Cred}}">
-                    <input type="hidden" name="holder" id="holder" value="">
-                    <input type="hidden" name="authresp" id="authresp" value="">
+                    <input type="hidden" name="holder" id="holder-val" value="">
+                    <input type="hidden" name="domain" id="domain-val" value="">
+                    <input type="hidden" name="challenge" id="challenge-val" value="">
+                    <input type="hidden" name="authresp" id="authresp-val" value="">
                     <div>
                         <a id='authBtn' class="btn btn-default btn-lg page-scroll">Authenticate</a>
                     </div>
@@ -123,9 +125,18 @@ SPDX-License-Identifier: Apache-2.0
     async function performDIDAuth() {
         document.getElementById("error-board").innerText = ""
 
-        // TODO domain and challenge need to be dynamic
-        const credentialQuery = JSON.parse(`{"web": {"VerifiablePresentation": {"query":{"type":"DIDAuth"},
-        "challenge":"${uuidv4()}","domain":"${window.location.hostname}"}}}`);
+        const challenge = uuidv4()
+        const domain = window.location.hostname
+
+        const credentialQuery = {
+            web: {
+                VerifiablePresentation: {
+                    query: {type: "DIDAuth"},
+                    challenge: challenge,
+                    domain: domain
+                }
+            }
+        };
 
         console.log("Sending credential query", credentialQuery)
 
@@ -138,15 +149,17 @@ SPDX-License-Identifier: Apache-2.0
             return;
         }
 
-        if (!result.data.holder){
+        if (!result.data.holder) {
             console.log("invalid DID auth response, failed to get holder info from response", result.data)
             document.getElementById("error-board").innerText = "Authentication failed, please try again."
             return;
         }
 
         document.getElementById("title-board").innerText = "Authentication Successful, please wait."
-        document.getElementById("holder").value = result.data.holder
-        document.getElementById("authresp").value = JSON.stringify(result.data)
+        document.getElementById("holder-val").value = result.data.holder
+        document.getElementById("domain-val").value = domain
+        document.getElementById("challenge-val").value = challenge
+        document.getElementById("authresp-val").value = JSON.stringify(result.data)
         document.getElementById("generate-cred-form").submit();
     }
 
