@@ -209,6 +209,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 }
 
 // generateVC for creates VC
+//nolint: funlen
 func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
 	if err != nil {
@@ -226,7 +227,7 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.validateForm(r.Form, "cred", "holder", "authresp")
+	err = c.validateForm(r.Form, "cred", "holder", "authresp", "domain", "challenge")
 	if err != nil {
 		log.Errorf("invalid generate credential request: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid request argument: %s", err.Error()))
@@ -234,7 +235,8 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cred, err := c.createCredential(r.Form["cred"][0], r.Form["authresp"][0], r.Form["holder"][0], vcsProfileCookie.Value)
+	cred, err := c.createCredential(r.Form["cred"][0], r.Form["authresp"][0], r.Form["holder"][0],
+		r.Form["domain"][0], r.Form["challenge"][0], vcsProfileCookie.Value)
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -530,11 +532,10 @@ func (c *Operation) retrieveProfile(profileName string) (*vcprofile.DataProfile,
 	return profileResponse, nil
 }
 
-func (c *Operation) createCredential(cred, authResp, holder, id string) ([]byte, error) { //nolint: lll
-	// currently using only holder from authResp
-	// TODO need to validate proof in authResp??
-	if holder == "" || !strings.Contains(authResp, fmt.Sprintf(`"%s"`, holder)) {
-		return nil, fmt.Errorf("credential subject id is not matching with DID auth response")
+func (c *Operation) createCredential(cred, authResp, holder, domain, challenge, id string) ([]byte, error) { //nolint: lll
+	err := c.validateAuthResp([]byte(authResp), holder, domain, challenge)
+	if err != nil {
+		return nil, fmt.Errorf("DID Auth failed: %w", err)
 	}
 
 	credential, _, err := verifiable.NewCredential([]byte(cred), verifiable.WithDisabledProofCheck())
@@ -566,6 +567,46 @@ func (c *Operation) createCredential(cred, authResp, holder, id string) ([]byte,
 	}
 
 	return sendHTTPRequest(req, c.httpClient, http.StatusCreated)
+}
+
+// validateAuthResp validates did auth response against given domain and challenge
+func (c *Operation) validateAuthResp(authResp []byte, holder, domain, challenge string) error {
+	vp, err := verifiable.NewPresentation(authResp)
+	if err != nil {
+		return err
+	}
+
+	if vp.Holder != holder {
+		return fmt.Errorf("invalid auth response, invalid holder proof")
+	}
+
+	if len(vp.Proofs) == 0 {
+		return fmt.Errorf("invalid auth response, missing proof")
+	}
+
+	proofOfInterest := vp.Proofs[0]
+
+	var proofChallenge, proofDomain string
+
+	if c, ok := proofOfInterest["challenge"]; ok && c != nil {
+		//nolint: errcheck
+		proofChallenge = c.(string)
+	} else {
+		return fmt.Errorf("invalid auth response proof, missing challenge")
+	}
+
+	if d, ok := proofOfInterest["domain"]; ok && d != nil {
+		//nolint: errcheck
+		proofDomain = d.(string)
+	} else {
+		return fmt.Errorf("invalid auth response proof, missing domain")
+	}
+
+	if proofChallenge != challenge || proofDomain != domain {
+		return fmt.Errorf("invalid proof and challenge in response")
+	}
+
+	return nil
 }
 
 func (c *Operation) storeCredential(cred []byte, vcsProfile string) error {
