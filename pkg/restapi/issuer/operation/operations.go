@@ -486,6 +486,13 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, info *toke
 	cred.ID = profileResponse.URI + "/" + uuid.New().String()
 	cred.CustomFields = customFields
 
+	// credential subject as single json entity in CMS for complex data
+	if s, ok := subject["vccredentialsubject"]; ok {
+		if subject, ok := s.(map[string]interface{}); ok {
+			cred.Subject = subject
+		}
+	}
+
 	return json.Marshal(cred)
 }
 
