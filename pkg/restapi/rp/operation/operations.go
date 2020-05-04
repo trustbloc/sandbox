@@ -117,10 +117,15 @@ func (c *Operation) verifyVP(w http.ResponseWriter, r *http.Request) {
 	//  checks for Credential and Presentation verifications
 	checks := []string{"proof"}
 
+	domain := r.Form.Get("domain")
+	challenge := r.Form.Get("challenge")
+
 	req := edgesvcops.VerifyPresentationRequest{
 		Presentation: []byte(r.Form.Get(inputData)),
 		Opts: &edgesvcops.VerifyPresentationOptions{
-			Checks: checks,
+			Checks:    checks,
+			Challenge: challenge,
+			Domain:    domain,
 		},
 	}
 

@@ -92,6 +92,8 @@ SPDX-License-Identifier: Apache-2.0
 
                             <form method="post" id="vpForm" action="/verifyPresentation">
                                 <input type="hidden" name="vpDataInput" id="vpDataInput">
+                                <input type="hidden" name="domain" id="domainInput">
+                                <input type="hidden" name="challenge" id="challengeInput">
                             </form>
                             <div class="portfolio-info" style="padding: 12px;height: 100px" >
                                 <p style="font-weight: 600; font-size: 21px; margin-bottom: 10px">Choose your credential to verify</p>
@@ -311,6 +313,8 @@ SPDX-License-Identifier: Apache-2.0
         console.log("WebCredential response:", result.data)
         document.getElementById("msg-board").innerText = "Please wait while we verify your presentation."
         document.getElementById('vpDataInput').value = JSON.stringify(result.data)
+        document.getElementById('domainInput').value = domain
+        document.getElementById('challengeInput').value = challenge
 
         document.getElementById('vpForm').submit()
     }
