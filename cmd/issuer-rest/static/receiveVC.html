@@ -9,18 +9,18 @@ SPDX-License-Identifier: Apache-2.0
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="images/x-icon" href="img/logo.png" >
+    <link rel="icon" type="images/x-icon" href="img/logo.png">
     <title>Receive VC</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
     <!-- Bootstrap -->
-    <link rel="stylesheet" type="text/css"  href="css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="fonts/font-awesome/css/font-awesome.css">
 
     <!-- Stylesheet
         ================================================== -->
-    <link rel="stylesheet" type="text/css"  href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
     <link href='http://fonts.googleapis.com/css?family=Lato:400,700,900,300' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,800,600,300' rel='stylesheet' type='text/css'>
     <script type="text/javascript" src="js/modernizr.custom.js"></script>
@@ -40,25 +40,49 @@ SPDX-License-Identifier: Apache-2.0
 </head>
 
 <style>
-    pre {outline: 1px solid #777777; padding: 2px; margin: 2px;
-        border: 2px solid #464441; font-size:10px; text-align: left}
-    .string { color: green; }
-    .number { color: darkorange; }
-    .boolean { color: blue; }
-    .null { color: magenta; }
-    .key { color: red; }
+    pre {
+        outline: 1px solid #777777;
+        padding: 2px;
+        margin: 2px;
+        border: 2px solid #464441;
+        font-size: 10px;
+        text-align: left
+    }
+
+    .string {
+        color: green;
+    }
+
+    .number {
+        color: darkorange;
+    }
+
+    .boolean {
+        color: blue;
+    }
+
+    .null {
+        color: magenta;
+    }
+
+    .key {
+        color: red;
+    }
+
     .tabs .tab a {
         color: #1976d2;
         background-color: #f5f5f5;
     }
+
     .alert-fixed {
-        position:fixed;
+        position: fixed;
         top: 0px;
         left: 0px;
         width: 100%;
-        z-index:9999;
-        border-radius:0px
+        z-index: 9999;
+        border-radius: 0px
     }
+
     @media (min-width: 1200px) {
         .container {
             width: 1170px;
@@ -72,8 +96,10 @@ SPDX-License-Identifier: Apache-2.0
     <div class="container">
         <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
-            <a class="navbar-brand" href="/">Issuer</a> </div>
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1"><span class="sr-only">Toggle navigation</span> <span
+                        class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span></button>
+            <a class="navbar-brand" href="/">Issuer</a></div>
 
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -88,32 +114,32 @@ SPDX-License-Identifier: Apache-2.0
 
 <header class="text-center" name="receive">
     <div class="intro-text">
-            <div class="container">
-                    <textarea id="vcDataTextArea" style="display:none;">{{.Data}}</textarea>
-                    <pre id="vcDataJSON"></pre>
-                    <br>
-                    <button id='storeVCBtn' class='btn btn-default btn-lg page-scroll'>Store VC in Wallet</button>
+        <div class="container">
+            <textarea id="vcDataTextArea" style="display:none;">{{.Data}}</textarea>
+            <pre id="vcDataJSON"></pre>
+            <br>
+            <button id='storeVCBtn' class='btn btn-default btn-lg page-scroll'>Store VC in Wallet</button>
         </div>
     </div>
 
-<div class="alert alert-success alert-fixed alert-dismissable" role="alert" id="success-alert">
-    <strong>Success!</strong> Credential is saved successfully.
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-    </button>
-</div>
-<div class="alert alert-danger alert-fixed alert-dismissable" role="alert" id="error-alert">
-    <strong>Oops!</strong> operation is cancelled or something went wrong.
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-    </button>
-</div>
-<div id="footer">
-    <div class="container">
-        <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github-square"></i></a>
-        Copyright &copy; Trustbloc by  <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
+    <div class="alert alert-success alert-fixed alert-dismissable" role="alert" id="success-alert">
+        <strong>Success!</strong> Credential is saved successfully.
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
     </div>
-</div>
+    <div class="alert alert-danger alert-fixed alert-dismissable" role="alert" id="error-alert">
+        <strong>Oops!</strong> operation is cancelled or something went wrong.
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div id="footer">
+        <div class="container">
+            <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github-square"></i></a>
+            Copyright &copy; Trustbloc by <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
+        </div>
+    </div>
 </header>
 </body>
 <script>
@@ -125,13 +151,13 @@ SPDX-License-Identifier: Apache-2.0
         console.log('Loading polyfill...');
         try {
             await credentialHandlerPolyfill.loadOnce();
-        } catch(e) {
+        } catch (e) {
             console.error('Error in loadOnce:', e);
         }
     }
 
     function ready(fn) {
-        if (document.readyState !== 'loading'){
+        if (document.readyState !== 'loading') {
             fn();
         } else {
             document.addEventListener('DOMContentLoaded', fn);
@@ -141,28 +167,39 @@ SPDX-License-Identifier: Apache-2.0
     async function onClickReceive() {
         const credentialToStore = document.getElementById('vcDataTextArea').value;
 
+        const vp = {
+            "@context": [
+                "https://www.w3.org/2018/credentials/v1"
+            ],
+            type: "VerifiablePresentation",
+            verifiableCredential: [
+                JSON.parse(credentialToStore)
+            ]
+        }
+
         // Construct the WebCredential wrapper around the credential to be stored
-        const webCredentialWrapper = new WebCredential('VerifiableCredential', JSON.parse(credentialToStore));
+        const webCredentialWrapper = new WebCredential('VerifiablePresentation',vp);
         // Use Credential Handler API to store
         result = await navigator.credentials.store(webCredentialWrapper);
         console.log('Result of receiving via store() request:', result);
-        if(!result) {
-            M.toast({html:'null result', classes: 'red lighten-2'});
+        if (!result) {
+            M.toast({html: 'null result', classes: 'red lighten-2'});
             return;
         }
-        if (result.data == "success"){
+        if (result.data == "success") {
             $("#success-alert").show()
-            $("#success-alert").fadeTo(2000, 500).slideUp(500, function() {
+            $("#success-alert").fadeTo(2000, 500).slideUp(500, function () {
                 $("#success-alert").slideUp(500);
             });
-        }else {
+        } else {
             $("#error-alert").show()
-            $("#error-alert").fadeTo(2000, 500).slideUp(500, function() {
+            $("#error-alert").fadeTo(2000, 500).slideUp(500, function () {
                 $("#error-alert").slideUp(500);
             });
         }
 
     }
+
     ready(() => {
         $("#success-alert").hide()
         $("#error-alert").hide()

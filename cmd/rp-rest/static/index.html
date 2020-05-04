@@ -237,7 +237,7 @@ SPDX-License-Identifier: Apache-2.0
                                 }
                             }
                         }
-                    ]
+                    ],
                 }
             }},
     }
@@ -257,6 +257,13 @@ SPDX-License-Identifier: Apache-2.0
         } else {
             document.addEventListener('DOMContentLoaded', fn);
         }
+    }
+
+    function uuidv4() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
     }
 
     async function getVC() {
@@ -281,10 +288,17 @@ SPDX-License-Identifier: Apache-2.0
     }
 
     async function getVP() {
+
+        const challenge = uuidv4()
+        const domain = window.location.hostname
+
         var e = document.getElementById("cred-types");
         var value = e.options[e.selectedIndex].value
 
         const credentialQuery = webQueryOpts[value];
+        credentialQuery.web.VerifiablePresentation.domain = domain
+        credentialQuery.web.VerifiablePresentation.challenge = challenge
+
         console.log("Sending webcredential query", credentialQuery)
         const result = await navigator.credentials.get(credentialQuery);
 
