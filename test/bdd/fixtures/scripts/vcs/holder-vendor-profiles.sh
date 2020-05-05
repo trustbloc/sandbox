@@ -63,7 +63,7 @@ until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"name":"vc-holder-didsov", "signatureType":"Ed25519Signature2018","signatureRepresentation":0,"uniRegistrar":{"driverURL":"https://uniregistrar.io/1.0/register?driverId=driver-universalregistrar/driver-did-sov","options": {"network":"danube"}},"didKeyType":"Ed25519"}' \
+   --data '{"name":"vc-holder-didsov", "signatureType":"Ed25519Signature2018","signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uniregistrar.io/1.0/register?driverId=driver-universalregistrar/driver-did-sov","options": {"network":"danube"}},"didKeyType":"Ed25519"}' \
    http://holder.vcs.example.com:8067/holder/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile vc-holder-didsov response is: $responseCreatedTime"
 
