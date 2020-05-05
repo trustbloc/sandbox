@@ -73,6 +73,9 @@ SPDX-License-Identifier: Apache-2.0
                         <div class="portfolio-wrap">
                             <figure id="getVCBtn">
                                 <img src="img/portfolio/3.jpg" class="img-fluid"  >
+                                <div class="overlay">
+                                    <div class="text">Click Me</div>
+                                </div>
                             </figure>
                             <form method="post" id="vcForm" action="/verify">
                                 <input type="hidden" name="vcDataInput" id="vcDataInput">
@@ -87,7 +90,10 @@ SPDX-License-Identifier: Apache-2.0
                     <div class="col-lg-4 col-md-2 portfolio-item filter-web wow fadeInUp" data-wow-delay="0.1s">
                         <div class="portfolio-wrap">
                             <figure id="getVPBtn">
-                                <img src="img/portfolio/2.jpg" class="img-fluid" alt="">
+                                <img src="img/portfolio/2.jpg" class="img-fluid">
+                                <div class="overlay">
+                                    <div class="text">Click Me</div>
+                                </div>
                             </figure>
 
                             <form method="post" id="vpForm" action="/verifyPresentation">
@@ -114,6 +120,9 @@ SPDX-License-Identifier: Apache-2.0
                             <figure>
                                 <a href="reader/qrReader.html">
                                     <img src="img/portfolio/1.jpg" class="img-fluid" alt="reader/qrReader.html">
+                                    <div class="overlay">
+                                        <div class="text">Click Me</div>
+                                    </div>
                                 </a>
 
                             </figure>
@@ -135,7 +144,7 @@ SPDX-License-Identifier: Apache-2.0
         <div class="container">
             <div class="container">
                 <a href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github"></i></a>
-                Copyright &copy; Trustbloc by <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
+                Copyright &copy; TrustBloc by <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a>
             </div>
         </div>
     </div>
@@ -356,7 +365,27 @@ SPDX-License-Identifier: Apache-2.0
         background-repeat: no-repeat, repeat;
         background-position: right .7em top 50%, 0 0;
         background-size: .65em auto, 100%;
+        /* Some browsers will not display the caret when using calc, so we put the fallback first */
+        background: url("http://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/br_down.png") white no-repeat 98.5% !important; /* !important used for overriding all other customisations */
+        background: url("http://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/br_down.png") white no-repeat calc(100% - 10px) !important; /* Better placement regardless of input width */
+
     }
+    .overlay {
+        position: absolute;
+        top: 50%;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 100%;
+        width: 100%;
+        opacity: 0;
+        transition: .5s ease;
+    }
+
+    .portfolio-wrap:hover .overlay {
+        opacity: 1;
+    }
+
 
 </style>
 </body>
