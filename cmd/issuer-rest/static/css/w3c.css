@@ -1,0 +1,71 @@
+/*
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+*/
+
+@charset "utf-8";
+
+.w3-bar .w3-button {
+    padding: 16px;
+}
+.w3-jumbo {
+    font-size: 64px!important;
+}
+.w3-text-white, .w3-hover-text-white:hover {
+    color: #fff!important;
+}
+.w3-white, .w3-hover-white:hover {
+    color: #000!important;
+    background-color: #fff!important;
+}
+.w3-padding-large {
+    padding: 12px 24px!important;
+}
+
+.w3-margin-top {
+    margin-top: 16px!important;
+}
+.w3-large {
+    font-size: 18px!important;
+}
+.w3-opacity, .w3-hover-opacity:hover {
+    opacity: 0.60;
+}
+.w3-btn, .w3-button {
+    border: none;
+    display: inline-block;
+    vertical-align: middle;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    background-color: inherit;
+    text-align: center;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.w3-large {
+    font-size: 18px!important;
+}
+.w3-large {
+    font-size: 18px!important;
+}
+.w3-black, .w3-hover-black:hover {
+    color: #fff!important;
+    background-color: #000!important;
+}
+.w3-padding-64 {
+    padding-top: 64px!important;
+    padding-bottom: 64px!important;
+}
+.w3-center {
+    text-align: center!important;
+}
+.w3-display-container:hover .w3-display-hover{display:block}.w3-display-container:hover span.w3-display-hover{display:inline-block}.w3-display-hover{display:none}
+.w3-display-left {
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    transform: translate(0%,-50%);
+    -ms-transform: translate(-0%,-50%);
+}
