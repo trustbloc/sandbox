@@ -108,6 +108,7 @@ services:
       - DID_REST_HOST_URL=0.0.0.0:8080
       - DID_REST_CONFIG_FILE=/opt/did-rest/config.json
       - DID_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - DID_REST_TLS_SYSTEMCERTPOOL=true
       - VIRTUAL_HOST=did-resolver.trustbloc.local
       - VIRTUAL_PORT=8080
     ports:
