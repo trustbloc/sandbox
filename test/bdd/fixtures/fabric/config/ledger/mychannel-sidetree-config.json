@@ -2,19 +2,5 @@
   "Monitor": {
     "Period": "3s",
     "MetaDataChaincodeName": "document"
-  },
-  "Namespaces": [
-    {
-      "Namespace": "did:trustbloc:testnet.trustbloc.local",
-      "BasePath": "/sidetree/0.0.1"
-    },
-    {
-      "DocType": "FILE_INDEX",
-      "Namespace": "file:idx",
-      "BasePath": "/file",
-      "Authorization": {
-        "WriteTokens": ["fileidx_w"]
-      }
-    }
-  ]
+  }
 }

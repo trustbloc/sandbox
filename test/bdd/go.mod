@@ -12,7 +12,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/viper v1.4.0
-	github.com/trustbloc/fabric-peer-test-common v0.1.3-0.20200430175241-8d0f7a6204c3
+	github.com/trustbloc/fabric-peer-test-common v0.1.3
 )
 
-replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.2
+replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.3
