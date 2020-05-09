@@ -484,7 +484,8 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, info *toke
 	cred.Types = []string{"VerifiableCredential", info.Scope}
 	cred.Issued = &issueDate
 	cred.Issuer.ID = profileResponse.DID
-	cred.Issuer.Name = profileResponse.Name
+	cred.Issuer.CustomFields = make(verifiable.CustomFields)
+	cred.Issuer.CustomFields["name"] = profileResponse.Name
 	cred.ID = profileResponse.URI + "/" + uuid.New().String()
 	cred.CustomFields = customFields
 

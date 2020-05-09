@@ -89,7 +89,7 @@ until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"name":"vc-issuer-interop-key", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "did":"did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLt9DoHd","didPrivateKey":"28xXA4NyCQinSJpaZdSuNBM4kR2GqYb8NPqAtZoGCpcRYWBcDXtzVAzpZ9BAfgV334R2FC383fiHaWWWAacRaYGs","signatureRepresentation":1,"disableVCStatus":true,"didKeyType":"Ed25519"}' \
+   --data '{"name":"vc-issuer-interop-key", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "did":"did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLt9DoHd","didPrivateKey":"28xXA4NyCQinSJpaZdSuNBM4kR2GqYb8NPqAtZoGCpcRYWBcDXtzVAzpZ9BAfgV334R2FC383fiHaWWWAacRaYGs","didKeyID":"did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLt9DoHd#z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLt9DoHd","signatureRepresentation":1,"disableVCStatus":true,"didKeyType":"Ed25519"}' \
    http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile vc-issuer-interop-key response is: $responseCreatedTime"
 

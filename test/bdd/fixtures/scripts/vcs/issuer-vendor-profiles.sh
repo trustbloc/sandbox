@@ -37,7 +37,7 @@ until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"name":"elem-ed25519signature2018-ed25519", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "did":"did:elem:EiAWdU2yih6NA2IGnLsDhkErZ8aQX6b8yKt7jHMi-ttFdQ","didPrivateKey":"5AcDTQT7Cdg1gBvz8PQpnH3xEbLCE1VQxAJV5NjVHvNjsZSfn4NaLZ77mapoi4QwZeBhcAA7MQzaFYkzJLfGjNnR","signatureRepresentation":1,"disableVCStatus":true,"didKeyType":"Ed25519"}' \
+   --data '{"name":"elem-ed25519signature2018-ed25519", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "did":"did:elem:EiAWdU2yih6NA2IGnLsDhkErZ8aQX6b8yKt7jHMi-ttFdQ","didPrivateKey":"5AcDTQT7Cdg1gBvz8PQpnH3xEbLCE1VQxAJV5NjVHvNjsZSfn4NaLZ77mapoi4QwZeBhcAA7MQzaFYkzJLfGjNnR","didKeyID":"did:elem:ropsten:EiAWdU2yih6NA2IGnLsDhkErZ8aQX6b8yKt7jHMi-ttFdQ#SQ2PY2xs7NOr6B26xq_pJMNpuYk6dOeROlkzKF7909I","signatureRepresentation":1,"disableVCStatus":true,"didKeyType":"Ed25519"}' \
    http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile elem-ed25519signature2018-ed25519 response is: $responseCreatedTime"
 
@@ -87,7 +87,7 @@ until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"name":"didkey-ed25519signature2018-ed25519", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "did":"did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLt9DoHd","didPrivateKey":"28xXA4NyCQinSJpaZdSuNBM4kR2GqYb8NPqAtZoGCpcRYWBcDXtzVAzpZ9BAfgV334R2FC383fiHaWWWAacRaYGs","signatureRepresentation":1,"disableVCStatus":true,"didKeyType":"Ed25519"}' \
+   --data '{"name":"didkey-ed25519signature2018-ed25519", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "did":"did:key:z6MkjtF2htvLuxPu3wAuVgu1zZ5Jgwvu7QkJkyvyGX478RrM","didPrivateKey":"5k9LgFFpxYCrHKyKxZWj6CWZNs6rFkPfQiggMUCwRBifjP4wLXZaFuFr1vhwK7Kj9YLowXZr3tQvwpLDonXBJUpm","didKeyID":"did:key:z6MkjtF2htvLuxPu3wAuVgu1zZ5Jgwvu7QkJkyvyGX478RrM#z6MkjtF2htvLuxPu3wAuVgu1zZ5Jgwvu7QkJkyvyGX478RrM","signatureRepresentation":1,"disableVCStatus":true,"didKeyType":"Ed25519"}' \
    http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile didkey-ed25519signature2018-ed25519 response is: $responseCreatedTime"
 
