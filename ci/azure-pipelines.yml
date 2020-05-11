@@ -59,12 +59,12 @@ jobs:
           source ci/version_var.sh
           echo $DOCKER_PASSWORD | docker login docker.pkg.github.com --username $DOCKER_USER --password-stdin
           make issuer-rest-docker rp-rest-docker login-consent-server-docker
-          docker tag docker.pkg.github.com/trustbloc/edge-sandbox/issuer-rest:latest docker.pkg.github.com/trustbloc/edge-sandbox/issuer-rest:$EDGE_SANDBOX_TAG
-          docker push docker.pkg.github.com/trustbloc/edge-sandbox/issuer-rest:$EDGE_SANDBOX_TAG
-          docker tag docker.pkg.github.com/trustbloc/edge-sandbox/rp-rest:latest docker.pkg.github.com/trustbloc/edge-sandbox/rp-rest:$EDGE_SANDBOX_TAG
-          docker push docker.pkg.github.com/trustbloc/edge-sandbox/rp-rest:$EDGE_SANDBOX_TAG
-          docker tag docker.pkg.github.com/trustbloc/edge-sandbox/login-consent-server:latest docker.pkg.github.com/trustbloc/edge-sandbox/login-consent-server:$EDGE_SANDBOX_TAG
-          docker push docker.pkg.github.com/trustbloc/edge-sandbox/login-consent-server:$EDGE_SANDBOX_TAG
+          docker tag docker.pkg.github.com/trustbloc/edge-sandbox/issuer-rest:latest ${ISSUER_REST_PKG}:${EDGE_SANDBOX_TAG}
+          docker push ${ISSUER_REST_PKG}:${EDGE_SANDBOX_TAG}
+          docker tag docker.pkg.github.com/trustbloc/edge-sandbox/rp-rest:latest ${RP_REST_PKG}:${EDGE_SANDBOX_TAG}
+          docker push ${RP_REST_PKG}:${EDGE_SANDBOX_TAG}
+          docker tag docker.pkg.github.com/trustbloc/edge-sandbox/login-consent-server:latest ${LOGIN_REST_PKG}:${EDGE_SANDBOX_TAG}
+          docker push ${LOGIN_REST_PKG}:${EDGE_SANDBOX_TAG}
         env:
           DOCKER_USER: $(DOCKER_USER)
           DOCKER_PASSWORD: $(DOCKER_PASSWORD)
