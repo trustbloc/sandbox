@@ -63,8 +63,8 @@ jobs:
           docker push ${ISSUER_REST_PKG}:${EDGE_SANDBOX_TAG}
           docker tag docker.pkg.github.com/trustbloc/edge-sandbox/rp-rest:latest ${RP_REST_PKG}:${EDGE_SANDBOX_TAG}
           docker push ${RP_REST_PKG}:${EDGE_SANDBOX_TAG}
-          docker tag docker.pkg.github.com/trustbloc/edge-sandbox/login-consent-server:latest ${LOGIN_REST_PKG}:${EDGE_SANDBOX_TAG}
-          docker push ${LOGIN_REST_PKG}:${EDGE_SANDBOX_TAG}
+          docker tag docker.pkg.github.com/trustbloc/edge-sandbox/login-consent-server:latest ${LOGIN_PKG}:${EDGE_SANDBOX_TAG}
+          docker push ${LOGIN_PKG}:${EDGE_SANDBOX_TAG}
         env:
           DOCKER_USER: $(DOCKER_USER)
           DOCKER_PASSWORD: $(DOCKER_PASSWORD)
