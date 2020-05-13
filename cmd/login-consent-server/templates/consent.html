@@ -10,24 +10,8 @@ SPDX-License-Identifier: Apache-2.0
     <title>Consent Page</title>
     <link rel="icon" type="images/x-icon" href="img/logo.png" >
 
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css">
     <style>
-        [type="checkbox"].filled-in+span:after{
-            background-color: #71bd46 !important;
-            border: 2px solid #e0e0e0 !important;
-        }
-        [type="checkbox"].filled-in:not(:checked)+span:after {
-            border: 2px solid #0d0d0d !important;
-            background-color: #ffffff !important;
-        }
-        .section {
-            padding-top: 24rem;
-            padding-bottom: 3rem;
-        }
-        label {
-            font-size: .8rem;
-            color: #0d0d0d;
-        }
         body {
             background-image: url("img/header-bg.jpg");
             background-size: cover;
@@ -36,56 +20,44 @@ SPDX-License-Identifier: Apache-2.0
             min-height: 100vh;
             flex-direction: column;
         }
-        main {
-            flex: 1 0 auto;
-        }
     </style>
 </head>
-<body>
-<br><br>
-<div class="container">
-    <div class="col">
-        <div class="card grey lighten-4">
-            <div class="card-content green-text text-darken-2">
-                <span class="card-title">An application requests access to your data</span>
-            </div>
-            <div class="card-action">
-                <form action="" method="POST">
-                    <p>Hi {{.User}}, application <strong>{{.ClientID}}</strong> wants access resources on your behalf and to:</p>
-                        {{range $element := .Scope}}
-                       <label>
-                        <input type="checkbox" class="filled-in" id="{{$element}}" value="{{$element}}" name="grant_scope" checked="checked" />
-                        <span for="{{$element}}">{{$element}}</span>
-                        <br/>
-                        {{end}}
-                        </label>
-                    <div class="section" style="padding-top: 0.5rem;"></div>
-                    <p>The application will not be able to ask for more permissions without your consent.</p>
-                    <label>
-                            <input type="checkbox" value="remember" class="filled-in" id="remember"/>
-                            <span>Do not ask me again</span>
-                    </label>
-                    <p>
-                    <input type="hidden" name="challenge" value="{{.Challenge}}">
-                    <button type="submit" name="submit" id="accept" class='col s1  btn-large waves-effect green darken-2' value="accept" style="text-transform:capitalize">Allow access</button>
-                    <button type="submit" name="submit" id="reject" class='col s1  btn-large waves-effect green darken-2'  style='margin-left:1%; text-transform:capitalize' value="reject" >Deny access</button>
-                     <p>
-                  <div class="section" style="padding-top: 1rem;"></div>
-                </p>
-                </form>
-            </div>
-
-        </div>
-        <div class="section"></div>
-        <footer style="position:fixed;bottom:0;left:0;width:100%;">
-            <h6 class="center-align" style="color:grey">
-                Copyright &copy; <a href="https://securekey.com/" rel="nofollow" >SecureKey Technologies</a> and the TrustBloc Contributors
-            </h6>
-        </footer>
-    </div>
-
-
+<!-- Navigation -->
+<div class="flex justify-around bg-200">
+    <div class="text-center text-gray-400 bg-400 px-4 py-2 m-2">
+        <a href="javascript:history.back()">Issuer</a></div>
+    <div class="text-center text-gray-400 bg-400 px-4 py-2 m-2"> <a href="https://github.com/trustbloc/edge-sandbox">Source</a></div>
 </div>
-</form>
+<body>
+<center>
+<div class="container my-24">
+    <div class="max-w-3xl rounded shadow-lg">
+        <img class="object-cover h-48 w-full" src="img/consent.png">
+        <div class="px-6 py-4 bg-gray-100">
+            <div class="font-bold text-xl text-green-600 mb-2">An application requests access to your data</div>
+
+            <form action="" method="POST">
+            <p class="text-gray-700 text-base">Hi {{.User}}, application <strong>{{.ClientID}}</strong> wants access resources on your behalf:</p>
+            {{range $element := .Scope}}
+                <label class="md:w-2/3 block text-gray-500 font-bold">
+                    <input class="mr-2 leading-tight filled-in" type="checkbox" id="{{$element}}" value="{{$element}}" name="grant_scope" checked="checked" />
+                    <span class="text-lg text-black" for="{{$element}}">{{$element}}</span>
+                    {{end}}
+                </label>
+            <br>
+            <p>
+            <input type="hidden" name="challenge" value="{{.Challenge}}">
+                <button type="submit" name="submit" id="reject" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"      value="reject" >Deny access</button>
+                <button type="submit" name="submit" id="accept" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"  value="accept" >Allow access</button>
+            </p>
+            </form>
+        </div>
+    </div>
+    <br>
+    <p class="text-center text-gray-400 text-xs">
+        Copyright &copy; <a href="https://securekey.com/" rel="nofollow" >SecureKey Technologies</a> and the TrustBloc Contributors
+    </p>
+</div>
+</center>
 </body>
 </html>

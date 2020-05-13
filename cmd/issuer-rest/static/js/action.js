@@ -8,7 +8,6 @@ $(document).ready(function () {
 
     var profileVal = $('#vcsProfile').val()
     var actionRequested = $('#actionRequested').val()
-    $formSubmit = $('#formSubmit');
 
     $('#profile').on('change', function () {
         if ($(this).val() != "") {
@@ -26,20 +25,31 @@ $(document).ready(function () {
         }
     });
 
-
     $('#demoSetupForm').submit(function () {
         if ($('#chooseOption').val() == "studentCard") {
-            $('#demoSetupForm').attr('action', 'view/college.html');
+            $('#scope').val("StudentCard");
+
+            $('#demoSetupForm').attr('action', '/login?');
         } else if ($('#chooseOption').val() == "travelCard") {
-            $('#demoSetupForm').attr('action', 'view/travel.html');
+            $('#scope').val("TravelCard");
+
+            $('#demoSetupForm').attr('action', '/login?');
         } else if ($('#chooseOption').val() == "universityDegree") {
-            $('#demoSetupForm').attr('action', 'view/udc.html');
+            $('#scope').val("UniversityDegreeCredential");
+
+            $('#demoSetupForm').attr('action', '/login?');
         } else if ($('#chooseOption').val() == "prCard") {
-            $('#demoSetupForm').attr('action', 'view/pr.html');
+            $('#scope').val("PermanentResidentCard");
+
+            $('#demoSetupForm').attr('action', '/login?');
         } else if ($('#chooseOption').val() == "cmtr") {
-            $('#demoSetupForm').attr('action', 'view/cmtr.html');
+            $('#scope').val("CertifiedMillTestReport");
+
+            $('#demoSetupForm').attr('action', '/login?');
         } else if ($('#chooseOption').val() == "cpr") {
-            $('#demoSetupForm').attr('action', 'view/cpr.html');
+            $('#scope').val("CrudeProductCredential");
+
+            $('#demoSetupForm').attr('action', '/login?');
         } else if ($('#chooseOption').val() == "kiosk") {
             $('#demoSetupForm').attr('action', 'reader/qrReader.html');
         } else if ($('#chooseOption').val() == "revokeCard") {

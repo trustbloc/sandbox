@@ -9,50 +9,9 @@ SPDX-License-Identifier: Apache-2.0
 <head>
     <title>Login Page</title>
     <link rel="icon" type="images/x-icon" href="img/logo.png" >
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
 
     <style>
-        body {
-            display: flex;
-            min-height: 100vh;
-            flex-direction: column;
-        }
-
-        main {
-            flex: 1 0 auto;
-        }
-
-        body {
-            background: #fff;
-        }
-
-        .input-field input[type=date]:focus + label,
-        .input-field input[type=text]:focus + label,
-        .input-field input[type=email]:focus + label,
-        .input-field input[type=password]:focus + label {
-            color: #e91e63;
-        }
-
-        .input-field input[type=date]:focus,
-        .input-field input[type=text]:focus,
-        .input-field input[type=email]:focus,
-        .input-field input[type=password]:focus {
-            border-bottom: 2px solid #e91e63;
-            box-shadow: none;
-        }
-        [type="checkbox"].filled-in+span:after{
-            background-color: #71bd46 !important;
-            border: 2px solid #e0e0e0 !important;
-        }
-        [type="checkbox"].filled-in:not(:checked)+span:after {
-            border: 2px solid #0d0d0d !important;
-            background-color: #ffffff !important;
-        }
-        /* label underline focus color */
-        .row .input-field input:focus {
-            border-bottom: 1px solid #71bd46 !important;
-            box-shadow: 0 1px 0 0 #71bd46 !important
-        }
         body {
             background-image: url("img/header-bg.jpg");
             background-size: cover;
@@ -61,68 +20,56 @@ SPDX-License-Identifier: Apache-2.0
             min-height: 100vh;
             flex-direction: column;
         }
-        main {
-            flex: 1 0 auto;
-        }
     </style>
+
 </head>
-
+<!-- Navigation -->
+<div class="flex justify-around bg-200">
+    <div class="text-center text-gray-400 bg-400 px-4 py-2 m-2">
+        <a href="javascript:history.back()">Issuer</a></div>
+    <div class="text-center text-gray-400 bg-400 px-4 py-2 m-2"> <a href="https://github.com/trustbloc/edge-sandbox">Source</a></div>
+</div>
 <body>
-<div class="section"></div>
-    <center>
-        <div class="section"></div>
-        <div class="section"></div>
-        <div class="container">
-            <div class="z-depth-1 grey lighten-4 row" style="display: inline-block; padding: 32px 48px 0px 48px; border: 1px solid #EEE;">
-                <h5 class="green-text darken-2">Login to your account</h5>
-                <form class="col s12" action="/login" method="post">
-                    <div class='row'>
-                        <div class='col s12'>
-                        </div>
-                    </div>
+   <center>
+        <div class="container my-32">
+            <div class="w-full max-w-md">
+
+                <form class="bg-white shadow-md rounded px-8 pt-8 pb-8 md:flex-wrap md:justify-between" action="/login" method="post">
+                    <p class="text-green-600 text-xl">Login to your account</p>
+                    </br>
+
                     <input type="hidden" name="challenge" value="{{.login_challenge}}">
-                    <div class='row'>
-                        <div class='input-field col s12'>
-                            <input class='validate' type='email' name='email' id='email' />
-                            <label class='green-text darken-2' for='email'>Enter your email</label>
-                        </div>
-                    </div>
-                    <div>
 
-                    </div>
-
-                    <div class='row'>
-                        <div class='input-field col s12'>
-                            <input class='validate' type='password' name='password' id='password' />
-                            <label class='green-text darken-2' for='password'>Enter your password</label>
-                        </div>
-                        <label style='float:right;'>
-                            <span  href='#!'>For demo use username:foo@bar.com and password:foobar</span>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2 text-left" for="email">
+                            Email
                         </label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+                        leading-tight focus:outline-none focus:shadow-outline" type='email' name='email' id='email' id="email" value="foo@bar.com" required>
                     </div>
-                    <label>
-                        <input type="checkbox" class="filled-in" id="remember" />
-                        <span>Remember my decision</span>
-                    </label>
-                    <br>
-                    <br>
-                    <div class='row'>
-                        <button type='submit' id="accept" name='btn_login' class='col s12 btn-large waves-effect green darken-2'>Login</button>
+
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-bold mb-2 text-left" for="password">
+                            Password
+                        </label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight
+                        focus:outline-none focus:shadow-outline" id="password" name='password' type="password" value="foobar">
+                        <p class="text-green-500 text-xs italic text-left">For demo password is optional.</p>
+                    </div>
+
+                    <div class="flex items-center w-1/4 p-2">
+                        <button class="bg-green-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" type='submit' id="accept" name='btn_login'>
+                            Login
+                        </button>
                     </div>
                 </form>
+                <br>
+                <p class="text-center text-gray-400 text-xs">
+                    Copyright &copy; <a href="https://securekey.com/" rel="nofollow" >SecureKey Technologies</a> and the TrustBloc Contributors
+                </p>
             </div>
+
         </div>
     </center>
-
-<footer style="position:fixed;bottom:0;left:0;width:100%;">
-    <h6 class="center-align" style="color:grey">
-        Copyright &copy; <a href="https://securekey.com/" rel="nofollow" >SecureKey Technologies</a> and the TrustBloc Contributors
-    </h6>
-</footer>
-
-
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </body>
-
 </html>
