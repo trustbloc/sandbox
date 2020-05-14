@@ -44,7 +44,7 @@ SPDX-License-Identifier: Apache-2.0
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="/" class="page-scroll" style="text-transform: capitalize">Home</a></li>
+                <li><a href="https://github.com/trustbloc/edge-sandbox" class="page-scroll" style="text-transform: capitalize">Source</a></li>
             </ul>
         </div>
     </div>
@@ -60,28 +60,28 @@ SPDX-License-Identifier: Apache-2.0
             </div>
             <div class="container">
                 <div>
+                    <h6 style="text-align: left">Choose profile</h6>
                     <select class="form-control" id = "profile">
-                        <option value="trustbloc-ed25519signature2018-ed25519" id="vci1" selected>trustbloc-ed25519signature2018-ed25519</option>
-                        <option value="trustbloc-jsonwebsignature2020-ed25519"id="vci2">trustbloc-jsonwebsignature2020-ed25519</option>
-                        <option value="trustbloc-jsonwebsignature2020-p256"id="vci3">trustbloc-jsonwebsignature2020-p256</option>
-                        <option value="interop-ed25519signature2018-ed25519"id="vci4">interop-ed25519signature2018-ed25519</option>
-                        <option value="interop-jsonwebsignature2020-ed25519"id="vci5">interop-jsonwebsignature2020-ed25519</option>
-                        <option value="interop-jsonwebsignature2020-p256"id="vci6">interop-jsonwebsignature2020-p256</option>
-                        <option value="verseone-ed25519signature2018-ed25519"id="vci7">verseone-ed25519signature2018-ed25519</option>
-                        <option value="elem-ed25519signature2018-ed25519"id="vci8">elem-ed25519signature2018-ed25519</option>
-                        <option value="sov-ed25519signature2018-ed25519"id="vci9">sov-ed25519signature2018-ed25519</option>
-                        <option value="didkey-ed25519signature2018-ed25519"id="vci10">didkey-ed25519signature2018-ed25519</option>
-                        <option value="vc-issuer-interop-key"id="vci11">interop-didkey-ed25519signature2018-ed25519</option>
+                        <option value="trustbloc-ed25519signature2018-ed25519" id="vci1" selected>TrustBloc (ed25519signature2018 and ed25519)</option>
+                        <option value="trustbloc-jsonwebsignature2020-ed25519"id="vci2">TrustBloc (jsonwebsignature2020 and ed25519)</option>
+                        <option value="trustbloc-jsonwebsignature2020-p256"id="vci3">TrustBloc (jsonwebsignature2020 and p256)</option>
+                        <option value="interop-ed25519signature2018-ed25519"id="vci4">Interop (ed25519signature2018 and ed25519)</option>
+                        <option value="interop-jsonwebsignature2020-ed25519"id="vci5">Interop (jsonwebsignature2020 and ed25519)</option>
+                        <option value="interop-jsonwebsignature2020-p256"id="vci6">Interop (jsonwebsignature2020 and p256)</option>
+                        <option value="verseone-ed25519signature2018-ed25519"id="vci7">Veres One (ed25519signature2018 and ed25519)</option>
+                        <option value="elem-ed25519signature2018-ed25519"id="vci8">Elem (ed25519signature2018 and ed25519)</option>
+                        <option value="sov-ed25519signature2018-ed25519"id="vci9">Sov (ed25519signature2018 and ed25519)</option>
+                        <option value="didkey-ed25519signature2018-ed25519"id="vci10">DID Key (ed25519signature2018 and ed25519)</option>
+                        <option value="vc-issuer-interop-key"id="vci11">Interop DID Key (ed25519signature2018 and ed25519)</option>
                     </select>
                 </div>
-                <br>
                 <div>
+                    <h6 style="text-align: left">Choose Action</h6>
                     <select class="form-control" id="chooseOption">
-                        <option value="" disabled selected>Choose Action </option>
-                        <option value="studentCard" id="studentCard"><i class="fa fa-desktop"></i>Issue HighTech College Card</option>
+                        <option value="prCard"id="prCard" selected>Issue Permanent Resident Card</option>
+                        <option value="studentCard" id="studentCard">Issue HighTech College Card</option>
                         <option value="universityDegree" id="universityDegree">Issue University Degree Certificate</option>
                         <option value="travelCard"id="travelCard">Issue VIP Travel Card</option>
-                        <option value="prCard"id="prCard">Issue Permanent Resident Card</option>
                         <option value="cmtr"id="cmtr">Issue Certified Mill Test Report</option>
                         <option value="cpr"id="cpr">Issue Crude Product Credential</option>
                         <option value="kiosk"id="kiosk">Issuer Kiosk</option>
@@ -90,6 +90,8 @@ SPDX-License-Identifier: Apache-2.0
                 </div>
                 </br>
                 <form id="demoSetupForm"  action="" style="text-align:center">
+                    <input type="text" id="scope" name="scope" value="" checked hidden>
+                    <!-- default profile set to Permanent Resident Card -->
                     <input type="radio" id="vcsProfile" name="vcsProfile" value="trustbloc-ed25519signature2018-ed25519" checked hidden>
                     <input type="submit"id="formSubmit" class="btn btn-default btn-lg page-scroll" value="Start Demo">
                 </form>
