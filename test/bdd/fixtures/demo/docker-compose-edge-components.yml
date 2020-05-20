@@ -60,8 +60,9 @@ services:
       - VIRTUAL_HOST=rp-vcs.trustbloc.local
     entrypoint: ""
     # wait 20 seconds for couchdb to start
-    command:  /bin/sh -c "sleep 20;vc-rest start"
+    command:  /bin/sh -c "sleep 20;/tmp/scripts/vcs_verifier_configure.sh& vc-rest start"
     volumes:
+      - ../scripts/:/tmp/scripts
       - ../keys/tls:/etc/tls
     ports:
       - 8069:8069

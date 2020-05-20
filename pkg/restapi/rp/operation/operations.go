@@ -30,8 +30,11 @@ const (
 	verifyVPPath = "/verifyPresentation"
 
 	// edge-service verifier endpoints
-	verifyCredentialEndpoint   = "/verifier/credentials"
-	verifyPresentationEndpoint = "/verifier/presentations"
+	verifyCredentialURLFormat   = "/%s" + "/verifier/credentials"
+	verifyPresentationURLFormat = "/%s" + "/verifier/presentations"
+
+	// TODO https://github.com/trustbloc/edge-sandbox/issues/352 Configure verifier profiles in Verifier page
+	verifierProfileID = "verifier1"
 )
 
 // Handler http handler for each controller API endpoint
@@ -100,6 +103,8 @@ func (c *Operation) verifyVC(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
+	verifyCredentialEndpoint := fmt.Sprintf(verifyCredentialURLFormat, verifierProfileID)
+
 	c.verify(verifyCredentialEndpoint, req, inputData, c.vcHTML, w, r)
 }
 
@@ -128,6 +133,8 @@ func (c *Operation) verifyVP(w http.ResponseWriter, r *http.Request) {
 			Domain:    domain,
 		},
 	}
+
+	verifyPresentationEndpoint := fmt.Sprintf(verifyPresentationURLFormat, verifierProfileID)
 
 	c.verify(verifyPresentationEndpoint, req, inputData, c.vpHTML, w, r)
 }
