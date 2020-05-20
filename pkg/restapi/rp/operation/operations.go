@@ -17,7 +17,7 @@ import (
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
-	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/vc/operation"
+	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/verifier/operation"
 
 	"github.com/trustbloc/edge-sandbox/pkg/internal/common/support"
 )
