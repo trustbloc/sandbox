@@ -21,11 +21,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
 	vcprofile "github.com/trustbloc/edge-service/pkg/doc/vc/profile"
-	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/vc/operation"
+	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
 	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/edge-sandbox/pkg/internal/common/support"
@@ -476,13 +477,11 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, info *toke
 		return nil, fmt.Errorf("retrieve profile - name=%s err=%s", vcsProfile, err)
 	}
 
-	issueDate := time.Now().UTC()
-
 	cred := &verifiable.Credential{}
 	cred.Context = vcContext
 	cred.Subject = subject
 	cred.Types = []string{"VerifiableCredential", info.Scope}
-	cred.Issued = &issueDate
+	cred.Issued = util.NewTime(time.Now().UTC())
 	cred.Issuer.ID = profileResponse.DID
 	cred.Issuer.CustomFields = make(verifiable.CustomFields)
 	cred.Issuer.CustomFields["name"] = profileResponse.Name

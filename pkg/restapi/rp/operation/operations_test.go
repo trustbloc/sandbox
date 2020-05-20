@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/vc/operation"
+	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/verifier/operation"
 )
 
 const (
