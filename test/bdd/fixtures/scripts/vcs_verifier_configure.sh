@@ -12,7 +12,7 @@ n=0
 maxAttempts=30
 until [ $n -ge $maxAttempts ]
 do
-   responseCreatedTime=$(curl --header "Content-Type: application/json" \
+   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_verifier_rw_token" \
    --request POST \
    --data '{"id":"verifier1","name":"Verifier", "credentialChecks":["proof","status"], "presentationChecks":["proof"]}' \
    http://rp.vcs.example.com:8069/verifier/profile | jq -r '.id' 2>/dev/null)

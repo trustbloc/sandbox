@@ -9,7 +9,6 @@ package operation
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -116,6 +115,18 @@ func TestVerifyVC(t *testing.T) {
 		require.Contains(t, rr.Body.String(), "post error")
 	})
 
+	t.Run("test error from http request", func(t *testing.T) {
+		svc := New(&Config{})
+		svc.client = &mockHTTPClient{}
+		svc.vcsURL = "%%%%"
+
+		rr := httptest.NewRecorder()
+		m := make(map[string][]string)
+		svc.verifyVC(rr, &http.Request{Form: m})
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to create http request")
+	})
+
 	t.Run("test verify vc failed", func(t *testing.T) {
 		svc := New(&Config{})
 		b, err := json.Marshal(edgesvcops.CredentialsVerificationFailResponse{
@@ -152,7 +163,7 @@ func TestVerifyVC(t *testing.T) {
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
-		svc := New(&Config{VCHTML: file.Name()})
+		svc := New(&Config{VCHTML: file.Name(), RequestTokens: map[string]string{vcsVerifierRequestTokenName: "tk1"}})
 		svc.client = &mockHTTPClient{postValue: &http.Response{
 			StatusCode: http.StatusOK, Body: nil}}
 
@@ -271,6 +282,6 @@ type mockHTTPClient struct {
 	postErr   error
 }
 
-func (m *mockHTTPClient) Post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
+func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	return m.postValue, m.postErr
 }

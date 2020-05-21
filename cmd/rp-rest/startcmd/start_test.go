@@ -103,6 +103,7 @@ func getValidArgs() []string {
 	args = append(args, tlsCertFileArg()...)
 	args = append(args, tlsKeyFileArg()...)
 	args = append(args, vcsServiceURLArg()...)
+	args = append(args, requestTokensArg()...)
 
 	return args
 }
@@ -147,4 +148,8 @@ func tlsKeyFileArg() []string {
 
 func vcsServiceURLArg() []string {
 	return []string{flag + vcsURLFlagName, "localhost:8081"}
+}
+
+func requestTokensArg() []string {
+	return []string{flag + requestTokensFlagName, "token1=tk1", flag + requestTokensFlagName, "token2=tk2=tk2"}
 }
