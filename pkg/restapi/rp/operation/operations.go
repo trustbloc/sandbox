@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io"
 	"io/ioutil"
 	"net/http"
 
@@ -35,6 +34,8 @@ const (
 
 	// TODO https://github.com/trustbloc/edge-sandbox/issues/352 Configure verifier profiles in Verifier page
 	verifierProfileID = "verifier1"
+
+	vcsVerifierRequestTokenName = "vcs_verifier" //nolint: gosec
 )
 
 // Handler http handler for each controller API endpoint
@@ -45,24 +46,26 @@ type Handler interface {
 }
 
 type httpClient interface {
-	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
+	Do(req *http.Request) (*http.Response, error)
 }
 
 // Operation defines handlers
 type Operation struct {
-	handlers []Handler
-	vcHTML   string
-	vpHTML   string
-	vcsURL   string
-	client   httpClient
+	handlers      []Handler
+	vcHTML        string
+	vpHTML        string
+	vcsURL        string
+	client        httpClient
+	requestTokens map[string]string
 }
 
 // Config defines configuration for rp operations
 type Config struct {
-	VCHTML    string
-	VPHTML    string
-	VCSURL    string
-	TLSConfig *tls.Config
+	VCHTML        string
+	VPHTML        string
+	VCSURL        string
+	TLSConfig     *tls.Config
+	RequestTokens map[string]string
 }
 
 // vc struct used to return vc data to html
@@ -73,10 +76,11 @@ type vc struct {
 // New returns rp operation instance
 func New(config *Config) *Operation {
 	svc := &Operation{
-		vcHTML: config.VCHTML,
-		vpHTML: config.VPHTML,
-		vcsURL: config.VCSURL,
-		client: &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}}}
+		vcHTML:        config.VCHTML,
+		vpHTML:        config.VPHTML,
+		vcsURL:        config.VCSURL,
+		client:        &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
+		requestTokens: config.RequestTokens}
 	svc.registerHandler()
 
 	return svc
@@ -150,7 +154,8 @@ func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, ht
 		return
 	}
 
-	resp, httpErr := c.client.Post(c.vcsURL+endpoint, httpContentTypeJSON, bytes.NewBuffer(reqBytes))
+	resp, httpErr := c.sendHTTPRequest(http.MethodPost, c.vcsURL+endpoint, reqBytes, httpContentTypeJSON,
+		c.requestTokens[vcsVerifierRequestTokenName])
 	if httpErr != nil {
 		c.writeErrorResponse(w, http.StatusBadRequest,
 			fmt.Sprintf("failed to verify: %s", httpErr.Error()))
@@ -193,6 +198,24 @@ func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, ht
 	if err := t.Execute(w, vc{Data: r.Form.Get(inputData)}); err != nil {
 		log.Error(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
+}
+
+func (c *Operation) sendHTTPRequest(method, url string, body []byte, contentType,
+	token string) (*http.Response, error) {
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create http request: %w", err)
+	}
+
+	if token != "" {
+		req.Header.Add("Authorization", "Bearer "+c.requestTokens[vcsVerifierRequestTokenName])
+	}
+
+	if contentType != "" {
+		req.Header.Add("Content-Type", contentType)
+	}
+
+	return c.client.Do(req)
 }
 
 // writeResponse writes interface value to response

@@ -23,6 +23,7 @@ services:
       - ISSUER_CMS_URL=https://oathkeeper-proxy.trustbloc.local
       - ISSUER_VCS_URL=https://issuer-vcs.trustbloc.local
       - ISSUER_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - ISSUER_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
       - VIRTUAL_HOST=issuer.trustbloc.local
     ports:
       - 5556:5556
@@ -39,6 +40,7 @@ services:
       - RP_HOST_URL=0.0.0.0:5557
       - RP_VCS_URL=https://rp-vcs.trustbloc.local
       - RP_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - RP_REQUEST_TOKENS=vcs_verifier=vcs_verifier_rw_token
       - VIRTUAL_HOST=rp.trustbloc.local
     ports:
       - 5557:5557

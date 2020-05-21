@@ -290,6 +290,7 @@ func getValidArgs() []string {
 	args = append(args, tlsKeyFileArg()...)
 	args = append(args, cmsURLArg()...)
 	args = append(args, vcsURLArg()...)
+	args = append(args, requestTokensArg()...)
 
 	return args
 }
@@ -336,4 +337,8 @@ func cmsURLArg() []string {
 
 func vcsURLArg() []string {
 	return []string{flag + vcsURLFlagName, "vcs"}
+}
+
+func requestTokensArg() []string {
+	return []string{flag + requestTokensFlagName, "token1=tk1", flag + requestTokensFlagName, "token2=tk2=tk2"}
 }

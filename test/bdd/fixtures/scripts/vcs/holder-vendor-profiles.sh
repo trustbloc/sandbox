@@ -11,7 +11,7 @@ n=0
 maxAttempts=30
 until [ $n -ge $maxAttempts ]
 do
-   responseCreatedTime=$(curl --header "Content-Type: application/json" \
+   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
    --request POST \
    --data '{"name":"vc-holder-didkey", "signatureType":"Ed25519Signature2018", "signatureRepresentation":1,"did":"did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLt9DoHd","didPrivateKey":"28xXA4NyCQinSJpaZdSuNBM4kR2GqYb8NPqAtZoGCpcRYWBcDXtzVAzpZ9BAfgV334R2FC383fiHaWWWAacRaYGs","didKeyID":"did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLt9DoHd#z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLt9DoHd", "didKeyType":"Ed25519"}' \
    http://holder.vcs.example.com:8067/holder/profile | jq -r '.created' 2>/dev/null)
@@ -36,7 +36,7 @@ n=0
 maxAttempts=30
 until [ $n -ge $maxAttempts ]
 do
-   responseCreatedTime=$(curl --header "Content-Type: application/json" \
+   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
    --request POST \
    --data '{"name":"vc-holder-didv1", "signatureType":"Ed25519Signature2018", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driverId=driver-universalregistrar/driver-did-v1"}, "didKeyType":"Ed25519"}' \
    http://holder.vcs.example.com:8067/holder/profile | jq -r '.created' 2>/dev/null)
@@ -61,7 +61,7 @@ n=0
 maxAttempts=30
 until [ $n -ge $maxAttempts ]
 do
-   responseCreatedTime=$(curl --header "Content-Type: application/json" \
+   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
    --request POST \
    --data '{"name":"vc-holder-didsov", "signatureType":"Ed25519Signature2018","signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uniregistrar.io/1.0/register?driverId=driver-universalregistrar/driver-did-sov","options": {"network":"danube"}},"didKeyType":"Ed25519"}' \
    http://holder.vcs.example.com:8067/holder/profile | jq -r '.created' 2>/dev/null)
@@ -86,7 +86,7 @@ n=0
 maxAttempts=30
 until [ $n -ge $maxAttempts ]
 do
-   responseCreatedTime=$(curl --header "Content-Type: application/json" \
+   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
    --request POST \
    --data '{"name":"vc-holder-didelem", "signatureType":"Ed25519Signature2018", "signatureRepresentation":1,"did":"did:elem:EiAWdU2yih6NA2IGnLsDhkErZ8aQX6b8yKt7jHMi-ttFdQ","didPrivateKey":"5AcDTQT7Cdg1gBvz8PQpnH3xEbLCE1VQxAJV5NjVHvNjsZSfn4NaLZ77mapoi4QwZeBhcAA7MQzaFYkzJLfGjNnR","didKeyID":"did:elem:ropsten:EiAWdU2yih6NA2IGnLsDhkErZ8aQX6b8yKt7jHMi-ttFdQ#SQ2PY2xs7NOr6B26xq_pJMNpuYk6dOeROlkzKF7909I", "didKeyType":"Ed25519"}' \
    http://holder.vcs.example.com:8067/holder/profile | jq -r '.created' 2>/dev/null)

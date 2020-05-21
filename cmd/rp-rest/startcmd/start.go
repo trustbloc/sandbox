@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
@@ -52,6 +53,11 @@ const (
 	tlsCACertsFlagUsage = "Comma-Separated list of ca certs path." +
 		" Alternatively, this can be set with the following environment variable: " + tlsCACertsEnvKey
 	tlsCACertsEnvKey = "RP_TLS_CACERTS"
+
+	requestTokensFlagName  = "request-tokens"
+	requestTokensEnvKey    = "RP_REQUEST_TOKENS" //nolint: gosec
+	requestTokensFlagUsage = "Tokens used for http request " +
+		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
 )
 
 type server interface {
@@ -78,6 +84,7 @@ type rpParameters struct {
 	vcServiceURL      string
 	tlsSystemCertPool bool
 	tlsCACerts        []string
+	requestTokens     map[string]string
 }
 
 type tlsConfig struct {
@@ -117,6 +124,11 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			requestTokens, err := getRequestTokens(cmd)
+			if err != nil {
+				return err
+			}
+
 			parameters := &rpParameters{
 				srv:               srv,
 				hostURL:           strings.TrimSpace(hostURL),
@@ -125,11 +137,34 @@ func createStartCmd(srv server) *cobra.Command {
 				vcServiceURL:      vcServiceURL,
 				tlsSystemCertPool: tlsConfg.systemCertPool,
 				tlsCACerts:        tlsConfg.caCerts,
+				requestTokens:     requestTokens,
 			}
 
 			return startRP(parameters)
 		},
 	}
+}
+
+func getRequestTokens(cmd *cobra.Command) (map[string]string, error) {
+	requestTokens, err := cmdutils.GetUserSetVarFromArrayString(cmd, requestTokensFlagName,
+		requestTokensEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	tokens := make(map[string]string)
+
+	for _, token := range requestTokens {
+		split := strings.Split(token, "=")
+		switch len(split) {
+		case 2:
+			tokens[split[0]] = split[1]
+		default:
+			log.Warnf("invalid token '%s'", token)
+		}
+	}
+
+	return tokens, nil
 }
 
 func getTLS(cmd *cobra.Command) (*tlsConfig, error) {
@@ -177,6 +212,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(tlsSystemCertPoolFlagName, "", "",
 		tlsSystemCertPoolFlagUsage)
 	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
+	startCmd.Flags().StringArrayP(requestTokensFlagName, "", []string{}, requestTokensFlagUsage)
 }
 
 func startRP(parameters *rpParameters) error {
@@ -186,10 +222,11 @@ func startRP(parameters *rpParameters) error {
 	}
 
 	cfg := &operation.Config{
-		VCHTML:    "static/vc.html",
-		VPHTML:    "static/vp.html",
-		VCSURL:    parameters.vcServiceURL,
-		TLSConfig: &tls.Config{RootCAs: rootCAs}}
+		VCHTML:        "static/vc.html",
+		VPHTML:        "static/vp.html",
+		VCSURL:        parameters.vcServiceURL,
+		TLSConfig:     &tls.Config{RootCAs: rootCAs},
+		RequestTokens: parameters.requestTokens}
 
 	rpService, err := rp.New(cfg)
 	if err != nil {

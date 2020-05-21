@@ -26,6 +26,7 @@ services:
       - KMSSECRETS_DATABASE_PREFIX=issuer
       - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - VC_REST_TLS_SYSTEMCERTPOOL=true
+      - VC_REST_API_TOKEN=vcs_issuer_rw_token
       - VIRTUAL_HOST=issuer-vcs.trustbloc.local
     ports:
       - 8070:8070
@@ -57,6 +58,8 @@ services:
       - KMSSECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - KMSSECRETS_DATABASE_PREFIX=verifier
       - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - VC_REST_API_TOKEN=vcs_verifier_rw_token
+      - VC_REST_REQUEST_TOKENS=csl=vcs_issuer_rw_token
       - VIRTUAL_HOST=rp-vcs.trustbloc.local
     entrypoint: ""
     # wait 20 seconds for couchdb to start
@@ -89,6 +92,7 @@ services:
       - KMSSECRETS_DATABASE_PREFIX=holder
       - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - VC_REST_TLS_SYSTEMCERTPOOL=true
+      - VC_REST_API_TOKEN=vcs_holder_rw_token
       - VIRTUAL_HOST=holder-vcs.trustbloc.local
     entrypoint: ""
     # wait 20 seconds for couchdb to start

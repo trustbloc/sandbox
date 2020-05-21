@@ -50,6 +50,8 @@ const (
 
 	// contexts
 	trustBlocExampleContext = "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld"
+
+	vcsIssuerRequestTokenName = "vcs_issuer"
 )
 
 // Handler http handler for each controller API endpoint
@@ -71,6 +73,7 @@ type Operation struct {
 	didAuthHTML   string
 	vcHTML        string
 	httpClient    *http.Client
+	requestTokens map[string]string
 }
 
 // Config defines configuration for issuer operations
@@ -84,6 +87,7 @@ type Config struct {
 	DIDAuthHTML   string
 	VCHTML        string
 	TLSConfig     *tls.Config
+	RequestTokens map[string]string
 }
 
 // vc struct used to return vc data to html
@@ -118,7 +122,8 @@ func New(config *Config) *Operation {
 		didAuthHTML:   config.DIDAuthHTML,
 		receiveVCHTML: config.ReceiveVCHTML,
 		vcHTML:        config.VCHTML,
-		httpClient:    &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}}}
+		httpClient:    &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
+		requestTokens: config.RequestTokens}
 	svc.registerHandler()
 
 	return svc
@@ -331,7 +336,7 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = sendHTTPRequest(req, c.httpClient, http.StatusOK)
+	_, err = sendHTTPRequest(req, c.httpClient, http.StatusOK, c.requestTokens[vcsIssuerRequestTokenName])
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusBadRequest,
 			fmt.Sprintf("failed to update vc status: %s", err.Error()))
@@ -404,7 +409,7 @@ func (c *Operation) getCMSUser(tk *oauth2.Token, info *token.Introspection) (*cm
 		return nil, err
 	}
 
-	userBytes, err := sendHTTPRequest(req, httpClient, http.StatusOK)
+	userBytes, err := sendHTTPRequest(req, httpClient, http.StatusOK, "")
 	if err != nil {
 		return nil, err
 	}
@@ -517,7 +522,7 @@ func (c *Operation) retrieveProfile(profileName string) (*vcprofile.DataProfile,
 		return nil, err
 	}
 
-	respBytes, err := sendHTTPRequest(req, c.httpClient, http.StatusOK)
+	respBytes, err := sendHTTPRequest(req, c.httpClient, http.StatusOK, c.requestTokens[vcsIssuerRequestTokenName])
 	if err != nil {
 		return nil, err
 	}
@@ -566,7 +571,7 @@ func (c *Operation) createCredential(cred, authResp, holder, domain, challenge, 
 		return nil, err
 	}
 
-	return sendHTTPRequest(req, c.httpClient, http.StatusCreated)
+	return sendHTTPRequest(req, c.httpClient, http.StatusCreated, c.requestTokens[vcsIssuerRequestTokenName])
 }
 
 // validateAuthResp validates did auth response against given domain and challenge
@@ -621,7 +626,7 @@ func (c *Operation) storeCredential(cred []byte, vcsProfile string) error {
 		return err
 	}
 
-	_, err = sendHTTPRequest(storeReq, c.httpClient, http.StatusOK)
+	_, err = sendHTTPRequest(storeReq, c.httpClient, http.StatusOK, c.requestTokens[vcsIssuerRequestTokenName])
 	if err != nil {
 		return err
 	}
@@ -641,7 +646,7 @@ func (c *Operation) retrieveCredential(id, vcsProfile string) ([]byte, error) {
 
 	r.URL.RawQuery = q.Encode()
 
-	return sendHTTPRequest(r, c.httpClient, http.StatusOK)
+	return sendHTTPRequest(r, c.httpClient, http.StatusOK, c.requestTokens[vcsIssuerRequestTokenName])
 }
 
 func (c *Operation) validateForm(formVals url.Values, keys ...string) error {
@@ -689,7 +694,7 @@ func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) (map
 		return nil, err
 	}
 
-	subjectBytes, err := sendHTTPRequest(req, httpClient, http.StatusOK)
+	subjectBytes, err := sendHTTPRequest(req, httpClient, http.StatusOK, "")
 	if err != nil {
 		return nil, err
 	}
@@ -697,7 +702,11 @@ func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) (map
 	return unmarshalSubject(subjectBytes)
 }
 
-func sendHTTPRequest(req *http.Request, client *http.Client, status int) ([]byte, error) {
+func sendHTTPRequest(req *http.Request, client *http.Client, status int, httpToken string) ([]byte, error) {
+	if httpToken != "" {
+		req.Header.Add("Authorization", "Bearer "+httpToken)
+	}
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err

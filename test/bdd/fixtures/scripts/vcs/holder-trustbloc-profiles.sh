@@ -11,7 +11,7 @@ n=0
 maxAttempts=30
 until [ $n -ge $maxAttempts ]
 do
-   responseCreatedTime=$(curl --header "Content-Type: application/json" \
+   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
    --request POST \
    --data '{"name":"vc-holder-interop", "signatureType":"Ed25519Signature2018", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driverId=driver-did-method-rest"}, "didKeyType":"Ed25519"}' \
    http://holder.vcs.example.com:8067/holder/profile | jq -r '.created' 2>/dev/null)
@@ -36,7 +36,7 @@ n=0
 maxAttempts=30
 until [ $n -ge $maxAttempts ]
 do
-   responseCreatedTime=$(curl --header "Content-Type: application/json" \
+   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
    --request POST \
    --data '{"name":"vc-holder-jsonwebsignature2020-ed25519", "signatureType":"JsonWebSignature2020", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driverId=driver-did-method-rest"}, "didKeyType":"Ed25519"}' \
    http://holder.vcs.example.com:8067/holder/profile | jq -r '.created' 2>/dev/null)
@@ -61,7 +61,7 @@ n=0
 maxAttempts=30
 until [ $n -ge $maxAttempts ]
 do
-   responseCreatedTime=$(curl --header "Content-Type: application/json" \
+   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
    --request POST \
    --data '{"name":"vc-holder-jsonwebsignature2020-p256", "signatureType":"JsonWebSignature2020", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driverId=driver-did-method-rest"}, "didKeyType":"P256"}' \
    http://holder.vcs.example.com:8067/holder/profile | jq -r '.created' 2>/dev/null)

@@ -803,7 +803,7 @@ func TestOperation_SendHTTPRequest_WrongStatus(t *testing.T) {
 	req, err := http.NewRequest("GET", ts.URL, nil)
 	require.NoError(t, err)
 
-	data, err := sendHTTPRequest(req, http.DefaultClient, http.StatusInternalServerError)
+	data, err := sendHTTPRequest(req, http.DefaultClient, http.StatusInternalServerError, "tk1")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "200 OK")
 	require.Nil(t, data)
