@@ -307,6 +307,7 @@ func startIssuer(parameters *issuerParameters) error {
 		DIDAuthHTML:   "static/didAuth.html",
 		ReceiveVCHTML: "static/receiveVC.html",
 		VCHTML:        "static/vc.html",
+		DIDCommHTML:   "static/didcomm.html",
 		TLSConfig:     tlsConfig,
 		RequestTokens: parameters.requestTokens}
 

@@ -650,6 +650,7 @@ func TestOperation_StoreCredential(t *testing.T) {
 		require.Contains(t, err.Error(), "201 Created")
 	})
 }
+
 func TestOperation_GetCMSData_InvalidURL(t *testing.T) {
 	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 		CMSURL: "xyz:cms"})
@@ -671,6 +672,7 @@ func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
 	require.Contains(t, err.Error(), "invalid character")
 	require.Nil(t, data)
 }
+
 func TestOperation_CreateCredential_Errors(t *testing.T) {
 	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
 
@@ -885,6 +887,35 @@ func TestRevokeVC(t *testing.T) {
 
 		svc.revokeVC(rr, &http.Request{Form: m})
 		require.Equal(t, http.StatusOK, rr.Code)
+	})
+}
+
+func TestDIDCommController(t *testing.T) {
+	headers := make(map[string]string)
+
+	t.Run("test didcomm handler - success", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		cfg := &Config{DIDCommHTML: file.Name()}
+		handler := getHandlerWithConfig(t, didcomm, cfg)
+
+		_, status, err := handleRequest(handler, headers, didcomm, true)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusOK, status)
+	})
+
+	t.Run("test didcomm handler - html not found", func(t *testing.T) {
+		// test html not exist
+		cfg := &Config{}
+		handler := getHandlerWithConfig(t, didcomm, cfg)
+
+		body, status, err := handleRequest(handler, headers, didcomm, true)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusInternalServerError, status)
+		require.Contains(t, body.String(), "unable to load html")
 	})
 }
 
