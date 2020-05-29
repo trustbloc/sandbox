@@ -39,6 +39,7 @@ const (
 	generate = "/generate"
 	retrieve = "/retrieve"
 	revoke   = "/revoke"
+	didcomm  = "/didcomm"
 
 	credentialContext = "https://www.w3.org/2018/credentials/v1"
 
@@ -72,6 +73,7 @@ type Operation struct {
 	qrCodeHTML    string
 	didAuthHTML   string
 	vcHTML        string
+	didCommHTML   string
 	httpClient    *http.Client
 	requestTokens map[string]string
 }
@@ -86,6 +88,7 @@ type Config struct {
 	QRCodeHTML    string
 	DIDAuthHTML   string
 	VCHTML        string
+	DIDCommHTML   string
 	TLSConfig     *tls.Config
 	RequestTokens map[string]string
 }
@@ -122,11 +125,29 @@ func New(config *Config) *Operation {
 		didAuthHTML:   config.DIDAuthHTML,
 		receiveVCHTML: config.ReceiveVCHTML,
 		vcHTML:        config.VCHTML,
+		didCommHTML:   config.DIDCommHTML,
 		httpClient:    &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
 		requestTokens: config.RequestTokens}
 	svc.registerHandler()
 
 	return svc
+}
+
+// registerHandler register handlers to be exposed from this service as REST API endpoints
+func (c *Operation) registerHandler() {
+	// Add more protocol endpoints here to expose them as controller API endpoints
+	c.handlers = []Handler{
+		support.NewHTTPHandler(login, http.MethodGet, c.login),
+		support.NewHTTPHandler(callback, http.MethodGet, c.callback),
+
+		// chapi
+		support.NewHTTPHandler(retrieve, http.MethodGet, c.retrieveVC),
+		support.NewHTTPHandler(revoke, http.MethodPost, c.revokeVC),
+		support.NewHTTPHandler(generate, http.MethodPost, c.generateVC),
+
+		// didcomm
+		support.NewHTTPHandler(didcomm, http.MethodGet, c.didcomm),
+	}
 }
 
 // login using oauth2, will redirect to Auth Code URL
@@ -356,6 +377,28 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 
 	if err := t.Execute(w, vc{Msg: "VC is revoked", Data: r.Form.Get("vcDataInput")}); err != nil {
 		log.Error(fmt.Sprintf("failed execute html template: %s", err.Error()))
+	}
+}
+
+func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	t, err := template.ParseFiles(c.didCommHTML)
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to load html: %s", err.Error()))
+
+		return
+	}
+
+	// TODO https://github.com/trustbloc/edge-sandbox/issues/360 - Fetch Invitation from issuer adapter
+	didExchangeInvitation := "<invitation from issuer adapter>"
+
+	err = t.Execute(w, map[string]interface{}{
+		"Invitation": didExchangeInvitation,
+	})
+	if err != nil {
+		log.Error(fmt.Sprintf("failed execute didcomm html template: %s", err.Error()))
 	}
 }
 
@@ -738,18 +781,6 @@ func getFormValue(k string, vals url.Values) (string, bool) {
 	}
 
 	return "", false
-}
-
-// registerHandler register handlers to be exposed from this service as REST API endpoints
-func (c *Operation) registerHandler() {
-	// Add more protocol endpoints here to expose them as controller API endpoints
-	c.handlers = []Handler{
-		support.NewHTTPHandler(login, http.MethodGet, c.login),
-		support.NewHTTPHandler(callback, http.MethodGet, c.callback),
-		support.NewHTTPHandler(retrieve, http.MethodGet, c.retrieveVC),
-		support.NewHTTPHandler(revoke, http.MethodPost, c.revokeVC),
-		support.NewHTTPHandler(generate, http.MethodPost, c.generateVC),
-	}
 }
 
 // writeResponse writes interface value to response
