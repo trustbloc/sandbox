@@ -29,3 +29,21 @@ services:
     command: start
     networks:
       - demo-net
+
+  issuer.adapter.example.com:
+    container_name: issuer.adapter.example.com
+    image: ${ARIES_AGENT_REST_IMAGE}:${ARIES_AGENT_REST_IMAGE_TAG}
+    environment:
+      - ARIESD_API_HOST=${ISSUER_ADAPTER_HOST}:${ISSUER_ADAPTER_API_PORT}
+      - ARIESD_INBOUND_HOST=${HTTP_SCHEME}@${ISSUER_ADAPTER_HOST}:${ISSUER_ADAPTER_HTTP_INBOUND_PORT}
+      - ARIESD_INBOUND_HOST_EXTERNAL=${HTTP_SCHEME}@http://issuer.adapter.example.com:${ISSUER_ADAPTER_HTTP_INBOUND_PORT}
+      - ARIESD_DB_PATH=${ISSUER_ADAPTER_DB_PATH}
+      - ARIESD_DEFAULT_LABEL=trustbloc-issuer
+      - ARIESD_OUTBOUND_TRANSPORT=${HTTP_SCHEME}
+      - ARIESD_AUTO_ACCEPT=true
+    ports:
+      - ${ISSUER_ADAPTER_HTTP_INBOUND_PORT}:${ISSUER_ADAPTER_HTTP_INBOUND_PORT}
+      - ${ISSUER_ADAPTER_API_PORT}:${ISSUER_ADAPTER_API_PORT}
+    command: start
+    networks:
+      - demo-net

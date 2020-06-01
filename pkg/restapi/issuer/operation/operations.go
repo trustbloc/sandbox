@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	didexcmd "github.com/hyperledger/aries-framework-go/pkg/controller/command/didexchange"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	log "github.com/sirupsen/logrus"
@@ -52,7 +53,11 @@ const (
 	// contexts
 	trustBlocExampleContext = "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld"
 
-	vcsIssuerRequestTokenName = "vcs_issuer"
+	vcsIssuerRequestTokenName     = "vcs_issuer"
+	issuerAdapterRequestTokenName = "issuer_adapter" // nolint: gosec
+
+	// issuer adapter endpoints
+	createInvitation = "/connections/create-invitation"
 )
 
 // Handler http handler for each controller API endpoint
@@ -64,33 +69,35 @@ type Handler interface {
 
 // Operation defines handlers for authorization service
 type Operation struct {
-	handlers      []Handler
-	tokenIssuer   tokenIssuer
-	tokenResolver tokenResolver
-	cmsURL        string
-	vcsURL        string
-	receiveVCHTML string
-	qrCodeHTML    string
-	didAuthHTML   string
-	vcHTML        string
-	didCommHTML   string
-	httpClient    *http.Client
-	requestTokens map[string]string
+	handlers         []Handler
+	tokenIssuer      tokenIssuer
+	tokenResolver    tokenResolver
+	cmsURL           string
+	vcsURL           string
+	receiveVCHTML    string
+	qrCodeHTML       string
+	didAuthHTML      string
+	vcHTML           string
+	didCommHTML      string
+	httpClient       *http.Client
+	requestTokens    map[string]string
+	issuerAdapterURL string
 }
 
 // Config defines configuration for issuer operations
 type Config struct {
-	TokenIssuer   tokenIssuer
-	TokenResolver tokenResolver
-	CMSURL        string
-	VCSURL        string
-	ReceiveVCHTML string
-	QRCodeHTML    string
-	DIDAuthHTML   string
-	VCHTML        string
-	DIDCommHTML   string
-	TLSConfig     *tls.Config
-	RequestTokens map[string]string
+	TokenIssuer      tokenIssuer
+	TokenResolver    tokenResolver
+	CMSURL           string
+	VCSURL           string
+	ReceiveVCHTML    string
+	QRCodeHTML       string
+	DIDAuthHTML      string
+	VCHTML           string
+	DIDCommHTML      string
+	TLSConfig        *tls.Config
+	RequestTokens    map[string]string
+	IssuerAdapterURL string
 }
 
 // vc struct used to return vc data to html
@@ -117,17 +124,19 @@ type tokenResolver interface {
 // New returns authorization instance
 func New(config *Config) *Operation {
 	svc := &Operation{
-		tokenIssuer:   config.TokenIssuer,
-		tokenResolver: config.TokenResolver,
-		cmsURL:        config.CMSURL,
-		vcsURL:        config.VCSURL,
-		qrCodeHTML:    config.QRCodeHTML,
-		didAuthHTML:   config.DIDAuthHTML,
-		receiveVCHTML: config.ReceiveVCHTML,
-		vcHTML:        config.VCHTML,
-		didCommHTML:   config.DIDCommHTML,
-		httpClient:    &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
-		requestTokens: config.RequestTokens}
+		tokenIssuer:      config.TokenIssuer,
+		tokenResolver:    config.TokenResolver,
+		cmsURL:           config.CMSURL,
+		vcsURL:           config.VCSURL,
+		qrCodeHTML:       config.QRCodeHTML,
+		didAuthHTML:      config.DIDAuthHTML,
+		receiveVCHTML:    config.ReceiveVCHTML,
+		vcHTML:           config.VCHTML,
+		didCommHTML:      config.DIDCommHTML,
+		httpClient:       &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
+		requestTokens:    config.RequestTokens,
+		issuerAdapterURL: config.IssuerAdapterURL,
+	}
 	svc.registerHandler()
 
 	return svc
@@ -381,6 +390,15 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request) {
+	invitationJSONByte, err := c.createDIDCommInvitation()
+	if err != nil {
+		log.Error(err)
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to create didcomm invitation: %s", err.Error()))
+
+		return
+	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	t, err := template.ParseFiles(c.didCommHTML)
@@ -391,15 +409,35 @@ func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO https://github.com/trustbloc/edge-sandbox/issues/360 - Fetch Invitation from issuer adapter
-	didExchangeInvitation := "<invitation from issuer adapter>"
-
 	err = t.Execute(w, map[string]interface{}{
-		"Invitation": didExchangeInvitation,
+		"Invitation": string(invitationJSONByte),
 	})
 	if err != nil {
 		log.Error(fmt.Sprintf("failed execute didcomm html template: %s", err.Error()))
 	}
+}
+
+func (c *Operation) createDIDCommInvitation() ([]byte, error) {
+	u := c.issuerAdapterURL + createInvitation
+
+	req, err := http.NewRequest(http.MethodPost, u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	respBytes, err := sendHTTPRequest(req, c.httpClient, http.StatusOK, c.requestTokens[issuerAdapterRequestTokenName])
+	if err != nil {
+		return nil, err
+	}
+
+	didExchangeInvitation := &didexcmd.CreateInvitationResponse{}
+
+	err = json.Unmarshal(respBytes, didExchangeInvitation)
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(didExchangeInvitation.Invitation)
 }
 
 func generateQRCode(cred []byte, host, profile string) (*qr, error) {

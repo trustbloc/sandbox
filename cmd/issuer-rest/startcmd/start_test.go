@@ -100,6 +100,29 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 		require.Error(t, err)
 		require.Equal(t, "vcs-url value is empty", err.Error())
 	})
+
+	t.Run("test blank issuer-adapter url arg", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, endpointAuthURLArg()...)
+		args = append(args, endpointTokenURLArg()...)
+		args = append(args, clientRedirectURLArg()...)
+		args = append(args, clientIDArg()...)
+		args = append(args, clientSecretArg()...)
+		args = append(args, tokenIntrospectionURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, cmsURLArg()...)
+		args = append(args, vcsURLArg()...)
+		args = append(args, []string{flag + issuerAdapterURLFlagName, ""}...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Error(t, err)
+		require.Equal(t, "issuer-adapter-url value is empty", err.Error())
+	})
 }
 
 func TestStartCmdWithMissingHostArg(t *testing.T) {
@@ -262,6 +285,9 @@ func setEnvVars(t *testing.T) {
 
 	err = os.Setenv(tlsKeyFileEnvKey, "key")
 	require.Nil(t, err)
+
+	err = os.Setenv(issuerAdapterURLEnvKey, "issuer-adapter")
+	require.Nil(t, err)
 }
 
 func checkFlagPropertiesCorrect(t *testing.T, cmd *cobra.Command, flagName, flagShorthand, flagUsage string) {
@@ -291,6 +317,7 @@ func getValidArgs() []string {
 	args = append(args, cmsURLArg()...)
 	args = append(args, vcsURLArg()...)
 	args = append(args, requestTokensArg()...)
+	args = append(args, issuerAdapterURLArg()...)
 
 	return args
 }
@@ -341,4 +368,8 @@ func vcsURLArg() []string {
 
 func requestTokensArg() []string {
 	return []string{flag + requestTokensFlagName, "token1=tk1", flag + requestTokensFlagName, "token2=tk2=tk2"}
+}
+
+func issuerAdapterURLArg() []string {
+	return []string{flag + issuerAdapterURLFlagName, "issuer-adapter"}
 }

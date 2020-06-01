@@ -10,7 +10,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="images/x-icon" href="img/logo.png">
-    <title>QR Code</title>
+    <title>DIDComm Flow</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -127,7 +127,7 @@ SPDX-License-Identifier: Apache-2.0
             web: {
                 VerifiablePresentation: {
                     query: {type: "DIDCommConnectionRequest"},
-                    invitation: invitation
+                    invitation: JSON.parse(invitation)
                 }
             }
         };

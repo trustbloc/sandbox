@@ -103,6 +103,11 @@ const (
 	requestTokensEnvKey    = "ISSUER_REQUEST_TOKENS" //nolint: gosec
 	requestTokensFlagUsage = "Tokens used for http request " +
 		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
+
+	// issuer adapter url
+	issuerAdapterURLFlagName  = "issuer-adapter-url"
+	issuerAdapterURLFlagUsage = "Issuer Adapter Service URL. Format: HostName:Port."
+	issuerAdapterURLEnvKey    = "ISSUER_ADAPTER_URL"
 )
 
 type server interface {
@@ -133,6 +138,7 @@ type issuerParameters struct {
 	tlsSystemCertPool     bool
 	tlsCACerts            []string
 	requestTokens         map[string]string
+	issuerAdapterURL      string
 }
 
 type tlsConfig struct {
@@ -151,6 +157,7 @@ func GetStartCmd(srv server) *cobra.Command {
 	return startCmd
 }
 
+// nolint: funlen
 func createStartCmd(srv server) *cobra.Command {
 	return &cobra.Command{
 		Use:   "start",
@@ -193,6 +200,12 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			issuerAdapterURL, err := cmdutils.GetUserSetVarFromString(cmd, issuerAdapterURLFlagName,
+				issuerAdapterURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
 			parameters := &issuerParameters{
 				srv:                   srv,
 				hostURL:               strings.TrimSpace(hostURL),
@@ -205,6 +218,7 @@ func createStartCmd(srv server) *cobra.Command {
 				tlsSystemCertPool:     tlsConfg.systemCertPool,
 				tlsCACerts:            tlsConfg.caCerts,
 				requestTokens:         requestTokens,
+				issuerAdapterURL:      issuerAdapterURL,
 			}
 
 			return startIssuer(parameters)
@@ -288,6 +302,9 @@ func createFlags(startCmd *cobra.Command) {
 		tlsSystemCertPoolFlagUsage)
 	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
 	startCmd.Flags().StringArrayP(requestTokensFlagName, "", []string{}, requestTokensFlagUsage)
+
+	// did-comm
+	startCmd.Flags().StringP(issuerAdapterURLFlagName, "", "", issuerAdapterURLFlagUsage)
 }
 
 func startIssuer(parameters *issuerParameters) error {
@@ -299,17 +316,19 @@ func startIssuer(parameters *issuerParameters) error {
 	tlsConfig := &tls.Config{RootCAs: rootCAs}
 
 	cfg := &operation.Config{
-		TokenIssuer:   tokenIssuer.New(parameters.oauth2Config, tokenIssuer.WithTLSConfig(tlsConfig)),
-		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL, tokenResolver.WithTLSConfig(tlsConfig)),
-		CMSURL:        parameters.cmsURL,
-		VCSURL:        parameters.vcsURL,
-		QRCodeHTML:    "static/qr.html",
-		DIDAuthHTML:   "static/didAuth.html",
-		ReceiveVCHTML: "static/receiveVC.html",
-		VCHTML:        "static/vc.html",
-		DIDCommHTML:   "static/didcomm.html",
-		TLSConfig:     tlsConfig,
-		RequestTokens: parameters.requestTokens}
+		TokenIssuer:      tokenIssuer.New(parameters.oauth2Config, tokenIssuer.WithTLSConfig(tlsConfig)),
+		TokenResolver:    tokenResolver.New(parameters.tokenIntrospectionURL, tokenResolver.WithTLSConfig(tlsConfig)),
+		CMSURL:           parameters.cmsURL,
+		VCSURL:           parameters.vcsURL,
+		QRCodeHTML:       "static/qr.html",
+		DIDAuthHTML:      "static/didAuth.html",
+		ReceiveVCHTML:    "static/receiveVC.html",
+		VCHTML:           "static/vc.html",
+		DIDCommHTML:      "static/didcomm.html",
+		TLSConfig:        tlsConfig,
+		RequestTokens:    parameters.requestTokens,
+		IssuerAdapterURL: parameters.issuerAdapterURL,
+	}
 
 	issuerService, err := issuer.New(cfg)
 	if err != nil {
