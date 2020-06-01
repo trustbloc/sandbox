@@ -23,5 +23,5 @@ if [ "$START_SIDETREE_FABRIC" = true ] ; then
     setupFabric &
     sidetreeCompseFile='-f docker-compose-sidetree-fabric.yml'
 fi
-dockerComposeFiles="-f docker-compose-third-party.yml -f docker-compose-router.yml -f docker-compose-edge-components.yml -f docker-compose-demo-applications.yml -f docker-compose-universal-resolver.yml -f docker-compose-universal-registrar.yml $sidetreeCompseFile"
+dockerComposeFiles="-f docker-compose-third-party.yml -f docker-compose-didcomm.yml -f docker-compose-edge-components.yml -f docker-compose-demo-applications.yml -f docker-compose-universal-resolver.yml -f docker-compose-universal-registrar.yml $sidetreeCompseFile"
 (cd test/bdd/fixtures/demo ; (docker-compose $dockerComposeFiles down && docker-compose $dockerComposeFiles up --force-recreate))

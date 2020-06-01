@@ -8,6 +8,7 @@ package operation
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -18,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	didexcmd "github.com/hyperledger/aries-framework-go/pkg/controller/command/didexchange"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
@@ -894,25 +896,99 @@ func TestDIDCommController(t *testing.T) {
 	headers := make(map[string]string)
 
 	t.Run("test didcomm handler - success", func(t *testing.T) {
+		router := mux.NewRouter()
+		router.HandleFunc(createInvitation, func(w http.ResponseWriter, r *http.Request) {
+			invitation := &didexcmd.CreateInvitationResponse{
+				InvitationURL: "hello",
+			}
+			invitationJSON, err := json.Marshal(invitation)
+			require.NoError(t, err)
+
+			_, err = w.Write(invitationJSON)
+			require.NoError(t, err)
+
+			w.WriteHeader(http.StatusOK)
+		})
+
+		adapter := httptest.NewServer(router)
+		defer adapter.Close()
+
 		file, err := ioutil.TempFile("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-		cfg := &Config{DIDCommHTML: file.Name()}
+		cfg := &Config{DIDCommHTML: file.Name(), IssuerAdapterURL: adapter.URL}
+
 		handler := getHandlerWithConfig(t, didcomm, cfg)
 
-		_, status, err := handleRequest(handler, headers, didcomm, true)
+		_, status, err := handleRequest(handler, headers, didcomm, false)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, status)
 	})
 
-	t.Run("test didcomm handler - html not found", func(t *testing.T) {
-		// test html not exist
-		cfg := &Config{}
+	t.Run("test didcomm handler - adapter returns server error", func(t *testing.T) {
+		router := mux.NewRouter()
+		router.HandleFunc(createInvitation, func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+
+		adapter := httptest.NewServer(router)
+		defer adapter.Close()
+
+		cfg := &Config{IssuerAdapterURL: adapter.URL}
+
 		handler := getHandlerWithConfig(t, didcomm, cfg)
 
-		body, status, err := handleRequest(handler, headers, didcomm, true)
+		_, status, err := handleRequest(handler, headers, didcomm, false)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusInternalServerError, status)
+	})
+
+	t.Run("test didcomm handler - adapter returns non-json response", func(t *testing.T) {
+		router := mux.NewRouter()
+		router.HandleFunc(createInvitation, func(w http.ResponseWriter, r *http.Request) {
+			_, err := w.Write([]byte("invalid-json"))
+			require.NoError(t, err)
+
+			w.WriteHeader(http.StatusOK)
+		})
+
+		adapter := httptest.NewServer(router)
+		defer adapter.Close()
+
+		cfg := &Config{IssuerAdapterURL: adapter.URL}
+
+		handler := getHandlerWithConfig(t, didcomm, cfg)
+
+		_, status, err := handleRequest(handler, headers, didcomm, false)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusInternalServerError, status)
+	})
+
+	t.Run("test didcomm handler - html not found", func(t *testing.T) {
+		router := mux.NewRouter()
+		router.HandleFunc(createInvitation, func(w http.ResponseWriter, r *http.Request) {
+			invitation := &didexcmd.CreateInvitationResponse{
+				InvitationURL: "hello",
+			}
+			invitationJSON, err := json.Marshal(invitation)
+			require.NoError(t, err)
+
+			_, err = w.Write(invitationJSON)
+			require.NoError(t, err)
+
+			w.WriteHeader(http.StatusOK)
+		})
+
+		adapter := httptest.NewServer(router)
+		defer adapter.Close()
+
+		// test html not exist
+		cfg := &Config{IssuerAdapterURL: adapter.URL}
+		handler := getHandlerWithConfig(t, didcomm, cfg)
+
+		body, status, err := handleRequest(handler, headers, didcomm, false)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusInternalServerError, status)
 		require.Contains(t, body.String(), "unable to load html")
