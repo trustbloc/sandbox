@@ -586,7 +586,7 @@ func (c *Operation) createCredential(cred, authResp, holder, domain, challenge, 
 		return nil, fmt.Errorf("DID Auth failed: %w", err)
 	}
 
-	credential, _, err := verifiable.NewCredential([]byte(cred), verifiable.WithDisabledProofCheck())
+	credential, err := verifiable.ParseCredential([]byte(cred), verifiable.WithDisabledProofCheck())
 	if err != nil {
 		return nil, fmt.Errorf("invalid credential: %w", err)
 	}
@@ -619,7 +619,7 @@ func (c *Operation) createCredential(cred, authResp, holder, domain, challenge, 
 
 // validateAuthResp validates did auth response against given domain and challenge
 func (c *Operation) validateAuthResp(authResp []byte, holder, domain, challenge string) error {
-	vp, err := verifiable.NewPresentation(authResp)
+	vp, err := verifiable.ParsePresentation(authResp)
 	if err != nil {
 		return err
 	}
