@@ -126,60 +126,101 @@ func TestOperation_Login3(t *testing.T) {
 }
 
 func TestOperation_Callback(t *testing.T) {
-	cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
-	}))
-	defer cms.Close()
-
-	router := mux.NewRouter()
-	router.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
-		writer.WriteHeader(http.StatusOK)
-		_, err := writer.Write([]byte(profileData))
-		if err != nil {
-			panic(err)
-		}
-	})
-
-	vcs := httptest.NewServer(router)
-
-	defer vcs.Close()
-
 	headers := make(map[string]string)
 	headers["Authorization"] = authHeader
 
-	file, err := ioutil.TempFile("", "*.html")
-	require.NoError(t, err)
+	t.Run("test callback - non didcomm", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+		}))
+		defer cms.Close()
 
-	defer func() { require.NoError(t, os.Remove(file.Name())) }()
+		router := mux.NewRouter()
+		router.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusOK)
+			_, err := writer.Write([]byte(profileData))
+			if err != nil {
+				panic(err)
+			}
+		})
 
-	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name(),
-		DIDAuthHTML: file.Name()}
-	handler := getHandlerWithConfig(t, callback, cfg)
+		vcs := httptest.NewServer(router)
 
-	_, status, err := handleRequest(handler, headers, callback, true)
-	require.NoError(t, err)
-	require.Equal(t, http.StatusOK, status)
+		defer vcs.Close()
 
-	// test ledger cookie not found
-	cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), DIDAuthHTML: file.Name()}
-	handler = getHandlerWithConfig(t, callback, cfg)
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
 
-	body, status, err := handleRequest(handler, headers, callback, false)
-	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, status)
-	require.Contains(t, body.String(), "failed to get cookie")
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-	// test html not exist
-	cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: ""}
-	handler = getHandlerWithConfig(t, callback, cfg)
+		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), QRCodeHTML: file.Name(),
+			DIDAuthHTML: file.Name()}
+		handler := getHandlerWithConfig(t, callback, cfg)
 
-	body, status, err = handleRequest(handler, headers, callback, true)
-	require.NoError(t, err)
-	require.Equal(t, http.StatusInternalServerError, status)
-	require.Contains(t, body.String(), "unable to load html")
+		_, status, err := handleRequest(handler, headers, callback, true)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusOK, status)
+
+		// test ledger cookie not found
+		cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), DIDAuthHTML: file.Name()}
+		handler = getHandlerWithConfig(t, callback, cfg)
+
+		body, status, err := handleRequest(handler, headers, callback, false)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusBadRequest, status)
+		require.Contains(t, body.String(), "failed to get cookie")
+
+		// test html not exist
+		cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: ""}
+		handler = getHandlerWithConfig(t, callback, cfg)
+
+		body, status, err = handleRequest(handler, headers, callback, true)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusInternalServerError, status)
+		require.Contains(t, body.String(), "unable to load html")
+	})
+
+	t.Run("test callback - didcomm", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+		}))
+		defer cms.Close()
+
+		router := mux.NewRouter()
+		router.HandleFunc(createInvitation, func(w http.ResponseWriter, r *http.Request) {
+			invitation := &didexcmd.CreateInvitationResponse{
+				InvitationURL: "hello",
+			}
+			invitationJSON, err := json.Marshal(invitation)
+			require.NoError(t, err)
+
+			_, err = w.Write(invitationJSON)
+			require.NoError(t, err)
+
+			w.WriteHeader(http.StatusOK)
+		})
+
+		adapter := httptest.NewServer(router)
+		defer adapter.Close()
+
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			CMSURL:      cms.URL,
+			DIDCommHTML: file.Name(), IssuerAdapterURL: adapter.URL}
+		handler := getHandlerWithConfig(t, callback, cfg)
+
+		_, status, err := handleRequestWithCokie(handler, headers, callback,
+			&http.Cookie{Name: vcsProfileCookie, Value: didCommProfile})
+		require.NoError(t, err)
+		require.Equal(t, http.StatusOK, status)
+	})
 }
 
 func TestOperation_GenerateVC(t *testing.T) {
@@ -996,6 +1037,16 @@ func TestDIDCommController(t *testing.T) {
 }
 
 func handleRequest(handler Handler, headers map[string]string, path string, addCookie bool) (*bytes.Buffer, int, error) { //nolint:lll
+	var cookie *http.Cookie
+
+	if addCookie {
+		cookie = &http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"}
+	}
+
+	return handleRequestWithCokie(handler, headers, path, cookie)
+}
+
+func handleRequestWithCokie(handler Handler, headers map[string]string, path string, cookie *http.Cookie) (*bytes.Buffer, int, error) { //nolint:lll
 	req, err := http.NewRequest(handler.Method(), path, bytes.NewBuffer([]byte("")))
 	if err != nil {
 		return nil, 0, err
@@ -1005,8 +1056,8 @@ func handleRequest(handler Handler, headers map[string]string, path string, addC
 		req.Header.Add(k, v)
 	}
 
-	if addCookie {
-		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
+	if cookie != nil {
+		req.AddCookie(cookie)
 	}
 
 	router := mux.NewRouter()
