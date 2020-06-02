@@ -31,6 +31,7 @@ authenticators:
         - CertifiedMillTestReport
         - CrudeProductCredential
         - UniversityDegreeCredential
+        - CreditCardStatement
 
 authorizers:
   allow:

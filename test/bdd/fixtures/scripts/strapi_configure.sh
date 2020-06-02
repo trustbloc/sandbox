@@ -47,6 +47,11 @@ GENERATE_UDC_COMMAND="strapi generate:api universitydegreecredentials UserID:str
 
 $GENERATE_UDC_COMMAND
 
+# generate the creditcardstatement and model
+GENERATE_CCS_COMMAND="strapi generate:api creditcardstatement UserID:string VcMetadata:json Statement:json"
+
+$GENERATE_CCS_COMMAND
+
 sleep 30
 
 # Create admin user
@@ -154,6 +159,17 @@ result=$(curl --header "Content-Type: application/json" --header "Authorization:
    --request POST \
    --data '{ "userid":"100", "vcmetadata":{"@context": [ "https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1", "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld" ], "name": "University Degree Credential", "description": "University Degree Credential for Mr.Jayden Doe"}, "name": "Jayden Doe", "degree": { "type": "BachelorDegree", "degree": "Bachelor of Science and Arts"} }' \
    http://strapi:1337/universitydegreecredentials | jq  -r ".error")
+# check for error
+if [ "$result" != "null" ]
+   then
+        echo "error insert universitydegreecredentials data in strapi: $result"
+fi
+
+# Add creditcardstatement data for above created user
+result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
+   --request POST \
+   --data '{ "userid":"100", "vcmetadata":{ "@context": "http://schema.org/", "@type": "Invoice", "description": "June 2020 Credit Card Statement", "url": "http://acmebank.com/invoice.pdf", "broker": { "@type": "BankOrCreditUnion", "name": "ACME Bank" }, "accountId": "xxxx-xxxx-xxxx-1234", "customer": { "@type": "Person", "name": "Jane Doe" }, "paymentDueDate": "2020-06-30T12:00:00", "minimumPaymentDue": { "@type": "PriceSpecification", "price": 15.00, "priceCurrency": "CAD" }, "totalPaymentDue": { "@type": "PriceSpecification", "price": 200.00, "priceCurrency": "CAD" }, "billingPeriod": "P30D", "paymentStatus": "http://schema.org/PaymentDue" }' \
+   http://strapi:1337/creditcardstatement | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]
    then
