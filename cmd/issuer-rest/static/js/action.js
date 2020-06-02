@@ -6,9 +6,6 @@ SPDX-License-Identifier: Apache-2.0
 
 $(document).ready(function () {
 
-    var profileVal = $('#vcsProfile').val()
-    var actionRequested = $('#actionRequested').val()
-
     $('#profile').on('change', function () {
         if ($(this).val() != "") {
             $('#vcsProfile').val($(this).val());
@@ -17,46 +14,91 @@ $(document).ready(function () {
         }
     });
 
-    $('#chooseOption').on('change', function () {
-        if ($(this).val() != "") {
-            $('#actionRequested').val($(this).val());
-        } else {
-            $('#actionRequested').val('');
+    $('#studentCard').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $('#scope').val("StudentCard");
+            $(this).data('clicked', true);
+        }
+    });
+
+    $('#prCard').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $('#scope').val("PermanentResidentCard");
+            $(this).data('clicked', true);
+        }
+    });
+
+    $('#travelCard').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $('#scope').val("TravelCard");
+            $(this).data('clicked', true);
+        }
+    });
+
+    $('#cpr').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $('#scope').val("CrudeProductCredential");
+            $(this).data('clicked', true);
+        }
+    });
+
+    $('#universityDegree').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $('#scope').val("UniversityDegreeCredential");
+            $(this).data('clicked', true);
+        }
+    });
+
+    $('#cmtr').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $('#scope').val("CertifiedMillTestReport");
+            $(this).data('clicked', true);
+        }
+    });
+
+    $('#revokeVCBtn').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $(this).data('clicked', true);
         }
     });
 
     $('#demoSetupForm').submit(function () {
-        if ($('#chooseOption').val() == "studentCard") {
-            $('#scope').val("StudentCard");
+
+        if($('#studentCard').data('clicked'))
+        {
+            $('#demoSetupForm').attr('action', '/login?');
+
+        } else if ($("#travelCard").data('clicked'))  {
 
             $('#demoSetupForm').attr('action', '/login?');
-        } else if ($('#chooseOption').val() == "travelCard") {
-            $('#scope').val("TravelCard");
+
+        } else if ($("#universityDegree").data('clicked')) {
 
             $('#demoSetupForm').attr('action', '/login?');
-        } else if ($('#chooseOption').val() == "universityDegree") {
-            $('#scope').val("UniversityDegreeCredential");
+
+        } else if ($("#cmtr").data('clicked')) {
 
             $('#demoSetupForm').attr('action', '/login?');
-        } else if ($('#chooseOption').val() == "prCard") {
-            $('#scope').val("PermanentResidentCard");
+
+        } else if ($("#cpr").data('clicked')) {
 
             $('#demoSetupForm').attr('action', '/login?');
-        } else if ($('#chooseOption').val() == "cmtr") {
-            $('#scope').val("CertifiedMillTestReport");
+
+        } else if ($("#travelCard").data('clicked')) {
 
             $('#demoSetupForm').attr('action', '/login?');
-        } else if ($('#chooseOption').val() == "cpr") {
-            $('#scope').val("CrudeProductCredential");
+
+        }  else if ($("#prCard").data('clicked')) {
 
             $('#demoSetupForm').attr('action', '/login?');
-        } else if ($('#chooseOption').val() == "kiosk") {
-            $('#demoSetupForm').attr('action', 'reader/qrReader.html');
-        } else if ($('#chooseOption').val() == "revokeCard") {
+
+        } else if ($("#revokeVCBtn").data('clicked')) {
+
             $('#demoSetupForm').attr('action', 'view/revoke.html');
+
         } else {
-            $('#message').text("Profile or Action is not selected").show().fadeOut(2000);
-            event.preventDefault();
+
+            $('#message').text("Profile is not selected").show().fadeOut(2000);
         }
     });
 });

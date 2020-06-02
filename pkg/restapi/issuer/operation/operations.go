@@ -9,7 +9,6 @@ package operation
 import (
 	"bytes"
 	"crypto/tls"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,7 +24,6 @@ import (
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	log "github.com/sirupsen/logrus"
-	"github.com/skip2/go-qrcode"
 	vcprofile "github.com/trustbloc/edge-service/pkg/doc/vc/profile"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
 	"golang.org/x/oauth2"
@@ -38,7 +36,6 @@ const (
 	login    = "/login"
 	callback = "/callback"
 	generate = "/generate"
-	retrieve = "/retrieve"
 	revoke   = "/revoke"
 	didcomm  = "/didcomm"
 
@@ -76,7 +73,6 @@ type Operation struct {
 	cmsURL           string
 	vcsURL           string
 	receiveVCHTML    string
-	qrCodeHTML       string
 	didAuthHTML      string
 	vcHTML           string
 	didCommHTML      string
@@ -92,7 +88,6 @@ type Config struct {
 	CMSURL           string
 	VCSURL           string
 	ReceiveVCHTML    string
-	QRCodeHTML       string
 	DIDAuthHTML      string
 	VCHTML           string
 	DIDCommHTML      string
@@ -105,11 +100,6 @@ type Config struct {
 type vc struct {
 	Msg  string `json:"msg"`
 	Data string `json:"data"`
-}
-
-type qr struct {
-	Image string
-	URL   string
 }
 
 type tokenIssuer interface {
@@ -129,7 +119,6 @@ func New(config *Config) *Operation {
 		tokenResolver:    config.TokenResolver,
 		cmsURL:           config.CMSURL,
 		vcsURL:           config.VCSURL,
-		qrCodeHTML:       config.QRCodeHTML,
 		didAuthHTML:      config.DIDAuthHTML,
 		receiveVCHTML:    config.ReceiveVCHTML,
 		vcHTML:           config.VCHTML,
@@ -151,7 +140,6 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(callback, http.MethodGet, c.callback),
 
 		// chapi
-		support.NewHTTPHandler(retrieve, http.MethodGet, c.retrieveVC),
 		support.NewHTTPHandler(revoke, http.MethodPost, c.revokeVC),
 		support.NewHTTPHandler(generate, http.MethodPost, c.generateVC),
 
@@ -297,41 +285,6 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	t, err := template.ParseFiles(c.qrCodeHTML)
-	if err != nil {
-		log.Error(err)
-		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to load html: %s", err.Error()))
-
-		return
-	}
-
-	q, err := generateQRCode(cred, r.Host, vcsProfileCookie.Value)
-	if err != nil {
-		log.Error(fmt.Sprintf("failed to generate qr code : %s", err.Error()))
-		return
-	}
-
-	if err := t.Execute(w, q); err != nil {
-		log.Error(fmt.Sprintf("failed execute qr html template: %s", err.Error()))
-	}
-}
-
-// retrieveVC for retrieving the VC via link and QRCode
-func (c *Operation) retrieveVC(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
-	profile := r.URL.Query().Get("profile")
-
-	cred, err := c.retrieveCredential(id, profile)
-	if err != nil {
-		log.Error(err)
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to retrieve credential: %s", err.Error()))
-
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
 	t, err := template.ParseFiles(c.receiveVCHTML)
 	if err != nil {
 		log.Error(err)
@@ -444,46 +397,6 @@ func (c *Operation) createDIDCommInvitation() ([]byte, error) {
 	}
 
 	return json.Marshal(didExchangeInvitation.Invitation)
-}
-
-func generateQRCode(cred []byte, host, profile string) (*qr, error) {
-	var vcMap map[string]interface{}
-
-	var img []byte
-
-	err := json.Unmarshal(cred, &vcMap)
-	if err != nil {
-		return nil, fmt.Errorf("generate QR Code unmarshalling failed: %s", err)
-	}
-
-	vcID, ok := vcMap["id"].(string)
-
-	if !ok {
-		return nil, fmt.Errorf("unable to assert vc ID field type as string")
-	}
-
-	retrieveURL := "https://" + host + retrieve + "?" + "profile=" + profile + "&" + "id=" + trimQuote(vcID)
-
-	img, err = qrcode.Encode(retrieveURL, qrcode.Medium, 256)
-	if err != nil {
-		return nil, fmt.Errorf("generate QR Code encoding failed: %s", err)
-	}
-
-	image := base64.StdEncoding.EncodeToString(img)
-
-	return &qr{Image: image, URL: retrieveURL}, nil
-}
-
-func trimQuote(s string) string {
-	if len(s) > 0 && s[0] == '"' {
-		s = s[1:]
-	}
-
-	if len(s) > 0 && s[len(s)-1] == '"' {
-		s = s[:len(s)-1]
-	}
-
-	return s
 }
 
 func (c *Operation) getCMSUser(tk *oauth2.Token, info *token.Introspection) (*cmsUser, error) {
@@ -719,21 +632,6 @@ func (c *Operation) storeCredential(cred []byte, vcsProfile string) error {
 	}
 
 	return nil
-}
-
-func (c *Operation) retrieveCredential(id, vcsProfile string) ([]byte, error) {
-	r, err := http.NewRequest("GET", c.vcsURL+"/retrieve", nil)
-	if err != nil {
-		return nil, fmt.Errorf("retrieve credential get request failed %s", err)
-	}
-
-	q := r.URL.Query()
-	q.Add("id", id)
-	q.Add("profile", vcsProfile)
-
-	r.URL.RawQuery = q.Encode()
-
-	return sendHTTPRequest(r, c.httpClient, http.StatusOK, c.requestTokens[vcsIssuerRequestTokenName])
 }
 
 func (c *Operation) validateForm(formVals url.Values, keys ...string) error {
