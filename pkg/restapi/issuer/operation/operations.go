@@ -47,6 +47,7 @@ const (
 	vcsUpdateStatusEndpoint = "/updateStatus"
 
 	vcsProfileCookie = "vcsProfile"
+	didCommProfile   = "didComm"
 
 	issueCredentialURLFormat = "%s/%s" + "/credentials/issueCredential"
 
@@ -170,8 +171,7 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 
 	vcsProfile := r.URL.Query()["vcsProfile"]
 	if len(vcsProfile) == 0 {
-		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("vcs profile is empty"))
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("vcs profile is empty"))
 
 		return
 	}
@@ -214,6 +214,12 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get cms data: %s", err.Error()))
+
+		return
+	}
+
+	if vcsProfileCookie.Value == didCommProfile {
+		c.didcomm(w, r)
 
 		return
 	}
