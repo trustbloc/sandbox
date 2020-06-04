@@ -320,7 +320,6 @@ func startIssuer(parameters *issuerParameters) error {
 		TokenResolver:    tokenResolver.New(parameters.tokenIntrospectionURL, tokenResolver.WithTLSConfig(tlsConfig)),
 		CMSURL:           parameters.cmsURL,
 		VCSURL:           parameters.vcsURL,
-		QRCodeHTML:       "static/qr.html",
 		DIDAuthHTML:      "static/didAuth.html",
 		ReceiveVCHTML:    "static/receiveVC.html",
 		VCHTML:           "static/vc.html",
