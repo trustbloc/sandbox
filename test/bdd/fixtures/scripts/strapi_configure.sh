@@ -168,12 +168,12 @@ fi
 # Add creditcardstatement data for above created user
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{ "userid":"100", "vcmetadata":{ "@context": "http://schema.org/", "@type": "Invoice", "description": "June 2020 Credit Card Statement", "url": "http://acmebank.com/invoice.pdf", "broker": { "@type": "BankOrCreditUnion", "name": "ACME Bank" }, "accountId": "xxxx-xxxx-xxxx-1234", "customer": { "@type": "Person", "name": "Jane Doe" }, "paymentDueDate": "2020-06-30T12:00:00", "minimumPaymentDue": { "@type": "PriceSpecification", "price": 15.00, "priceCurrency": "CAD" }, "totalPaymentDue": { "@type": "PriceSpecification", "price": 200.00, "priceCurrency": "CAD" }, "billingPeriod": "P30D", "paymentStatus": "http://schema.org/PaymentDue" }' \
+   --data '{ "userid":"100", "vcmetadata":{ "@context": "http://schema.org/", "@type": "Invoice", "description": "June 2020 Credit Card Statement", "url": "http://acmebank.com/invoice.pdf", "broker": { "@type": "BankOrCreditUnion", "name": "ACME Bank" }, "accountId": "xxxx-xxxx-xxxx-1234", "customer": { "@type": "Person", "name": "Jane Doe" }, "paymentDueDate": "2020-06-30T12:00:00", "minimumPaymentDue": { "@type": "PriceSpecification", "price": 15.00, "priceCurrency": "CAD" }, "totalPaymentDue": { "@type": "PriceSpecification", "price": 200.00, "priceCurrency": "CAD" }, "billingPeriod": "P30D", "paymentStatus": "http://schema.org/PaymentDue" }}' \
    http://strapi:1337/creditcardstatement | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]
    then
-        echo "error insert universitydegreecredentials data in strapi: $result"
+        echo "error insert creditcardstatement data in strapi: $result"
 fi
 
 echo "STRAPI SETUP IS COMPLETED"
