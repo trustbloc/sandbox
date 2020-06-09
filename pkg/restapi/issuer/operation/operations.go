@@ -270,7 +270,7 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error(err)
 		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to create verifiable credentiall: %s", err.Error()))
+			fmt.Sprintf("failed to create verifiable credential: %s", err.Error()))
 
 		return
 	}

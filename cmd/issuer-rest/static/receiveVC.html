@@ -24,6 +24,14 @@ SPDX-License-Identifier: Apache-2.0
     <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
     <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
 
+    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+
+    <script>
+        $(function() {
+            $( "#tabs" ).tabs();
+        });
+    </script>
 
     <style>
         .gradient {
@@ -32,7 +40,7 @@ SPDX-License-Identifier: Apache-2.0
         pre {
             padding: 2px;
             margin: 2px;
-            font-size: 10px;
+            font-size: 12px;
             text-align: left
         }
     </style>
@@ -102,8 +110,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 <section class="bg-gray-100 py-8">
-
-    <div class="container mx-auto px-2 pt-4 pb-12 text-gray-800">
+    <div class="container mx-auto px-2 pt-4 pb-12 text-gray-800 overflow-auto">
             <div class="bg-teal-400 border border-teal-500 justify-center text-center rounded-b text-teal-900 px-32 py-3 shadow-md" role="alert" id="success-alert">
                 <strong class="font-bold">Success!</strong> Credential is saved successfully.
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -122,26 +129,44 @@ SPDX-License-Identifier: Apache-2.0
         <div class="w-full mb-4">
             <div class="h-1 mx-auto gradient w-64 opacity-25 my-0 py-0 rounded-t"></div>
         </div>
-
-        <div class="flex flex-col sm:flex-row justify-center pt-12 my-12 sm:my-4 ">
-            <div class="flex flex-col w-5/6 lg:w-1/2 mx-auto lg:mx-0 rounded-lg bg-white mt-4 sm:-mt-6 shadow-lg z-10">
-                <div class="flex-1 bg-white rounded-t rounded-b-none overflow-hidden shadow" >
-                    <div class="w-full p-4 text-2xl font-bold text-center"><i class="fa fa-certificate" style="font-size:64px;color:darkgoldenrod"></i></div>
-                    <textarea id="vcDataTextArea" style="display:none;">{{.Data}}</textarea>
-                    <pre id="vcDataJSON"></pre>
-                    </div>
-                    <div class="flex-none mt-auto bg-white rounded-b rounded-t-none overflow-hidden shadow p-6">
-                        <div class="flex items-center justify-center">
-                            <button id='storeVCBtn' class="mx-auto lg:mx-0 hover:underline gradient text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg">Save your credential</button>
-                        </div>
-                    </div>
-                </div>
-
-
+        <div id ="tabs" class="gradient">
+            <ul class="flex border-b">
+                <li class="-mb-px mr-1">
+                    <a href = "#preview" class="text-center block  py-2 px-4 hover:bg-blue-300 text-white">Preview</a>
+                </li>
+                <li class="mr-1">
+                    <a href = "#source" class="text-center block  text-white hover:bg-blue-300  py-2 px-4">Source</a>
+                </li>
+            </ul>
+            <div id = "source" class="flex flex-wrap overflow-auto bg-white">
+                <textarea id="vcDataTextArea" style="display:none;">{{.Data}}</textarea>
+                <pre id="vcDataJSON"></pre>
             </div>
-
+            <div  id="preview">
+                <table class="table-auto bg-white text-black w-full">
+                    <thead>
+                    <tr>
+                        <td class="w-1/2 px-4 py-2 font-bold" >Credential</td>
+                    </tr>
+                    </thead>
+                    <tbody id="credential">
+                    </tbody>
+                    <thead>
+                    <tr>
+                        <td class="w-1/2 px-4 py-2 font-bold">Subject</td>
+                    </tr>
+                    </thead>
+                    <tbody id="subject">
+                    </tbody>
+                </table>
+            </div>
         </div>
-
+        <div class="flex-none mt-auto bg-white rounded-b rounded-t-none overflow-hidden shadow p-6">
+            <div class="flex items-center justify-center">
+                <button id='storeVCBtn' class="mx-auto lg:mx-0 hover:underline gradient text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg">Save your credential</button>
+            </div>
+        </div>
+    </div>
 
 
 </section>
@@ -171,10 +196,9 @@ SPDX-License-Identifier: Apache-2.0
     </section>
 </footer>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-<script type="text/javascript" src="js/jquery.1.11.1.js"></script>
 
 <script>
+    let subject
     console.log('Installing...')
     installHandler()
         .catch(e => console.error('Error in installHandler:', e));
@@ -195,9 +219,9 @@ SPDX-License-Identifier: Apache-2.0
             document.addEventListener('DOMContentLoaded', fn);
         }
     }
+    const credentialToStore = document.getElementById('vcDataTextArea').value;
 
     async function onClickReceive() {
-        const credentialToStore = document.getElementById('vcDataTextArea').value;
         console.log('storing credential...', credentialToStore)
         const vp = {
             "@context": [
@@ -235,9 +259,47 @@ SPDX-License-Identifier: Apache-2.0
     ready(() => {
         $("#success-alert").hide()
         $("#error-alert").hide()
+
         document.getElementById("vcDataJSON").innerHTML = syntaxHighlight(JSON.stringify(JSON.parse({{.Data}}), undefined, 4));
         document.getElementById('storeVCBtn').addEventListener('click', onClickReceive);
+        var data =  JSON.parse({{.Data}})
+
+        var flattened = {};
+        flatten(data, flattened);
+
+        for (var key in flattened){
+            if ( key == "id" ||  key == "name" ||  key == "description" ||  key == "type"){
+                var tbody = document.getElementById('credential');
+                var tr = "<tr>";
+                console.log(key + ": " + flattened[key]);
+                if (isNaN(key)){
+                    tr += "<td class=\" px-4 py-2\">" + key + "</td>" + "<td class=\"px-4 py-2 overflow-auto \">" + flattened[key] + "</td></tr>";
+                    tbody.innerHTML += tr;
+                }
+            } else {
+                var tbody = document.getElementById('subject');
+                var tr = "<tr>";
+                console.log(key + ": " + flattened[key]);
+                if (isNaN(key)){
+                    tr += "<td class=\" px-4 py-2\">" + key + "</td>" + "<td class=\"px-4 py-2 overflow-auto \">" + flattened[key] + "</td></tr>";
+                    tbody.innerHTML += tr;
+                }
+            }
+        }
+
     })
+
+    function flatten(json, flattened) {
+        for (var key in json) {
+            if (json.hasOwnProperty(key)) {
+                if (json[key] instanceof Object && json[key] != "") {
+                    flatten(json[key], flattened,  key);
+                } else {
+                    flattened[key] = json[key];
+                }
+            }
+        }
+    }
 
     function syntaxHighlight(json) {
         json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
