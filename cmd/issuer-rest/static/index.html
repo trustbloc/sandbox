@@ -189,8 +189,9 @@ SPDX-License-Identifier: Apache-2.0
             <div class="flex-none mt-auto bg-white rounded-b rounded-t-none overflow-hidden shadow p-6">
                 <i class="fa  fa-times-rectangle-o" style="font-size:128px;color:indigo"></i>
                 <div class="flex items-center justify-start">
-                    <input id='revokeVCBtn' value ="Revoke Credential" type="submit" action="view/revoke.html"
-                            class="mx-auto lg:mx-0 hover:underline gradient text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg"/>
+                    <a id='revokeVCBtn' value ="Revoke Credential" href="view/revoke.html"
+                            class="mx-auto lg:mx-0 hover:underline gradient text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg">Revoke Credential</a>
+
                 </div>
             </div>
         </div>
@@ -245,7 +246,7 @@ SPDX-License-Identifier: Apache-2.0
                     <form id="demoSetupForm"  action="">
                         <input type="text" id="scope" name="scope" value="" checked hidden>
                         <input type="radio" id="vcsProfile" name="vcsProfile" value="trustbloc-ed25519signature2018-ed25519" checked hidden>
-                        <input type="submit"id="formSubmit" class="px-5 bg-transparent bg-indigo-700 p-3 rounded-lg text-white hover:bg-green-600 mr-2" value="Issue">
+                        <input type="submit"id="formSubmit" class="px-6 bg-transparent bg-indigo-700 p-1 rounded-lg text-white hover:bg-green-600 mr-2" value="Issue">
                     </form>
                 </div>
 
