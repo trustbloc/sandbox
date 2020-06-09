@@ -179,13 +179,16 @@ SPDX-License-Identifier: Apache-2.0
         document.getElementById("error-board").innerText = ""
 
         const invitation =  document.getElementById("invitation").value
-
-        // TODO https://github.com/trustbloc/edge-sandbox/issues/361 - Decide on the CHAPI request/response formats
+        const challenge = uuidv4()
+        const domain = window.location.hostname
+        
         const connectionRequest = {
             web: {
                 VerifiablePresentation: {
-                    query: {type: "DIDCommConnectionRequest"},
-                    invitation: JSON.parse(invitation)
+                    query: {type: "DIDConnect"},
+                    invitation: JSON.parse(invitation),
+                    challenge: challenge,
+                    domain: domain
                 }
             }
         };
@@ -264,6 +267,13 @@ SPDX-License-Identifier: Apache-2.0
             t = t.parentNode;
         }
         return false;
+    }
+
+    function uuidv4() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
     }
 </script>
 
