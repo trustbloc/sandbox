@@ -256,7 +256,7 @@
       "url": "http://strapi:1337"
     },
     "match": {
-      "url": "http://oathkeeper-proxy.trustbloc.local/creditcardstatement<.*>",
+      "url": "http://oathkeeper-proxy.trustbloc.local/creditcardstatements<.*>",
       "methods": [
         "GET"
       ]
