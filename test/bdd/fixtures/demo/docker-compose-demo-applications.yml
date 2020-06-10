@@ -22,7 +22,8 @@ services:
       - OAUTH2_ENDPOINT_TOKEN_INTROSPECTION_URL=https://hydra.trustbloc.local:4445/oauth2/introspect
       - ISSUER_CMS_URL=https://oathkeeper-proxy.trustbloc.local
       - ISSUER_VCS_URL=https://issuer-vcs.trustbloc.local
-      - ISSUER_ADAPTER_URL=http://issuer.adapter.example.com:10063
+      # TODO update this to use HTTPS
+      - ISSUER_ADAPTER_URL=http://localhost:10061
       - ISSUER_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - ISSUER_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
       - VIRTUAL_HOST=issuer.trustbloc.local
