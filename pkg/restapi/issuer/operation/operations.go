@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	didexcmd "github.com/hyperledger/aries-framework-go/pkg/controller/command/didexchange"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	log "github.com/sirupsen/logrus"
@@ -51,8 +50,7 @@ const (
 	// contexts
 	trustBlocExampleContext = "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld"
 
-	vcsIssuerRequestTokenName     = "vcs_issuer"
-	issuerAdapterRequestTokenName = "issuer_adapter" // nolint: gosec
+	vcsIssuerRequestTokenName = "vcs_issuer"
 
 	// issuer adapter endpoints
 	createInvitation = "/connections/create-invitation"
@@ -349,54 +347,7 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request) {
-	invitationJSONByte, err := c.createDIDCommInvitation()
-	if err != nil {
-		log.Error(err)
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("unable to create didcomm invitation: %s", err.Error()))
-
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-	t, err := template.ParseFiles(c.didCommHTML)
-	if err != nil {
-		log.Error(err)
-		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to load html: %s", err.Error()))
-
-		return
-	}
-
-	err = t.Execute(w, map[string]interface{}{
-		"Invitation": string(invitationJSONByte),
-	})
-	if err != nil {
-		log.Error(fmt.Sprintf("failed execute didcomm html template: %s", err.Error()))
-	}
-}
-
-func (c *Operation) createDIDCommInvitation() ([]byte, error) {
-	u := c.issuerAdapterURL + createInvitation
-
-	req, err := http.NewRequest(http.MethodPost, u, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	respBytes, err := sendHTTPRequest(req, c.httpClient, http.StatusOK, c.requestTokens[issuerAdapterRequestTokenName])
-	if err != nil {
-		return nil, err
-	}
-
-	didExchangeInvitation := &didexcmd.CreateInvitationResponse{}
-
-	err = json.Unmarshal(respBytes, didExchangeInvitation)
-	if err != nil {
-		return nil, err
-	}
-
-	return json.Marshal(didExchangeInvitation.Invitation)
+	http.Redirect(w, r, c.issuerAdapterURL+"/issuer/didcomm/connect/wallet", http.StatusFound)
 }
 
 func (c *Operation) getCMSUser(tk *oauth2.Token, info *token.Introspection) (*cmsUser, error) {

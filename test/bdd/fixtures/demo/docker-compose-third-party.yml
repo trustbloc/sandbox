@@ -122,6 +122,7 @@ services:
           - uni-registrar-web.trustbloc.local
           - did-resolver.trustbloc.local
           - consent-login.trustbloc.local
+          - issuer.adapter.trustbloc.local
           - peer0-org1.trustbloc.local
           - peer1-org1.trustbloc.local
           - peer0-org2.trustbloc.local

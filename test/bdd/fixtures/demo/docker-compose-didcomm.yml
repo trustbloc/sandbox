@@ -30,20 +30,23 @@ services:
     networks:
       - demo-net
 
-  issuer.adapter.example.com:
-    container_name: issuer.adapter.example.com
-    image: ${ARIES_AGENT_REST_IMAGE}:${ARIES_AGENT_REST_IMAGE_TAG}
+  issuer.adapter.rest.example.com:
+    container_name: issuer.adapter.rest.example.com
+    image: ${ADAPTER_REST_IMAGE}:${ADAPTER_REST_IMAGE_TAG}
     environment:
-      - ARIESD_API_HOST=${ISSUER_ADAPTER_HOST}:${ISSUER_ADAPTER_API_PORT}
-      - ARIESD_INBOUND_HOST=${HTTP_SCHEME}@${ISSUER_ADAPTER_HOST}:${ISSUER_ADAPTER_HTTP_INBOUND_PORT}
-      - ARIESD_INBOUND_HOST_EXTERNAL=${HTTP_SCHEME}@http://issuer.adapter.example.com:${ISSUER_ADAPTER_HTTP_INBOUND_PORT}
-      - ARIESD_DB_PATH=${ISSUER_ADAPTER_DB_PATH}
-      - ARIESD_DEFAULT_LABEL=trustbloc-issuer
-      - ARIESD_OUTBOUND_TRANSPORT=${HTTP_SCHEME}
-      - ARIESD_AUTO_ACCEPT=true
+      - ADAPTER_REST_HOST_URL=${ISSUER_ADAPTER_HOST}:${ISSUER_ADAPTER_PORT}
+      - ADAPTER_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - ADAPTER_REST_TLS_SYSTEMCERTPOOL=true
+      - ADAPTER_REST_DIDCOMM_INBOUND_HOST=${ISSUER_ADAPTER_HOST}:${ISSUER_ADAPTER_DIDCOMM_PORT}
+      - ADAPTER_REST_DIDCOMM_INBOUND_HOST_EXTERNAL=https://issuer-adapter.trustbloc.local
+      - VIRTUAL_HOST=issuer-adapter.trustbloc.local
+      - VIRTUAL_PORT=${ISSUER_ADAPTER_DIDCOMM_PORT}
     ports:
-      - ${ISSUER_ADAPTER_HTTP_INBOUND_PORT}:${ISSUER_ADAPTER_HTTP_INBOUND_PORT}
-      - ${ISSUER_ADAPTER_API_PORT}:${ISSUER_ADAPTER_API_PORT}
-    command: start
+      - ${ISSUER_ADAPTER_PORT}:${ISSUER_ADAPTER_PORT}
+      - ${ISSUER_ADAPTER_DIDCOMM_PORT}:${ISSUER_ADAPTER_DIDCOMM_PORT}
+    entrypoint: ""
+    command:  /bin/sh -c "adapter-rest start"
+    volumes:
+      - ../keys/tls:/etc/tls
     networks:
       - demo-net
