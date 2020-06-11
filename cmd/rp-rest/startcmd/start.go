@@ -222,7 +222,6 @@ func startRP(parameters *rpParameters) error {
 	}
 
 	cfg := &operation.Config{
-		VCHTML:        "static/vc.html",
 		VPHTML:        "static/vp.html",
 		VCSURL:        parameters.vcServiceURL,
 		TLSConfig:     &tls.Config{RootCAs: rootCAs},
@@ -240,7 +239,6 @@ func startRP(parameters *rpParameters) error {
 	router.PathPrefix("/reader/").Handler(fs)
 	router.PathPrefix("/css/").Handler(fs)
 	router.PathPrefix("/img/").Handler(fs)
-	router.PathPrefix("/js/").Handler(fs)
 
 	router.Handle("/", fs)
 
