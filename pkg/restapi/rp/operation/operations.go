@@ -25,11 +25,9 @@ const (
 	httpContentTypeJSON = "application/json"
 
 	// api paths
-	verifyVCPath = "/verify"
 	verifyVPPath = "/verifyPresentation"
 
 	// edge-service verifier endpoints
-	verifyCredentialURLFormat   = "/%s" + "/verifier/credentials"
 	verifyPresentationURLFormat = "/%s" + "/verifier/presentations"
 
 	// TODO https://github.com/trustbloc/edge-sandbox/issues/352 Configure verifier profiles in Verifier page
@@ -52,7 +50,6 @@ type httpClient interface {
 // Operation defines handlers
 type Operation struct {
 	handlers      []Handler
-	vcHTML        string
 	vpHTML        string
 	vcsURL        string
 	client        httpClient
@@ -61,7 +58,6 @@ type Operation struct {
 
 // Config defines configuration for rp operations
 type Config struct {
-	VCHTML        string
 	VPHTML        string
 	VCSURL        string
 	TLSConfig     *tls.Config
@@ -76,7 +72,6 @@ type vc struct {
 // New returns rp operation instance
 func New(config *Config) *Operation {
 	svc := &Operation{
-		vcHTML:        config.VCHTML,
 		vpHTML:        config.VPHTML,
 		vcsURL:        config.VCSURL,
 		client:        &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
@@ -84,32 +79,6 @@ func New(config *Config) *Operation {
 	svc.registerHandler()
 
 	return svc
-}
-
-// verifyVC
-func (c *Operation) verifyVC(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to parse form: %s", err.Error()))
-
-		return
-	}
-
-	inputData := "vcDataInput"
-	// TODO https://github.com/trustbloc/edge-sandbox/issues/194 RP Verifier - Support to configure
-	//  checks for Credential and Presentation verifications
-	checks := []string{"proof", "status"}
-
-	req := edgesvcops.CredentialsVerificationRequest{
-		Credential: []byte(r.Form.Get(inputData)),
-		Opts: &edgesvcops.CredentialsVerificationOptions{
-			Checks: checks,
-		},
-	}
-
-	verifyCredentialEndpoint := fmt.Sprintf(verifyCredentialURLFormat, verifierProfileID)
-
-	c.verify(verifyCredentialEndpoint, req, inputData, c.vcHTML, w, r)
 }
 
 // verifyVP
@@ -233,7 +202,6 @@ func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg s
 func (c *Operation) registerHandler() {
 	// Add more protocol endpoints here to expose them as controller API endpoints
 	c.handlers = []Handler{
-		support.NewHTTPHandler(verifyVCPath, http.MethodPost, c.verifyVC),
 		support.NewHTTPHandler(verifyVPPath, http.MethodPost, c.verifyVP),
 	}
 }

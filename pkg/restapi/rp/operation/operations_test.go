@@ -21,26 +21,6 @@ import (
 )
 
 const (
-	validContext = `"@context":["https://www.w3.org/2018/credentials/v1"]`
-
-	validVC = `{` +
-		validContext + `,
-	  "id": "http://example.edu/credentials/1872",
-	  "type": "VerifiableCredential",
-	  "credentialSubject": {
-		"id": "did:example:ebfeb1f712ebc6f1c276e12ec21"
-	  },
-	  "issuer": {
-		"id": "did:example:76e12ec712ebc6f1c221ebfeb1f",
-		"name": "Example University"
-	  },
-	  "issuanceDate": "2010-01-01T19:23:24Z",
-	  "credentialStatus": {
-		"id": "https://example.gov/status/24",
-		"type": "CredentialStatusList2017"
-	  }
-	}`
-
 	validVP = `{
 		"@context": [
 			"https://www.w3.org/2018/credentials/v1",
@@ -79,101 +59,7 @@ const (
 func TestNew(t *testing.T) {
 	svc := New(&Config{})
 	require.NotNil(t, svc)
-	require.Equal(t, 2, len(svc.GetRESTHandlers()))
-}
-
-func TestVerifyVC(t *testing.T) {
-	t.Run("test error from parse form", func(t *testing.T) {
-		svc := New(&Config{})
-		svc.client = &mockHTTPClient{postErr: fmt.Errorf("post error")}
-
-		rr := httptest.NewRecorder()
-		svc.verifyVC(rr, &http.Request{Method: http.MethodPost})
-		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to parse form")
-	})
-
-	t.Run("test error from unmarshal request", func(t *testing.T) {
-		svc := New(&Config{})
-
-		rr := httptest.NewRecorder()
-		m := make(map[string][]string)
-		m["vcDataInput"] = []string{"vc"}
-		svc.verifyVC(rr, &http.Request{Form: m})
-		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to unmarshal request")
-	})
-
-	t.Run("test error from http post", func(t *testing.T) {
-		svc := New(&Config{})
-		svc.client = &mockHTTPClient{postErr: fmt.Errorf("post error")}
-
-		rr := httptest.NewRecorder()
-		m := make(map[string][]string)
-		svc.verifyVC(rr, &http.Request{Form: m})
-		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "post error")
-	})
-
-	t.Run("test error from http request", func(t *testing.T) {
-		svc := New(&Config{})
-		svc.client = &mockHTTPClient{}
-		svc.vcsURL = "%%%%"
-
-		rr := httptest.NewRecorder()
-		m := make(map[string][]string)
-		svc.verifyVC(rr, &http.Request{Form: m})
-		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to create http request")
-	})
-
-	t.Run("test verify vc failed", func(t *testing.T) {
-		svc := New(&Config{})
-		b, err := json.Marshal(edgesvcops.CredentialsVerificationFailResponse{
-			Checks: []edgesvcops.CredentialsVerificationCheckResult{
-				{Check: "status", Error: "status check failed"},
-			},
-		})
-		require.NoError(t, err)
-		svc.client = &mockHTTPClient{postValue: &http.Response{
-			StatusCode: http.StatusBadRequest, Body: ioutil.NopCloser(strings.NewReader(string(b)))}}
-
-		rr := httptest.NewRecorder()
-		m := make(map[string][]string)
-		svc.verifyVC(rr, &http.Request{Form: m})
-		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "status check failed")
-	})
-
-	t.Run("test vc html not exist", func(t *testing.T) {
-		svc := New(&Config{VCHTML: ""})
-		svc.client = &mockHTTPClient{postValue: &http.Response{
-			StatusCode: http.StatusOK, Body: nil}}
-
-		rr := httptest.NewRecorder()
-		m := make(map[string][]string)
-		m["vcDataInput"] = []string{validVC}
-		svc.verifyVC(rr, &http.Request{Form: m})
-		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "unable to load html")
-	})
-
-	t.Run("test success", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
-		require.NoError(t, err)
-
-		defer func() { require.NoError(t, os.Remove(file.Name())) }()
-		svc := New(&Config{VCHTML: file.Name(), RequestTokens: map[string]string{vcsVerifierRequestTokenName: "tk1"}})
-		svc.client = &mockHTTPClient{postValue: &http.Response{
-			StatusCode: http.StatusOK, Body: nil}}
-
-		rr := httptest.NewRecorder()
-		m := make(map[string][]string)
-		m["vcDataInput"] = []string{validVC}
-
-		svc.verifyVC(rr, &http.Request{Form: m})
-		require.Equal(t, http.StatusOK, rr.Code)
-	})
+	require.Equal(t, 1, len(svc.GetRESTHandlers()))
 }
 
 func TestVerifyVP(t *testing.T) {
@@ -230,7 +116,7 @@ func TestVerifyVP(t *testing.T) {
 	})
 
 	t.Run("test vp html not exist", func(t *testing.T) {
-		svc := New(&Config{VCHTML: ""})
+		svc := New(&Config{VPHTML: ""})
 		svc.client = &mockHTTPClient{postValue: &http.Response{
 			StatusCode: http.StatusOK, Body: nil}}
 
