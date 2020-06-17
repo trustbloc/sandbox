@@ -85,7 +85,7 @@ func TestIssuer_Exchange_GetTokenError(t *testing.T) {
 
 	token, err := tokenIssuer.Exchange(req)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "Post : unsupported protocol scheme")
+	require.Contains(t, err.Error(), "unsupported protocol scheme")
 	require.Nil(t, token)
 }
 
