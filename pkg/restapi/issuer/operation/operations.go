@@ -22,7 +22,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
-	log "github.com/sirupsen/logrus"
+	"github.com/trustbloc/edge-core/pkg/log"
 	vcprofile "github.com/trustbloc/edge-service/pkg/doc/vc/profile"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
 	"golang.org/x/oauth2"
@@ -55,6 +55,8 @@ const (
 	// issuer adapter endpoints
 	createInvitation = "/connections/create-invitation"
 )
+
+var logger = log.New("edge-sandbox-issuer-restapi")
 
 // Handler http handler for each controller API endpoint
 type Handler interface {
@@ -173,7 +175,7 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint: funlen
 	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
 	if err != nil {
-		log.Error(err)
+		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get cookie: %s", err.Error()))
 
 		return
@@ -181,7 +183,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 
 	tk, err := c.tokenIssuer.Exchange(r)
 	if err != nil {
-		log.Error(err)
+		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to exchange code for token: %s", err.Error()))
 
 		return
@@ -190,7 +192,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 	// user info from token will be used for to retrieve data from cms
 	info, err := c.tokenResolver.Resolve(tk.AccessToken)
 	if err != nil {
-		log.Error(err)
+		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get token info: %s", err.Error()))
 
 		return
@@ -198,7 +200,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 
 	subject, err := c.getCMSData(tk, info)
 	if err != nil {
-		log.Error(err)
+		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get cms data: %s", err.Error()))
 
 		return
@@ -212,7 +214,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 
 	cred, err := c.prepareCredential(subject, info, vcsProfileCookie.Value)
 	if err != nil {
-		log.Error(err)
+		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create credential: %s", err.Error()))
 
 		return
@@ -222,7 +224,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 
 	t, err := template.ParseFiles(c.didAuthHTML)
 	if err != nil {
-		log.Error(err)
+		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to load html: %s", err.Error()))
 
 		return
@@ -232,7 +234,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 		"Path": generate + "?" + "profile=" + vcsProfileCookie.Value,
 		"Cred": string(cred),
 	}); err != nil {
-		log.Error(fmt.Sprintf("failed execute qr html template: %s", err.Error()))
+		logger.Errorf(fmt.Sprintf("failed execute qr html template: %s", err.Error()))
 	}
 }
 
@@ -241,7 +243,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
 	if err != nil {
-		log.Error(err)
+		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get cookie: %s", err.Error()))
 
 		return
@@ -249,7 +251,7 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 
 	err = r.ParseForm()
 	if err != nil {
-		log.Error(err)
+		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to parse request form: %s", err.Error()))
 
 		return
@@ -257,7 +259,7 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 
 	err = c.validateForm(r.Form, "cred", "holder", "authresp", "domain", "challenge")
 	if err != nil {
-		log.Errorf("invalid generate credential request: %s", err.Error())
+		logger.Errorf("invalid generate credential request: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid request argument: %s", err.Error()))
 
 		return
@@ -266,7 +268,7 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 	cred, err := c.createCredential(r.Form["cred"][0], r.Form["authresp"][0], r.Form["holder"][0],
 		r.Form["domain"][0], r.Form["challenge"][0], vcsProfileCookie.Value)
 	if err != nil {
-		log.Error(err)
+		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to create verifiable credential: %s", err.Error()))
 
@@ -275,7 +277,7 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 
 	err = c.storeCredential(cred, vcsProfileCookie.Value)
 	if err != nil {
-		log.Error(err)
+		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to store credential: %s", err.Error()))
 
 		return
@@ -285,14 +287,14 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 
 	t, err := template.ParseFiles(c.receiveVCHTML)
 	if err != nil {
-		log.Error(err)
+		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to load html: %s", err.Error()))
 
 		return
 	}
 
 	if err := t.Execute(w, vc{Data: string(cred)}); err != nil {
-		log.Error(fmt.Sprintf("failed execute html template: %s", err.Error()))
+		logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
 }
 
@@ -342,7 +344,7 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := t.Execute(w, vc{Msg: "VC is revoked", Data: r.Form.Get("vcDataInput")}); err != nil {
-		log.Error(fmt.Sprintf("failed execute html template: %s", err.Error()))
+		logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
 }
 
@@ -651,14 +653,14 @@ func sendHTTPRequest(req *http.Request, client *http.Client, status int, httpTok
 	defer func() {
 		err = resp.Body.Close()
 		if err != nil {
-			log.Warn("failed to close response body")
+			logger.Warnf("failed to close response body")
 		}
 	}()
 
 	if resp.StatusCode != status {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Warnf("failed to read response body for status: %d", resp.StatusCode)
+			logger.Warnf("failed to read response body for status: %d", resp.StatusCode)
 		}
 
 		return nil, fmt.Errorf("%s: %s", resp.Status, string(body))
@@ -681,7 +683,7 @@ func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg s
 	rw.WriteHeader(status)
 
 	if _, err := rw.Write([]byte(msg)); err != nil {
-		log.Errorf("Unable to send error message, %s", err)
+		logger.Errorf("Unable to send error message, %s", err)
 	}
 }
 

@@ -14,12 +14,14 @@ import (
 	"net/http"
 	"net/url"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/trustbloc/edge-core/pkg/log"
 
 	"github.com/trustbloc/edge-sandbox/pkg/token"
 )
 
 const tokenFormKey = "token"
+
+var logger = log.New("edge-sandbox-token-resolver")
 
 // Option configures the resolver
 type Option func(opts *Resolver)
@@ -59,7 +61,7 @@ func (r *Resolver) Resolve(tk string) (*token.Introspection, error) {
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			log.Warn("failed to close response body")
+			logger.Warnf("failed to close response body")
 		}
 	}()
 

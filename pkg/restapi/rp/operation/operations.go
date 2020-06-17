@@ -15,7 +15,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/trustbloc/edge-core/pkg/log"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/verifier/operation"
 
 	"github.com/trustbloc/edge-sandbox/pkg/internal/common/support"
@@ -35,6 +35,8 @@ const (
 
 	vcsVerifierRequestTokenName = "vcs_verifier" //nolint: gosec
 )
+
+var logger = log.New("edge-sandbox-rp-restapi")
 
 // Handler http handler for each controller API endpoint
 type Handler interface {
@@ -145,7 +147,7 @@ func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, ht
 		defer func() {
 			e := resp.Body.Close()
 			if e != nil {
-				log.Errorf("closing response body failed: %v", e)
+				logger.Errorf("closing response body failed: %v", e)
 			}
 		}()
 
@@ -165,7 +167,7 @@ func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, ht
 	}
 
 	if err := t.Execute(w, vc{Data: r.Form.Get(inputData)}); err != nil {
-		log.Error(fmt.Sprintf("failed execute html template: %s", err.Error()))
+		logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
 }
 
@@ -189,12 +191,12 @@ func (c *Operation) sendHTTPRequest(method, url string, body []byte, contentType
 
 // writeResponse writes interface value to response
 func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg string) {
-	log.Error(msg)
+	logger.Errorf(msg)
 
 	rw.WriteHeader(status)
 
 	if _, err := rw.Write([]byte(msg)); err != nil {
-		log.Errorf("Unable to send error message, %s", err)
+		logger.Errorf("Unable to send error message, %s", err)
 	}
 }
 

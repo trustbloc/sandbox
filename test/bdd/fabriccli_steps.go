@@ -11,7 +11,7 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/fabric-peer-test-common/bddtests"
 )
 
@@ -20,7 +20,7 @@ const (
 	sdkConfigPath = "./fixtures/fabric/config/sdk-client/config.yaml"
 )
 
-var logger = logrus.New()
+var logger = log.New("fabric-cli")
 
 // FabricCLISteps extend the BDD test with Fabric CLI steps
 type FabricCLISteps struct {

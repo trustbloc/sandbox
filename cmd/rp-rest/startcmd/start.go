@@ -13,8 +13,8 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/trustbloc/edge-core/pkg/log"
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 
@@ -59,6 +59,8 @@ const (
 	requestTokensFlagUsage = "Tokens used for http request " +
 		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
 )
+
+var logger = log.New("rp-rest")
 
 type server interface {
 	ListenAndServe(host, certFile, keyFile string, router http.Handler) error
@@ -160,7 +162,7 @@ func getRequestTokens(cmd *cobra.Command) (map[string]string, error) {
 		case 2:
 			tokens[split[0]] = split[1]
 		default:
-			log.Warnf("invalid token '%s'", token)
+			logger.Warnf("invalid token '%s'", token)
 		}
 	}
 
