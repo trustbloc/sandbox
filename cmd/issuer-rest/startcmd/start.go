@@ -13,8 +13,8 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/trustbloc/edge-core/pkg/log"
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 	"golang.org/x/oauth2"
@@ -109,6 +109,8 @@ const (
 	issuerAdapterURLFlagUsage = "Issuer Adapter Service URL. Format: HostName:Port."
 	issuerAdapterURLEnvKey    = "ISSUER_ADAPTER_URL"
 )
+
+var logger = log.New("issuer-rest")
 
 type server interface {
 	ListenAndServe(host, certFile, keyFile string, router http.Handler) error
@@ -241,7 +243,7 @@ func getRequestTokens(cmd *cobra.Command) (map[string]string, error) {
 		case 2:
 			tokens[split[0]] = split[1]
 		default:
-			log.Warnf("invalid token '%s'", token)
+			logger.Warnf("invalid token '%s'", token)
 		}
 	}
 

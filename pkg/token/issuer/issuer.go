@@ -15,7 +15,7 @@ import (
 	"net/http"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/trustbloc/edge-core/pkg/log"
 	"golang.org/x/oauth2"
 )
 
@@ -27,6 +27,8 @@ const (
 	defaultCookieExpiry = 20
 	stateValueLength    = 16 // minutes
 )
+
+var logger = log.New("edge-sandbox-token-issuer")
 
 // Option configures the issuer
 type Option func(opts *Issuer)
@@ -97,7 +99,7 @@ func generateStateOauthCookie(w http.ResponseWriter) string {
 
 	_, err := rand.Read(b)
 	if err != nil {
-		log.Error(err)
+		logger.Errorf(err.Error())
 	}
 
 	state := base64.URLEncoding.EncodeToString(b)
