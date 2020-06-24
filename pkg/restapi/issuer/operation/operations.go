@@ -32,11 +32,15 @@ import (
 )
 
 const (
-	login    = "/login"
-	callback = "/callback"
-	generate = "/generate"
-	revoke   = "/revoke"
-	didcomm  = "/didcomm"
+	login           = "/login"
+	callback        = "/callback"
+	generate        = "/generate"
+	revoke          = "/revoke"
+	didcommCallback = "/didcomm/cb"
+
+	// http query params
+	stateQueryParam = "state"
+	tokenQueryParam = "token"
 
 	credentialContext = "https://www.w3.org/2018/credentials/v1"
 
@@ -144,7 +148,7 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(generate, http.MethodPost, c.generateVC),
 
 		// didcomm
-		support.NewHTTPHandler(didcomm, http.MethodGet, c.didcomm),
+		support.NewHTTPHandler(didcommCallback, http.MethodGet, c.didcommCallbackHandler),
 	}
 }
 
@@ -349,7 +353,63 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, c.issuerAdapterURL+"/issuer/didcomm/connect/wallet", http.StatusFound)
+	// TODO https://github.com/trustbloc/edge-sandbox/issues/391 configure DIDComm Issuers
+	issuerID := "tb-cc-issuer"
+
+	state := uuid.New().String()
+
+	// TODO https://github.com/trustbloc/edge-sandbox/issues/390 store state with user details
+
+	http.Redirect(w, r, fmt.Sprintf(c.issuerAdapterURL+"/%s/connect/wallet?state=%s", issuerID, state), http.StatusFound)
+}
+
+func (c *Operation) didcommCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	err := c.validateAdapterCallback(r.URL.RequestURI())
+	if err != nil {
+		logger.Errorf("failed to validate the adapter response: %s", err)
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to validate the adapter response: %s", err.Error()))
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	t, err := template.ParseFiles(c.didCommHTML)
+	if err != nil {
+		logger.Errorf("unable to load didcomm html: %s", err)
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to load didcomm html: %s", err.Error()))
+
+		return
+	}
+
+	err = t.Execute(w, map[string]interface{}{})
+	if err != nil {
+		logger.Errorf(fmt.Sprintf("failed execute didcomm html template: %s", err.Error()))
+	}
+}
+
+func (c *Operation) validateAdapterCallback(redirectURL string) error {
+	u, err := url.Parse(redirectURL)
+	if err != nil {
+		return fmt.Errorf("didcomm callback - error parsing the request url: %s", err)
+	}
+
+	state := u.Query().Get(stateQueryParam)
+	if state == "" {
+		return errors.New("missing state in http query param")
+	}
+
+	tkn := u.Query().Get(tokenQueryParam)
+	if tkn == "" {
+		return errors.New("missing token in http query param")
+	}
+
+	// TODO https://github.com/trustbloc/edge-sandbox/issues/390 validate the state and store mapping
+	//  between user - adapter token
+
+	return nil
 }
 
 func (c *Operation) getCMSUser(tk *oauth2.Token, info *token.Introspection) (*cmsUser, error) {
