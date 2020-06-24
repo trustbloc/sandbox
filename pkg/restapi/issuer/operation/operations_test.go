@@ -18,6 +18,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	didexcmd "github.com/hyperledger/aries-framework-go/pkg/controller/command/didexchange"
 	"github.com/stretchr/testify/require"
@@ -824,6 +825,62 @@ func TestRevokeVC(t *testing.T) {
 
 		svc.revokeVC(rr, &http.Request{Form: m})
 		require.Equal(t, http.StatusOK, rr.Code)
+	})
+}
+
+func TestDIDCommController(t *testing.T) {
+	headers := make(map[string]string)
+	urlFmt := didcommCallback + "?" + stateQueryParam + "=%s&" + tokenQueryParam + "=%s&"
+
+	t.Run("test didcomm callback handler - success", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		cfg := &Config{DIDCommHTML: file.Name()}
+
+		handler := getHandlerWithConfig(t, didcommCallback, cfg)
+
+		_, status, err := handleRequest(handler, headers,
+			fmt.Sprintf(urlFmt, uuid.New().String(), uuid.New().String()), false)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusOK, status)
+	})
+
+	t.Run("test didcomm callback handler - state/token missing", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		cfg := &Config{DIDCommHTML: file.Name()}
+
+		handler := getHandlerWithConfig(t, didcommCallback, cfg)
+
+		respData, status, err := handleRequest(handler, headers,
+			fmt.Sprintf(urlFmt, "", uuid.New().String()), false)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusBadRequest, status)
+		require.Contains(t, respData.String(), "missing state in http query param")
+
+		respData, status, err = handleRequest(handler, headers,
+			fmt.Sprintf(urlFmt, uuid.New().String(), ""), false)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusBadRequest, status)
+		require.Contains(t, respData.String(), "missing token in http query param")
+	})
+
+	t.Run("test didcomm callback handler - html not found", func(t *testing.T) {
+		cfg := &Config{}
+
+		handler := getHandlerWithConfig(t, didcommCallback, cfg)
+
+		respData, status, err := handleRequest(handler, headers,
+			fmt.Sprintf(urlFmt, uuid.New().String(), uuid.New().String()), false)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusInternalServerError, status)
+		require.Contains(t, respData.String(), "unable to load didcomm html")
 	})
 }
 
