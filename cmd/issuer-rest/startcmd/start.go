@@ -19,6 +19,7 @@ import (
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 	"golang.org/x/oauth2"
 
+	"github.com/trustbloc/edge-sandbox/cmd/common"
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/issuer"
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/issuer/operation"
 	tokenIssuer "github.com/trustbloc/edge-sandbox/pkg/token/issuer"
@@ -141,6 +142,7 @@ type issuerParameters struct {
 	tlsCACerts            []string
 	requestTokens         map[string]string
 	issuerAdapterURL      string
+	logLevel              string
 }
 
 type tlsConfig struct {
@@ -208,6 +210,11 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			loggingLevel, err := cmdutils.GetUserSetVarFromString(cmd, common.LogLevelFlagName, common.LogLevelEnvKey, true)
+			if err != nil {
+				return err
+			}
+
 			parameters := &issuerParameters{
 				srv:                   srv,
 				hostURL:               strings.TrimSpace(hostURL),
@@ -221,6 +228,7 @@ func createStartCmd(srv server) *cobra.Command {
 				tlsCACerts:            tlsConfg.caCerts,
 				requestTokens:         requestTokens,
 				issuerAdapterURL:      issuerAdapterURL,
+				logLevel:              loggingLevel,
 			}
 
 			return startIssuer(parameters)
@@ -307,9 +315,16 @@ func createFlags(startCmd *cobra.Command) {
 
 	// did-comm
 	startCmd.Flags().StringP(issuerAdapterURLFlagName, "", "", issuerAdapterURLFlagUsage)
+
+	// default log level
+	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
 }
 
 func startIssuer(parameters *issuerParameters) error {
+	if parameters.logLevel != "" {
+		common.SetDefaultLogLevel(logger, parameters.logLevel)
+	}
+
 	rootCAs, err := tlsutils.GetCertPool(parameters.tlsSystemCertPool, parameters.tlsCACerts)
 	if err != nil {
 		return err

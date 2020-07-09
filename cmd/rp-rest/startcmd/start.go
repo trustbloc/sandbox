@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/trustbloc/edge-sandbox/cmd/common"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
@@ -87,6 +89,7 @@ type rpParameters struct {
 	tlsSystemCertPool bool
 	tlsCACerts        []string
 	requestTokens     map[string]string
+	logLevel          string
 }
 
 type tlsConfig struct {
@@ -131,6 +134,11 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			loggingLevel, err := cmdutils.GetUserSetVarFromString(cmd, common.LogLevelFlagName, common.LogLevelEnvKey, true)
+			if err != nil {
+				return err
+			}
+
 			parameters := &rpParameters{
 				srv:               srv,
 				hostURL:           strings.TrimSpace(hostURL),
@@ -140,6 +148,7 @@ func createStartCmd(srv server) *cobra.Command {
 				tlsSystemCertPool: tlsConfg.systemCertPool,
 				tlsCACerts:        tlsConfg.caCerts,
 				requestTokens:     requestTokens,
+				logLevel:          loggingLevel,
 			}
 
 			return startRP(parameters)
@@ -215,9 +224,14 @@ func createFlags(startCmd *cobra.Command) {
 		tlsSystemCertPoolFlagUsage)
 	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
 	startCmd.Flags().StringArrayP(requestTokensFlagName, "", []string{}, requestTokensFlagUsage)
+	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
 }
 
 func startRP(parameters *rpParameters) error {
+	if parameters.logLevel != "" {
+		common.SetDefaultLogLevel(logger, parameters.logLevel)
+	}
+
 	rootCAs, err := tlsutils.GetCertPool(parameters.tlsSystemCertPool, parameters.tlsCACerts)
 	if err != nil {
 		return err
