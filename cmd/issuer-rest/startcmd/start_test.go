@@ -12,6 +12,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	"github.com/trustbloc/edge-core/pkg/log"
+
+	"github.com/trustbloc/edge-sandbox/cmd/common"
 )
 
 const flag = "--"
@@ -224,11 +227,12 @@ func TestStartCmdWithMissingClientScopesArg(t *testing.T) {
 func TestStartCmdValidArgs(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
-	args := getValidArgs()
+	args := getValidArgs(log.ParseString(log.ERROR))
 	startCmd.SetArgs(args)
 
 	err := startCmd.Execute()
 	require.Nil(t, err)
+	require.Equal(t, log.ERROR, log.GetLevel(""))
 }
 
 func TestStartCmdValidArgsEnvVar(t *testing.T) {
@@ -303,7 +307,7 @@ func checkFlagPropertiesCorrect(t *testing.T, cmd *cobra.Command, flagName, flag
 	require.Nil(t, flagAnnotations)
 }
 
-func getValidArgs() []string {
+func getValidArgs(logLevel string) []string {
 	var args []string
 	args = append(args, hostURLArg()...)
 	args = append(args, endpointAuthURLArg()...)
@@ -318,6 +322,10 @@ func getValidArgs() []string {
 	args = append(args, vcsURLArg()...)
 	args = append(args, requestTokensArg()...)
 	args = append(args, issuerAdapterURLArg()...)
+
+	if logLevel != "" {
+		args = append(args, logLevelArg(logLevel)...)
+	}
 
 	return args
 }
@@ -372,4 +380,8 @@ func requestTokensArg() []string {
 
 func issuerAdapterURLArg() []string {
 	return []string{flag + issuerAdapterURLFlagName, "issuer-adapter"}
+}
+
+func logLevelArg(logLevel string) []string {
+	return []string{flag + common.LogLevelFlagName, logLevel}
 }

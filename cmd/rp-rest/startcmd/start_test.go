@@ -12,6 +12,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	"github.com/trustbloc/edge-core/pkg/log"
+
+	"github.com/trustbloc/edge-sandbox/cmd/common"
 )
 
 const flag = "--"
@@ -68,11 +71,12 @@ func TestStartCmdWithMissingHostArg(t *testing.T) {
 func TestStartCmdValidArgs(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
-	args := getValidArgs()
+	args := getValidArgs(log.ParseString(log.ERROR))
 	startCmd.SetArgs(args)
 
 	err := startCmd.Execute()
 	require.Nil(t, err)
+	require.Equal(t, log.ERROR, log.GetLevel(""))
 }
 
 func TestStartCmdValidArgsEnvVar(t *testing.T) {
@@ -97,13 +101,17 @@ func checkFlagPropertiesCorrect(t *testing.T, cmd *cobra.Command, flagName, flag
 	require.Nil(t, flagAnnotations)
 }
 
-func getValidArgs() []string {
+func getValidArgs(logLevel string) []string {
 	var args []string
 	args = append(args, hostURLArg()...)
 	args = append(args, tlsCertFileArg()...)
 	args = append(args, tlsKeyFileArg()...)
 	args = append(args, vcsServiceURLArg()...)
 	args = append(args, requestTokensArg()...)
+
+	if logLevel != "" {
+		args = append(args, logLevelArg(logLevel)...)
+	}
 
 	return args
 }
@@ -152,4 +160,8 @@ func vcsServiceURLArg() []string {
 
 func requestTokensArg() []string {
 	return []string{flag + requestTokensFlagName, "token1=tk1", flag + requestTokensFlagName, "token2=tk2=tk2"}
+}
+
+func logLevelArg(logLevel string) []string {
+	return []string{flag + common.LogLevelFlagName, logLevel}
 }
