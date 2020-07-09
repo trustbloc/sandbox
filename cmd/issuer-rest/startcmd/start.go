@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
+	"github.com/trustbloc/edge-core/pkg/restapi/logspec"
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 	"golang.org/x/oauth2"
@@ -365,6 +366,10 @@ func startIssuer(parameters *issuerParameters) error {
 	router.Handle("/", fs)
 
 	for _, handler := range handlers {
+		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
+	}
+
+	for _, handler := range logspec.New().GetOperations() {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
 	}
 
