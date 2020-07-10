@@ -39,7 +39,7 @@ services:
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer0.org1.example.com
-      - FABRIC_LOGGING_SPEC=comm.grpc.server=error:cauthdsl=warn:gossip=warn:grpc=warn:ledger=info:msp=warn:policies=warn:peer.gossip=warn:info
+      - FABRIC_LOGGING_SPEC=comm.grpc.server=error:cauthdsl=warn:gossip=warn:grpc=warn:ledger=info:msp=warn:policies=warn:peer.gossip=warn:info:sidetree_observer=info
       ## the following setting redirects chaincode container logs to the peer container logs
       - CORE_VM_DOCKER_ATTACHSTDOUT=true
       - CORE_PEER_LOCALMSPID=Org1MSP
@@ -61,7 +61,7 @@ services:
       # metrics config
       - CORE_METRICS_PROVIDER=prometheus
       - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:8080
-      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-monitor
+      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-observer
       - CORE_SIDETREE_PORT=48326
       # # the following setting starts chaincode containers on the same
       # # bridge network as the peers
@@ -100,7 +100,7 @@ services:
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer1.org1.example.com
-      - FABRIC_LOGGING_SPEC=comm.grpc.server=error:cauthdsl=warn:gossip=warn:grpc=warn:ledger=info:msp=warn:policies=warn:peer.gossip=warn:info
+      - FABRIC_LOGGING_SPEC=comm.grpc.server=error:cauthdsl=warn:gossip=warn:grpc=warn:ledger=info:msp=warn:policies=warn:peer.gossip=warn:info:sidetree_observer=info
       ## the following setting redirects chaincode container logs to the peer container logs
       - CORE_VM_DOCKER_ATTACHSTDOUT=true
       - CORE_PEER_LOCALMSPID=Org1MSP
@@ -162,7 +162,7 @@ services:
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer0.org2.example.com
-      - FABRIC_LOGGING_SPEC=comm.grpc.server=error:cauthdsl=warn:gossip=warn:grpc=warn:ledger=info:msp=warn:policies=warn:peer.gossip=warn:info
+      - FABRIC_LOGGING_SPEC=comm.grpc.server=error:cauthdsl=warn:gossip=warn:grpc=warn:ledger=info:msp=warn:policies=warn:peer.gossip=warn:info:sidetree_observer=info
       ## the following setting redirects chaincode container logs to the peer container logs
       - CORE_VM_DOCKER_ATTACHSTDOUT=true
       - CORE_PEER_LOCALMSPID=Org2MSP
@@ -184,7 +184,7 @@ services:
       # metrics config
       - CORE_METRICS_PROVIDER=prometheus
       - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:8080
-      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-monitor
+      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-observer
       - CORE_SIDETREE_PORT=48326
       # # the following setting starts chaincode containers on the same
       # # bridge network as the peers
@@ -223,7 +223,7 @@ services:
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer1.org2.example.com
-      - FABRIC_LOGGING_SPEC=comm.grpc.server=error:cauthdsl=warn:gossip=warn:grpc=warn:ledger=info:msp=warn:policies=warn:peer.gossip=warn:info
+      - FABRIC_LOGGING_SPEC=comm.grpc.server=error:cauthdsl=warn:gossip=warn:grpc=warn:ledger=info:msp=warn:policies=warn:peer.gossip=warn:info:sidetree_observer=info
       ## the following setting redirects chaincode container logs to the peer container logs
       - CORE_VM_DOCKER_ATTACHSTDOUT=true
       - CORE_PEER_LOCALMSPID=Org2MSP
@@ -285,7 +285,7 @@ services:
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer0.org3.example.com
-      - FABRIC_LOGGING_SPEC=comm.grpc.server=error:cauthdsl=warn:gossip=warn:grpc=warn:ledger=info:msp=warn:policies=warn:peer.gossip=warn:info
+      - FABRIC_LOGGING_SPEC=comm.grpc.server=error:cauthdsl=warn:gossip=warn:grpc=warn:ledger=info:msp=warn:policies=warn:peer.gossip=warn:info:sidetree_observer=info
       ## the following setting redirects chaincode container logs to the peer container logs
       - CORE_VM_DOCKER_ATTACHSTDOUT=true
       - CORE_PEER_LOCALMSPID=Org3MSP
@@ -307,7 +307,7 @@ services:
       # metrics config
       - CORE_METRICS_PROVIDER=prometheus
       - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:8080
-      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-monitor
+      - CORE_LEDGER_ROLES=endorser,committer,sidetree-resolver,sidetree-batch-writer,sidetree-observer
       - CORE_SIDETREE_PORT=48326
       # # the following setting starts chaincode containers on the same
       # # bridge network as the peers
@@ -346,7 +346,7 @@ services:
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer1.org3.example.com
-      - FABRIC_LOGGING_SPEC=comm.grpc.server=error:cauthdsl=warn:gossip=warn:grpc=warn:ledger=info:msp=warn:policies=warn:peer.gossip=warn:info
+      - FABRIC_LOGGING_SPEC=comm.grpc.server=error:cauthdsl=warn:gossip=warn:grpc=warn:ledger=info:msp=warn:policies=warn:peer.gossip=warn:info:sidetree_observer=info
       ## the following setting redirects chaincode container logs to the peer container logs
       - CORE_VM_DOCKER_ATTACHSTDOUT=true
       - CORE_PEER_LOCALMSPID=Org3MSP

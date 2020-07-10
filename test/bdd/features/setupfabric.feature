@@ -42,7 +42,7 @@ Feature:
     # Check blockchain endpoint
     When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/0.0.1/blockchain/version"
     Then the JSON path "name" of the response equals "Hyperledger Fabric"
-    And the JSON path "version" of the response equals "2.0.0"
+    And the JSON path "version" of the response equals "2.1.1"
 
     # Check cas endpoint
     When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/0.0.1/cas/version"
@@ -51,10 +51,11 @@ Feature:
 
     Given variable "token_fileidx_w" is assigned the value "TOKEN_FILEIDX_W"
 
-
     # Create a file index document
-    When fabric-cli is executed with args "file createidx --path /.well-known/did-trustbloc --url http://localhost:48326/file --recoverypwd pwd1 --nextpwd pwd1 --recoverykeyfile ./fixtures/keys/public.pem --updatekeyfile ./fixtures/keys/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    When fabric-cli is executed with args "file createidx --path /.well-known/did-trustbloc --url http://localhost:48326/file --recoverykeyfile ./fixtures/keys/public.pem --updatekeyfile ./fixtures/keys/public.pem --authtoken ${token_fileidx_w} --noprompt"
     And the JSON path "id" of the response is saved to variable "fileIdxID"
+
+    Then we wait 10 seconds
 
     # Update the file handler configuration for the '/content' path with the ID of the file index document
     Then fabric-cli is executed with args "ledgerconfig fileidxupdate --msp Org1MSP --peers peer0.org1.example.com;peer1.org1.example.com --path /.well-known/did-trustbloc --idxid ${fileIdxID} --noprompt"
@@ -67,7 +68,7 @@ Feature:
     Then the JSON path "didDocument.id" of the response equals "${fileIdxID}"
 
   # Upload a couple of files and add them to the file index document
-    When fabric-cli is executed with args "file upload --url https://peer0-org1.trustbloc.local/.well-known/did-trustbloc --files ./fixtures/discovery-config/sidetree-fabric/config/testnet.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/org1.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/org2.trustbloc.local.json;fixtures/discovery-config/sidetree-fabric/config/org3.trustbloc.local.json --idxurl https://peer0-org1.trustbloc.local/file/${fileIdxID} --pwd pwd1 --nextpwd pwd2  --signingkeyfile ./fixtures/keys/key.pem --authtoken ${token_fileidx_w} --noprompt"
+    When fabric-cli is executed with args "file upload --url https://peer0-org1.trustbloc.local/.well-known/did-trustbloc --files ./fixtures/discovery-config/sidetree-fabric/config/testnet.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/org1.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/org2.trustbloc.local.json;fixtures/discovery-config/sidetree-fabric/config/org3.trustbloc.local.json --idxurl https://peer0-org1.trustbloc.local/file/${fileIdxID} --signingkeyfile ./fixtures/keys/key.pem --nextupdatekeyfile ./fixtures/keys/public.pem --authtoken ${token_fileidx_w} --noprompt"
     Then the JSON path "#" of the response has 4 items
     And the JSON path "0.Name" of the response equals "testnet.trustbloc.local.json"
     And the JSON path "0.ContentType" of the response equals "application/json"
