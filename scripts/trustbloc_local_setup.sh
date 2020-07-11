@@ -34,4 +34,6 @@ cat > ${SANDBOX_HOME}/hosts <<EOF
 127.0.0.1 org3.trustbloc.local
 127.0.0.1 testnet.trustbloc.local
 127.0.0.1 issuer-adapter.trustbloc.local
+127.0.0.1 rp-adapter.trustbloc.local
+127.0.0.1 rp-adapter-hydra.trustbloc.local
 EOF

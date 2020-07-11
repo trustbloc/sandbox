@@ -51,3 +51,61 @@ services:
       - ../scripts/:/tmp/scripts
     networks:
       - demo-net
+
+  rp.adapter.rest.example.com:
+    container_name: rp.adapter.rest.example.com
+    image: ${RP_ADAPTER_REST_IMAGE}:${RP_ADAPTER_REST_IMAGE_TAG}
+    environment:
+      - ADAPTER_REST_HOST_URL=${RP_ADAPTER_HOST}:${RP_ADAPTER_PORT}
+      - ADAPTER_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - ADAPTER_REST_TLS_SYSTEMCERTPOOL=true
+      - ADAPTER_REST_DSN=TODO                         # TODO currently unused: https://github.com/trustbloc/edge-adapter/issues/168
+      - ADAPTER_REST_OP_URL=http://TODO.example.com   # TODO currently unused: https://github.com/trustbloc/edge-adapter/issues/24
+      - ADAPTER_REST_PRESENTATION_DEFINITIONS_FILE=/etc/testdata/presentationdefinitions.json
+      - ADAPTER_REST_DIDCOMM_INBOUND_HOST=${RP_ADAPTER_HOST}:${RP_ADAPTER_DIDCOMM_PORT}
+      - ADAPTER_REST_DIDCOMM_INBOUND_HOST_EXTERNAL=https://rp-adapter.trustbloc.local
+      - ADAPTER_REST_TRUSTBLOC_DOMAIN=${BLOC_DOMAIN}
+      - ADAPTER_REST_HYDRA_URL=https://rp-adapter-hydra.trustbloc.local:${RPADAPTER_HYDRA_ADMIN_PORT}
+      - VIRTUAL_HOST=rp-adapter.trustbloc.local
+      - VIRTUAL_PORT=${RP_ADAPTER_DIDCOMM_PORT}
+    ports:
+      - ${RP_ADAPTER_PORT}:${RP_ADAPTER_PORT}
+      - ${RP_ADAPTER_DIDCOMM_PORT}:${RP_ADAPTER_DIDCOMM_PORT}
+    entrypoint: ""
+    command:  /bin/sh -c "adapter-rest start"
+    volumes:
+      - ../keys/tls:/etc/tls
+      - ./adapter-config/rp:/etc/testdata
+    networks:
+      - demo-net
+    depends_on:
+      - hydra
+      - mysql
+
+  rp-adapter-hydra.trustbloc.local:
+    container_name: rp-adapter-hydra.trustbloc.local
+    image: oryd/hydra:v1.3.2-alpine
+    ports:
+      - ${RPADAPTER_HYDRA_PUBLIC_PORT}:${RPADAPTER_HYDRA_PUBLIC_PORT}
+      - ${RPADAPTER_HYDRA_ADMIN_PORT}:${RPADAPTER_HYDRA_ADMIN_PORT}
+    command:  /bin/sh -c "hydra migrate sql --read-from-env --yes; hydra serve all"
+    entrypoint: ""
+    environment:
+      - DSN=mysql://rpadapterhydra:secret@tcp(mysql:3306)/rpadapter_hydra?max_conns=20&max_idle_conns=4
+      - URLS_SELF_ISSUER=https://rp-adapter-hydra.trustbloc.local:${RPADAPTER_HYDRA_PUBLIC_PORT}
+      - URLS_CONSENT=http://rp.adapter.rest.example.com:${RP_ADAPTER_PORT}/consent
+      - URLS_LOGIN=http://rp.adapter.rest.example.com:${RP_ADAPTER_PORT}/login
+      - SECRETS_SYSTEM=testSecretsSystem
+      - OIDC_SUBJECT_TYPES_SUPPORTED=public
+      - OIDC_SUBJECT_TYPE_PAIRWISE_SALT=testSecretsSystem
+      - SERVE_PUBLIC_PORT=${RPADAPTER_HYDRA_PUBLIC_PORT}
+      - SERVE_ADMIN_PORT=${RPADAPTER_HYDRA_ADMIN_PORT}
+      - SERVE_TLS_KEY_PATH=/etc/tls/trustbloc.local.key
+      - SERVE_TLS_CERT_PATH=/etc/tls/trustbloc.local.crt
+    restart: unless-stopped
+    volumes:
+      - ../keys/tls:/etc/tls
+    depends_on:
+      - mysql
+    networks:
+      - demo-net
