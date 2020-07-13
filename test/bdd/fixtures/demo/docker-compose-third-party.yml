@@ -87,16 +87,15 @@ services:
 
   mysql:
     container_name: mysql
-    image: mysql:8.0.18
+    image: mysql:8.0.20
     restart: always
     command: --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_DATABASE: strapi
-      MYSQL_USER: user
-      MYSQL_PASSWORD: secret
       MYSQL_ROOT_PASSWORD: secret
     logging:
       driver: "none"
+    volumes:
+      - ../scripts/mysql:/docker-entrypoint-initdb.d
     networks:
       - demo-net
 
@@ -123,6 +122,8 @@ services:
           - did-resolver.trustbloc.local
           - consent-login.trustbloc.local
           - issuer.adapter.trustbloc.local
+          - rp.adapter.trustbloc.local
+          - rp-adapter-hydra.trustbloc.local
           - peer0-org1.trustbloc.local
           - peer1-org1.trustbloc.local
           - peer0-org2.trustbloc.local
@@ -154,7 +155,7 @@ services:
     image: ${CONSENT_LOGIN_SERVER_IMAGE}:latest
     environment:
       # will access hydra admin through container directly because nginx-proxy doesn't support multiple ports per virtual host
-      - ADMIN_URL=https://hydra.trustbloc.local:4445
+      - ADMIN_URL=${HYDRA_ADMIN_URL}
       - SERVE_PORT=3300
       - TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - VIRTUAL_HOST=consent-login.trustbloc.local

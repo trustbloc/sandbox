@@ -1,0 +1,42 @@
+{
+  "input_descriptors": [
+    {
+      "id": "banking_input_1",
+      "group": ["scope1"],
+      "schema": {
+        "uri": "https://bank-standards.com/customer.json",
+        "name": "Bank Account Information",
+        "purpose": "We need your bank and account information."
+      },
+      "constraints": {
+        "fields": [
+          {
+            "path": ["$.issuer", "$.vc.issuer", "$.iss"],
+            "purpose": "The credential must be from one of the specified issuers",
+            "filter": {
+              "type": "string",
+              "pattern": "did:example:123|did:example:456"
+            }
+          },
+          {
+            "path": ["$.credentialSubject.account[*].id", "$.vc.credentialSubject.account[*].id"],
+            "purpose": "We need your bank account number for processing purposes",
+            "filter": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 12
+            }
+          },
+          {
+            "path": ["$.credentialSubject.account[*].route", "$.vc.credentialSubject.account[*].route"],
+            "purpose": "You must have an account with a German, US, or Japanese bank account",
+            "filter": {
+              "type": "string",
+              "pattern": "^DE|^US|^JP"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
