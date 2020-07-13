@@ -15,7 +15,7 @@ until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"id":"tb-cc-issuer", "name":"TrustBloc - Credit Card Data Issuer", "callbackURL":"https://issuer.trustbloc.local/didcomm/cb"}' \
+   --data '{"id":"tb-cc-issuer", "name":"TrustBloc - Credit Card Data Issuer", "url":"https://issuer.trustbloc.local/didcomm/", "supportedVCContexts" : ["https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld"]}' \
    http://issuer.adapter.rest.example.com:10061/profile | jq -r '.createdAt' 2>/dev/null)
    echo "'created' field from profile tb-cc-issuer response is: $responseCreatedTime"
 
