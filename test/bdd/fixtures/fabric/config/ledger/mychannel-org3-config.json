@@ -25,7 +25,7 @@
         {
           "AppName": "sidetree",
           "Version": "1",
-          "Config": "file://./mychannel-sidetree-config.json",
+          "Config": "file://./sidetree-config.json",
           "Format": "json",
           "Components": [
             {
@@ -61,7 +61,7 @@
             {
               "Name": "/sidetree/0.0.1/cas",
               "Version": "0.1.3",
-              "Config": "file://./mychannel-dcashandler-config.yaml",
+              "Config": "file://./dcashandler-config.yaml",
               "Format": "yaml"
             }
           ]
@@ -73,7 +73,19 @@
             {
               "Name": "/sidetree/0.0.1/blockchain",
               "Version": "0.1.3",
-              "Config": "file://./mychannel-blockchainhandler-config.yaml",
+              "Config": "file://./blockchainhandler-config.yaml",
+              "Format": "yaml"
+            }
+          ]
+        },
+        {
+          "AppName": "discovery-handler",
+          "Version": "1",
+          "Components": [
+            {
+              "Name": "/discovery/0.0.1",
+              "Version": "0.1.4",
+              "Config": "file://./discoveryhandler-config.yaml",
               "Format": "yaml"
             }
           ]
@@ -104,7 +116,7 @@
         {
           "AppName": "sidetree",
           "Version": "1",
-          "Config": "file://./mychannel-sidetree-config.json",
+          "Config": "file://./sidetree-config.json",
           "Format": "json",
           "Components": [
             {
@@ -140,7 +152,7 @@
             {
               "Name": "/sidetree/0.0.1/cas",
               "Version": "0.1.3",
-              "Config": "file://./mychannel-dcashandler-config.yaml",
+              "Config": "file://./dcashandler-config.yaml",
               "Format": "yaml"
             }
           ]
@@ -152,7 +164,19 @@
             {
               "Name": "/sidetree/0.0.1/blockchain",
               "Version": "0.1.3",
-              "Config": "file://./mychannel-blockchainhandler-config.yaml",
+              "Config": "file://./blockchainhandler-config.yaml",
+              "Format": "yaml"
+            }
+          ]
+        },
+        {
+          "AppName": "discovery-handler",
+          "Version": "1",
+          "Components": [
+            {
+              "Name": "/discovery/0.0.1",
+              "Version": "0.1.4",
+              "Config": "file://./discoveryhandler-config.yaml",
               "Format": "yaml"
             }
           ]

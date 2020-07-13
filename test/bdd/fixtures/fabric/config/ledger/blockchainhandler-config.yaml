@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-batchWriterTimeout: 3s
-chaincodeName: document
-collection: diddoc
+basePath: /sidetree/0.0.1/blockchain
+maxTransactionsInResponse: 10
+maxBlocksInResponse: 5
+

@@ -6,6 +6,6 @@
   "IndexNamespace": "file:idx",
   "IndexDocID": "",
   "Authorization":{
-  "WriteTokens": ["fileidx_w"]
-}
+    "WriteTokens": ["fileidx_w"]
+  }
 }

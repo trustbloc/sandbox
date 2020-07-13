@@ -4,6 +4,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-batchWriterTimeout: 3s
+batchWriterTimeout: 5s
 chaincodeName: document
 collection: diddoc

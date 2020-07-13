@@ -21,7 +21,7 @@
     {
       "AppName": "sidetree-dcas",
       "Version": "1",
-      "Config": "file://./dcas-config.yaml",
+      "Config": "file://./mychannel-dcas-config.yaml",
       "Format": "yaml"
     },
     {
