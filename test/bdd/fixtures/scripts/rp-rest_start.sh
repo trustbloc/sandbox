@@ -49,9 +49,13 @@ then
     echo "   HTTP RESPONSE: $registration"
     exit 1
 fi
-echo "RP Tenant ClientID=$(echo $registration | jq .clientID) PublicDID=$(echo $registration | jq .publicDID)."
+
+clientID=$(echo $registration | jq .clientID)
+clientSecret=$(echo $registration | jq .clientSecret)
+publicDID=$(echo $registration | jq .publicDID)
+
+echo "RP Tenant ClientID=$clientID PublicDID=$publicDID."
 echo ""
 
 echo "Starting rp.example.com..."
-# TODO OAuth2 configuration for rp.example.com https://github.com/trustbloc/edge-sandbox/issues/399
-rp-rest start
+rp-rest start --oidc-opurl https://rp-adapter-hydra.trustbloc.local:6666/ --oidc-clientid $clientID --oidc-clientsecret $clientSecret

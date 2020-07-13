@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/restapi/logspec"
+	"github.com/trustbloc/edge-core/pkg/storage/memstore"
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 
@@ -60,6 +61,22 @@ const (
 	requestTokensEnvKey    = "RP_REQUEST_TOKENS" //nolint: gosec
 	requestTokensFlagUsage = "Tokens used for http request " +
 		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
+
+	// OIDC flags
+	oidcProviderURLFlagName  = "oidc-opurl"
+	oidcProviderURLFlagUsage = "URL for the OIDC provider." +
+		" Alternatively, this can be set with the following environment variable: " + oidcProviderURLEnvKey
+	oidcProviderURLEnvKey = "RP_OIDC_OPURL"
+
+	oidcClientIDFlagName  = "oidc-clientid"
+	oidcClientIDFlagUsage = "OAuth2 client_id for OIDC." +
+		" Alternatively, this can be set with the following environment variable: " + oidcProviderURLEnvKey
+	oidcClientIDEnvKey = "RP_OIDC_CLIENTID"
+
+	oidcClientSecretFlagName  = "oidc-clientsecret" //nolint:gosec
+	oidcClientSecretFlagUsage = "OAuth2 client secret for OIDC." +
+		" Alternatively, this can be set with the following environment variable: " + oidcClientSecretEnvKey
+	oidcClientSecretEnvKey = "RP_OIDC_CLIENTSECRET" //nolint:gosec
 )
 
 var logger = log.New("rp-rest")
@@ -90,6 +107,13 @@ type rpParameters struct {
 	tlsCACerts        []string
 	requestTokens     map[string]string
 	logLevel          string
+	oidcParameters    *oidcParameters
+}
+
+type oidcParameters struct {
+	oidcProviderURL  string
+	oidcClientID     string
+	oidcClientSecret string
 }
 
 type tlsConfig struct {
@@ -139,6 +163,11 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			oidcParams, err := getOIDCParameters(cmd)
+			if err != nil {
+				return err
+			}
+
 			parameters := &rpParameters{
 				srv:               srv,
 				hostURL:           strings.TrimSpace(hostURL),
@@ -149,11 +178,36 @@ func createStartCmd(srv server) *cobra.Command {
 				tlsCACerts:        tlsConfg.caCerts,
 				requestTokens:     requestTokens,
 				logLevel:          loggingLevel,
+				oidcParameters:    oidcParams,
 			}
 
 			return startRP(parameters)
 		},
 	}
+}
+
+func getOIDCParameters(cmd *cobra.Command) (*oidcParameters, error) {
+	oidcProviderURL, err := cmdutils.GetUserSetVarFromString(cmd, oidcProviderURLFlagName, oidcProviderURLEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	oidcClientID, err := cmdutils.GetUserSetVarFromString(cmd, oidcClientIDFlagName, oidcClientIDEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	oidcClientSecret, err := cmdutils.GetUserSetVarFromString(
+		cmd, oidcClientSecretFlagName, oidcClientSecretEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return &oidcParameters{
+		oidcProviderURL:  oidcProviderURL,
+		oidcClientID:     oidcClientID,
+		oidcClientSecret: oidcClientSecret,
+	}, nil
 }
 
 func getRequestTokens(cmd *cobra.Command) (map[string]string, error) {
@@ -225,6 +279,9 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
 	startCmd.Flags().StringArrayP(requestTokensFlagName, "", []string{}, requestTokensFlagUsage)
 	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
+	startCmd.Flags().StringP(oidcProviderURLFlagName, "", "", oidcProviderURLFlagUsage)
+	startCmd.Flags().StringP(oidcClientIDFlagName, "", "", oidcClientIDFlagUsage)
+	startCmd.Flags().StringP(oidcClientSecretFlagName, "", "", oidcClientSecretFlagUsage)
 }
 
 func startRP(parameters *rpParameters) error {
@@ -238,10 +295,15 @@ func startRP(parameters *rpParameters) error {
 	}
 
 	cfg := &operation.Config{
-		VPHTML:        "static/vp.html",
-		VCSURL:        parameters.vcServiceURL,
-		TLSConfig:     &tls.Config{RootCAs: rootCAs},
-		RequestTokens: parameters.requestTokens}
+		VPHTML:                 "static/vp.html",
+		VCSURL:                 parameters.vcServiceURL,
+		TLSConfig:              &tls.Config{RootCAs: rootCAs},
+		RequestTokens:          parameters.requestTokens,
+		TransientStoreProvider: memstore.NewProvider(),
+		OIDCProviderURL:        parameters.oidcParameters.oidcProviderURL,
+		OIDCClientID:           parameters.oidcParameters.oidcClientID,
+		OIDCClientSecret:       parameters.oidcParameters.oidcClientSecret,
+	}
 
 	rpService, err := rp.New(cfg)
 	if err != nil {

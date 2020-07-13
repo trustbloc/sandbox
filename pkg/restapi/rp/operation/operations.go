@@ -8,15 +8,21 @@ package operation
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/coreos/go-oidc"
+	"github.com/google/uuid"
 	"github.com/trustbloc/edge-core/pkg/log"
+	"github.com/trustbloc/edge-core/pkg/storage"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/verifier/operation"
+	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/edge-sandbox/pkg/internal/common/support"
 )
@@ -25,7 +31,12 @@ const (
 	httpContentTypeJSON = "application/json"
 
 	// api paths
-	verifyVPPath = "/verifyPresentation"
+	verifyVPPath         = "/verifyPresentation"
+	oauth2GetRequestPath = "/oauth2/request"
+	oauth2CallbackPath   = "/oauth2/callback"
+
+	// api path params
+	scopeQueryParam = "scope"
 
 	// edge-service verifier endpoints
 	verifyPresentationURLFormat = "/%s" + "/verifier/presentations"
@@ -34,6 +45,8 @@ const (
 	verifierProfileID = "verifier1"
 
 	vcsVerifierRequestTokenName = "vcs_verifier" //nolint: gosec
+
+	transientStoreName = "rp-rest-transient"
 )
 
 var logger = log.New("edge-sandbox-rp-restapi")
@@ -49,21 +62,33 @@ type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
+type oidcProvider interface {
+	Endpoint() oauth2.Endpoint
+}
+
 // Operation defines handlers
 type Operation struct {
-	handlers      []Handler
-	vpHTML        string
-	vcsURL        string
-	client        httpClient
-	requestTokens map[string]string
+	handlers         []Handler
+	vpHTML           string
+	vcsURL           string
+	client           httpClient
+	requestTokens    map[string]string
+	transientStore   storage.Store
+	oidcProvider     oidcProvider
+	oidcClientID     string
+	oidcClientSecret string
 }
 
 // Config defines configuration for rp operations
 type Config struct {
-	VPHTML        string
-	VCSURL        string
-	TLSConfig     *tls.Config
-	RequestTokens map[string]string
+	VPHTML                 string
+	VCSURL                 string
+	TLSConfig              *tls.Config
+	RequestTokens          map[string]string
+	OIDCProviderURL        string
+	OIDCClientID           string
+	OIDCClientSecret       string
+	TransientStoreProvider storage.Provider
 }
 
 // vc struct used to return vc data to html
@@ -71,16 +96,44 @@ type vc struct {
 	Data string `json:"data"`
 }
 
+type createOIDCRequestResponse struct {
+	Request string `json:"request"`
+}
+
 // New returns rp operation instance
-func New(config *Config) *Operation {
+func New(config *Config) (*Operation, error) {
 	svc := &Operation{
-		vpHTML:        config.VPHTML,
-		vcsURL:        config.VCSURL,
-		client:        &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
-		requestTokens: config.RequestTokens}
+		vpHTML:           config.VPHTML,
+		vcsURL:           config.VCSURL,
+		client:           &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
+		requestTokens:    config.RequestTokens,
+		oidcClientID:     config.OIDCClientID,
+		oidcClientSecret: config.OIDCClientSecret,
+	}
+
+	var err error
+
+	svc.oidcProvider, err = oidc.NewProvider(
+		oidc.ClientContext(
+			context.Background(),
+			&http.Client{
+				Transport: &http.Transport{TLSClientConfig: config.TLSConfig},
+			},
+		),
+		config.OIDCProviderURL,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init oidc provider with url [%s] : %w", config.OIDCProviderURL, err)
+	}
+
+	svc.transientStore, err = createStore(config.TransientStoreProvider)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create store : %w", err)
+	}
+
 	svc.registerHandler()
 
-	return svc
+	return svc, nil
 }
 
 // verifyVP
@@ -112,6 +165,52 @@ func (c *Operation) verifyVP(w http.ResponseWriter, r *http.Request) {
 	verifyPresentationEndpoint := fmt.Sprintf(verifyPresentationURLFormat, verifierProfileID)
 
 	c.verify(verifyPresentationEndpoint, req, inputData, c.vpHTML, w, r)
+}
+
+func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) {
+	scope := r.URL.Query().Get(scopeQueryParam)
+	if scope == "" {
+		c.writeErrorResponse(w, http.StatusBadRequest, "missing scope")
+
+		return
+	}
+
+	// TODO validate scope
+
+	oauth2Config := &oauth2.Config{
+		ClientID:     c.oidcClientID,
+		ClientSecret: c.oidcClientSecret,
+		Endpoint:     c.oidcProvider.Endpoint(),
+		RedirectURL:  oauth2CallbackPath, // TODO set full callback path properly
+		Scopes:       []string{oidc.ScopeOpenID, scope},
+	}
+
+	state := uuid.New().String()
+	redirectURL := oauth2Config.AuthCodeURL(state, oauth2.AccessTypeOnline)
+
+	response, err := json.Marshal(&createOIDCRequestResponse{
+		Request: redirectURL,
+	})
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to marshal response : %s", err))
+
+		return
+	}
+
+	err = c.transientStore.Put(state, []byte(state))
+	if err != nil {
+		c.writeErrorResponse(w,
+			http.StatusInternalServerError, fmt.Sprintf("failed to write state to transient store : %s", err))
+
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+
+	_, err = w.Write(response)
+	if err != nil {
+		logger.Errorf("failed to write response : %s", err)
+	}
 }
 
 // verify function verifies the input data and parse the response to provided template
@@ -205,10 +304,20 @@ func (c *Operation) registerHandler() {
 	// Add more protocol endpoints here to expose them as controller API endpoints
 	c.handlers = []Handler{
 		support.NewHTTPHandler(verifyVPPath, http.MethodPost, c.verifyVP),
+		support.NewHTTPHandler(oauth2GetRequestPath, http.MethodGet, c.createOIDCRequest),
 	}
 }
 
 // GetRESTHandlers get all controller API handler available for this service
 func (c *Operation) GetRESTHandlers() []Handler {
 	return c.handlers
+}
+
+func createStore(p storage.Provider) (storage.Store, error) {
+	err := p.CreateStore(transientStoreName)
+	if err != nil && !errors.Is(err, storage.ErrDuplicateStore) {
+		return nil, fmt.Errorf("failed to create store [%s] : %w", transientStoreName, err)
+	}
+
+	return p.OpenStore(transientStoreName)
 }

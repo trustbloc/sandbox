@@ -6,10 +6,14 @@ SPDX-License-Identifier: Apache-2.0
 package startcmd
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/trustbloc/edge-core/pkg/log"
@@ -71,7 +75,10 @@ func TestStartCmdWithMissingHostArg(t *testing.T) {
 func TestStartCmdValidArgs(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
-	args := getValidArgs(log.ParseString(log.ERROR))
+	path, cleanup := newTestOIDCProvider()
+	defer cleanup()
+
+	args := getValidArgs(log.ParseString(log.ERROR), path)
 	startCmd.SetArgs(args)
 
 	err := startCmd.Execute()
@@ -81,8 +88,10 @@ func TestStartCmdValidArgs(t *testing.T) {
 
 func TestStartCmdValidArgsEnvVar(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
+	path, cleanup := newTestOIDCProvider()
 
-	setEnvVars(t)
+	defer cleanup()
+	setEnvVars(t, path)
 
 	err := startCmd.Execute()
 	require.Nil(t, err)
@@ -101,16 +110,22 @@ func checkFlagPropertiesCorrect(t *testing.T, cmd *cobra.Command, flagName, flag
 	require.Nil(t, flagAnnotations)
 }
 
-func getValidArgs(logLevel string) []string {
+func getValidArgs(logLevel, oidcProviderURL string) []string {
 	var args []string
 	args = append(args, hostURLArg()...)
 	args = append(args, tlsCertFileArg()...)
 	args = append(args, tlsKeyFileArg()...)
 	args = append(args, vcsServiceURLArg()...)
 	args = append(args, requestTokensArg()...)
+	args = append(args, oidcClientIDArg()...)
+	args = append(args, oidcClientSecretArg()...)
 
 	if logLevel != "" {
 		args = append(args, logLevelArg(logLevel)...)
+	}
+
+	if oidcProviderURL != "" {
+		args = append(args, oidcProviderURLArg(oidcProviderURL)...)
 	}
 
 	return args
@@ -119,7 +134,9 @@ func getValidArgs(logLevel string) []string {
 func TestTLSSystemCertPoolInvalidArgsEnvVar(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
-	setEnvVars(t)
+	path, cleanup := newTestOIDCProvider()
+	defer cleanup()
+	setEnvVars(t, path)
 
 	require.NoError(t, os.Setenv(tlsSystemCertPoolEnvKey, "wrongvalue"))
 
@@ -128,7 +145,7 @@ func TestTLSSystemCertPoolInvalidArgsEnvVar(t *testing.T) {
 	require.Contains(t, err.Error(), "invalid syntax")
 }
 
-func setEnvVars(t *testing.T) {
+func setEnvVars(t *testing.T, oidcProviderURL string) {
 	err := os.Setenv(hostURLEnvKey, "localhost:8080")
 	require.Nil(t, err)
 
@@ -140,6 +157,9 @@ func setEnvVars(t *testing.T) {
 
 	err = os.Setenv(vcsURLEnvKey, "localhost:8081")
 	require.Nil(t, err)
+
+	err = os.Setenv(oidcProviderURLEnvKey, oidcProviderURL)
+	require.NoError(t, err)
 }
 
 func hostURLArg() []string {
@@ -164,4 +184,56 @@ func requestTokensArg() []string {
 
 func logLevelArg(logLevel string) []string {
 	return []string{flag + common.LogLevelFlagName, logLevel}
+}
+
+func oidcProviderURLArg(oidcProviderURL string) []string {
+	return []string{flag + oidcProviderURLFlagName, oidcProviderURL}
+}
+
+func oidcClientIDArg() []string {
+	return []string{flag + oidcClientIDFlagName, uuid.New().String()}
+}
+
+func oidcClientSecretArg() []string {
+	return []string{flag + oidcClientSecretFlagName, uuid.New().String()}
+}
+
+func newTestOIDCProvider() (string, func()) {
+	h := &testOIDCProvider{}
+	srv := httptest.NewServer(h)
+	h.baseURL = srv.URL
+
+	return srv.URL, srv.Close
+}
+
+type oidcConfigJSON struct {
+	Issuer      string   `json:"issuer"`
+	AuthURL     string   `json:"authorization_endpoint"`
+	TokenURL    string   `json:"token_endpoint"`
+	JWKSURL     string   `json:"jwks_uri"`
+	UserInfoURL string   `json:"userinfo_endpoint"`
+	Algorithms  []string `json:"id_token_signing_alg_values_supported"`
+}
+
+type testOIDCProvider struct {
+	baseURL string
+}
+
+func (t *testOIDCProvider) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+	response, err := json.Marshal(&oidcConfigJSON{
+		Issuer:      t.baseURL,
+		AuthURL:     fmt.Sprintf("%s/oauth2/auth", t.baseURL),
+		TokenURL:    fmt.Sprintf("%s/oauth2/token", t.baseURL),
+		JWKSURL:     fmt.Sprintf("%s/oauth2/certs", t.baseURL),
+		UserInfoURL: fmt.Sprintf("%s/oauth2/userinfo", t.baseURL),
+		Algorithms:  []string{"RS256"},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = w.Write(response)
+	if err != nil {
+		panic(err)
+	}
 }
