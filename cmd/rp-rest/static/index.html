@@ -26,6 +26,7 @@ SPDX-License-Identifier: Apache-2.0
 
     <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
     <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
@@ -164,6 +165,12 @@ SPDX-License-Identifier: Apache-2.0
             <div class="px-4 py-8">
                 <button id="universityDegree" onclick="getUniversityDegree()" class="h-24"><img src="img/icon-home-5.png"></button>
                 <h4 class="mt-10 text-lg font-medium tracking-wide uppercase leading-tight">Apply for University Grant</h4>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-lg">
+            <div class="px-4 py-8">
+                <button id="creditCardStatement" onclick="getCreditCardStatement()" class="h-24"><img src="img/icon-home-5.png"></button>
+                <h4 class="mt-10 text-lg font-medium tracking-wide uppercase leading-tight">Apply for ?????</h4>
             </div>
         </div>
         </div>
@@ -404,6 +411,11 @@ SPDX-License-Identifier: Apache-2.0
 
     async function getUniversityDegree() {
         await getVP("universityDegree")
+    }
+
+    async function getCreditCardStatement() {
+        const redirectURL = await axios.get("/oauth2/request?scope=CreditCardStatement").data
+        window.location.replace(redirectURL)
     }
 
 </script>

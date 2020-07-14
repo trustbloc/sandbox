@@ -79,7 +79,7 @@ services:
     networks:
       - demo-net
     depends_on:
-      - hydra
+      - rp-adapter-hydra.trustbloc.local
       - mysql
 
   rp-adapter-hydra.trustbloc.local:
@@ -102,6 +102,8 @@ services:
       - SERVE_ADMIN_PORT=${RPADAPTER_HYDRA_ADMIN_PORT}
       - SERVE_TLS_KEY_PATH=/etc/tls/trustbloc.local.key
       - SERVE_TLS_CERT_PATH=/etc/tls/trustbloc.local.crt
+      - VIRTUAL_HOST=rp-adapter-hydra.trustbloc.local
+      - VIRTUAL_PORT=${RPADAPTER_HYDRA_PUBLIC_PORT}
     restart: unless-stopped
     volumes:
       - ../keys/tls:/etc/tls
