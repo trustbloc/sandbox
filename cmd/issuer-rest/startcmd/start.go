@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/restapi/logspec"
+	"github.com/trustbloc/edge-core/pkg/storage/memstore"
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 	"golang.org/x/oauth2"
@@ -345,6 +346,8 @@ func startIssuer(parameters *issuerParameters) error {
 		TLSConfig:        tlsConfig,
 		RequestTokens:    parameters.requestTokens,
 		IssuerAdapterURL: parameters.issuerAdapterURL,
+		// TODO https://github.com/trustbloc/edge-sandbox/issues/408 configure database
+		StoreProvider: memstore.NewProvider(),
 	}
 
 	issuerService, err := issuer.New(cfg)
