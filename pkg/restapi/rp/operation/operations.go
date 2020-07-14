@@ -64,6 +64,57 @@ type httpClient interface {
 
 type oidcProvider interface {
 	Endpoint() oauth2.Endpoint
+	Verifier(*oidc.Config) verifier
+}
+
+type oidcProviderImpl struct {
+	op *oidc.Provider
+}
+
+func (o *oidcProviderImpl) Endpoint() oauth2.Endpoint {
+	return o.op.Endpoint()
+}
+
+func (o *oidcProviderImpl) Verifier(config *oidc.Config) verifier {
+	return &verifierImpl{v: o.op.Verifier(config)}
+}
+
+type verifier interface {
+	Verify(context.Context, string) (idToken, error)
+}
+
+type verifierImpl struct {
+	v *oidc.IDTokenVerifier
+}
+
+func (v *verifierImpl) Verify(ctx context.Context, token string) (idToken, error) {
+	return v.v.Verify(ctx, token)
+}
+
+type idToken interface {
+	Claims(interface{}) error
+}
+
+type oauth2Config interface {
+	AuthCodeURL(string, ...oauth2.AuthCodeOption) string
+	Exchange(context.Context, string, ...oauth2.AuthCodeOption) (oauth2Token, error)
+}
+
+type oauth2ConfigImpl struct {
+	oc *oauth2.Config
+}
+
+func (o *oauth2ConfigImpl) AuthCodeURL(state string, options ...oauth2.AuthCodeOption) string {
+	return o.oc.AuthCodeURL(state, options...)
+}
+
+func (o *oauth2ConfigImpl) Exchange(
+	ctx context.Context, code string, options ...oauth2.AuthCodeOption) (oauth2Token, error) {
+	return o.oc.Exchange(ctx, code, options...)
+}
+
+type oauth2Token interface {
+	Extra(string) interface{}
 }
 
 // Operation defines handlers
@@ -77,6 +128,8 @@ type Operation struct {
 	oidcProvider     oidcProvider
 	oidcClientID     string
 	oidcClientSecret string
+	oidcCallbackURL  string
+	oauth2ConfigFunc func(...string) oauth2Config
 }
 
 // Config defines configuration for rp operations
@@ -88,6 +141,7 @@ type Config struct {
 	OIDCProviderURL        string
 	OIDCClientID           string
 	OIDCClientSecret       string
+	OIDCCallbackURL        string
 	TransientStoreProvider storage.Provider
 }
 
@@ -109,11 +163,10 @@ func New(config *Config) (*Operation, error) {
 		requestTokens:    config.RequestTokens,
 		oidcClientID:     config.OIDCClientID,
 		oidcClientSecret: config.OIDCClientSecret,
+		oidcCallbackURL:  config.OIDCCallbackURL,
 	}
 
-	var err error
-
-	svc.oidcProvider, err = oidc.NewProvider(
+	idp, err := oidc.NewProvider(
 		oidc.ClientContext(
 			context.Background(),
 			&http.Client{
@@ -126,9 +179,27 @@ func New(config *Config) (*Operation, error) {
 		return nil, fmt.Errorf("failed to init oidc provider with url [%s] : %w", config.OIDCProviderURL, err)
 	}
 
+	svc.oidcProvider = &oidcProviderImpl{op: idp}
+
 	svc.transientStore, err = createStore(config.TransientStoreProvider)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create store : %w", err)
+	}
+
+	svc.oauth2ConfigFunc = func(scopes ...string) oauth2Config {
+		config := &oauth2.Config{
+			ClientID:     svc.oidcClientID,
+			ClientSecret: svc.oidcClientSecret,
+			Endpoint:     svc.oidcProvider.Endpoint(),
+			RedirectURL:  fmt.Sprintf("%s%s", svc.oidcCallbackURL, oauth2CallbackPath),
+			Scopes:       []string{oidc.ScopeOpenID},
+		}
+
+		if len(scopes) > 0 {
+			config.Scopes = append(config.Scopes, scopes...)
+		}
+
+		return &oauth2ConfigImpl{oc: config}
 	}
 
 	svc.registerHandler()
@@ -177,16 +248,10 @@ func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) {
 
 	// TODO validate scope
 
-	oauth2Config := &oauth2.Config{
-		ClientID:     c.oidcClientID,
-		ClientSecret: c.oidcClientSecret,
-		Endpoint:     c.oidcProvider.Endpoint(),
-		RedirectURL:  oauth2CallbackPath, // TODO set full callback path properly
-		Scopes:       []string{oidc.ScopeOpenID, scope},
-	}
-
 	state := uuid.New().String()
-	redirectURL := oauth2Config.AuthCodeURL(state, oauth2.AccessTypeOnline)
+	redirectURL := c.oauth2Config(scope).AuthCodeURL(state, oauth2.AccessTypeOnline)
+
+	logger.Debugf("redirectURL: %s", redirectURL)
 
 	response, err := json.Marshal(&createOIDCRequestResponse{
 		Request: redirectURL,
@@ -210,6 +275,101 @@ func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write(response)
 	if err != nil {
 		logger.Errorf("failed to write response : %s", err)
+	}
+}
+
+func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) { //nolint:funlen
+	state := r.URL.Query().Get("state")
+	if state == "" {
+		logger.Errorf("missing state")
+		c.didcommDemoResult(w, "missing state")
+
+		return
+	}
+
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		logger.Errorf("missing code")
+		c.didcommDemoResult(w, "missing code")
+
+		return
+	}
+
+	_, err := c.transientStore.Get(state)
+	if errors.Is(err, storage.ErrValueNotFound) {
+		logger.Errorf("invalid state parameter")
+		c.didcommDemoResult(w, "invalid state parameter")
+
+		return
+	}
+
+	if err != nil {
+		logger.Errorf("failed to query transient store for state : %s", err)
+		c.didcommDemoResult(w, fmt.Sprintf("failed to query transient store for state : %s", err))
+
+		return
+	}
+
+	oauthToken, err := c.oauth2Config().Exchange(r.Context(), code)
+	if err != nil {
+		logger.Errorf("failed to exchange oauth2 code for token : %s", err)
+		c.didcommDemoResult(w, fmt.Sprintf("failed to exchange oauth2 code for token : %s", err))
+
+		return
+	}
+
+	rawIDToken, ok := oauthToken.Extra("id_token").(string)
+	if !ok {
+		logger.Errorf("missing id_token")
+		c.didcommDemoResult(w, "missing id_token")
+
+		return
+	}
+
+	oidcToken, err := c.oidcProvider.Verifier(&oidc.Config{
+		ClientID: c.oidcClientID,
+	}).Verify(r.Context(), rawIDToken)
+	if err != nil {
+		logger.Errorf("failed to verify id_token : %s", err)
+		c.didcommDemoResult(w, fmt.Sprintf("failed to verify id_token : %s", err))
+
+		return
+	}
+
+	userData := make(map[string]interface{})
+
+	err = oidcToken.Claims(&userData)
+	if err != nil {
+		logger.Errorf("failed to extract user data from id_token : %s", err)
+		c.didcommDemoResult(w, fmt.Sprintf("failed to extract user data from id_token : %s", err))
+
+		return
+	}
+
+	bits, err := json.Marshal(userData)
+	if err != nil {
+		logger.Errorf("failed to marshal user data : %s", err)
+		c.didcommDemoResult(w, fmt.Sprintf("failed to marshal user data : %s", err))
+
+		return
+	}
+
+	c.didcommDemoResult(w, string(bits))
+}
+
+func (c *Operation) didcommDemoResult(w http.ResponseWriter, data string) {
+	t, err := template.ParseFiles(c.vpHTML)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to load html: %s", err.Error()))
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	if err := t.Execute(w, vc{Data: data}); err != nil {
+		logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
 }
 
@@ -305,12 +465,17 @@ func (c *Operation) registerHandler() {
 	c.handlers = []Handler{
 		support.NewHTTPHandler(verifyVPPath, http.MethodPost, c.verifyVP),
 		support.NewHTTPHandler(oauth2GetRequestPath, http.MethodGet, c.createOIDCRequest),
+		support.NewHTTPHandler(oauth2CallbackPath, http.MethodGet, c.handleOIDCCallback),
 	}
 }
 
 // GetRESTHandlers get all controller API handler available for this service
 func (c *Operation) GetRESTHandlers() []Handler {
 	return c.handlers
+}
+
+func (c *Operation) oauth2Config(scopes ...string) oauth2Config {
+	return c.oauth2ConfigFunc(scopes...)
 }
 
 func createStore(p storage.Provider) (storage.Store, error) {

@@ -414,8 +414,13 @@ SPDX-License-Identifier: Apache-2.0
     }
 
     async function getCreditCardStatement() {
-        const redirectURL = await axios.get("/oauth2/request?scope=CreditCardStatement").data
-        window.location.replace(redirectURL)
+        axios({
+            method: "GET",
+            url: "/oauth2/request?scope=CreditCardStatement"
+        }).then(
+            resp => {window.location.href = resp.data.request},
+            err => console.error(err)
+        )
     }
 
 </script>

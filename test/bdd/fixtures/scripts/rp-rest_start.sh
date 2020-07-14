@@ -5,17 +5,22 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+rpAdapterURL=http://rp.adapter.rest.example.com:10161/relyingparties
+callbackURL=https://rp.trustbloc.local:5557/oauth2/callback
+
 registerRPTenant() {
     n=0
-    maxAttempts=30
+
+    # TODO implement a smart healthcheck on RP Adapter: https://github.com/trustbloc/edge-adapter/issues/134
+    maxAttempts=60
 
     until [ $n -ge $maxAttempts ]
     do
         response=$(curl -o - -s -w "RESPONSE_CODE=%{response_code}" \
         --header "Content-Type: application/json" \
         --request POST \
-        --data '{"label": "rp.trustbloc.local", "callback": "https://rp.trustbloc.local/oauth2/callback"}' \
-        http://rp.adapter.rest.example.com:10161/relyingparties)
+        --data '{"label": "rp.trustbloc.local", "callback": "'$callbackURL'"}' \
+        $rpAdapterURL)
 
         code=${response//*RESPONSE_CODE=/}
 
@@ -35,10 +40,7 @@ registerRPTenant() {
     done
 }
 
-echo "Waiting for the RP Adapter to be ready..."
-# TODO implement a smart healthcheck on RP Adapter: https://github.com/trustbloc/edge-adapter/issues/134
-sleep 30
-echo "Registering RP Adapter tenant..."
+echo "Registering RP Adapter tenant at "$rpAdapterURL
 result=$(registerRPTenant)
 registration=${result//RESPONSE_CODE*/}
 code=${result//*RESPONSE_CODE=/}
@@ -50,12 +52,12 @@ then
     exit 1
 fi
 
-clientID=$(echo $registration | jq .clientID)
-clientSecret=$(echo $registration | jq .clientSecret)
-publicDID=$(echo $registration | jq .publicDID)
+clientID=$(echo $registration | jq -r .clientID)
+clientSecret=$(echo $registration | jq -r .clientSecret)
+publicDID=$(echo $registration | jq -r .publicDID)
 
-echo "RP Tenant ClientID=$clientID PublicDID=$publicDID."
+echo "RP Tenant ClientID=$clientID Callback=$callbackURL PublicDID=$publicDID"
 echo ""
 
 echo "Starting rp.example.com..."
-rp-rest start --oidc-opurl https://rp-adapter-hydra.trustbloc.local:6666/ --oidc-clientid $clientID --oidc-clientsecret $clientSecret
+rp-rest start --oidc-opurl https://rp-adapter-hydra.trustbloc.local:7777/ --oidc-clientid $clientID --oidc-clientsecret $clientSecret
