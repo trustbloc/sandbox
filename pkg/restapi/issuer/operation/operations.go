@@ -23,6 +23,7 @@ import (
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/trustbloc/edge-core/pkg/log"
+	"github.com/trustbloc/edge-core/pkg/storage"
 	vcprofile "github.com/trustbloc/edge-service/pkg/doc/vc/profile"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
 	"golang.org/x/oauth2"
@@ -32,11 +33,12 @@ import (
 )
 
 const (
-	login           = "/login"
-	callback        = "/callback"
-	generate        = "/generate"
-	revoke          = "/revoke"
-	didcommCallback = "/didcomm/cb"
+	login             = "/login"
+	callback          = "/callback"
+	generate          = "/generate"
+	revoke            = "/revoke"
+	didcommCallback   = "/didcomm/cb"
+	didcommCredential = "/didcomm/credential"
 
 	// http query params
 	stateQueryParam = "state"
@@ -47,7 +49,8 @@ const (
 	vcsUpdateStatusEndpoint = "/updateStatus"
 
 	vcsProfileCookie = "vcsProfile"
-	didCommProfile   = "didComm"
+	demoTypeCookie   = "demoType"
+	didCommDemo      = "DIDComm"
 
 	issueCredentialURLFormat = "%s/%s" + "/credentials/issueCredential"
 
@@ -56,8 +59,8 @@ const (
 
 	vcsIssuerRequestTokenName = "vcs_issuer"
 
-	// issuer adapter endpoints
-	createInvitation = "/connections/create-invitation"
+	// store
+	txnStoreName = "issuer_txn"
 )
 
 var logger = log.New("edge-sandbox-issuer-restapi")
@@ -83,6 +86,7 @@ type Operation struct {
 	httpClient       *http.Client
 	requestTokens    map[string]string
 	issuerAdapterURL string
+	store            storage.Store
 }
 
 // Config defines configuration for issuer operations
@@ -98,6 +102,7 @@ type Config struct {
 	TLSConfig        *tls.Config
 	RequestTokens    map[string]string
 	IssuerAdapterURL string
+	StoreProvider    storage.Provider
 }
 
 // vc struct used to return vc data to html
@@ -117,7 +122,12 @@ type tokenResolver interface {
 }
 
 // New returns authorization instance
-func New(config *Config) *Operation {
+func New(config *Config) (*Operation, error) {
+	store, err := getTxnStore(config.StoreProvider)
+	if err != nil {
+		return nil, fmt.Errorf("issuer store provider : %w", err)
+	}
+
 	svc := &Operation{
 		tokenIssuer:      config.TokenIssuer,
 		tokenResolver:    config.TokenResolver,
@@ -130,10 +140,11 @@ func New(config *Config) *Operation {
 		httpClient:       &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
 		requestTokens:    config.RequestTokens,
 		issuerAdapterURL: config.IssuerAdapterURL,
+		store:            store,
 	}
 	svc.registerHandler()
 
-	return svc
+	return svc, nil
 }
 
 // registerHandler register handlers to be exposed from this service as REST API endpoints
@@ -149,6 +160,7 @@ func (c *Operation) registerHandler() {
 
 		// didcomm
 		support.NewHTTPHandler(didcommCallback, http.MethodGet, c.didcommCallbackHandler),
+		support.NewHTTPHandler(didcommCredential, http.MethodPost, c.didcommCredentialHandler),
 	}
 }
 
@@ -168,19 +180,37 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	demo := "nonDIDComm"
+
+	demoType := r.URL.Query()["demoType"]
+	if len(demoType) > 0 {
+		demo = demoType[0]
+	}
+
 	expire := time.Now().AddDate(0, 0, 1)
 	cookie := http.Cookie{Name: vcsProfileCookie, Value: vcsProfile[0], Expires: expire}
+	http.SetCookie(w, &cookie)
+
+	cookie = http.Cookie{Name: demoTypeCookie, Value: demo, Expires: expire}
 	http.SetCookie(w, &cookie)
 
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 }
 
 // callback for oauth2 login
-func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint: funlen
+func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint: funlen,gocyclo
 	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
 	if err != nil {
 		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get cookie: %s", err.Error()))
+
+		return
+	}
+
+	demoTypeCookie, err := r.Cookie(demoTypeCookie)
+	if err != nil && !errors.Is(err, http.ErrNoCookie) {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get demoType cookie: %s", err.Error()))
 
 		return
 	}
@@ -210,16 +240,16 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 		return
 	}
 
-	if vcsProfileCookie.Value == didCommProfile {
-		c.didcomm(w, r)
-
-		return
-	}
-
 	cred, err := c.prepareCredential(subject, info, vcsProfileCookie.Value)
 	if err != nil {
 		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create credential: %s", err.Error()))
+
+		return
+	}
+
+	if demoTypeCookie != nil && demoTypeCookie.Value == didCommDemo {
+		c.didcomm(w, r, cred, vcsProfileCookie.Value)
 
 		return
 	}
@@ -352,13 +382,27 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request) {
+func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request, cred []byte, profileID string) {
 	// TODO https://github.com/trustbloc/edge-sandbox/issues/391 configure DIDComm Issuers
 	issuerID := "tb-cc-issuer"
 
+	signedVC, err := c.issueCredential(cred, profileID)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to issue credential : %s", err.Error()))
+
+		return
+	}
+
 	state := uuid.New().String()
 
-	// TODO https://github.com/trustbloc/edge-sandbox/issues/390 store state with user details
+	err = c.store.Put(state, signedVC)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to store state subject mapping : %s", err.Error()))
+
+		return
+	}
 
 	http.Redirect(w, r, fmt.Sprintf(c.issuerAdapterURL+"/%s/connect/wallet?state=%s", issuerID, state), http.StatusFound)
 }
@@ -390,6 +434,50 @@ func (c *Operation) didcommCallbackHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+func (c *Operation) didcommCredentialHandler(w http.ResponseWriter, r *http.Request) {
+	data := &adapterDataReq{}
+
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid request: %s", err.Error()))
+
+		return
+	}
+
+	cred, err := c.store.Get(data.Token)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid token: %s", err.Error()))
+
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+
+	_, err = w.Write(cred)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to write data: %s", err.Error()))
+
+		return
+	}
+}
+
+func (c *Operation) issueCredential(credBytes []byte, profileID string) ([]byte, error) {
+	body, err := json.Marshal(edgesvcops.IssueCredentialRequest{
+		Credential: credBytes,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal credential : %w", err)
+	}
+
+	endpointURL := fmt.Sprintf(issueCredentialURLFormat, c.vcsURL, profileID)
+
+	req, err := http.NewRequest("POST", endpointURL, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+
+	return sendHTTPRequest(req, c.httpClient, http.StatusCreated, c.requestTokens[vcsIssuerRequestTokenName])
+}
+
 func (c *Operation) validateAdapterCallback(redirectURL string) error {
 	u, err := url.Parse(redirectURL)
 	if err != nil {
@@ -406,8 +494,15 @@ func (c *Operation) validateAdapterCallback(redirectURL string) error {
 		return errors.New("missing token in http query param")
 	}
 
-	// TODO https://github.com/trustbloc/edge-sandbox/issues/390 validate the state and store mapping
-	//  between user - adapter token
+	cred, err := c.store.Get(state)
+	if err != nil {
+		return fmt.Errorf("invalid state : %s", err)
+	}
+
+	err = c.store.Put(tkn, cred)
+	if err != nil {
+		return fmt.Errorf("store adapter token and userID mapping : %s", err)
+	}
 
 	return nil
 }
@@ -752,6 +847,20 @@ func (c *Operation) GetRESTHandlers() []Handler {
 	return c.handlers
 }
 
+func getTxnStore(prov storage.Provider) (storage.Store, error) {
+	err := prov.CreateStore(txnStoreName)
+	if err != nil && err != storage.ErrDuplicateStore {
+		return nil, err
+	}
+
+	txnStore, err := prov.OpenStore(txnStoreName)
+	if err != nil {
+		return nil, err
+	}
+
+	return txnStore, nil
+}
+
 // updateCredentialStatusRequest request struct for updating vc status
 type updateCredentialStatusRequest struct {
 	Credential   string `json:"credential"`
@@ -768,4 +877,8 @@ type cmsUser struct {
 	UserID string `json:"userid"`
 	Name   string `json:"name"`
 	Email  string `json:"email"`
+}
+
+type adapterDataReq struct {
+	Token string `json:"token"`
 }

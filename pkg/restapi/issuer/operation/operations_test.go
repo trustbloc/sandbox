@@ -18,10 +18,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/trustbloc/edge-core/pkg/storage/memstore"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	didexcmd "github.com/hyperledger/aries-framework-go/pkg/controller/command/didexchange"
 	"github.com/stretchr/testify/require"
+	mockstorage "github.com/trustbloc/edge-core/pkg/storage/mockstore"
 	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/edge-sandbox/pkg/token"
@@ -87,8 +89,34 @@ const authResp = `{
     }
 }`
 
+func TestController_New(t *testing.T) {
+	t.Run("test new - success", func(t *testing.T) {
+		op, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
+		require.NoError(t, err)
+		require.NotNil(t, op)
+	})
+
+	t.Run("test new - error", func(t *testing.T) {
+		// create error
+		op, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{ErrCreateStore: errors.New("store create error")},
+		})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "issuer store provider : store create error")
+		require.Nil(t, op)
+
+		op, err = New(&Config{
+			StoreProvider: &mockstorage.Provider{ErrOpenStoreHandle: errors.New("store open error")},
+		})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "issuer store provider : store open error")
+		require.Nil(t, op)
+	})
+}
+
 func TestOperation_Login(t *testing.T) {
-	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
+	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		StoreProvider: &mockstorage.Provider{}}
 	handler := getHandlerWithConfig(t, login, cfg)
 
 	buff, status, err := handleRequest(handler, nil, login, true)
@@ -96,7 +124,7 @@ func TestOperation_Login(t *testing.T) {
 	require.Contains(t, buff.String(), "vcs profile is empty")
 	require.Equal(t, http.StatusBadRequest, status)
 
-	buff, status, err = handleRequest(handler, nil, login+"?vcsProfile=vc-issuer-1", true)
+	buff, status, err = handleRequest(handler, nil, login+"?vcsProfile=vc-issuer-1&demoType=DIDComm", true)
 	require.NoError(t, err)
 	require.Contains(t, buff.String(), "Temporary Redirect")
 	require.Equal(t, http.StatusTemporaryRedirect, status)
@@ -108,7 +136,8 @@ func TestOperation_Login(t *testing.T) {
 }
 
 func TestOperation_Login3(t *testing.T) {
-	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
+	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		StoreProvider: &mockstorage.Provider{}}
 	handler := getHandlerWithConfig(t, login, cfg)
 
 	req, err := http.NewRequest(handler.Method(), login+"?scope=test&vcsProfile=vc-issuer-1", bytes.NewBuffer([]byte("")))
@@ -156,7 +185,8 @@ func TestOperation_Callback(t *testing.T) {
 
 		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(),
-			DIDAuthHTML: file.Name()}
+			DIDAuthHTML:   file.Name(),
+			StoreProvider: &mockstorage.Provider{}}
 		handler := getHandlerWithConfig(t, callback, cfg)
 
 		_, status, err := handleRequest(handler, headers, callback, true)
@@ -165,7 +195,8 @@ func TestOperation_Callback(t *testing.T) {
 
 		// test ledger cookie not found
 		cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), DIDAuthHTML: file.Name()}
+			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(), DIDAuthHTML: file.Name(),
+			StoreProvider: &mockstorage.Provider{}}
 		handler = getHandlerWithConfig(t, callback, cfg)
 
 		body, status, err := handleRequest(handler, headers, callback, false)
@@ -175,7 +206,8 @@ func TestOperation_Callback(t *testing.T) {
 
 		// test html not exist
 		cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: ""}
+			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: "",
+			StoreProvider: &mockstorage.Provider{}}
 		handler = getHandlerWithConfig(t, callback, cfg)
 
 		body, status, err = handleRequest(handler, headers, callback, true)
@@ -190,37 +222,117 @@ func TestOperation_Callback(t *testing.T) {
 		}))
 		defer cms.Close()
 
-		router := mux.NewRouter()
-		router.HandleFunc(createInvitation, func(w http.ResponseWriter, r *http.Request) {
-			invitation := &didexcmd.CreateInvitationResponse{
-				InvitationURL: "hello",
-			}
-			invitationJSON, err := json.Marshal(invitation)
-			require.NoError(t, err)
-
-			_, err = w.Write(invitationJSON)
-			require.NoError(t, err)
-
-			w.WriteHeader(http.StatusOK)
-		})
-
-		adapter := httptest.NewServer(router)
-		defer adapter.Close()
-
 		file, err := ioutil.TempFile("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-			CMSURL:      cms.URL,
-			DIDCommHTML: file.Name(), IssuerAdapterURL: adapter.URL}
-		handler := getHandlerWithConfig(t, callback, cfg)
+		t.Run("test callback didcomm - success", func(t *testing.T) {
+			vcsRouter := mux.NewRouter()
+			vcsRouter.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+				writer.WriteHeader(http.StatusOK)
+				_, err := writer.Write([]byte(profileData))
+				if err != nil {
+					panic(err)
+				}
+			})
+			vcsRouter.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
+				writer.WriteHeader(http.StatusCreated)
+				_, err := writer.Write([]byte(testCredentialRequest))
+				if err != nil {
+					panic(err)
+				}
+			})
 
-		_, status, err := handleRequestWithCokie(handler, headers, callback,
-			&http.Cookie{Name: vcsProfileCookie, Value: didCommProfile})
-		require.NoError(t, err)
-		require.Equal(t, http.StatusFound, status)
+			vcs := httptest.NewServer(vcsRouter)
+
+			defer vcs.Close()
+
+			cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+				CMSURL:        cms.URL,
+				VCSURL:        vcs.URL,
+				DIDCommHTML:   file.Name(),
+				StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}}}
+			handler := getHandlerWithConfig(t, callback, cfg)
+
+			_, status, err := handleRequestWithCookies(handler, headers, callback,
+				[]*http.Cookie{{Name: vcsProfileCookie, Value: "vc-1"}, {Name: demoTypeCookie, Value: didCommDemo}})
+			require.NoError(t, err)
+			require.Equal(t, http.StatusFound, status)
+		})
+
+		t.Run("test callback didcomm - issue cred error", func(t *testing.T) {
+			vcsRouter := mux.NewRouter()
+			vcsRouter.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+				writer.WriteHeader(http.StatusOK)
+				_, err := writer.Write([]byte(profileData))
+				if err != nil {
+					panic(err)
+				}
+			})
+			vcsRouter.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
+				writer.WriteHeader(http.StatusBadRequest)
+				_, err := writer.Write([]byte(testCredentialRequest))
+				if err != nil {
+					panic(err)
+				}
+			})
+
+			vcs := httptest.NewServer(vcsRouter)
+
+			defer vcs.Close()
+
+			cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+				CMSURL:        cms.URL,
+				VCSURL:        vcs.URL,
+				DIDCommHTML:   file.Name(),
+				StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}}}
+			handler := getHandlerWithConfig(t, callback, cfg)
+
+			respData, status, err := handleRequestWithCookies(handler, headers, callback,
+				[]*http.Cookie{{Name: vcsProfileCookie, Value: "vc-1"}, {Name: demoTypeCookie, Value: didCommDemo}})
+			require.NoError(t, err)
+			require.Equal(t, http.StatusInternalServerError, status)
+			require.Contains(t, respData.String(), "failed to issue credential")
+		})
+
+		t.Run("test callback didcomm - store error", func(t *testing.T) {
+			vcsRouter := mux.NewRouter()
+			vcsRouter.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+				writer.WriteHeader(http.StatusOK)
+				_, err := writer.Write([]byte(profileData))
+				if err != nil {
+					panic(err)
+				}
+			})
+			vcsRouter.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
+				writer.WriteHeader(http.StatusCreated)
+				_, err := writer.Write([]byte(testCredentialRequest))
+				if err != nil {
+					panic(err)
+				}
+			})
+
+			vcs := httptest.NewServer(vcsRouter)
+
+			defer vcs.Close()
+
+			cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+				CMSURL:      cms.URL,
+				VCSURL:      vcs.URL,
+				DIDCommHTML: file.Name(),
+				StoreProvider: &mockstorage.Provider{
+					Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPut: errors.New("save error")},
+				},
+			}
+			handler := getHandlerWithConfig(t, callback, cfg)
+
+			respData, status, err := handleRequestWithCookies(handler, headers, callback,
+				[]*http.Cookie{{Name: vcsProfileCookie, Value: "vc-1"}, {Name: demoTypeCookie, Value: didCommDemo}})
+			require.NoError(t, err)
+			require.Equal(t, http.StatusInternalServerError, status)
+			require.Contains(t, respData.String(), "failed to store state subject mapping")
+		})
 	})
 }
 
@@ -261,10 +373,12 @@ func TestOperation_GenerateVC(t *testing.T) {
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
 		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name()}
+			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(),
+			StoreProvider: &mockstorage.Provider{}}
 
-		svc := New(cfg)
+		svc, err := New(cfg)
 		require.NotNil(t, svc)
+		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 
@@ -283,8 +397,9 @@ func TestOperation_GenerateVC(t *testing.T) {
 	})
 
 	t.Run("generate VC - validations", func(t *testing.T) {
-		svc := New(&Config{})
+		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
 		require.NotNil(t, svc)
+		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
@@ -417,10 +532,12 @@ func TestOperation_GenerateVC(t *testing.T) {
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
 		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name()}
+			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(),
+			StoreProvider: &mockstorage.Provider{}}
 
-		svc := New(cfg)
+		svc, err := New(cfg)
 		require.NotNil(t, svc)
+		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 
@@ -470,10 +587,12 @@ func TestOperation_GenerateVC(t *testing.T) {
 		headers["Authorization"] = authHeader
 
 		cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-			CMSURL: cms.URL, VCSURL: vcs.URL}
+			CMSURL: cms.URL, VCSURL: vcs.URL,
+			StoreProvider: &mockstorage.Provider{}}
 
-		svc := New(cfg)
+		svc, err := New(cfg)
 		require.NotNil(t, svc)
+		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 
@@ -494,10 +613,12 @@ func TestOperation_GenerateVC(t *testing.T) {
 }
 
 func TestOperation_Callback_ExchangeCodeError(t *testing.T) {
-	svc := New(&Config{
+	svc, err := New(&Config{
 		TokenIssuer:   &mockTokenIssuer{err: errors.New("exchange code error")},
-		TokenResolver: &mockTokenResolver{}})
+		TokenResolver: &mockTokenResolver{},
+		StoreProvider: &mockstorage.Provider{}})
 	require.NotNil(t, svc)
+	require.NoError(t, err)
 
 	handler := handlerLookup(t, svc, callback)
 
@@ -512,9 +633,11 @@ func TestOperation_Callback_TokenIntrospectionError(t *testing.T) {
 	headers := make(map[string]string)
 	headers["Authorization"] = authHeader
 
-	svc := New(&Config{
+	svc, err := New(&Config{
 		TokenIssuer:   &mockTokenIssuer{},
-		TokenResolver: &mockTokenResolver{err: errors.New("token info error")}})
+		TokenResolver: &mockTokenResolver{err: errors.New("token info error")},
+		StoreProvider: &mockstorage.Provider{}})
+	require.NoError(t, err)
 	require.NotNil(t, svc)
 
 	handler := handlerLookup(t, svc, callback)
@@ -530,7 +653,8 @@ func TestOperation_Callback_GetCMSData_Error(t *testing.T) {
 	headers["Authorization"] = authHeader
 
 	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: "cms"}
+		CMSURL:        "cms",
+		StoreProvider: &mockstorage.Provider{}}
 	handler := getHandlerWithConfig(t, callback, cfg)
 
 	data, status, err := handleRequest(handler, headers, callback, true)
@@ -549,7 +673,8 @@ func TestOperation_Callback_CreateCredential_Error(t *testing.T) {
 	headers["Authorization"] = authHeader
 
 	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: cms.URL, VCSURL: "vcs"}
+		CMSURL: cms.URL, VCSURL: "vcs",
+		StoreProvider: &mockstorage.Provider{}}
 	handler := getHandlerWithConfig(t, callback, cfg)
 
 	data, status, err := handleRequest(handler, headers, callback, true)
@@ -565,14 +690,20 @@ func TestOperation_StoreCredential(t *testing.T) {
 			fmt.Fprintln(w, "{}")
 		}))
 		defer vcs.Close()
-		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}, VCSURL: vcs.URL})
-		err := svc.storeCredential([]byte(testCredentialRequest), "")
+		svc, err := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}, VCSURL: vcs.URL,
+			StoreProvider: &mockstorage.Provider{}})
+		require.NoError(t, err)
+
+		err = svc.storeCredential([]byte(testCredentialRequest), "")
 		require.NoError(t, err)
 	})
 	t.Run("store credential error invalid url ", func(t *testing.T) {
-		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-			VCSURL: "%%&^$"})
-		err := svc.storeCredential([]byte(testCredentialRequest), "")
+		svc, err := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			VCSURL:        "%%&^$",
+			StoreProvider: &mockstorage.Provider{}})
+		require.NoError(t, err)
+
+		err = svc.storeCredential([]byte(testCredentialRequest), "")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid URL escape")
 	})
@@ -582,17 +713,22 @@ func TestOperation_StoreCredential(t *testing.T) {
 			fmt.Fprintln(w, "{}")
 		}))
 		defer vcs.Close()
-		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}, VCSURL: vcs.URL})
-		err := svc.storeCredential([]byte(testCredentialRequest), "")
+		svc, err := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}, VCSURL: vcs.URL,
+			StoreProvider: &mockstorage.Provider{}})
+		require.NoError(t, err)
+
+		err = svc.storeCredential([]byte(testCredentialRequest), "")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "201 Created")
 	})
 }
 
 func TestOperation_GetCMSData_InvalidURL(t *testing.T) {
-	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: "xyz:cms"})
+	svc, err := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		CMSURL:        "xyz:cms",
+		StoreProvider: &mockstorage.Provider{}})
 	require.NotNil(t, svc)
+	require.NoError(t, err)
 
 	data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
 	require.Error(t, err)
@@ -601,9 +737,11 @@ func TestOperation_GetCMSData_InvalidURL(t *testing.T) {
 }
 
 func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
-	svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		CMSURL: "http://cms\\"})
+	svc, err := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		CMSURL:        "http://cms\\",
+		StoreProvider: &mockstorage.Provider{}})
 	require.NotNil(t, svc)
+	require.NoError(t, err)
 
 	data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
 	require.Error(t, err)
@@ -612,15 +750,17 @@ func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
 }
 
 func TestOperation_CreateCredential_Errors(t *testing.T) {
-	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
+	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		StoreProvider: &mockstorage.Provider{}}
 
 	var subject map[string]interface{} = make(map[string]interface{})
 	subject["id"] = "1"
 
 	t.Run("unsupported protocol scheme", func(t *testing.T) {
 		cfg.VCSURL = "xyz:vcs"
-		svc := New(cfg)
+		svc, err := New(cfg)
 		require.NotNil(t, svc)
+		require.NoError(t, err)
 
 		data, err := svc.createCredential(testCredentialRequest, authResp, holder, domain, challenge, "")
 		require.Error(t, err)
@@ -629,8 +769,9 @@ func TestOperation_CreateCredential_Errors(t *testing.T) {
 	})
 	t.Run("invalid http request", func(t *testing.T) {
 		cfg.VCSURL = "http://vcs\\"
-		svc := New(cfg)
+		svc, err := New(cfg)
 		require.NotNil(t, svc)
+		require.NoError(t, err)
 
 		data, err := svc.createCredential(testCredentialRequest, authResp, holder, domain, challenge, "")
 		require.Error(t, err)
@@ -638,8 +779,9 @@ func TestOperation_CreateCredential_Errors(t *testing.T) {
 		require.Nil(t, data)
 	})
 	t.Run("invalid subject map - contains channel", func(t *testing.T) {
-		svc := New(cfg)
+		svc, err := New(cfg)
 		require.NotNil(t, svc)
+		require.NoError(t, err)
 
 		data, err := svc.createCredential(testCredentialRequest+",", authResp, holder, domain, challenge, "")
 		require.Error(t, err)
@@ -649,7 +791,8 @@ func TestOperation_CreateCredential_Errors(t *testing.T) {
 }
 
 func TestOperation_GetCMSUser(t *testing.T) {
-	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{}}
+	cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+		StoreProvider: &mockstorage.Provider{}}
 
 	t.Run("test success", func(t *testing.T) {
 		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -658,8 +801,9 @@ func TestOperation_GetCMSUser(t *testing.T) {
 		defer cms.Close()
 
 		cfg.CMSURL = cms.URL
-		svc := New(cfg)
+		svc, err := New(cfg)
 		require.NotNil(t, svc)
+		require.NoError(t, err)
 
 		data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
 		require.NoError(t, err)
@@ -672,7 +816,9 @@ func TestOperation_GetCMSUser(t *testing.T) {
 		defer cms.Close()
 
 		cfg.CMSURL = cms.URL
-		svc := New(cfg)
+
+		svc, err := New(cfg)
+		require.NoError(t, err)
 		require.NotNil(t, svc)
 
 		data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
@@ -751,7 +897,8 @@ func TestOperation_SendHTTPRequest_WrongStatus(t *testing.T) {
 
 func TestRevokeVC(t *testing.T) {
 	t.Run("test error from parse form", func(t *testing.T) {
-		svc := New(&Config{})
+		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
+		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 		svc.revokeVC(rr, &http.Request{Method: http.MethodPost})
@@ -760,9 +907,11 @@ func TestRevokeVC(t *testing.T) {
 	})
 
 	t.Run("test error from create http request", func(t *testing.T) {
-		svc := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-			VCSURL: "http://vcs\\"})
+		svc, err := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			VCSURL:        "http://vcs\\",
+			StoreProvider: &mockstorage.Provider{}})
 		require.NotNil(t, svc)
+		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
@@ -773,7 +922,8 @@ func TestRevokeVC(t *testing.T) {
 	})
 
 	t.Run("test error from http post", func(t *testing.T) {
-		svc := New(&Config{})
+		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
+		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
@@ -793,7 +943,8 @@ func TestRevokeVC(t *testing.T) {
 
 		defer vcs.Close()
 
-		svc := New(&Config{VCHTML: "", VCSURL: vcs.URL})
+		svc, err := New(&Config{VCHTML: "", VCSURL: vcs.URL, StoreProvider: &mockstorage.Provider{}})
+		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
@@ -817,7 +968,8 @@ func TestRevokeVC(t *testing.T) {
 
 		defer vcs.Close()
 
-		svc := New(&Config{VCHTML: file.Name(), VCSURL: vcs.URL})
+		svc, err := New(&Config{VCHTML: file.Name(), VCSURL: vcs.URL, StoreProvider: &mockstorage.Provider{}})
+		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
@@ -828,7 +980,7 @@ func TestRevokeVC(t *testing.T) {
 	})
 }
 
-func TestDIDCommController(t *testing.T) {
+func TestDIDCommCallbackHandler(t *testing.T) {
 	headers := make(map[string]string)
 	urlFmt := didcommCallback + "?" + stateQueryParam + "=%s&" + tokenQueryParam + "=%s&"
 
@@ -838,12 +990,16 @@ func TestDIDCommController(t *testing.T) {
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-		cfg := &Config{DIDCommHTML: file.Name()}
+		cfg := &Config{DIDCommHTML: file.Name(), StoreProvider: memstore.NewProvider()}
 
-		handler := getHandlerWithConfig(t, didcommCallback, cfg)
+		ops, handler := getHandlerWithOps(t, didcommCallback, cfg)
+
+		state := uuid.New().String()
+		err = ops.store.Put(state, []byte(uuid.New().String()))
+		require.NoError(t, err)
 
 		_, status, err := handleRequest(handler, headers,
-			fmt.Sprintf(urlFmt, uuid.New().String(), uuid.New().String()), false)
+			fmt.Sprintf(urlFmt, state, uuid.New().String()), false)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, status)
 	})
@@ -854,7 +1010,7 @@ func TestDIDCommController(t *testing.T) {
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-		cfg := &Config{DIDCommHTML: file.Name()}
+		cfg := &Config{DIDCommHTML: file.Name(), StoreProvider: &mockstorage.Provider{}}
 
 		handler := getHandlerWithConfig(t, didcommCallback, cfg)
 
@@ -871,16 +1027,115 @@ func TestDIDCommController(t *testing.T) {
 		require.Contains(t, respData.String(), "missing token in http query param")
 	})
 
-	t.Run("test didcomm callback handler - html not found", func(t *testing.T) {
-		cfg := &Config{}
+	t.Run("test didcomm callback handler - invalid token", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		cfg := &Config{DIDCommHTML: file.Name(), StoreProvider: memstore.NewProvider()}
 
 		handler := getHandlerWithConfig(t, didcommCallback, cfg)
 
 		respData, status, err := handleRequest(handler, headers,
 			fmt.Sprintf(urlFmt, uuid.New().String(), uuid.New().String()), false)
 		require.NoError(t, err)
+		require.Equal(t, http.StatusBadRequest, status)
+		require.Contains(t, respData.String(), "failed to validate the adapter response: invalid state")
+	})
+
+	t.Run("test didcomm callback handler - html not found", func(t *testing.T) {
+		cfg := &Config{StoreProvider: memstore.NewProvider()}
+
+		ops, handler := getHandlerWithOps(t, didcommCallback, cfg)
+
+		state := uuid.New().String()
+		err := ops.store.Put(state, []byte(uuid.New().String()))
+		require.NoError(t, err)
+
+		respData, status, err := handleRequest(handler, headers,
+			fmt.Sprintf(urlFmt, state, uuid.New().String()), false)
+		require.NoError(t, err)
 		require.Equal(t, http.StatusInternalServerError, status)
 		require.Contains(t, respData.String(), "unable to load didcomm html")
+	})
+
+	t.Run("test didcomm callback handler - validation error", func(t *testing.T) {
+		s := make(map[string][]byte)
+		cfg := &Config{StoreProvider: &mockstorage.Provider{
+			Store: &mockstorage.MockStore{Store: s, ErrPut: errors.New("save error")},
+		}}
+
+		ops, err := New(cfg)
+		require.NoError(t, err)
+
+		// invalid url
+		err = ops.validateAdapterCallback("http://[fe80::%31%25en0]:8080/")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "didcomm callback - error parsing the request url")
+
+		// token store error
+		state := uuid.New().String()
+		s[state] = []byte(uuid.New().String())
+
+		err = ops.validateAdapterCallback(fmt.Sprintf(urlFmt, state, uuid.New().String()))
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "store adapter token and userID mapping")
+	})
+}
+
+func TestDIDCommCredentialHandler(t *testing.T) {
+	t.Run("test didcomm credential - success", func(t *testing.T) {
+		cfg := &Config{StoreProvider: memstore.NewProvider()}
+
+		ops, handler := getHandlerWithOps(t, didcommCredential, cfg)
+
+		tkn := uuid.New().String()
+		err := ops.store.Put(tkn, []byte(testCredentialRequest))
+		require.NoError(t, err)
+
+		req := &adapterDataReq{
+			Token: tkn,
+		}
+
+		reqBytes, jsonErr := json.Marshal(req)
+		require.NoError(t, jsonErr)
+
+		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommCredential, reqBytes)
+		require.Equal(t, http.StatusOK, rr.Code)
+		require.Equal(t, rr.Body.String(), testCredentialRequest)
+	})
+
+	t.Run("test didcomm credential - invalid request", func(t *testing.T) {
+		cfg := &Config{StoreProvider: memstore.NewProvider()}
+
+		_, handler := getHandlerWithOps(t, didcommCredential, cfg)
+
+		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommCredential, []byte("invalid-json"))
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "invalid request")
+	})
+
+	t.Run("test didcomm credential - invalid token", func(t *testing.T) {
+		cfg := &Config{StoreProvider: memstore.NewProvider()}
+
+		ops, handler := getHandlerWithOps(t, didcommCredential, cfg)
+
+		req := &adapterDataReq{
+			Token: uuid.New().String(),
+		}
+
+		reqBytes, jsonErr := json.Marshal(req)
+		require.NoError(t, jsonErr)
+
+		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommCredential, reqBytes)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "invalid token")
+
+		signedVC, err := ops.issueCredential([]byte("invalid-json"), uuid.New().String())
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to marshal credential")
+		require.Nil(t, signedVC)
 	})
 }
 
@@ -920,9 +1175,44 @@ func handleRequestWithCokie(handler Handler, headers map[string]string, path str
 	return rr.Body, rr.Code, nil
 }
 
-func getHandlerWithConfig(t *testing.T, lookup string, cfg *Config) Handler {
-	svc := New(cfg)
+func handleRequestWithCookies(handler Handler, headers map[string]string, path string, cookies []*http.Cookie) (*bytes.Buffer, int, error) { //nolint:lll
+	req, err := http.NewRequest(handler.Method(), path, bytes.NewBuffer([]byte("")))
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
+
+	for _, cookie := range cookies {
+		req.AddCookie(cookie)
+	}
+
+	router := mux.NewRouter()
+
+	router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
+
+	// create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+	rr := httptest.NewRecorder()
+
+	router.ServeHTTP(rr, req)
+
+	return rr.Body, rr.Code, nil
+}
+
+func getHandlerWithOps(t *testing.T, lookup string, cfg *Config) (*Operation, Handler) {
+	svc, err := New(cfg)
 	require.NotNil(t, svc)
+	require.NoError(t, err)
+
+	return svc, handlerLookup(t, svc, lookup)
+}
+
+func getHandlerWithConfig(t *testing.T, lookup string, cfg *Config) Handler {
+	svc, err := New(cfg)
+	require.NotNil(t, svc)
+	require.NoError(t, err)
 
 	return handlerLookup(t, svc, lookup)
 }
@@ -940,6 +1230,21 @@ func handlerLookup(t *testing.T, op *Operation, lookup string) Handler {
 	require.Fail(t, "unable to find handler")
 
 	return nil
+}
+
+func serveHTTP(t *testing.T, handler http.HandlerFunc, method, path string, req []byte) *httptest.ResponseRecorder {
+	httpReq, err := http.NewRequest(
+		method,
+		path,
+		bytes.NewBuffer(req),
+	)
+	require.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, httpReq)
+
+	return rr
 }
 
 type mockTokenIssuer struct {

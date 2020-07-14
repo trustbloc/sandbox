@@ -14,7 +14,11 @@ import (
 func New(config *operation.Config) (*Controller, error) {
 	var allHandlers []operation.Handler
 
-	issuerService := operation.New(config)
+	issuerService, err := operation.New(config)
+	if err != nil {
+		return nil, err
+	}
+
 	allHandlers = append(allHandlers, issuerService.GetRESTHandlers()...)
 
 	return &Controller{handlers: allHandlers}, nil
