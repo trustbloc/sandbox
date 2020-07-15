@@ -15,4 +15,5 @@ require (
 	github.com/trustbloc/edge-core v0.1.4-0.20200708225443-dcc42296cada
 	github.com/trustbloc/edge-service v0.1.4-0.20200710111914-05e78dcad03f
 	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
+	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 )

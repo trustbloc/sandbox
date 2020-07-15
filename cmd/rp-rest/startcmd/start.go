@@ -77,6 +77,11 @@ const (
 	oidcClientSecretFlagUsage = "OAuth2 client secret for OIDC." +
 		" Alternatively, this can be set with the following environment variable: " + oidcClientSecretEnvKey
 	oidcClientSecretEnvKey = "RP_OIDC_CLIENTSECRET" //nolint:gosec
+
+	oidcCallbackURLFlagName  = "oidc-callback"
+	oidcCallbackURLFlagUsage = "Base URL for the OAuth2 callback endpoints." +
+		" Alternatively, this can be set with the following environment variable: " + oidcCallbackURLEnvKey
+	oidcCallbackURLEnvKey = "RP_OIDC_CALLBACK"
 )
 
 var logger = log.New("rp-rest")
@@ -114,6 +119,7 @@ type oidcParameters struct {
 	oidcProviderURL  string
 	oidcClientID     string
 	oidcClientSecret string
+	oidcCallbackURL  string
 }
 
 type tlsConfig struct {
@@ -203,10 +209,16 @@ func getOIDCParameters(cmd *cobra.Command) (*oidcParameters, error) {
 		return nil, err
 	}
 
+	oidcCallbackURL, err := cmdutils.GetUserSetVarFromString(cmd, oidcCallbackURLFlagName, oidcCallbackURLEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
 	return &oidcParameters{
 		oidcProviderURL:  oidcProviderURL,
 		oidcClientID:     oidcClientID,
 		oidcClientSecret: oidcClientSecret,
+		oidcCallbackURL:  oidcCallbackURL,
 	}, nil
 }
 
@@ -282,6 +294,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(oidcProviderURLFlagName, "", "", oidcProviderURLFlagUsage)
 	startCmd.Flags().StringP(oidcClientIDFlagName, "", "", oidcClientIDFlagUsage)
 	startCmd.Flags().StringP(oidcClientSecretFlagName, "", "", oidcClientSecretFlagUsage)
+	startCmd.Flags().StringP(oidcCallbackURLFlagName, "", "", oidcCallbackURLFlagUsage)
 }
 
 func startRP(parameters *rpParameters) error {
@@ -303,6 +316,7 @@ func startRP(parameters *rpParameters) error {
 		OIDCProviderURL:        parameters.oidcParameters.oidcProviderURL,
 		OIDCClientID:           parameters.oidcParameters.oidcClientID,
 		OIDCClientSecret:       parameters.oidcParameters.oidcClientSecret,
+		OIDCCallbackURL:        parameters.oidcParameters.oidcCallbackURL,
 	}
 
 	rpService, err := rp.New(cfg)

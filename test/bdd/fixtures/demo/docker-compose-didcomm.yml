@@ -95,8 +95,8 @@ services:
     environment:
       - DSN=mysql://rpadapterhydra:secret@tcp(mysql:3306)/rpadapter_hydra?max_conns=20&max_idle_conns=4
       - URLS_SELF_ISSUER=https://rp-adapter-hydra.trustbloc.local:${RPADAPTER_HYDRA_PUBLIC_PORT}
-      - URLS_CONSENT=http://rp.adapter.rest.example.com:${RP_ADAPTER_PORT}/consent
-      - URLS_LOGIN=http://rp.adapter.rest.example.com:${RP_ADAPTER_PORT}/login
+      - URLS_CONSENT=http://rp-adapter.trustbloc.local:${RP_ADAPTER_PORT}/consent
+      - URLS_LOGIN=http://rp-adapter.trustbloc.local:${RP_ADAPTER_PORT}/login
       - SECRETS_SYSTEM=testSecretsSystem
       - OIDC_SUBJECT_TYPES_SUPPORTED=public
       - OIDC_SUBJECT_TYPE_PAIRWISE_SALT=testSecretsSystem
