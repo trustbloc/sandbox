@@ -40,7 +40,7 @@ services:
       - ADAPTER_REST_DIDCOMM_INBOUND_HOST=${ISSUER_ADAPTER_HOST}:${ISSUER_ADAPTER_DIDCOMM_PORT}
       - ADAPTER_REST_DIDCOMM_INBOUND_HOST_EXTERNAL=https://issuer-adapter.trustbloc.local
       - ADAPTER_REST_TRUSTBLOC_DOMAIN=${BLOC_DOMAIN}
-      - ADAPTER_UNIVERSAL_RESOLVER_URL=https://did-resolver.trustbloc.local/1.0/identifiers
+      - ADAPTER_REST_UNIVERSAL_RESOLVER_URL=https://did-resolver.trustbloc.local/1.0/identifiers
       - VIRTUAL_HOST=issuer-adapter.trustbloc.local
       - VIRTUAL_PORT=${ISSUER_ADAPTER_DIDCOMM_PORT}
     ports:
