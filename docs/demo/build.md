@@ -48,8 +48,8 @@ Edge Components:
 - [User Agent](https://github.com/trustbloc/edge-agent/tree/master/cmd/user-agent) is WASM agent for storing and retrieving verifiable credentials using CHAPI
 
 Demo Applications:
-- [Issuer](https://github.com/trustbloc/edge-sandbox/docs/issuer/README.md)
-- [Relying Party](https://github.com/trustbloc/edge-sandbox/docs/rp/README.md)
+- [Issuer](../issuer/README.md)
+- [Relying Party](../rp/README.md)
 
 Third Party:
 - [ORY Hydra](https://www.ory.sh/docs/hydra/) OAuth2 Server 

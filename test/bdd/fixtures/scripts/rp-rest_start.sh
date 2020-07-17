@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-rpAdapterURL=http://rp.adapter.rest.example.com:10161/relyingparties
+rpAdapterURL=https://rp.adapter.rest.example.com:10161/relyingparties
 callbackURL=https://rp.trustbloc.local:5557/oauth2/callback
 
 registerRPTenant() {
@@ -16,7 +16,7 @@ registerRPTenant() {
 
     until [ $n -ge $maxAttempts ]
     do
-        response=$(curl -o - -s -w "RESPONSE_CODE=%{response_code}" \
+        response=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" \
         --header "Content-Type: application/json" \
         --request POST \
         --data '{"label": "rp.trustbloc.local", "callback": "'$callbackURL'"}' \
@@ -60,4 +60,4 @@ echo "RP Tenant ClientID=$clientID Callback=$callbackURL PublicDID=$publicDID"
 echo ""
 
 echo "Starting rp.example.com..."
-rp-rest start --oidc-opurl https://rp-adapter-hydra.trustbloc.local:7777/ --oidc-clientid $clientID --oidc-clientsecret $clientSecret
+rp-rest start --oidc-clientid $clientID --oidc-clientsecret $clientSecret
