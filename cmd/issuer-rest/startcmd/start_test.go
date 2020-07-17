@@ -224,6 +224,62 @@ func TestStartCmdWithMissingClientScopesArg(t *testing.T) {
 		"Neither introspect-url (command line flag) nor OAUTH2_ENDPOINT_TOKEN_INTROSPECTION_URL (environment variable) have been set.") //nolint:lll
 }
 
+func TestDatabaseTypeArg(t *testing.T) {
+	t.Run("test database type - missing arg", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, endpointAuthURLArg()...)
+		args = append(args, endpointTokenURLArg()...)
+		args = append(args, clientRedirectURLArg()...)
+		args = append(args, clientIDArg()...)
+		args = append(args, clientSecretArg()...)
+		args = append(args, tokenIntrospectionURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, cmsURLArg()...)
+		args = append(args, vcsURLArg()...)
+		args = append(args, issuerAdapterURLArg()...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Contains(t, err.Error(),
+			"Neither database-type (command line flag) nor DATABASE_TYPE (environment variable) have been set.")
+	})
+
+	t.Run("test database type - invalid type", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, endpointAuthURLArg()...)
+		args = append(args, endpointTokenURLArg()...)
+		args = append(args, clientRedirectURLArg()...)
+		args = append(args, clientIDArg()...)
+		args = append(args, clientSecretArg()...)
+		args = append(args, tokenIntrospectionURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, cmsURLArg()...)
+		args = append(args, vcsURLArg()...)
+		args = append(args, issuerAdapterURLArg()...)
+		args = append(args, []string{flag + databaseTypeFlagName, "invalid-db"}...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Contains(t, err.Error(), "database type 'invalid-db' is invalid")
+	})
+
+	t.Run("test database type - couch db failure", func(t *testing.T) {
+		prov, err := createStoreProviders(&issuerParameters{
+			dbParameters: &dbParameters{databaseType: databaseTypeCouchDBOption}})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "hostURL for new CouchDB provider can't be blank")
+		require.Nil(t, prov)
+	})
+}
+
 func TestStartCmdValidArgs(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
@@ -292,6 +348,9 @@ func setEnvVars(t *testing.T) {
 
 	err = os.Setenv(issuerAdapterURLEnvKey, "issuer-adapter")
 	require.Nil(t, err)
+
+	err = os.Setenv(databaseTypeEnvKey, "mem")
+	require.Nil(t, err)
 }
 
 func checkFlagPropertiesCorrect(t *testing.T, cmd *cobra.Command, flagName, flagShorthand, flagUsage string) {
@@ -322,6 +381,9 @@ func getValidArgs(logLevel string) []string {
 	args = append(args, vcsURLArg()...)
 	args = append(args, requestTokensArg()...)
 	args = append(args, issuerAdapterURLArg()...)
+	args = append(args, databaseTypeArg()...)
+	args = append(args, databaseURLArg()...)
+	args = append(args, databasePrefixArg()...)
 
 	if logLevel != "" {
 		args = append(args, logLevelArg(logLevel)...)
@@ -384,4 +446,16 @@ func issuerAdapterURLArg() []string {
 
 func logLevelArg(logLevel string) []string {
 	return []string{flag + common.LogLevelFlagName, logLevel}
+}
+
+func databaseTypeArg() []string {
+	return []string{flag + databaseTypeFlagName, "mem"}
+}
+
+func databaseURLArg() []string {
+	return []string{flag + databaseURLFlagName, "database-url"}
+}
+
+func databasePrefixArg() []string {
+	return []string{flag + databasePrefixFlagName, "database-prefix"}
 }
