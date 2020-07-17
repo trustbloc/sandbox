@@ -43,6 +43,7 @@ services:
       - RP_VCS_URL=https://rp-vcs.trustbloc.local
       - RP_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - RP_REQUEST_TOKENS=vcs_verifier=vcs_verifier_rw_token
+      - RP_OIDC_OPURL=https://rp-adapter-hydra.trustbloc.local:${RPADAPTER_HYDRA_PUBLIC_PORT}/
       - RP_OIDC_CALLBACK=https://rp.trustbloc.local:5557
       - VIRTUAL_HOST=rp.trustbloc.local
     ports:

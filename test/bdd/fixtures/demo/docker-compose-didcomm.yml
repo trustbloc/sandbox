@@ -61,12 +61,15 @@ services:
       - ADAPTER_REST_HOST_URL=${RP_ADAPTER_HOST}:${RP_ADAPTER_PORT}
       - ADAPTER_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - ADAPTER_REST_TLS_SYSTEMCERTPOOL=true
+      - ADAPTER_REST_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt
+      - ADAPTER_REST_TLS_SERVE_KEY=/etc/tls/trustbloc.local.key
       - ADAPTER_REST_DSN=TODO                         # TODO currently unused: https://github.com/trustbloc/edge-adapter/issues/168
       - ADAPTER_REST_OP_URL=http://TODO.example.com   # TODO currently unused: https://github.com/trustbloc/edge-adapter/issues/24
       - ADAPTER_REST_PRESENTATION_DEFINITIONS_FILE=/etc/testdata/presentationdefinitions.json
       - ADAPTER_REST_DIDCOMM_INBOUND_HOST=${RP_ADAPTER_HOST}:${RP_ADAPTER_DIDCOMM_PORT}
       - ADAPTER_REST_DIDCOMM_INBOUND_HOST_EXTERNAL=https://rp-adapter.trustbloc.local
       - ADAPTER_REST_TRUSTBLOC_DOMAIN=${BLOC_DOMAIN}
+      - ADAPTER_REST_UNIVERSAL_RESOLVER_URL=https://did-resolver.trustbloc.local/1.0/identifiers
       - ADAPTER_REST_HYDRA_URL=https://rp-adapter-hydra.trustbloc.local:${RPADAPTER_HYDRA_ADMIN_PORT}
       - VIRTUAL_HOST=rp-adapter.trustbloc.local
       - VIRTUAL_PORT=${RP_ADAPTER_DIDCOMM_PORT}
