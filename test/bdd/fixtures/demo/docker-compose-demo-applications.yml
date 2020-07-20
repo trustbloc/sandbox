@@ -28,6 +28,7 @@ services:
       # TODO https://github.com/trustbloc/edge-sandbox/issues/392 Expose multiple ports per virtual host
       - ISSUER_ADAPTER_URL=https://issuer-adapter.trustbloc.local:${ISSUER_ADAPTER_PORT}
       - ISSUER_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - ISSUER_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
       - ISSUER_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
       - VIRTUAL_HOST=issuer.trustbloc.local
     ports:
@@ -49,9 +50,10 @@ services:
       - RP_HOST_URL=0.0.0.0:5557
       - RP_VCS_URL=https://rp-vcs.trustbloc.local
       - RP_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - RP_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
       - RP_REQUEST_TOKENS=vcs_verifier=vcs_verifier_rw_token
       - RP_OIDC_OPURL=https://rp-adapter-hydra.trustbloc.local:${RPADAPTER_HYDRA_PUBLIC_PORT}/
-      - RP_OIDC_CALLBACK=https://rp.trustbloc.local:5557
+      - RP_OIDC_CALLBACK=https://rp.trustbloc.local
       - VIRTUAL_HOST=rp.trustbloc.local
     ports:
       - 5557:5557
