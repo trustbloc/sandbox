@@ -26,7 +26,7 @@ services:
       - ISSUER_CMS_URL=https://oathkeeper-proxy.trustbloc.local
       - ISSUER_VCS_URL=https://issuer-vcs.trustbloc.local
       # TODO https://github.com/trustbloc/edge-sandbox/issues/392 Expose multiple ports per virtual host
-      - ISSUER_ADAPTER_URL=http://localhost:10061
+      - ISSUER_ADAPTER_URL=https://issuer-adapter.trustbloc.local:${ISSUER_ADAPTER_PORT}
       - ISSUER_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - ISSUER_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
       - VIRTUAL_HOST=issuer.trustbloc.local
