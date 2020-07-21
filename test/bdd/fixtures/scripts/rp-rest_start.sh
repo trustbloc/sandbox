@@ -6,7 +6,7 @@
 #
 
 rpAdapterURL=https://rp.adapter.rest.example.com:10161/relyingparties
-callbackURL=https://rp.trustbloc.local:5557/oauth2/callback
+callbackURL=https://rp.trustbloc.local/oauth2/callback
 
 registerRPTenant() {
     n=0

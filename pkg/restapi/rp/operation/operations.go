@@ -130,6 +130,7 @@ type Operation struct {
 	oidcClientSecret string
 	oidcCallbackURL  string
 	oauth2ConfigFunc func(...string) oauth2Config
+	tlsConfig        *tls.Config
 }
 
 // Config defines configuration for rp operations
@@ -164,6 +165,7 @@ func New(config *Config) (*Operation, error) {
 		oidcClientID:     config.OIDCClientID,
 		oidcClientSecret: config.OIDCClientSecret,
 		oidcCallbackURL:  config.OIDCCallbackURL,
+		tlsConfig:        config.TLSConfig,
 	}
 
 	idp, err := oidc.NewProvider(
@@ -310,7 +312,13 @@ func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	oauthToken, err := c.oauth2Config().Exchange(r.Context(), code)
+	oauthToken, err := c.oauth2Config().Exchange(
+		context.WithValue(
+			r.Context(),
+			oauth2.HTTPClient,
+			&http.Client{Transport: &http.Transport{TLSClientConfig: c.tlsConfig}},
+		),
+		code)
 	if err != nil {
 		logger.Errorf("failed to exchange oauth2 code for token : %s", err)
 		c.didcommDemoResult(w, fmt.Sprintf("failed to exchange oauth2 code for token : %s", err))
