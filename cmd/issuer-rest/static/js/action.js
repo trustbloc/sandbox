@@ -56,6 +56,14 @@ $(document).ready(function () {
         }
     });
 
+    $('#creditCard').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $('#scope').val("CreditCardStatement");
+            $('#demoType').val("DIDComm");
+            $(this).data('clicked', true);
+        }
+    });
+
     $('#revokeVCBtn').on('click', function() {
         if (!$(this).data('clicked')) {
             $(this).data('clicked', true);
@@ -89,6 +97,10 @@ $(document).ready(function () {
             $('#demoSetupForm').attr('action', '/login?');
 
         }  else if ($("#prCard").data('clicked')) {
+
+            $('#demoSetupForm').attr('action', '/login?');
+
+        }  else if ($("#creditCard").data('clicked')) {
 
             $('#demoSetupForm').attr('action', '/login?');
 
