@@ -1,4 +1,4 @@
-# TrustBloc Edge Sandbox - Demo Playground
+# TrustBloc Edge Sandbox - Non DIDComm Demo Playground
 
 The components from this repo are deployed on a server to play around without running locally.
 

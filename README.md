@@ -13,13 +13,16 @@ Edge Sandbox is a reference implementation that demonstrates the following user 
 
 As a User, I should be able to get the Student Card from the Issuer and present it to the Relying Party.
 
+## Build
+Refer [Build](docs/demo/build.md) for more detailed information.
+
 ## Sample Applications
 - [Issuer](docs/issuer/README.md)
 - [Relying Party](docs/rp/README.md)
 
 ## Demo
-- [Build](docs/demo/build.md)
-- [Playground](docs/demo/sandbox_playground.md)
+- [Non DIDComm](docs/demo/sandbox_nondidcomm_playground.md)
+- [DIDComm](docs/demo/sandbox_didcomm_playground.md)
 
 ## Contributing
 Thank you for your interest in contributing. Please see our [community contribution guidelines](https://github.com/trustbloc/community/blob/master/CONTRIBUTING.md) for more information.
