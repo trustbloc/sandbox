@@ -124,7 +124,8 @@ func TestOperation_Login(t *testing.T) {
 	require.Contains(t, buff.String(), "vcs profile is empty")
 	require.Equal(t, http.StatusBadRequest, status)
 
-	buff, status, err = handleRequest(handler, nil, login+"?vcsProfile=vc-issuer-1&demoType=DIDComm", true)
+	buff, status, err = handleRequest(handler, nil,
+		login+"?vcsProfile=vc-issuer-1&demoType=DIDComm&adapterProfile=adapter-123", true)
 	require.NoError(t, err)
 	require.Contains(t, buff.String(), "Temporary Redirect")
 	require.Equal(t, http.StatusTemporaryRedirect, status)
@@ -155,7 +156,7 @@ func TestOperation_Login3(t *testing.T) {
 	require.Equal(t, http.StatusTemporaryRedirect, rr.Code)
 }
 
-func TestOperation_Callback(t *testing.T) {
+func TestOperation_Callback(t *testing.T) { // nolint: gocognit
 	headers := make(map[string]string)
 	headers["Authorization"] = authHeader
 
@@ -256,9 +257,36 @@ func TestOperation_Callback(t *testing.T) {
 			handler := getHandlerWithConfig(t, callback, cfg)
 
 			_, status, err := handleRequestWithCookies(handler, headers, callback,
-				[]*http.Cookie{{Name: vcsProfileCookie, Value: "vc-1"}, {Name: demoTypeCookie, Value: didCommDemo}})
+				[]*http.Cookie{{Name: vcsProfileCookie, Value: "vc-1"}, {Name: demoTypeCookie, Value: didCommDemo},
+					{Name: adapterProfileCookie, Value: "adapter-123"}})
 			require.NoError(t, err)
 			require.Equal(t, http.StatusFound, status)
+		})
+
+		t.Run("test callback didcomm - success", func(t *testing.T) {
+			vcsRouter := mux.NewRouter()
+			vcsRouter.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+				writer.WriteHeader(http.StatusOK)
+				_, err := writer.Write([]byte(profileData))
+				if err != nil {
+					panic(err)
+				}
+			})
+
+			vcs := httptest.NewServer(vcsRouter)
+
+			cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+				CMSURL:        cms.URL,
+				VCSURL:        vcs.URL,
+				StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			}
+			handler := getHandlerWithConfig(t, callback, cfg)
+
+			respData, status, err := handleRequestWithCookies(handler, headers, callback,
+				[]*http.Cookie{{Name: vcsProfileCookie, Value: "vc-1"}, {Name: demoTypeCookie, Value: didCommDemo}})
+			require.NoError(t, err)
+			require.Equal(t, http.StatusBadRequest, status)
+			require.Contains(t, respData.String(), "failed to get adapterProfileCookie cookie")
 		})
 
 		t.Run("test callback didcomm - issue cred error", func(t *testing.T) {
@@ -290,7 +318,8 @@ func TestOperation_Callback(t *testing.T) {
 			handler := getHandlerWithConfig(t, callback, cfg)
 
 			respData, status, err := handleRequestWithCookies(handler, headers, callback,
-				[]*http.Cookie{{Name: vcsProfileCookie, Value: "vc-1"}, {Name: demoTypeCookie, Value: didCommDemo}})
+				[]*http.Cookie{{Name: vcsProfileCookie, Value: "vc-1"}, {Name: demoTypeCookie, Value: didCommDemo},
+					{Name: adapterProfileCookie, Value: "adapter-123"}})
 			require.NoError(t, err)
 			require.Equal(t, http.StatusInternalServerError, status)
 			require.Contains(t, respData.String(), "failed to issue credential")
@@ -328,7 +357,8 @@ func TestOperation_Callback(t *testing.T) {
 			handler := getHandlerWithConfig(t, callback, cfg)
 
 			respData, status, err := handleRequestWithCookies(handler, headers, callback,
-				[]*http.Cookie{{Name: vcsProfileCookie, Value: "vc-1"}, {Name: demoTypeCookie, Value: didCommDemo}})
+				[]*http.Cookie{{Name: vcsProfileCookie, Value: "vc-1"}, {Name: demoTypeCookie, Value: didCommDemo},
+					{Name: adapterProfileCookie, Value: "adapter-123"}})
 			require.NoError(t, err)
 			require.Equal(t, http.StatusInternalServerError, status)
 			require.Contains(t, respData.String(), "failed to store state subject mapping")
@@ -1175,7 +1205,7 @@ func handleRequestWithCokie(handler Handler, headers map[string]string, path str
 	return rr.Body, rr.Code, nil
 }
 
-func handleRequestWithCookies(handler Handler, headers map[string]string, path string, cookies []*http.Cookie) (*bytes.Buffer, int, error) { //nolint:lll
+func handleRequestWithCookies(handler Handler, headers map[string]string, path string, cookies []*http.Cookie) (*bytes.Buffer, int, error) { //nolint:lll,unparam
 	req, err := http.NewRequest(handler.Method(), path, bytes.NewBuffer([]byte("")))
 	if err != nil {
 		return nil, 0, err

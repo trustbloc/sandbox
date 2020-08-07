@@ -48,9 +48,10 @@ const (
 
 	vcsUpdateStatusEndpoint = "/updateStatus"
 
-	vcsProfileCookie = "vcsProfile"
-	demoTypeCookie   = "demoType"
-	didCommDemo      = "DIDComm"
+	vcsProfileCookie     = "vcsProfile"
+	demoTypeCookie       = "demoType"
+	adapterProfileCookie = "adapterProfile"
+	didCommDemo          = "DIDComm"
 
 	issueCredentialURLFormat = "%s/%s" + "/credentials/issueCredential"
 
@@ -193,6 +194,11 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 
 	cookie = http.Cookie{Name: demoTypeCookie, Value: demo, Expires: expire}
 	http.SetCookie(w, &cookie)
+
+	if len(r.URL.Query()["adapterProfile"]) > 0 {
+		cookie = http.Cookie{Name: adapterProfileCookie, Value: r.URL.Query()["adapterProfile"][0], Expires: expire}
+		http.SetCookie(w, &cookie)
+	}
 
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 }
@@ -383,8 +389,16 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request, cred []byte, profileID string) {
-	// TODO https://github.com/trustbloc/edge-sandbox/issues/391 configure DIDComm Issuers
-	issuerID := "tb-cc-issuer"
+	adapterProfileCookie, err := r.Cookie(adapterProfileCookie)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get adapterProfileCookie cookie: %s",
+			err.Error()))
+
+		return
+	}
+
+	issuerID := adapterProfileCookie.Value
 
 	signedVC, err := c.issueCredential(cred, profileID)
 	if err != nil {
