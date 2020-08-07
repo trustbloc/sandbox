@@ -60,6 +60,7 @@ $(document).ready(function () {
         if (!$(this).data('clicked')) {
             $('#scope').val("CreditCardStatement");
             $('#demoType').val("DIDComm");
+            $('#adapterProfile').val("tb-cc-issuer");
             $(this).data('clicked', true);
         }
     });
