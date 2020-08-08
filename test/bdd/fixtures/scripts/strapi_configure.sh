@@ -52,6 +52,11 @@ GENERATE_CCS_COMMAND="strapi generate:api creditcardstatements UserID:string VcM
 
 $GENERATE_CCS_COMMAND
 
+# generate the drivinglicenses and model
+GENERATE_DL_COMMAND="strapi generate:api drivinglicenses UserID:string VcMetadata:json stmt:json"
+
+GENERATE_DL_COMMAND
+
 sleep 30
 
 # Create admin user
@@ -174,6 +179,17 @@ result=$(curl --header "Content-Type: application/json" --header "Authorization:
 if [ "$result" != "null" ]
    then
         echo "error insert creditcardstatements data in strapi: $result"
+fi
+
+# Add driving license data for above created user
+result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
+   --request POST \
+   --data '{"userid":"100","vcmetadata":{"@context":["https://www.w3.org/2018/credentials/v1","https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld"],"name":"Driving License","description":"Driving License for Mr. John Smith"},"stmt":{"description":"Driving License 2019-2024","number":"xxxxx-xxxxx-26206","customer":{"@type":"Person","name":"Jane Doe"},"expiryDate":"2024-06-30T12:00:00", "sex": "Male", "issueyDate":"2019-06-30T12:00:00", "address" : "29 Tan Street", "height" : "159 cm", "class": "g"}}' \
+   http://strapi:1337/drivinglicenses | jq  -r ".error")
+# check for error
+if [ "$result" != "null" ]
+   then
+        echo "error insert drivinglicenses data in strapi: $result"
 fi
 
 echo "STRAPI SETUP IS COMPLETED"
