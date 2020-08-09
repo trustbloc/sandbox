@@ -32,6 +32,7 @@ authenticators:
         - CrudeProductCredential
         - UniversityDegreeCredential
         - CreditCardStatement
+        - DrivingLicense
 
 authorizers:
   allow:

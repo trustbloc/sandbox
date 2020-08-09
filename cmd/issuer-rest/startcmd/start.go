@@ -365,7 +365,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
 }
 
-func startIssuer(parameters *issuerParameters) error {
+func startIssuer(parameters *issuerParameters) error { //nolint:funlen
 	if parameters.logLevel != "" {
 		common.SetDefaultLogLevel(logger, parameters.logLevel)
 	}
@@ -414,6 +414,9 @@ func startIssuer(parameters *issuerParameters) error {
 	router.PathPrefix("/js/").Handler(fs)
 
 	router.Handle("/", fs)
+	router.PathPrefix("/drivinglicense").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/drivinglicense.html")
+	})
 
 	for _, handler := range handlers {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
