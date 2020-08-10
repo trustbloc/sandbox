@@ -150,6 +150,8 @@ services:
       - VIRTUAL_HOST=myagent.trustbloc.local
       - ARIESD_HTTP_RESOLVER=${HTTP_RESOLVER}
       - WALLET_MEDIATOR_URL=${WALLET_ROUTER_URL}
+      - ARIESD_DEFAULT_LABEL=user-agent
+      - HTTP_SERVER_SDS_URL=https://edv.trustbloc.local/encrypted-data-vaults
     ports:
       - 8091:8091
     volumes:
