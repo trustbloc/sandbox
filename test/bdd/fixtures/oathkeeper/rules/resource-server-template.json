@@ -285,5 +285,41 @@
     "authorizer": {
       "handler": "allow"
     }
+  },
+  {
+    "id": "drivinglicense-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi:1337"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.trustbloc.local/drivinglicenses<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "DrivingLicense"
+          ]
+        }
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
   }
 ]

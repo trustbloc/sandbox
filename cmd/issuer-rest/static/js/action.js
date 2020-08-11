@@ -5,7 +5,6 @@ SPDX-License-Identifier: Apache-2.0
  */
 
 $(document).ready(function () {
-
     $('#profile').on('change', function () {
         if ($(this).val() != "") {
             $('#vcsProfile').val($(this).val());
@@ -65,12 +64,19 @@ $(document).ready(function () {
         }
     });
 
+    $('#drivingLicense').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $('#scope').val("DrivingLicense");
+            $(this).data('clicked', true);
+        }
+    });
+
     $('#revokeVCBtn').on('click', function() {
         if (!$(this).data('clicked')) {
             $(this).data('clicked', true);
         }
     });
-
+    
     $('#demoSetupForm').submit(function () {
 
         if($('#studentCard').data('clicked'))
@@ -102,6 +108,10 @@ $(document).ready(function () {
             $('#demoSetupForm').attr('action', '/login?');
 
         }  else if ($("#creditCard").data('clicked')) {
+
+                $('#demoSetupForm').attr('action', '/login?');
+
+        } else if ($("#drivingLicense").data('clicked')) {
 
             $('#demoSetupForm').attr('action', '/login?');
 
