@@ -57,6 +57,12 @@ GENERATE_DL_COMMAND="strapi generate:api drivinglicenses UserID:string VcMetadat
 
 $GENERATE_DL_COMMAND
 
+# generate the drivinglicenses and model
+GENERATE_CS_COMMAND="strapi generate:api creditscores UserID:string VcMetadata:json VcCredentialSubject:json"
+
+$GENERATE_CS_COMMAND
+
+
 sleep 30
 
 # Create admin user
@@ -181,7 +187,7 @@ if [ "$result" != "null" ]
         echo "error insert creditcardstatements data in strapi: $result"
 fi
 
-# Add driving license data for above created user. Driving license data settup todo issue-449
+# Add driving license data for above created user. Driving license data settup
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
    --data '{"userid":"100","vcmetadata":{"@context":["https://www.w3.org/2018/credentials/v1","https://trustbloc.github.io/context/vc/examples/driving-license-v1.jsonld"],"name":"Drivers Licence","description":"Drivers Licence for Mr.Foo"},"vccredentialsubject":{"id":"1234568","name":"Foo","licenceType":"G2","issuedDate":"2020-05-27","expiryDate":"2025-05-26","address":"4726 Pine Street, Toronto - A1B 2C3"}}' \
@@ -190,6 +196,17 @@ result=$(curl --header "Content-Type: application/json" --header "Authorization:
 if [ "$result" != "null" ]
    then
         echo "error insert drivinglicenses data in strapi: $result"
+fi
+
+# Add credit score data for above created user. Credit Score data settup todo #450
+result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
+   --request POST \
+   --data '{"userid":"100","vcmetadata":{"@context":["https://www.w3.org/2018/credentials/v1","https://trustbloc.github.io/context/vc/examples/driving-license-v1.jsonld"],"name":"Credit Score Report","description":"Credit Score Report for Mr.Foo"},"vccredentialsubject":{"id":"1234568","name":"Foo","licenceType":"G2","issuedDate":"2020-05-27","expiryDate":"2025-05-26","address":"4726 Pine Street, Toronto - A1B 2C3"}}' \
+   http://strapi:1337/creditscores | jq  -r ".error")
+# check for error
+if [ "$result" != "null" ]
+   then
+        echo "error insert creditscores data in strapi: $result"
 fi
 
 echo "STRAPI SETUP IS COMPLETED"
