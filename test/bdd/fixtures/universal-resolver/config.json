@@ -32,7 +32,8 @@
     },
     {
       "pattern": "^(did:key:.+)$",
-      "url": "https://did-key.web.app/api/dids/$1"
+      "image": "universalresolver/driver-did-key",
+      "tag": "latest"
     }
   ]
 }
