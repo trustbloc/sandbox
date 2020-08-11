@@ -48,3 +48,10 @@ services:
       - "8084:8081"
     networks:
       - demo-net
+
+  driver-did-key:
+    image: universalresolver/driver-did-key:latest
+    ports:
+      - "8098:8080"
+    networks:
+      - demo-net
