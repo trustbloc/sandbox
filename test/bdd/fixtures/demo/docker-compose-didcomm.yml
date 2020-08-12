@@ -82,7 +82,7 @@ services:
       - ${RP_ADAPTER_PORT}:${RP_ADAPTER_PORT}
       - ${RP_ADAPTER_DIDCOMM_PORT}:${RP_ADAPTER_DIDCOMM_PORT}
     entrypoint: ""
-    command:  /bin/sh -c "adapter-rest start"
+    command:  /bin/sh -c "sleep 20;adapter-rest start"
     volumes:
       - ../keys/tls:/etc/tls
       - ./adapter-config/rp:/etc/testdata
