@@ -19,7 +19,7 @@ registerRPTenant() {
         response=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" \
         --header "Content-Type: application/json" \
         --request POST \
-        --data '{"label": "rp.trustbloc.local", "callback": "'$callbackURL'"}' \
+        --data '{"label": "rp.trustbloc.local", "callback": "'$callbackURL'", "scopes": ["CreditCardStatement"]}' \
         $rpAdapterURL)
 
         code=${response//*RESPONSE_CODE=/}
@@ -55,8 +55,9 @@ fi
 clientID=$(echo $registration | jq -r .clientID)
 clientSecret=$(echo $registration | jq -r .clientSecret)
 publicDID=$(echo $registration | jq -r .publicDID)
+scopes=$(echo $registration | jq -r .scopes)
 
-echo "RP Tenant ClientID=$clientID Callback=$callbackURL PublicDID=$publicDID"
+echo "RP Tenant ClientID=$clientID Callback=$callbackURL Scopes=$scopes PublicDID=$publicDID"
 echo ""
 
 echo "Starting rp.example.com..."
