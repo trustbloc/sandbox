@@ -1,0 +1,220 @@
+<! ––
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+––>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta charset="utf-8">
+    <link rel="icon" type="images/x-icon" href="img/logo.png" >
+    <title>Credit Score Issuer</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="author" content="">
+
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss/dist/tailwind.min.css">
+    <!--Replace with your tailwind.css once created-->
+
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+        .gradient {
+            background: linear-gradient(90deg, #93291e 20%, #93291e 100%);
+        }
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        body.modal-active {
+            overflow-x: hidden;
+            overflow-y: visible !important;
+        }
+    </style>
+
+</head>
+
+<body class="leading-normal tracking-normal text-white gradient" style="font-family: 'sans-serif', sans-serif;">
+
+<!--Nav-->
+<div class="pt-12">
+    <nav id="header" class="fixed w-full z-30 top-0 text-white ">
+
+        <div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0">
+
+            <div class="pl-6 flex items-center">
+                <a class="toggleColour text-white no-underline hover:no-underline font-bold text-xl lg:text-2xl"  href="#">
+                    <i class="fa fa-cubes" style="font-size:24px;color:white"></i>
+                    Trustbloc
+                </a>
+            </div>
+
+            <div class="block lg:hidden pr-4">
+                <button id="nav-toggle" class="flex items-center p-1 text-gray-300 hover:text-gray-900">
+                    <svg class="fill-current h-6 w-6" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/></svg>
+                </button>
+            </div>
+
+            <div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden lg:block mt-2 lg:mt-0 bg-white lg:bg-transparent text-black p-4 lg:p-0 z-20" id="nav-content">
+                <ul class="list-reset lg:flex justify-end flex-1 items-center">
+                    <li class="mr-3">
+                        <a class="inline-block text-gray-400 no-underline hover:text-green hover:text-underline py-2 px-4" href="https://github.com/trustbloc/edge-sandbox">Github</a>
+                    </li>
+                    <li class="flex-1 md:flex-none md:mr-3">
+                        <div class="relative inline-block">
+                            <button onclick="toggleDD('myDropdown')" class="drop-button text-white focus:outline-none"> <span class="pr-2"><i class="em em-robot_face"></i></span> Hi, Welcome <svg class="h-3 fill-current inline" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></button>
+                            <div id="myDropdown" class="dropdownlist absolute bg-gray-900 text-white right-0 mt-3 p-3 overflow-auto z-30 invisible">
+                                <div class="flex w-full">
+                                    <i class="fa fa-user fa-fw mt-2 hover:bg-gray-800"></i>
+                                    <input id="profile" value="Profile" type='button'
+                                           class="mx-auto modal-open lg:mx-0 p-2 bg-gray-900 hover:bg-gray-800 text-white text-sm no-underline hover:no-underline block"
+                                           data-target="#testModal"/>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="pt-0 bg-red-800">
+            <div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0">
+                <div class="pl-6 flex items-center">
+                    <a class="toggleColour text-white no-underline hover:no-underline font-bold text-xl lg:text-2xl"  href="#">
+                        Credit Score Issuer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+
+
+
+
+<section class="bg-white border-b py-48">
+    <div class="container mx-auto flex  flex-wrap pt-4 pb-12">
+
+        <h1 class="w-full my-2 text-2xl  leading-tight text-left text-black">Credit Score Report</h1>
+        <h5 class="w-full my-2 text-xl leading-tight left text-black">Find the services you need related to your Trustbloc credit score report.</h5>
+
+        <div class="w-full mb-8">
+            <div class="h-1 mx-auto gradient w-full opacity-25 my-0 py-0 rounded-t"></div>
+        </div>
+
+        <div class="w-full md:w-1/3 p-6 flex flex-col flex-grow flex-shrink ">
+            <div class="flex-none mt-auto bg-red-100 rounded-b rounded-t-none overflow-hidden shadow p-6">
+                <h5 class="w-full my-2 text-xl text-black text-center">Start the process to get your credit score.</h5>
+                <div class="flex justify-center mt-8 pt-2">
+                    <form id="demoSetupForm"  action="">
+                        <input type="text" id="scope" name="scope" value="" checked hidden>
+                        <input type="text" id="demoType" name="demoType" value="" checked hidden>
+                        <input type="radio" id="vcProfile" name="vcsProfile" value="" checked hidden>
+                        <input type="submit"id="creditScore" class="lg:mx-0 hover:underline gradient text-white font-bold my-6 py-4 px-8 shadow-lg" value="Get your credit report">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!--Modal-->
+<section id="testModal">
+    <div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+
+            <div class="modal-close absolute top-0 right-0 cursor-pointer flex flex-col items-center mt-4 mr-4 text-white text-sm z-50">
+                <svg class="fill-current text-white" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                    <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                </svg>
+                <span class="text-sm">(Esc)</span>
+            </div>
+
+            <!-- Add margin if you want to see some of the overlay behind the modal-->
+            <div class="modal-content py-4 text-left px-6">
+                <!--Title-->
+                <div class="flex justify-between items-center pb-3">
+                    <p class="text-2xl text-green-800 font-bold">Choose DID profile</p>
+                    <a href="https://github.com/trustbloc/edge-sandbox/blob/master/docs/demo/sandbox_nondidcomm_playground.md#issuer-options" target="_blank"
+                       class="p-4 text-black text-sm no-underline hover:no-underline block"><i class="fa fa-info-circle"></i> More Info</a>
+
+
+                    <div class="modal-close cursor-pointer z-50">
+                        <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                            <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="flex justify-center mt-4">
+                    <select class="form-control content-center text-black bg-gray-300" id = "profile" onchange="getProfile(this)">
+                        <option value="trustbloc-ed25519signature2018-ed25519" id="vci1" selected>TrustBloc ED </option>
+                        <option value="trustbloc-jsonwebsignature2020-ed25519"id="vci2">TrustBloc JWSE</option>
+                        <option value="trustbloc-jsonwebsignature2020-p256"id="vci3">TrustBloc JWSP</option>
+                        <option value="interop-ed25519signature2018-ed25519"id="vci4">Interop ED </option>
+                        <option value="interop-jsonwebsignature2020-ed25519"id="vci5">Interop JWSE</option>
+                        <option value="interop-jsonwebsignature2020-p256"id="vci6">Interop JWSP</option>
+                        <option value="verseone-ed25519signature2018-ed25519"id="vci7">Veres One ED</option>
+                        <option value="elem-ed25519signature2018-ed25519"id="vci8">Elem ED </option>
+                        <option value="sov-ed25519signature2018-ed25519"id="vci9">Sov ED </option>
+                        <option value="didkey-ed25519signature2018-ed25519"id="vci10">DID Key ED</option>
+                        <option value="vc-issuer-interop-key"id="vci11">Interop DID Key ED</option>
+                    </select>
+                </div>
+
+                <!--Footer-->
+                <div class="flex justify-center mt-8 pt-2">
+                    <form id="demoProfileSetupForm"  action="">
+                        <input type="radio" id="selectedVcsProfile" name="selectedVcsProfile" value="" checked hidden>
+                        <input type="submit"id="formSubmit" class="px-6 bg-transparent bg-green-700 p-1 rounded-lg text-white hover:bg-blue-600 mr-2" value="Select">
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <section class="container mx-auto text-center py-6 mb-12">
+        <div class="text-lg text-white font py-1">
+            Copyright &copy; <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+        </div>
+    </section>
+</footer>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.1.11.1.js"></script>
+<script type="text/javascript" src="js/profile.js"></script>
+<script type="text/javascript" src="js/action.js"></script>
+<script>
+    function getProfile(selectObject) {
+        var value = selectObject.value;
+        document.getElementById("selectedVcsProfile").value = value;
+    }
+    /*Toggle dropdown list*/
+    function toggleDD(myDropMenu) {
+        document.getElementById(myDropMenu).classList.toggle("invisible");
+    }
+    // Close the dropdown menu if the user clicks outside of it
+    window.onclick = function(event) {
+        if (!event.target.matches('.drop-button') && !event.target.matches('.drop-search')) {
+            var dropdowns = document.getElementsByClassName("dropdownlist");
+            for (var i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (!openDropdown.classList.contains('invisible')) {
+                    openDropdown.classList.add('invisible');
+                }
+            }
+        }
+    }
+</script>
+</body>
+
+</html>
+

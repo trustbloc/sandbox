@@ -33,6 +33,7 @@ authenticators:
         - UniversityDegreeCredential
         - CreditCardStatement
         - DrivingLicense
+        - CreditScore
 
 authorizers:
   allow:

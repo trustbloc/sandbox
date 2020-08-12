@@ -71,6 +71,14 @@ $(document).ready(function () {
         }
     });
 
+    $('#creditScore').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $('#scope').val("CreditScore");
+            $(this).data('clicked', true);
+        }
+    });
+
+
     $('#revokeVCBtn').on('click', function() {
         if (!$(this).data('clicked')) {
             $(this).data('clicked', true);
@@ -112,6 +120,10 @@ $(document).ready(function () {
                 $('#demoSetupForm').attr('action', '/login?');
 
         } else if ($("#drivingLicense").data('clicked')) {
+
+            $('#demoSetupForm').attr('action', '/login?');
+
+        } else if ($("#creditScore").data('clicked')) {
 
             $('#demoSetupForm').attr('action', '/login?');
 
