@@ -48,7 +48,7 @@ GENERATE_UDC_COMMAND="strapi generate:api universitydegreecredentials UserID:str
 $GENERATE_UDC_COMMAND
 
 # generate the creditcardstatements and model
-GENERATE_CCS_COMMAND="strapi generate:api creditcardstatements UserID:string VcMetadata:json stmt:json"
+GENERATE_CCS_COMMAND="strapi generate:api creditcardstatements UserID:string metadata:json data:json"
 
 $GENERATE_CCS_COMMAND
 
@@ -179,7 +179,7 @@ fi
 # Add creditcardstatements data for above created user
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{"userid":"100","vcmetadata":{"@context":["https://www.w3.org/2018/credentials/v1","https://trustbloc.github.io/context/vc/examples/credit-card-v1.jsonld"],"name":"Credit Card Statement","description":"Credit Card Statement of Mr.John Smith"},"stmt":{"description":"June 2020 CreditCardStatement","url":"http://acmebank.com/invoice.pdf","accountId":"xxxx-xxxx-xxxx-1234","customer":{"@type":"Person","name":"Jane Doe"},"paymentDueDate":"2020-06-30T12:00:00","minimumPaymentDue":{"@type":"PriceSpecification","price":15.00,"priceCurrency":"CAD"},"totalPaymentDue":{"@type":"PriceSpecification","price":200.00,"priceCurrency":"CAD"},"billingPeriod":"P30D","paymentStatus":"http://schema.org/PaymentDue"}}' \
+   --data '{"userid":"100","metadata": {"contexts":["https://trustbloc.github.io/context/vc/examples/credit-card-v1.jsonld"],"scopes":["CreditCardStatement"]},"data":{"stmt":{"description":"June 2020 CreditCardStatement","url":"http://acmebank.com/invoice.pdf","accountId":"xxxx-xxxx-xxxx-1234","customer":{"@type":"Person","name":"Jane Doe"},"paymentDueDate":"2020-06-30T12:00:00","minimumPaymentDue":{"@type":"PriceSpecification","price":15.00,"priceCurrency":"CAD"},"totalPaymentDue":{"@type":"PriceSpecification","price":200.00,"priceCurrency":"CAD"},"billingPeriod":"P30D","paymentStatus":"http://schema.org/PaymentDue"}}}' \
    http://strapi:1337/creditcardstatements | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]

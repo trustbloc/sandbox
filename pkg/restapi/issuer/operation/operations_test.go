@@ -67,8 +67,25 @@ const profileData = `{
    "didPrivateKey":""
 }`
 
-const foo = `{"id":1,"userid":"100","name":"Foo Bar","email":"foo@bar.com", 
-"vcmetadata":{"@context": [ "https://www.w3.org/2018/credentials/v1"], "name":"foo", "description":"foo bar"}}`
+const foo = `{
+   "id":1,
+   "userid":"100",
+   "name":"Foo Bar",
+   "email":"foo@bar.com",
+   "vcmetadata":{
+      "@context":[
+         "https://www.w3.org/2018/credentials/v1"
+      ],
+      "name":"foo",
+      "description":"foo bar"
+   },
+   "vccredentialsubject":{
+      "id":"1234568",
+      "issuedDate":"2020-05-27",
+      "expiryDate":"2025-05-26",
+      "address":"4726 Pine Street, Toronto - A1B 2C3"
+   }
+}`
 const jsonArray = `[{}]`
 
 const holder = "did:example.com"
@@ -286,43 +303,7 @@ func TestOperation_Callback(t *testing.T) { // nolint: gocognit
 				[]*http.Cookie{{Name: vcsProfileCookie, Value: "vc-1"}, {Name: demoTypeCookie, Value: didCommDemo}})
 			require.NoError(t, err)
 			require.Equal(t, http.StatusBadRequest, status)
-			require.Contains(t, respData.String(), "failed to get adapterProfileCookie cookie")
-		})
-
-		t.Run("test callback didcomm - issue cred error", func(t *testing.T) {
-			vcsRouter := mux.NewRouter()
-			vcsRouter.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
-				writer.WriteHeader(http.StatusOK)
-				_, err := writer.Write([]byte(profileData))
-				if err != nil {
-					panic(err)
-				}
-			})
-			vcsRouter.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
-				writer.WriteHeader(http.StatusBadRequest)
-				_, err := writer.Write([]byte(testCredentialRequest))
-				if err != nil {
-					panic(err)
-				}
-			})
-
-			vcs := httptest.NewServer(vcsRouter)
-
-			defer vcs.Close()
-
-			cfg := &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-				CMSURL:        cms.URL,
-				VCSURL:        vcs.URL,
-				DIDCommHTML:   file.Name(),
-				StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}}}
-			handler := getHandlerWithConfig(t, callback, cfg)
-
-			respData, status, err := handleRequestWithCookies(handler, headers, callback,
-				[]*http.Cookie{{Name: vcsProfileCookie, Value: "vc-1"}, {Name: demoTypeCookie, Value: didCommDemo},
-					{Name: adapterProfileCookie, Value: "adapter-123"}})
-			require.NoError(t, err)
-			require.Equal(t, http.StatusInternalServerError, status)
-			require.Contains(t, respData.String(), "failed to issue credential")
+			require.Contains(t, respData.String(), "failed to get adapterProfileCookie")
 		})
 
 		t.Run("test callback didcomm - store error", func(t *testing.T) {
@@ -1149,7 +1130,7 @@ func TestDIDCommCredentialHandler(t *testing.T) {
 	t.Run("test didcomm credential - invalid token", func(t *testing.T) {
 		cfg := &Config{StoreProvider: memstore.NewProvider()}
 
-		ops, handler := getHandlerWithOps(t, didcommCredential, cfg)
+		_, handler := getHandlerWithOps(t, didcommCredential, cfg)
 
 		req := &adapterDataReq{
 			Token: uuid.New().String(),
@@ -1161,11 +1142,6 @@ func TestDIDCommCredentialHandler(t *testing.T) {
 		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommCredential, reqBytes)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "invalid token")
-
-		signedVC, err := ops.issueCredential([]byte("invalid-json"), uuid.New().String())
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "failed to marshal credential")
-		require.Nil(t, signedVC)
 	})
 }
 
