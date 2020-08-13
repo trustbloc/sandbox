@@ -114,6 +114,7 @@ services:
           - sidetree-mock.trustbloc.local
           - issuer-vcs.trustbloc.local
           - rp-vcs.trustbloc.local
+          - governance-vcs.trustbloc.local
           - hydra.trustbloc.local
           - oathkeeper-proxy.trustbloc.local
           - edv.trustbloc.local
