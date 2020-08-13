@@ -64,7 +64,7 @@ services:
 
   strapi:
     container_name: strapi
-    image: strapi/strapi:3.0.0-beta.18.6-alpine
+    image: strapi/strapi:3.0.6-alpine
     entrypoint: ""
     command:  /bin/sh -c "/usr/local/bin/docker-entrypoint.sh strapi;/tmp/strapi_configure.sh& strapi develop"
     environment:
