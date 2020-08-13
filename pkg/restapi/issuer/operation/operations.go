@@ -38,7 +38,7 @@ const (
 	generate          = "/generate"
 	revoke            = "/revoke"
 	didcommCallback   = "/didcomm/cb"
-	didcommCredential = "/didcomm/credential"
+	didcommCredential = "/didcomm/data"
 
 	// http query params
 	stateQueryParam = "state"
@@ -246,16 +246,16 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 		return
 	}
 
-	cred, err := c.prepareCredential(subject, info, vcsProfileCookie.Value)
-	if err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create credential: %s", err.Error()))
+	if demoTypeCookie != nil && demoTypeCookie.Value == didCommDemo {
+		c.didcomm(w, r, subject)
 
 		return
 	}
 
-	if demoTypeCookie != nil && demoTypeCookie.Value == didCommDemo {
-		c.didcomm(w, r, cred, vcsProfileCookie.Value)
+	cred, err := c.prepareCredential(subject, info, vcsProfileCookie.Value)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create credential: %s", err.Error()))
 
 		return
 	}
@@ -388,11 +388,11 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request, cred []byte, profileID string) {
+func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request, userData map[string]interface{}) {
 	adapterProfileCookie, err := r.Cookie(adapterProfileCookie)
 	if err != nil {
 		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get adapterProfileCookie cookie: %s",
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get adapterProfileCookie: %s",
 			err.Error()))
 
 		return
@@ -400,17 +400,17 @@ func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request, cred []byte,
 
 	issuerID := adapterProfileCookie.Value
 
-	signedVC, err := c.issueCredential(cred, profileID)
+	b, err := json.Marshal(userData)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to issue credential : %s", err.Error()))
+			fmt.Sprintf("failed to store state subject mapping : %s", err.Error()))
 
 		return
 	}
 
 	state := uuid.New().String()
 
-	err = c.store.Put(state, signedVC)
+	err = c.store.Put(state, b)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to store state subject mapping : %s", err.Error()))
@@ -457,7 +457,7 @@ func (c *Operation) didcommCredentialHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	cred, err := c.store.Get(data.Token)
+	userData, err := c.store.Get(data.Token)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid token: %s", err.Error()))
 
@@ -466,30 +466,12 @@ func (c *Operation) didcommCredentialHandler(w http.ResponseWriter, r *http.Requ
 
 	w.WriteHeader(http.StatusOK)
 
-	_, err = w.Write(cred)
+	_, err = w.Write(userData)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to write data: %s", err.Error()))
 
 		return
 	}
-}
-
-func (c *Operation) issueCredential(credBytes []byte, profileID string) ([]byte, error) {
-	body, err := json.Marshal(edgesvcops.IssueCredentialRequest{
-		Credential: credBytes,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal credential : %w", err)
-	}
-
-	endpointURL := fmt.Sprintf(issueCredentialURLFormat, c.vcsURL, profileID)
-
-	req, err := http.NewRequest("POST", endpointURL, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-
-	return sendHTTPRequest(req, c.httpClient, http.StatusCreated, c.requestTokens[vcsIssuerRequestTokenName])
 }
 
 func (c *Operation) validateAdapterCallback(redirectURL string) error {
@@ -786,6 +768,15 @@ func prepareUpdateCredentialStatusRequest(cred, status, statusReason string) ([]
 }
 
 func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) (map[string]interface{}, error) {
+	subjectBytes, err := c.getUserData(tk, info)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalSubject(subjectBytes)
+}
+
+func (c *Operation) getUserData(tk *oauth2.Token, info *token.Introspection) ([]byte, error) {
 	user, err := c.getCMSUser(tk, info)
 	if err != nil {
 		return nil, err
@@ -801,12 +792,7 @@ func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) (map
 		return nil, err
 	}
 
-	subjectBytes, err := sendHTTPRequest(req, httpClient, http.StatusOK, "")
-	if err != nil {
-		return nil, err
-	}
-
-	return unmarshalSubject(subjectBytes)
+	return sendHTTPRequest(req, httpClient, http.StatusOK, "")
 }
 
 func sendHTTPRequest(req *http.Request, client *http.Client, status int, httpToken string) ([]byte, error) {

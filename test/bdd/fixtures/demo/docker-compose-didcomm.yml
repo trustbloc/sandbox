@@ -46,6 +46,7 @@ services:
       - VIRTUAL_HOST=issuer-adapter.trustbloc.local
       - VIRTUAL_PORT=${ISSUER_ADAPTER_DIDCOMM_PORT}
       - ADAPTER_REST_DSN=mysql://issueradapter:issueradapter-secret-pw@tcp(mysql:3306)/
+      - ADAPTER_REST_DSN_TIMEOUT=45
     ports:
       - ${ISSUER_ADAPTER_PORT}:${ISSUER_ADAPTER_PORT}
       - ${ISSUER_ADAPTER_DIDCOMM_PORT}:${ISSUER_ADAPTER_DIDCOMM_PORT}
