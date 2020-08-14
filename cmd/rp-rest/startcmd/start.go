@@ -333,6 +333,9 @@ func startRP(parameters *rpParameters) error {
 	router.PathPrefix("/img/").Handler(fs)
 
 	router.Handle("/", fs)
+	router.PathPrefix("/bankaccount").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/bankaccount.html")
+	})
 
 	for _, handler := range handlers {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
