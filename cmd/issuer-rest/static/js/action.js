@@ -66,7 +66,7 @@ $(document).ready(function () {
 
     $('#drivingLicense').on('click', function() {
         if (!$(this).data('clicked')) {
-            $('#scope').val("DrivingLicense");
+            $('#scope').val("mDL");
             $(this).data('clicked', true);
         }
     });
@@ -84,7 +84,7 @@ $(document).ready(function () {
             $(this).data('clicked', true);
         }
     });
-    
+
     $('#demoSetupForm').submit(function () {
 
         if($('#studentCard').data('clicked'))
