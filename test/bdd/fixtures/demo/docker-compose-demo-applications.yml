@@ -62,5 +62,7 @@ services:
     volumes:
       - ../keys/tls:/etc/tls
       - ../scripts/:/tmp/scripts
+    depends_on:
+      - rp.adapter.rest.example.com
     networks:
       - demo-net
