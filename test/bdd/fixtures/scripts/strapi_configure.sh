@@ -198,10 +198,10 @@ if [ "$result" != "null" ]
         echo "error insert drivinglicenses data in strapi: $result"
 fi
 
-# Add credit score data for above created user. Credit Score data settup todo #450
+# Add credit score data for above created user.
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{"userid":"100","vcmetadata":{"@context":["https://www.w3.org/2018/credentials/v1","https://trustbloc.github.io/context/vc/examples/driving-license-v1.jsonld"],"name":"Credit Score Report","description":"Credit Score Report for Mr.Foo"},"vccredentialsubject":{"id":"1234568","name":"Foo","licenceType":"G2","issuedDate":"2020-05-27","expiryDate":"2025-05-26","address":"4726 Pine Street, Toronto - A1B 2C3"}}' \
+   --data '{"userid":"100","vcmetadata":{"@context":["https://www.w3.org/2018/credentials/v1","https://trustbloc.github.io/context/vc/examples/credit-score-v1.jsonld"],"name":"Credit Score Report","description":"Credit Score Report for John Doe"},"vccredentialsubject":{"family_name":"Doe","given_name":"John","birthdate":"1990-01-01","address":"4726 Pine Street, Toronto - A1B 2C3","report_date":"2020-08-14","score":"737","provider_name":"Acme Inc", "type":"CreditScore"}}' \
    http://strapi:1337/creditscores | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]
