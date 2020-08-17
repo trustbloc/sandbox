@@ -71,7 +71,7 @@ SPDX-License-Identifier: Apache-2.0
         </div>
     </nav>
 
-    <section class="bg-white border-b py-32">
+    <section class="bg-white border-b py-32" id="open-bankAccount" style="display:block">
         <div class="container mx-auto flex  flex-wrap pt-1 pb-4">
             <h1 class="w-full my-2 text-3xl text-center text-green-800"> Open a Bank Account Online in Canada</h1>
             <h5 class="w-full my-2 text-xl  text-center text-green-800"> We know you have unique banking needs.
@@ -90,6 +90,7 @@ SPDX-License-Identifier: Apache-2.0
 
             <div class="container justify-center mx-auto flex flex-wrap">
                 <div class="w-full h-full fixed top-0 left-0 bg-black opacity-75 z-50" id="loading-screen" style="display:none">
+
         <span class="text-green-500 opacity-75 top-1/2 my-0 mx-auto block relative w-0 h-0" style="top: 50%;">
          <i class="fas fa-circle-notch fa-spin fa-5x"></i>
        </span>
@@ -122,8 +123,23 @@ SPDX-License-Identifier: Apache-2.0
                 </div>
         </div>
     </section>
-
-
+    <section class="bg-gray-100 py-64" id="failed-verification" style="display:none">
+        <div class="w-full mb-4">
+            <div class="h-1 mx-auto gradient w-64 opacity-25 my-0 py-0 rounded-t"></div>
+        </div>
+        <div class="flex flex-col sm:flex-row justify-center pt-12 my-12 sm:my-4 ">
+            <div class="max-w-sm rounded overflow-hidden shadow-lg">
+                <div class="px-6 py-4">
+                    <img class="w-auto" src="img/oops.png">
+                    <h3 class="font-bold text-2xl text-teal-900 mb-2" id="msg-board">Failed to get presentation from wallet, please try again.</h3>
+                    </p>
+                </div>
+                <div class="px-6 py-4">
+                    <span class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2"></span>
+                </div>
+            </div>
+        </div>
+    </section>
 <footer>
     <section class="container mx-auto text-center py-6 mb-12">
         <div class="text-lg text-white font py-1">
@@ -223,7 +239,8 @@ SPDX-License-Identifier: Apache-2.0
 
         if (!result || !result.data || !result.data.type) {
             console.log("Received invalid presentation from wallet", result.data)
-            document.getElementById("msg-board").innerText = "Failed to get presentation from wallet, please try again."
+            document.getElementById("open-bankAccount").style.display  = "none"
+            document.getElementById("failed-verification").style.display = "block"
             return;
         }
 
