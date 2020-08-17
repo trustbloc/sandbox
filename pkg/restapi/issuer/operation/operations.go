@@ -849,7 +849,7 @@ func (c *Operation) GetRESTHandlers() []Handler {
 
 func getTxnStore(prov storage.Provider) (storage.Store, error) {
 	err := prov.CreateStore(txnStoreName)
-	if err != nil && err != storage.ErrDuplicateStore {
+	if err != nil && !errors.Is(err, storage.ErrDuplicateStore) {
 		return nil, err
 	}
 
