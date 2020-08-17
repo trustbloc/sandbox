@@ -14,7 +14,7 @@ instruction on local deployment.
 ## Steps
 1. Login to Wallet : Go to [`Wallet`](https://myagent.trustbloc.local/dashboard) and click on `Login` button with pre-filled username and password. 
 2. Select DIDComm option : In the [`Issuer`](https://issuer.trustbloc.local/) page, click on `Share Credit Card Statement` option in `Choose your options (DIDComm)` 
-section. Select `TrustBloc ED` profile and click `Issue`. Refer [here](#issuer-options) for more info on available issuer actions and profiles.
+section. Refer [here](#issuer-options) for more info on available issuer actions.
 3. Login to the Issuer: On the login page, provide user email as `foo@bar.com` (no password) and click login. Now, consent to sharing the 
 data on next page by clicking `Allow Access`. This will redirect to `Issuer Adapter` page and opens a CHAPI window.
 4. Connect to Wallet : Select `myagent.trustbloc.local` wallet provider from the options shown in the CHAPI window and click on it. Click `Allow` to continue with the 
@@ -27,18 +27,3 @@ Credit Card data inside the OIDC ID token.
 ## Issuer Options
 ### Actions
 - Share Credit Card Statement
-
-### Profile
-Currently, the TrustBloc supports following profiles with different combination of DID method, key type, signature type, credential status in the VC etc
-- TrustBloc ED : DID TrustBloc + Ed25519 Key + Ed25519Signature2018 signature type + Credential Status in VC
-- TrustBloc JWSE : DID TrustBloc + Ed25519 Key + JsonWebSignature2020 signature type + Credential Status in VC
-- TrustBloc JWSP : DID TrustBloc + P256 Key + JsonWebSignature2020 signature type + Credential Status in VC
-- Interop ED : DID TrustBloc + Ed25519 Key + Ed25519Signature2018 signature type + No Credential Status in VC
-- Interop JWSE : DID TrustBloc + Ed25519 Key + JsonWebSignature2020 signature type + No Credential Status in VC
-- Interop JWSP : DID TrustBloc + P256 Key + JsonWebSignature2020 signature type + No Credential Status in VC
-- Veres One ED : DID V1 + Ed25519 Key + Ed25519Signature2018 signature type + No Credential Status in VC
-- Elem ED : DID Elem + Ed25519 Key + Ed25519Signature2018 signature type + No Credential Status in VC
-- Sov ED : DID Sov + Ed25519 Key + Ed25519Signature2018 signature type + No Credential Status in VC
-- DID Key ED : DID Key + Ed25519 Key + Ed25519Signature2018 signature type + No Credential Status in VC
-- Interop DID Key ED : DID Key + Ed25519 Key + Ed25519Signature2018 signature type + No Credential Status in VC
-

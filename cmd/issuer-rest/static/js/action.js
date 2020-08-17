@@ -57,8 +57,8 @@ $(document).ready(function () {
 
     $('#creditCard').on('click', function() {
         if (!$(this).data('clicked')) {
-            $('#scope').val("CreditCardStatement");
             $('#demoType').val("DIDComm");
+            $('#didCommScope').val("CreditCardStatement");
             $('#adapterProfile').val("tb-cc-issuer");
             $(this).data('clicked', true);
         }
@@ -115,10 +115,6 @@ $(document).ready(function () {
 
             $('#demoSetupForm').attr('action', '/login?');
 
-        }  else if ($("#creditCard").data('clicked')) {
-
-                $('#demoSetupForm').attr('action', '/login?');
-
         } else if ($("#drivingLicense").data('clicked')) {
 
             $('#demoSetupForm').attr('action', '/login?');
@@ -134,6 +130,15 @@ $(document).ready(function () {
         } else {
 
             $('#message').text("Profile is not selected").show().fadeOut(2000);
+        }
+    });
+
+    $('#didCommDemo').submit(function () {
+
+        if($('#creditCard').data('clicked'))
+        {
+            $('#didCommDemo').attr('action', '/login?');
+
         }
     });
 });
