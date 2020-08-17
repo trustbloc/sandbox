@@ -12,8 +12,8 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/hyperledger/aries-framework-go v0.1.4-0.20200528153636-1d4c39e41ae7
 	github.com/stretchr/testify v1.5.1
-	github.com/trustbloc/edge-core v0.1.4-0.20200708225443-dcc42296cada
-	github.com/trustbloc/edge-service v0.1.4-0.20200710111914-05e78dcad03f
+	github.com/trustbloc/edge-core v0.1.4-0.20200814194611-5f3b95f18b63
+	github.com/trustbloc/edge-service v0.1.4-0.20200817151514-625c085f89d1
 	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 )
