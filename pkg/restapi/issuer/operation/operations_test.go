@@ -142,7 +142,13 @@ func TestOperation_Login(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, status)
 
 	buff, status, err = handleRequest(handler, nil,
-		login+"?vcsProfile=vc-issuer-1&demoType=DIDComm&adapterProfile=adapter-123", true)
+		login+"?didCommScope=CrediCardStatement&demoType=DIDComm", true)
+	require.NoError(t, err)
+	require.Contains(t, buff.String(), "adapterProfile profile is empty")
+	require.Equal(t, http.StatusBadRequest, status)
+
+	buff, status, err = handleRequest(handler, nil,
+		login+"?didCommScope=CrediCardStatement&demoType=DIDComm&adapterProfile=adapter-123", true)
 	require.NoError(t, err)
 	require.Contains(t, buff.String(), "Temporary Redirect")
 	require.Equal(t, http.StatusTemporaryRedirect, status)

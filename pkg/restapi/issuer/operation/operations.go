@@ -52,6 +52,7 @@ const (
 	demoTypeCookie       = "demoType"
 	adapterProfileCookie = "adapterProfile"
 	didCommDemo          = "DIDComm"
+	nonDIDCommDemo       = "nonDIDComm"
 
 	issueCredentialURLFormat = "%s/%s" + "/credentials/issueCredential"
 
@@ -169,19 +170,7 @@ func (c *Operation) registerHandler() {
 func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 	u := c.tokenIssuer.AuthCodeURL(w)
 
-	scope := r.URL.Query()["scope"]
-	if len(scope) > 0 {
-		u += "&scope=" + scope[0]
-	}
-
-	vcsProfile := r.URL.Query()["vcsProfile"]
-	if len(vcsProfile) == 0 {
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("vcs profile is empty"))
-
-		return
-	}
-
-	demo := "nonDIDComm"
+	demo := nonDIDCommDemo
 
 	demoType := r.URL.Query()["demoType"]
 	if len(demoType) > 0 {
@@ -189,13 +178,35 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	expire := time.Now().AddDate(0, 0, 1)
-	cookie := http.Cookie{Name: vcsProfileCookie, Value: vcsProfile[0], Expires: expire}
+	cookie := http.Cookie{Name: demoTypeCookie, Value: demo, Expires: expire}
 	http.SetCookie(w, &cookie)
 
-	cookie = http.Cookie{Name: demoTypeCookie, Value: demo, Expires: expire}
-	http.SetCookie(w, &cookie)
+	if demo == nonDIDCommDemo {
+		if len(r.URL.Query()["vcsProfile"]) == 0 {
+			c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("vcs profile is empty"))
 
-	if len(r.URL.Query()["adapterProfile"]) > 0 {
+			return
+		}
+
+		scope := r.URL.Query()["scope"]
+		if len(scope) > 0 {
+			u += "&scope=" + scope[0]
+		}
+
+		cookie = http.Cookie{Name: vcsProfileCookie, Value: r.URL.Query()["vcsProfile"][0], Expires: expire}
+		http.SetCookie(w, &cookie)
+	} else {
+		if len(r.URL.Query()["adapterProfile"]) == 0 {
+			c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("adapterProfile profile is empty"))
+
+			return
+		}
+
+		scope := r.URL.Query()["didCommScope"]
+		if len(scope) > 0 {
+			u += "&scope=" + scope[0]
+		}
+
 		cookie = http.Cookie{Name: adapterProfileCookie, Value: r.URL.Query()["adapterProfile"][0], Expires: expire}
 		http.SetCookie(w, &cookie)
 	}
@@ -205,14 +216,6 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 
 // callback for oauth2 login
 func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint: funlen,gocyclo
-	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
-	if err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get cookie: %s", err.Error()))
-
-		return
-	}
-
 	demoTypeCookie, err := r.Cookie(demoTypeCookie)
 	if err != nil && !errors.Is(err, http.ErrNoCookie) {
 		logger.Errorf(err.Error())
@@ -248,6 +251,14 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 
 	if demoTypeCookie != nil && demoTypeCookie.Value == didCommDemo {
 		c.didcomm(w, r, subject)
+
+		return
+	}
+
+	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get cookie: %s", err.Error()))
 
 		return
 	}

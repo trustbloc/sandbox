@@ -116,9 +116,12 @@ SPDX-License-Identifier: Apache-2.0
             <div class="flex-none mt-auto bg-white rounded-b rounded-t-none overflow-hidden shadow p-6">
                 <i class="fa fa-credit-card" style="font-size:128px;color:indigo"></i>
                 <div class="flex items-center justify-start">
-                    <input id='creditCard' value="Share Credit Card Statement" type='button'
-                           class="mx-auto modal-open lg:mx-0 hover:underline gradient text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg"
-                           data-target="#testModal"/>
+                    <form id="didCommDemo"  action="">
+                        <input type="text" id="demoType" name="demoType" value="" checked hidden>
+                        <input type="text" id="didCommScope" name="didCommScope" value="" checked hidden>
+                        <input type="text" id="adapterProfile" name="adapterProfile" value="" checked hidden>
+                        <input type="submit" id="creditCard" value="Share Credit Card Statement" class="mx-auto lg:mx-0 hover:underline gradient text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg">
+                    </form>
                 </div>
             </div>
         </div>
@@ -263,8 +266,6 @@ SPDX-License-Identifier: Apache-2.0
                 <div class="flex justify-center mt-8 pt-2">
                     <form id="demoSetupForm"  action="">
                         <input type="text" id="scope" name="scope" value="" checked hidden>
-                        <input type="text" id="demoType" name="demoType" value="" checked hidden>
-                        <input type="text" id="adapterProfile" name="adapterProfile" value="" checked hidden>
                         <input type="radio" id="vcsProfile" name="vcsProfile" value="trustbloc-ed25519signature2018-ed25519" checked hidden>
                         <input type="submit"id="formSubmit" class="px-6 bg-transparent bg-indigo-700 p-1 rounded-lg text-white hover:bg-green-600 mr-2" value="Issue">
                     </form>
