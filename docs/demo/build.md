@@ -2,6 +2,7 @@
 
 ## Prerequisites (General)
 - Go 1.13
+- [git-lfs](https://github.com/git-lfs/git-lfs/blob/master/README.md)
 
 ## Developer Setup
 In order to access edge service image and user agent image you have to create personal token with read:packages and repo permissions ([personal token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line)).
