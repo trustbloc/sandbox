@@ -149,6 +149,7 @@ type Config struct {
 // vc struct used to return vc data to html
 type vc struct {
 	Data string `json:"data"`
+	Msg  string `json:"msg"`
 }
 
 type createOIDCRequestResponse struct {
@@ -382,7 +383,7 @@ func (c *Operation) didcommDemoResult(w http.ResponseWriter, data string) {
 }
 
 // verify function verifies the input data and parse the response to provided template
-func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, htmlTemplate string,
+func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, htmlTemplate string, //nolint:funlen
 	w http.ResponseWriter, r *http.Request) {
 	reqBytes, err := json.Marshal(verifyReq)
 	if err != nil {
@@ -392,11 +393,23 @@ func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, ht
 		return
 	}
 
+	t, err := template.ParseFiles(htmlTemplate)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to load html: %s", err.Error()))
+
+		return
+	}
+
 	resp, httpErr := c.sendHTTPRequest(http.MethodPost, c.vcsURL+endpoint, reqBytes, httpContentTypeJSON,
 		c.requestTokens[vcsVerifierRequestTokenName])
 	if httpErr != nil {
 		c.writeErrorResponse(w, http.StatusBadRequest,
 			fmt.Sprintf("failed to verify: %s", httpErr.Error()))
+
+		if err := t.Execute(w, vc{Msg: "Oops verification is failed, Try again"}); err != nil {
+			logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
+		}
 
 		return
 	}
@@ -425,15 +438,7 @@ func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, ht
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	t, err := template.ParseFiles(htmlTemplate)
-	if err != nil {
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("unable to load html: %s", err.Error()))
-
-		return
-	}
-
-	if err := t.Execute(w, vc{Data: r.Form.Get(inputData)}); err != nil {
+	if err := t.Execute(w, vc{Msg: "Successfully verified", Data: r.Form.Get(inputData)}); err != nil {
 		logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
 }
@@ -462,7 +467,8 @@ func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg s
 
 	rw.WriteHeader(status)
 
-	if _, err := rw.Write([]byte(msg)); err != nil {
+	write := rw.Write
+	if _, err := write([]byte(msg)); err != nil {
 		logger.Errorf("Unable to send error message, %s", err)
 	}
 }
