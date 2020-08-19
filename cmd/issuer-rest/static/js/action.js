@@ -66,7 +66,9 @@ $(document).ready(function () {
 
     $('#drivingLicense').on('click', function() {
         if (!$(this).data('clicked')) {
-            $('#scope').val("mDL");
+            $('#demoType').val("DIDComm");
+            $('#didCommScope').val("mDL");
+            $('#adapterProfile').val("tb-cc-issuer");
             $(this).data('clicked', true);
         }
     });
@@ -115,10 +117,6 @@ $(document).ready(function () {
 
             $('#demoSetupForm').attr('action', '/login?');
 
-        } else if ($("#drivingLicense").data('clicked')) {
-
-            $('#demoSetupForm').attr('action', '/login?');
-
         } else if ($("#creditScore").data('clicked')) {
 
             $('#demoSetupForm').attr('action', '/login?');
@@ -139,6 +137,9 @@ $(document).ready(function () {
         {
             $('#didCommDemo').attr('action', '/login?');
 
+        } else ($("#drivingLicense").data('clicked'))
+        {
+            $('#didCommDemo').attr('action', '/login?');
         }
     });
 });
