@@ -75,7 +75,9 @@ $(document).ready(function () {
 
     $('#creditScore').on('click', function() {
         if (!$(this).data('clicked')) {
-            $('#scope').val("CreditScore");
+            $('#demoType').val("DIDComm");
+            $('#didCommScope').val("CreditScore");
+            $('#adapterProfile').val("tb-cc-issuer");
             $(this).data('clicked', true);
         }
     });
@@ -117,11 +119,7 @@ $(document).ready(function () {
 
             $('#demoSetupForm').attr('action', '/login?');
 
-        } else if ($("#creditScore").data('clicked')) {
-
-            $('#demoSetupForm').attr('action', '/login?');
-
-        } else if ($("#revokeVCBtn").data('clicked')) {
+        }  else if ($("#revokeVCBtn").data('clicked')) {
 
             $('#demoSetupForm').attr('action', 'view/revoke.html');
 
@@ -137,7 +135,11 @@ $(document).ready(function () {
         {
             $('#didCommDemo').attr('action', '/login?');
 
-        } else ($("#drivingLicense").data('clicked'))
+        } else if ($("#drivingLicense").data('clicked'))
+        {
+            $('#didCommDemo').attr('action', '/login?');
+
+        } else ($("#creditScore").data('clicked'))
         {
             $('#didCommDemo').attr('action', '/login?');
         }
