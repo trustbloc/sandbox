@@ -1,0 +1,21 @@
+{
+  "consortium_data": {
+    "domain": "testnet.trustbloc.local",
+    "policy": {
+      "cache": {
+        "max_age": 600
+      },
+      "num_queries": 2
+    }
+  },
+  "members_data": [
+    {
+      "domain": "stakeholder-one.trustbloc.local",
+      "policy": {"cache": {"max_age": 300}},
+      "endpoints": [
+        "https://sidetree-mock.trustbloc.local/sidetree/0.0.1"
+      ],
+      "privateKeyJwkPath": "fixtures/discovery-config/sidetree-mock/config-data/stakeholder_jwk.json"
+    }
+  ]
+}

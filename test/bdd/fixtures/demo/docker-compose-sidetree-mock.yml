@@ -34,7 +34,7 @@ services:
     ports:
       - 8089:8089
     volumes:
-      - ../discovery-config/sidetree-mock/config:/web/.well-known/did-trustbloc
+      - ../discovery-config/sidetree-mock/config:/web/.well-known/
       - ../keys/tls:/etc/tls
     networks:
       - demo-net
@@ -52,7 +52,7 @@ services:
     ports:
       - "8088:8088"
     volumes:
-      - ../discovery-config/sidetree-mock/config:/web/.well-known/did-trustbloc
+      - ../discovery-config/sidetree-mock/config:/web/.well-known/
       - ../keys/tls:/etc/tls
     networks:
       - demo-net

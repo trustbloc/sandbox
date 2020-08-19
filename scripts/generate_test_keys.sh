@@ -15,6 +15,15 @@ mkdir -p test/bdd/fixtures/keys/tls
 mkdir -p test/bdd/fixtures/keys/recover
 mkdir -p test/bdd/fixtures/keys/update
 mkdir -p test/bdd/fixtures/keys/update2
+mkdir -p test/bdd/fixtures/keys/recover-org1
+mkdir -p test/bdd/fixtures/keys/update-org1
+mkdir -p test/bdd/fixtures/keys/update2-org1
+mkdir -p test/bdd/fixtures/keys/recover-org2
+mkdir -p test/bdd/fixtures/keys/update-org2
+mkdir -p test/bdd/fixtures/keys/update2-org2
+mkdir -p test/bdd/fixtures/keys/recover-org3
+mkdir -p test/bdd/fixtures/keys/update-org3
+mkdir -p test/bdd/fixtures/keys/update2-org3
 
 localhostSSLConf=$(mktemp)
 echo "subjectKeyIdentifier=hash
@@ -62,5 +71,28 @@ openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/upda
 openssl ec -in test/bdd/fixtures/keys/update/key.pem -pubout -out test/bdd/fixtures/keys/update/public.pem
 openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/update2/key.pem
 openssl ec -in test/bdd/fixtures/keys/update2/key.pem -pubout -out test/bdd/fixtures/keys/update2/public.pem
+
+# generate key pairs for org-specific wellknown
+# org 1
+openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/recover-org1/key.pem
+openssl ec -in test/bdd/fixtures/keys/recover-org1/key.pem -pubout -out test/bdd/fixtures/keys/recover-org1/public.pem
+openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/update-org1/key.pem
+openssl ec -in test/bdd/fixtures/keys/update-org1/key.pem -pubout -out test/bdd/fixtures/keys/update-org1/public.pem
+openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/update2-org1/key.pem
+openssl ec -in test/bdd/fixtures/keys/update2-org1/key.pem -pubout -out test/bdd/fixtures/keys/update2-org1/public.pem
+# org 2
+openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/recover-org2/key.pem
+openssl ec -in test/bdd/fixtures/keys/recover-org2/key.pem -pubout -out test/bdd/fixtures/keys/recover-org2/public.pem
+openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/update-org2/key.pem
+openssl ec -in test/bdd/fixtures/keys/update-org2/key.pem -pubout -out test/bdd/fixtures/keys/update-org2/public.pem
+openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/update2-org2/key.pem
+openssl ec -in test/bdd/fixtures/keys/update2-org2/key.pem -pubout -out test/bdd/fixtures/keys/update2-org2/public.pem
+# org 3
+openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/recover-org3/key.pem
+openssl ec -in test/bdd/fixtures/keys/recover-org3/key.pem -pubout -out test/bdd/fixtures/keys/recover-org3/public.pem
+openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/update-org3/key.pem
+openssl ec -in test/bdd/fixtures/keys/update-org3/key.pem -pubout -out test/bdd/fixtures/keys/update-org3/public.pem
+openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/update2-org3/key.pem
+openssl ec -in test/bdd/fixtures/keys/update2-org3/key.pem -pubout -out test/bdd/fixtures/keys/update2-org3/public.pem
 
 echo "done generating edge-sandbox PKI"

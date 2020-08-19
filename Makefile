@@ -50,12 +50,12 @@ unit-test:
 	@scripts/check_unit.sh
 
 .PHONY: demo-start
-demo-start: clean generate-test-config issuer-rest-docker rp-rest-docker login-consent-server-docker trustbloc-local-setup
+demo-start: clean did-method-cli issuer-rest-docker rp-rest-docker login-consent-server-docker trustbloc-local-setup
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-start-with-sidetree-fabric
 demo-start-with-sidetree-fabric: export START_SIDETREE_FABRIC=true
-demo-start-with-sidetree-fabric: clean generate-test-config issuer-rest-docker rp-rest-docker login-consent-server-docker trustbloc-local-setup populate-fixtures docker-thirdparty fabric-cli
+demo-start-with-sidetree-fabric: clean did-method-cli issuer-rest-docker rp-rest-docker login-consent-server-docker trustbloc-local-setup populate-fixtures fabric-cli
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-stop
@@ -153,9 +153,9 @@ create-element-did: clean
 	@cp scripts/create-element-did.js .build/
 	@REQUEST_URL=$(DID_ELEMENT_SIDETREE_REQUEST_URL) scripts/create_element_did.sh
 
-.PHONY: generate-test-config
-generate-test-config: clean
-	@scripts/generate_test_config.sh
+.PHONY: did-method-cli
+did-method-cli:
+	@scripts/build-did-method-cli.sh
 
 .PHONY: clean
 clean: clean-build
@@ -167,5 +167,5 @@ clean-build:
 	@rm -Rf ./test/bdd/fixtures/oathkeeper/rules/resource-server.json
 	@rm -Rf ./test/bdd/fixtures/fabric/channel
 	@rm -Rf ./test/bdd/fixtures/fabric/crypto-config
-	@rm -Rf ./test/bdd/fixtures/discovery-server/config
-	@rm -Rf ./test/bdd/fixtures/stakeholder-server/config
+	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-fabric/config
+	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-mock/config

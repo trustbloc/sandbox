@@ -55,28 +55,46 @@ Feature:
 
     Given variable "token_fileidx_w" is assigned the value "TOKEN_FILEIDX_W"
 
-    # Create a file index document
+    # Create did-trustbloc file index document
     Then fabric-cli context "org1-context" is used
     When fabric-cli is executed with args "file createidx --path /.well-known/did-trustbloc --url http://localhost:48326/file --recoverykeyfile ./fixtures/keys/recover/public.pem --updatekeyfile ./fixtures/keys/update/public.pem --authtoken ${token_fileidx_w} --noprompt"
     And the JSON path "id" of the response is saved to variable "fileIdxID"
+
+    # Create Org1 .well-known
+    When fabric-cli is executed with args "file createidx --path /.well-known --url http://localhost:48326/file --recoverykeyfile ./fixtures/keys/recover-org1/public.pem --updatekeyfile ./fixtures/keys/update-org1/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    And the JSON path "id" of the response is saved to variable "Org1WellKnownIdxID"
+
+    # Create Org2 .well-known
+    When fabric-cli is executed with args "file createidx --path /.well-known --url http://localhost:48326/file --recoverykeyfile ./fixtures/keys/recover-org2/public.pem --updatekeyfile ./fixtures/keys/update-org2/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    And the JSON path "id" of the response is saved to variable "Org2WellKnownIdxID"
+
+    # Create Org3 .well-known
+    When fabric-cli is executed with args "file createidx --path /.well-known --url http://localhost:48326/file --recoverykeyfile ./fixtures/keys/recover-org3/public.pem --updatekeyfile ./fixtures/keys/update-org3/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    And the JSON path "id" of the response is saved to variable "Org3WellKnownIdxID"
 
     Then we wait 10 seconds
 
     # Update the file handler configuration for the '/content' path with the ID of the file index document
     Then fabric-cli context "org1-context" is used
-    Then fabric-cli is executed with args "ledgerconfig fileidxupdate --msp Org1MSP --peers peer0.org1.example.com;peer1.org1.example.com --path /.well-known/did-trustbloc --idxid ${fileIdxID} --noprompt"
+    And fabric-cli is executed with args "ledgerconfig fileidxupdate --msp Org1MSP --peers peer0.org1.example.com;peer1.org1.example.com --path /.well-known/did-trustbloc --idxid ${fileIdxID} --noprompt"
+    And fabric-cli is executed with args "ledgerconfig fileidxupdate --msp Org1MSP --peers peer0.org1.example.com;peer1.org1.example.com --path /.well-known --idxid ${Org1WellKnownIdxID} --noprompt"
     Then fabric-cli context "org2-context" is used
     And fabric-cli is executed with args "ledgerconfig fileidxupdate --msp Org2MSP --peers peer0.org2.example.com;peer1.org2.example.com --path /.well-known/did-trustbloc --idxid ${fileIdxID} --noprompt"
+    And fabric-cli is executed with args "ledgerconfig fileidxupdate --msp Org2MSP --peers peer0.org2.example.com;peer1.org2.example.com --path /.well-known --idxid ${Org2WellKnownIdxID} --noprompt"
     Then fabric-cli context "org3-context" is used
     And fabric-cli is executed with args "ledgerconfig fileidxupdate --msp Org3MSP --peers peer0.org3.example.com;peer1.org3.example.com --path /.well-known/did-trustbloc --idxid ${fileIdxID} --noprompt"
+    And fabric-cli is executed with args "ledgerconfig fileidxupdate --msp Org3MSP --peers peer0.org3.example.com;peer1.org3.example.com --path /.well-known --idxid ${Org3WellKnownIdxID} --noprompt"
 
     Then we wait 10 seconds
 
     When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/file/${fileIdxID}"
     Then the JSON path "didDocument.id" of the response equals "${fileIdxID}"
 
+    Then fabric-cli setup script "./generate_did_method_config_fabric.sh" is executed
+
   # Upload a couple of files and add them to the file index document
-    When fabric-cli is executed with args "file upload --url https://peer0-org1.trustbloc.local/.well-known/did-trustbloc --files ./fixtures/discovery-config/sidetree-fabric/config/testnet.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/org1.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/org2.trustbloc.local.json;fixtures/discovery-config/sidetree-fabric/config/org3.trustbloc.local.json --idxurl https://peer0-org1.trustbloc.local/file/${fileIdxID} --signingkeyfile ./fixtures/keys/update/key.pem --nextupdatekeyfile ./fixtures/keys/update2/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    Then fabric-cli context "org1-context" is used
+    When fabric-cli is executed with args "file upload --url https://peer0-org1.trustbloc.local/.well-known/did-trustbloc --files ./fixtures/discovery-config/sidetree-fabric/config/did-trustbloc/testnet.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/did-trustbloc/org1.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/did-trustbloc/org2.trustbloc.local.json;fixtures/discovery-config/sidetree-fabric/config/did-trustbloc/org3.trustbloc.local.json --idxurl https://peer0-org1.trustbloc.local/file/${fileIdxID} --signingkeyfile ./fixtures/keys/update/key.pem --nextupdatekeyfile ./fixtures/keys/update2/public.pem --authtoken ${token_fileidx_w} --noprompt"
     Then the JSON path "#" of the response has 4 items
     And the JSON path "0.Name" of the response equals "testnet.trustbloc.local.json"
     And the JSON path "0.ContentType" of the response equals "application/json"
@@ -86,6 +104,27 @@ Feature:
     And the JSON path "2.ContentType" of the response equals "application/json"
     And the JSON path "3.Name" of the response equals "org3.trustbloc.local.json"
     And the JSON path "3.ContentType" of the response equals "application/json"
+
+    # Org1 did-configuration
+    Then fabric-cli context "org1-context" is used
+    When fabric-cli is executed with args "file upload --url https://peer0-org1.trustbloc.local/.well-known --files ./fixtures/discovery-config/sidetree-fabric/config/org1.trustbloc.local/did-configuration.json --idxurl https://peer0-org1.trustbloc.local/file/${Org1WellKnownIdxID} --signingkeyfile ./fixtures/keys/update-org1/key.pem --nextupdatekeyfile ./fixtures/keys/update2-org1/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    Then the JSON path "#" of the response has 1 items
+    And the JSON path "0.Name" of the response equals "did-configuration.json"
+    And the JSON path "0.ContentType" of the response equals "application/json"
+
+    # Org2 did-configuration
+    Then fabric-cli context "org2-context" is used
+    When fabric-cli is executed with args "file upload --url https://peer0-org2.trustbloc.local/.well-known --files ./fixtures/discovery-config/sidetree-fabric/config/org2.trustbloc.local/did-configuration.json --idxurl https://peer0-org2.trustbloc.local/file/${Org2WellKnownIdxID} --signingkeyfile ./fixtures/keys/update-org2/key.pem --nextupdatekeyfile ./fixtures/keys/update2-org2/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    Then the JSON path "#" of the response has 1 items
+    And the JSON path "0.Name" of the response equals "did-configuration.json"
+    And the JSON path "0.ContentType" of the response equals "application/json"
+
+    # Org3 did-configuration
+    Then fabric-cli context "org3-context" is used
+    When fabric-cli is executed with args "file upload --url https://peer0-org3.trustbloc.local/.well-known --files ./fixtures/discovery-config/sidetree-fabric/config/org3.trustbloc.local/did-configuration.json --idxurl https://peer0-org3.trustbloc.local/file/${Org3WellKnownIdxID} --signingkeyfile ./fixtures/keys/update-org3/key.pem --nextupdatekeyfile ./fixtures/keys/update2-org3/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    Then the JSON path "#" of the response has 1 items
+    And the JSON path "0.Name" of the response equals "did-configuration.json"
+    And the JSON path "0.ContentType" of the response equals "application/json"
 
     Then we wait 15 seconds
 

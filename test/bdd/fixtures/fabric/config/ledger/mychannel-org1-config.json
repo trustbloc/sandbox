@@ -49,6 +49,12 @@
             {
               "Name": "/.well-known/did-trustbloc",
               "Version": "1",
+              "Config": "file://./mychannel-filehandler-wellknown-did-trustbloc-config.json",
+              "Format": "json"
+            },
+            {
+              "Name": "/.well-known",
+              "Version": "1",
               "Config": "file://./mychannel-filehandler-wellknown-config.json",
               "Format": "json"
             }
@@ -139,6 +145,12 @@
           "Components": [
             {
               "Name": "/.well-known/did-trustbloc",
+              "Version": "1",
+              "Config": "file://./mychannel-filehandler-wellknown-did-trustbloc-config.json",
+              "Format": "json"
+            },
+            {
+              "Name": "/.well-known",
               "Version": "1",
               "Config": "file://./mychannel-filehandler-wellknown-config.json",
               "Format": "json"
