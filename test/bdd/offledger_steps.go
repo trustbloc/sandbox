@@ -8,20 +8,20 @@ package bdd
 import (
 	"crypto"
 	"encoding/base64"
-	"fmt"
 
 	"github.com/cucumber/godog"
 	"github.com/hyperledger/fabric-protos-go/common"
 	pb "github.com/hyperledger/fabric-protos-go/peer"
+	"github.com/pkg/errors"
 	"github.com/trustbloc/fabric-peer-test-common/bddtests"
 )
 
-// OffLedgerSteps off-ledger steps
+// OffLedgerSteps implements off-ledger steps
 type OffLedgerSteps struct {
 	BDDContext *bddtests.BDDContext
 }
 
-// NewOffLedgerSteps return ledger steps
+// NewOffLedgerSteps creates new off-ledger steps
 func NewOffLedgerSteps(context *bddtests.BDDContext) *OffLedgerSteps {
 	return &OffLedgerSteps{BDDContext: context}
 }
@@ -32,7 +32,7 @@ func (d *OffLedgerSteps) DefineOffLedgerCollectionConfig(id, name, policy string
 		func(channelID string) (*pb.CollectionConfig, error) {
 			sigPolicy, err := d.newChaincodePolicy(policy, channelID)
 			if err != nil {
-				return nil, fmt.Errorf("error creating collection policy for collection [%s]: %w", name, err)
+				return nil, errors.Wrapf(err, "error creating collection policy for collection [%s]", name)
 			}
 			return newOffLedgerCollectionConfig(name, requiredPeerCount, maxPeerCount, timeToLive, sigPolicy), nil
 		},
@@ -45,7 +45,7 @@ func (d *OffLedgerSteps) DefineDCASCollectionConfig(id, name, policy string, req
 		func(channelID string) (*pb.CollectionConfig, error) {
 			sigPolicy, err := d.newChaincodePolicy(policy, channelID)
 			if err != nil {
-				return nil, fmt.Errorf("error creating collection policy for collection [%s]: %w", name, err)
+				return nil, errors.Wrapf(err, "error creating collection policy for collection [%s]", name)
 			}
 			return newDCASCollectionConfig(name, requiredPeerCount, maxPeerCount, timeToLive, sigPolicy), nil
 		},

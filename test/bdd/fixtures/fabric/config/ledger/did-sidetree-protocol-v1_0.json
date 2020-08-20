@@ -1,10 +1,12 @@
 {
-  "startingBlockchainTime": 1,
+  "genesisTime": 1,
   "hashAlgorithmInMultihashCode": 18,
-  "maxDeltaByteSize": 200000,
-  "maxOperationsPerBatch": 10,
+  "maxOperationSize": 200000,
+  "maxOperationCount": 10,
   "compressionAlgorithm": "GZIP",
   "maxAnchorFileSize": 1000000,
   "maxMapFileSize": 1000000,
-  "maxChunkFileSize": 10000000
+  "maxChunkFileSize": 10000000,
+  "signatureAlgorithms": ["EdDSA", "ES256", "ES256K"],
+  "keyAlgorithms": ["Ed25519", "P-256", "secp256k1"]
 }

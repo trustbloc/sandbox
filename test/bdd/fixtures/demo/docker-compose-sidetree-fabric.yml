@@ -56,7 +56,7 @@ services:
       - CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
       - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/fabric/tls/ca.crt /etc/hyperledger/mutual_tls/peer/ca.crt
       # override chaincode images
-      - CORE_CHAINCODE_BUILDER=${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
+      - CORE_CHAINCODE_BUILDER=${FABRIC_NS}/${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
       - CORE_CHAINCODE_GOLANG_RUNTIME=${FABRIC_BASEOS_FIXTURE_IMAGE}:${FABRIC_BASEOS_FIXTURE_TAG}
       # metrics config
       - CORE_METRICS_PROVIDER=prometheus
@@ -118,7 +118,7 @@ services:
       - CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
       - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/fabric/tls/ca.crt /etc/hyperledger/mutual_tls/peer/ca.crt
       # override chaincode images
-      - CORE_CHAINCODE_BUILDER=${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
+      - CORE_CHAINCODE_BUILDER=${FABRIC_NS}/${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
       - CORE_CHAINCODE_GOLANG_RUNTIME=${FABRIC_BASEOS_FIXTURE_IMAGE}:${FABRIC_BASEOS_FIXTURE_TAG}
       # metrics config
       - CORE_METRICS_PROVIDER=prometheus
@@ -179,7 +179,7 @@ services:
       - CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
       - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/fabric/tls/ca.crt /etc/hyperledger/mutual_tls/peer/ca.crt
       # override chaincode images
-      - CORE_CHAINCODE_BUILDER=${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
+      - CORE_CHAINCODE_BUILDER=${FABRIC_NS}/${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
       - CORE_CHAINCODE_GOLANG_RUNTIME=${FABRIC_BASEOS_FIXTURE_IMAGE}:${FABRIC_BASEOS_FIXTURE_TAG}
       # metrics config
       - CORE_METRICS_PROVIDER=prometheus
@@ -241,7 +241,7 @@ services:
       - CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
       - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/fabric/tls/ca.crt /etc/hyperledger/mutual_tls/peer/ca.crt
       # override chaincode images
-      - CORE_CHAINCODE_BUILDER=${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
+      - CORE_CHAINCODE_BUILDER=${FABRIC_NS}/${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
       - CORE_CHAINCODE_GOLANG_RUNTIME=${FABRIC_BASEOS_FIXTURE_IMAGE}:${FABRIC_BASEOS_FIXTURE_TAG}
       # metrics config
       - CORE_METRICS_PROVIDER=prometheus
@@ -302,7 +302,7 @@ services:
       - CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
       - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/fabric/tls/ca.crt /etc/hyperledger/mutual_tls/peer/ca.crt
       # override chaincode images
-      - CORE_CHAINCODE_BUILDER=${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
+      - CORE_CHAINCODE_BUILDER=${FABRIC_NS}/${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
       - CORE_CHAINCODE_GOLANG_RUNTIME=${FABRIC_BASEOS_FIXTURE_IMAGE}:${FABRIC_BASEOS_FIXTURE_TAG}
       # metrics config
       - CORE_METRICS_PROVIDER=prometheus
@@ -364,7 +364,7 @@ services:
       - CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
       - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/fabric/tls/ca.crt /etc/hyperledger/mutual_tls/peer/ca.crt
       # override chaincode images
-      - CORE_CHAINCODE_BUILDER=${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
+      - CORE_CHAINCODE_BUILDER=${FABRIC_NS}/${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
       - CORE_CHAINCODE_GOLANG_RUNTIME=${FABRIC_BASEOS_FIXTURE_IMAGE}:${FABRIC_BASEOS_FIXTURE_TAG}
       # metrics config
       - CORE_METRICS_PROVIDER=prometheus
@@ -404,4 +404,6 @@ services:
 
   # builder is only here to create a dependency on the image (not used as part of compose)
   builder:
-    image: ${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
+    image: ${FABRIC_NS}/${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
+
+

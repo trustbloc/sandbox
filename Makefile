@@ -29,7 +29,7 @@ FABRIC_TOOLS_VERSION ?= 2.0.0-alpha
 FABRIC_TOOLS_TAG     ?= $(ARCH)-$(FABRIC_TOOLS_VERSION)
 
 # This can be a commit hash or a tag (or any git ref)
-export FABRIC_CLI_EXT_VERSION ?= 3afdf9b27aae2fe62b9f186a81370a570400a116
+export FABRIC_CLI_EXT_VERSION ?= 55672fc44f77185c5c77e616991b3dcc178b5cb0
 
 .PHONY: all
 all: checks unit-test
@@ -128,8 +128,8 @@ generate-test-keys: clean
 
 .PHONY: docker-thirdparty
 docker-thirdparty:
-	docker pull couchdb:2.2.0
-	docker pull hyperledger/fabric-orderer:$(ARCH)-2.0.0-alpha
+    docker pull couchdb:3.1.0
+    docker pull hyperledger/fabric-orderer:$(ARCH)-2.2.0
 
 .PHONY: crypto-gen
 crypto-gen:
