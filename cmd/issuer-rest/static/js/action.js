@@ -68,7 +68,7 @@ $(document).ready(function () {
         if (!$(this).data('clicked')) {
             $('#demoType').val("DIDComm");
             $('#didCommScope').val("mDL");
-            $('#adapterProfile').val("tb-cc-issuer");
+            $('#adapterProfile').val("tb-dl-issuer");
             $(this).data('clicked', true);
         }
     });

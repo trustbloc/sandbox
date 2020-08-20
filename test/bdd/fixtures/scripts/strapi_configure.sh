@@ -53,7 +53,7 @@ GENERATE_CCS_COMMAND="strapi generate:api creditcardstatements UserID:string met
 $GENERATE_CCS_COMMAND
 
 # generate the drivinglicenses and model
-GENERATE_DL_COMMAND="strapi generate:api mdls UserID:string VcMetadata:json VcCredentialSubject:json"
+GENERATE_DL_COMMAND="strapi generate:api mdls UserID:string metadata:json data:json"
 
 $GENERATE_DL_COMMAND
 
@@ -190,12 +190,12 @@ fi
 # Add driving license data for above created user.
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{"userid":"100","vcmetadata":{"@context":["https://www.w3.org/2018/credentials/v1","https://trustbloc.github.io/context/vc/examples/mdl-v1.jsonld"],"name":"Drivers License","description":"Drivers License for John Doe"},"vccredentialsubject":{"document_number":"1234568","family_name":"Doe","family_name":"Doe","given_name":"John","driving_privileges":"G2","issuing_country":"Canada","issuing_authority":"Ministry of Transport Ontario","issue_date":"2020-05-27","expiry_date":"2025-05-26","resident_address":"4726 Pine Street","resident_city":"Toronto","resident_postal_code":"A1B 2C3","resident_state":"Ontario", "type":"mDL"}}' \
-   http://strapi:1337/mdls | jq  -r ".error")
+   --data '{"userid":"100","metadata": {"contexts":["https://trustbloc.github.io/context/vc/examples/mdl-v1.jsonld"],"scopes":["mDL"]},"data":{"given_name": "John", "family_name": "Smith", "document_number": "123-456-789"}}' \
+    http://strapi:1337/mdls | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]
    then
-        echo "error insert drivinglicenses data in strapi: $result"
+        echo "error insert mDL data in strapi: $result"
 fi
 
 # Add credit score data for above created user.

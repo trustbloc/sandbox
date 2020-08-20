@@ -19,7 +19,7 @@ registerRPTenant() {
         response=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" \
         --header "Content-Type: application/json" \
         --request POST \
-        --data '{"label": "rp.trustbloc.local", "callback": "'$callbackURL'", "scopes": ["CreditCardStatement"]}' \
+        --data '{"label": "rp.trustbloc.local", "callback": "'$callbackURL'", "scopes": ["CreditCardStatement","DrivingLicense"]}' \
         $rpAdapterURL)
 
         code=${response//*RESPONSE_CODE=/}

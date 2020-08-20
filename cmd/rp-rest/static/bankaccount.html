@@ -150,7 +150,6 @@ SPDX-License-Identifier: Apache-2.0
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 <script type="text/javascript" src="js/jquery.1.11.1.js"></script>
-<script type="text/javascript" src="js/action.js"></script>
 
 
 <script>
@@ -191,25 +190,6 @@ SPDX-License-Identifier: Apache-2.0
     installHandler()
         .catch(e => console.error('Error in installHandler:', e));
 
-    const webQueryOpts = {
-        drivingLicense : { web: {
-                VerifiablePresentation: {
-                    query: [
-                        {
-                            type: "QueryByExample",
-                            credentialQuery: {
-                                reason: "Please present your Driving License",
-                                example: {
-                                    "@context": ["https://www.w3.org/2018/credentials/v1"],
-                                    type: ["mDL"]
-                                }
-                            }
-                        }
-                    ]
-                }
-            }}
-    }
-
     async function installHandler() {
         console.log('Loading polyfill...');
         try {
@@ -219,46 +199,18 @@ SPDX-License-Identifier: Apache-2.0
         }
     }
 
-    function uuidv4() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
-
-    async function getVP(value){
-        const challenge = uuidv4()
-        const domain = window.location.hostname
-
-        const credentialQuery = webQueryOpts[value];
-        credentialQuery.web.VerifiablePresentation.domain = domain
-        credentialQuery.web.VerifiablePresentation.challenge = challenge
-
-        console.log("Sending webcredential query", credentialQuery)
-        const result = await navigator.credentials.get(credentialQuery);
-
-        if (!result || !result.data || !result.data.type) {
-            console.log("Received invalid presentation from wallet", result.data)
-            document.getElementById("open-bankAccount").style.display  = "none"
-            document.getElementById("failed-verification").style.display = "block"
-            return;
-        }
-
-        console.log("WebCredential response:", result.data)
-        document.getElementById("loading-screen").style.display = "block";
-        document.getElementById('vpDataInput').value = JSON.stringify(result.data)
-        document.getElementById('domainInput').value = domain
-        document.getElementById('challengeInput').value = challenge
-
-        document.getElementById('vpForm').submit()
-    }
-
     async function getDrivingLicense() {
-        await getVP("drivingLicense")
+        console.log("Receiving presentation from wallet")
+        axios({
+            method: "GET",
+            url: "/oauth2/request?scope=DrivingLicense"
+        }).then(
+            resp => {window.location.href = resp.data.request},
+            err => console.error(err)
+        )
     }
 
 </script>
-
 </body>
 </html>
 

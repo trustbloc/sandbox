@@ -5,5 +5,12 @@
       "name": "Bank Account Information",
       "purpose": "We need your bank and account information."
     }
+  },
+  "DrivingLicense": {
+    "schema": {
+      "uri": "https://trustbloc.github.io/context/vc/examples/mdl-v1.jsonld",
+      "name": "Driving License Information",
+      "purpose": "We need your driving License information."
+    }
   }
 }
