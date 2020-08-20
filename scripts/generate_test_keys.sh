@@ -12,6 +12,10 @@ echo "Generating edge-sandbox Test PKI"
 
 cd /opt/workspace/edge-sandbox
 mkdir -p test/bdd/fixtures/keys/tls
+mkdir -p test/bdd/fixtures/keys/recover
+mkdir -p test/bdd/fixtures/keys/update
+mkdir -p test/bdd/fixtures/keys/update2
+
 localhostSSLConf=$(mktemp)
 echo "subjectKeyIdentifier=hash
 authorityKeyIdentifier = keyid,issuer
@@ -51,9 +55,12 @@ openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/tls/
 openssl req -new -key test/bdd/fixtures/keys/tls/trustbloc.local.key -subj "/C=CA/ST=ON/O=TrustBloc/OU=trustbloc-edge-sandbox/CN=trustbloc.local" -out test/bdd/fixtures/keys/tls/trustbloc.local.csr
 openssl x509 -req -in test/bdd/fixtures/keys/tls/trustbloc.local.csr -CA test/bdd/fixtures/keys/tls/trustbloc-dev-ca.crt -CAkey test/bdd/fixtures/keys/tls/trustbloc-dev-ca.key -CAcreateserial -extfile "$trustblocSSLConf" -out test/bdd/fixtures/keys/tls/trustbloc.local.crt -days 365
 
-
-# generate key pair
-openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/key.pem
-openssl ec -in test/bdd/fixtures/keys/key.pem -pubout -out test/bdd/fixtures/keys/public.pem
+# generate key pair for recover/updates
+openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/recover/key.pem
+openssl ec -in test/bdd/fixtures/keys/recover/key.pem -pubout -out test/bdd/fixtures/keys/recover/public.pem
+openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/update/key.pem
+openssl ec -in test/bdd/fixtures/keys/update/key.pem -pubout -out test/bdd/fixtures/keys/update/public.pem
+openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/update2/key.pem
+openssl ec -in test/bdd/fixtures/keys/update2/key.pem -pubout -out test/bdd/fixtures/keys/update2/public.pem
 
 echo "done generating edge-sandbox PKI"
