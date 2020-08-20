@@ -101,7 +101,7 @@ SPDX-License-Identifier: Apache-2.0
         </div>
         <div class="ml-6 pt-1">
             <h4 class="text-xl text-gray-900 leading-tight">Presented Digital ID</h4>
-            <p class="text-base text-gray-600 leading-normal" id="successMsg">{{.Msg}}</p>
+            <p class="text-base text-gray-600 leading-normal" id="successMsg">Successfully Verified</p>
         </div>
     </div>
 </section>
@@ -112,7 +112,7 @@ SPDX-License-Identifier: Apache-2.0
         </div>
         <div class="ml-6 pt-1">
             <h4 class="text-xl text-gray-900 leading-tight">Presented Digital ID</h4>
-            <p class="text-base text-gray-600 leading-normal" id="failMsg">{{.Msg}}</p>
+            <p class="text-base text-gray-600 leading-normal" id="failMsg">Oops verification is failed, Try again</p>
         </div>
     </div>
 </section>
@@ -160,7 +160,7 @@ SPDX-License-Identifier: Apache-2.0
             document.getElementById("failMsg").innerText = JSON.stringify(JSON.parse({{.Msg}}));
          }
 
-        console.log("verifiable presentation is test", JSON.stringify(JSON.parse({{.Data}})));
+        console.log("verifiable presentation", JSON.stringify(JSON.parse({{.Data}})));
     })
 </script>
 </body>
