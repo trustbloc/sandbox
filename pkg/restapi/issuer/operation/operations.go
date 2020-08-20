@@ -37,12 +37,12 @@ const (
 	callback          = "/callback"
 	generate          = "/generate"
 	revoke            = "/revoke"
+	didcommToken      = "/didcomm/token"
 	didcommCallback   = "/didcomm/cb"
 	didcommCredential = "/didcomm/data"
 
 	// http query params
 	stateQueryParam = "state"
-	tokenQueryParam = "token"
 
 	credentialContext = "https://www.w3.org/2018/credentials/v1"
 
@@ -161,6 +161,7 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(generate, http.MethodPost, c.generateVC),
 
 		// didcomm
+		support.NewHTTPHandler(didcommToken, http.MethodPost, c.didcommTokenHandler),
 		support.NewHTTPHandler(didcommCallback, http.MethodGet, c.didcommCallbackHandler),
 		support.NewHTTPHandler(didcommCredential, http.MethodPost, c.didcommCredentialHandler),
 	}
@@ -432,6 +433,47 @@ func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request, userData map
 	http.Redirect(w, r, fmt.Sprintf(c.issuerAdapterURL+"/%s/connect/wallet?state=%s", issuerID, state), http.StatusFound)
 }
 
+func (c *Operation) didcommTokenHandler(w http.ResponseWriter, r *http.Request) {
+	data := &adapterTokenReq{}
+
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid request: %s", err.Error()))
+
+		return
+	}
+
+	cred, err := c.store.Get(data.State)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid state: %s", err.Error()))
+
+		return
+	}
+
+	tkn := uuid.New().String()
+
+	err = c.store.Put(tkn, cred)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to store adapter token and userID mapping : %s", err.Error()))
+
+		return
+	}
+
+	resp := adapterTokenResp{
+		Token: tkn,
+	}
+
+	respBytes, err := json.Marshal(resp)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to store adapter token and userID mapping : %s", err.Error()))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(respBytes) // nolint: errcheck,gosec
+}
+
 func (c *Operation) didcommCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	err := c.validateAdapterCallback(r.URL.RequestURI())
 	if err != nil {
@@ -496,20 +538,12 @@ func (c *Operation) validateAdapterCallback(redirectURL string) error {
 		return errors.New("missing state in http query param")
 	}
 
-	tkn := u.Query().Get(tokenQueryParam)
-	if tkn == "" {
-		return errors.New("missing token in http query param")
-	}
-
-	cred, err := c.store.Get(state)
+	_, err = c.store.Get(state)
 	if err != nil {
 		return fmt.Errorf("invalid state : %s", err)
 	}
 
-	err = c.store.Put(tkn, cred)
-	if err != nil {
-		return fmt.Errorf("store adapter token and userID mapping : %s", err)
-	}
+	// TODO https://github.com/trustbloc/edge-sandbox/issues/493 validate token existence for the state
 
 	return nil
 }
@@ -892,4 +926,13 @@ type cmsUser struct {
 
 type adapterDataReq struct {
 	Token string `json:"token"`
+}
+
+type adapterTokenReq struct {
+	State string `json:"state,omitempty"`
+}
+
+// IssuerTokenResp issuer user data token response.
+type adapterTokenResp struct {
+	Token string `json:"token,omitempty"`
 }

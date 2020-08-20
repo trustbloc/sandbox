@@ -238,6 +238,28 @@ func TestOperation_Callback(t *testing.T) { // nolint: gocognit
 		require.NoError(t, err)
 		require.Equal(t, http.StatusInternalServerError, status)
 		require.Contains(t, body.String(), "unable to load html")
+
+		// profile doesnt exists
+		r := mux.NewRouter()
+		r.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusOK)
+			_, err = writer.Write([]byte("invalid-data"))
+			if err != nil {
+				panic(err)
+			}
+		})
+
+		cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			CMSURL: cms.URL, VCSURL: httptest.NewServer(r).URL, ReceiveVCHTML: file.Name(),
+			DIDAuthHTML:   file.Name(),
+			StoreProvider: &mockstorage.Provider{}}
+		handler = getHandlerWithConfig(t, callback, cfg)
+
+		fmt.Println("here here 1")
+		body, status, err = handleRequest(handler, headers, callback, true)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusInternalServerError, status)
+		require.Contains(t, body.String(), "failed to create credential: retrieve profile")
 	})
 
 	t.Run("test callback - didcomm", func(t *testing.T) {
@@ -997,9 +1019,81 @@ func TestRevokeVC(t *testing.T) {
 	})
 }
 
+func TestDIDCommTokenHandler(t *testing.T) {
+	cfg := &Config{StoreProvider: memstore.NewProvider()}
+	ops, handler := getHandlerWithOps(t, didcommToken, cfg)
+
+	t.Run("test didcomm token handler - success", func(t *testing.T) {
+		state := uuid.New().String()
+		err := ops.store.Put(state, []byte(testCredentialRequest))
+		require.NoError(t, err)
+
+		req := &adapterTokenReq{
+			State: state,
+		}
+
+		reqBytes, jsonErr := json.Marshal(req)
+		require.NoError(t, jsonErr)
+
+		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommToken, reqBytes)
+		require.Equal(t, http.StatusOK, rr.Code)
+
+		var resp adapterTokenResp
+
+		err = json.Unmarshal(rr.Body.Bytes(), &resp)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, resp.Token)
+	})
+
+	t.Run("test didcomm token handler - invalid request", func(t *testing.T) {
+		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommToken, []byte("invalid-json"))
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "invalid request")
+	})
+
+	t.Run("test didcomm token handler - invalid state", func(t *testing.T) {
+		req := &adapterTokenReq{
+			State: uuid.New().String(),
+		}
+
+		reqBytes, jsonErr := json.Marshal(req)
+		require.NoError(t, jsonErr)
+
+		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommToken, reqBytes)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "invalid state")
+	})
+
+	t.Run("test didcomm token handler - success", func(t *testing.T) {
+		ops, handler := getHandlerWithOps(t, didcommToken, cfg)
+
+		state := uuid.New().String()
+
+		s := make(map[string][]byte)
+		s[state] = []byte(testCredentialRequest)
+
+		ops.store = &mockstorage.MockStore{
+			Store:  s,
+			ErrPut: errors.New("error inserting data"),
+		}
+
+		req := &adapterTokenReq{
+			State: state,
+		}
+
+		reqBytes, jsonErr := json.Marshal(req)
+		require.NoError(t, jsonErr)
+
+		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommToken, reqBytes)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to store adapter token and userID mapping")
+	})
+}
+
 func TestDIDCommCallbackHandler(t *testing.T) {
 	headers := make(map[string]string)
-	urlFmt := didcommCallback + "?" + stateQueryParam + "=%s&" + tokenQueryParam + "=%s&"
+	urlFmt := didcommCallback + "?" + stateQueryParam + "=%s"
 
 	t.Run("test didcomm callback handler - success", func(t *testing.T) {
 		file, err := ioutil.TempFile("", "*.html")
@@ -1016,7 +1110,7 @@ func TestDIDCommCallbackHandler(t *testing.T) {
 		require.NoError(t, err)
 
 		_, status, err := handleRequest(handler, headers,
-			fmt.Sprintf(urlFmt, state, uuid.New().String()), false)
+			fmt.Sprintf(urlFmt, state), false)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, status)
 	})
@@ -1032,16 +1126,10 @@ func TestDIDCommCallbackHandler(t *testing.T) {
 		handler := getHandlerWithConfig(t, didcommCallback, cfg)
 
 		respData, status, err := handleRequest(handler, headers,
-			fmt.Sprintf(urlFmt, "", uuid.New().String()), false)
+			fmt.Sprintf(urlFmt, ""), false)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusBadRequest, status)
 		require.Contains(t, respData.String(), "missing state in http query param")
-
-		respData, status, err = handleRequest(handler, headers,
-			fmt.Sprintf(urlFmt, uuid.New().String(), ""), false)
-		require.NoError(t, err)
-		require.Equal(t, http.StatusBadRequest, status)
-		require.Contains(t, respData.String(), "missing token in http query param")
 	})
 
 	t.Run("test didcomm callback handler - invalid token", func(t *testing.T) {
@@ -1055,7 +1143,7 @@ func TestDIDCommCallbackHandler(t *testing.T) {
 		handler := getHandlerWithConfig(t, didcommCallback, cfg)
 
 		respData, status, err := handleRequest(handler, headers,
-			fmt.Sprintf(urlFmt, uuid.New().String(), uuid.New().String()), false)
+			fmt.Sprintf(urlFmt, uuid.New().String()), false)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusBadRequest, status)
 		require.Contains(t, respData.String(), "failed to validate the adapter response: invalid state")
@@ -1071,7 +1159,7 @@ func TestDIDCommCallbackHandler(t *testing.T) {
 		require.NoError(t, err)
 
 		respData, status, err := handleRequest(handler, headers,
-			fmt.Sprintf(urlFmt, state, uuid.New().String()), false)
+			fmt.Sprintf(urlFmt, state), false)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusInternalServerError, status)
 		require.Contains(t, respData.String(), "unable to load didcomm html")
@@ -1090,14 +1178,6 @@ func TestDIDCommCallbackHandler(t *testing.T) {
 		err = ops.validateAdapterCallback("http://[fe80::%31%25en0]:8080/")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "didcomm callback - error parsing the request url")
-
-		// token store error
-		state := uuid.New().String()
-		s[state] = []byte(uuid.New().String())
-
-		err = ops.validateAdapterCallback(fmt.Sprintf(urlFmt, state, uuid.New().String()))
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "store adapter token and userID mapping")
 	})
 }
 
@@ -1244,7 +1324,7 @@ func handlerLookup(t *testing.T, op *Operation, lookup string) Handler {
 	return nil
 }
 
-func serveHTTP(t *testing.T, handler http.HandlerFunc, method, path string, req []byte) *httptest.ResponseRecorder {
+func serveHTTP(t *testing.T, handler http.HandlerFunc, method, path string, req []byte) *httptest.ResponseRecorder { // nolint: unparam,lll
 	httpReq, err := http.NewRequest(
 		method,
 		path,
