@@ -203,7 +203,7 @@ SPDX-License-Identifier: Apache-2.0
         console.log("Receiving presentation from wallet")
         axios({
             method: "GET",
-            url: "/oauth2/request?scope=driver_license:local"
+            url: "/oauth2/request?scope=driver_license:local credit_score:remote"
         }).then(
             resp => {window.location.href = resp.data.request},
             err => console.error(err)

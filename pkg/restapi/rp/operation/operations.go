@@ -16,6 +16,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/coreos/go-oidc"
 	"github.com/google/uuid"
@@ -252,7 +253,7 @@ func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) {
 	// TODO validate scope
 
 	state := uuid.New().String()
-	redirectURL := c.oauth2Config(scope).AuthCodeURL(state, oauth2.AccessTypeOnline)
+	redirectURL := c.oauth2Config(strings.Split(scope, " ")...).AuthCodeURL(state, oauth2.AccessTypeOnline)
 
 	logger.Debugf("redirectURL: %s", redirectURL)
 
