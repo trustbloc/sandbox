@@ -1,0 +1,35 @@
+/*
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ */
+
+.gradient {
+    background: linear-gradient(90deg, #000046 20%, #000046 100%);
+}
+.credit-gradient {
+    background: linear-gradient(90deg, #3a7bd5 10%, #3a6073 100%);
+}
+
+.heading-text{
+    font-size:32px;
+    color:white
+}
+
+body-font{
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+.bg {
+    /* The image used */
+    background-image: url("../img/background.jpg");
+}
+.modal {
+    transition: opacity 0.25s ease;
+}
+pre {
+    padding: 2px;
+    margin: 2px;
+    font-size: 12px;
+    text-align: left
+}

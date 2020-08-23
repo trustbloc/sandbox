@@ -18,27 +18,15 @@ SPDX-License-Identifier: Apache-2.0
     <meta name="author" content="">
 
     <link rel="stylesheet" href="https://unpkg.com/tailwindcss/dist/tailwind.min.css">
+    <link rel="stylesheet" href="css/layout.css">
     <!--Replace with your tailwind.css once created-->
 
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <style>
-        .gradient {
-            background: linear-gradient(90deg, #3a7bd5 10%, #3a6073 100%);
-        }
-        .modal {
-            transition: opacity 0.25s ease;
-        }
-        body.modal-active {
-            overflow-x: hidden;
-            overflow-y: visible !important;
-        }
-    </style>
-
 </head>
 
-<body class="leading-normal tracking-normal text-white gradient" style="font-family: 'sans-serif', sans-serif;">
+<body class="leading-normal tracking-normal text-white credit-gradient" style="font-family: 'sans-serif', sans-serif;">
 
 <!--Nav-->
 <div class="pt-12">
@@ -62,11 +50,11 @@ SPDX-License-Identifier: Apache-2.0
             <div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden lg:block mt-2 lg:mt-0 bg-white lg:bg-transparent text-black p-4 lg:p-0 z-20" id="nav-content">
                 <ul class="list-reset lg:flex justify-end flex-1 items-center">
                     <li class="mr-3">
-                        <a class="inline-block text-gray-400 no-underline hover:text-white hover:text-underline py-2 px-4"
+                        <a class="inline-block text-gray-500 no-underline hover:text-white hover:text-underline py-2 px-4"
                            href="https://github.com/trustbloc/edge-sandbox/blob/master/docs/issuer/README.md">Doc  <i class="fa fa-wpforms"></i> </a>
                     </li>
                     <li class="mr-3">
-                        <a class="inline-block text-gray-400 no-underline hover:text-green hover:text-underline py-2 px-4" href="https://github.com/trustbloc/edge-sandbox">
+                        <a class="inline-block text-gray-500 no-underline hover:text-green hover:text-underline py-2 px-4" href="https://github.com/trustbloc/edge-sandbox">
                             <i class="fa fa-github"></i></a>
                     </li>
                 </ul>
@@ -75,7 +63,7 @@ SPDX-License-Identifier: Apache-2.0
     </nav>
 </div>
 
-<section class="bg-white border-b py-32">
+<section class="bg-white border-b py-32 bg">
     <div class="container mx-auto flex  flex-wrap pt-4 pb-12">
         <h1 class="w-full my-2 text-2xl leading-tight text-left font-bold text-black">Credit Score Report</h1>
         <h5 class="w-full my-2 text-xl leading-tight left text-black">Find the services you need related to your Trustbloc credit score report.</h5>
@@ -92,7 +80,7 @@ SPDX-License-Identifier: Apache-2.0
                         <input type="text" id="demoType" name="demoType" value="" checked hidden>
                         <input type="text" id="didCommScope" name="didCommScope" value="" checked hidden>
                         <input type="text" id="adapterProfile" name="adapterProfile" value="" checked hidden>
-                        <input type="submit" id="creditScore" class="lg:mx-0 hover:underline gradient text-white font-bold my-6 py-4 px-8 shadow-lg" value="Get your credit report">
+                        <input type="submit" id="creditScore" class="lg:mx-0 hover:underline credit-gradient text-white font-bold my-6 py-4 px-8 shadow-lg" value="Get your credit report">
                     </form>
                 </div>
             </div>
@@ -112,21 +100,35 @@ SPDX-License-Identifier: Apache-2.0
 <script type="text/javascript" src="js/jquery.1.11.1.js"></script>
 <script type="text/javascript" src="js/action.js"></script>
 <script>
-    /*Toggle dropdown list*/
-    function toggleDD(myDropMenu) {
-        document.getElementById(myDropMenu).classList.toggle("invisible");
-    }
-    // Close the dropdown menu if the user clicks outside of it
-    window.onclick = function(event) {
-        if (!event.target.matches('.drop-button') && !event.target.matches('.drop-search')) {
-            var dropdowns = document.getElementsByClassName("dropdownlist");
-            for (var i = 0; i < dropdowns.length; i++) {
-                var openDropdown = dropdowns[i];
-                if (!openDropdown.classList.contains('invisible')) {
-                    openDropdown.classList.add('invisible');
-                }
+
+    var navMenuDiv = document.getElementById("nav-content");
+    var navMenu = document.getElementById("nav-toggle");
+
+    document.onclick = check;
+    function check(e){
+        var target = (e && e.target) || (event && event.srcElement);
+
+        //Nav Menu
+        if (!checkParent(target, navMenuDiv)) {
+            // click NOT on the menu
+            if (checkParent(target, navMenu)) {
+                // click on the link
+                if (navMenuDiv.classList.contains("hidden")) {
+                    navMenuDiv.classList.remove("hidden");
+                } else {navMenuDiv.classList.add("hidden");}
+            } else {
+                // click both outside link and outside menu, hide menu
+                navMenuDiv.classList.add("hidden");
             }
         }
+    }
+
+    function checkParent(t, elm) {
+        while(t.parentNode) {
+            if( t == elm ) {return true;}
+            t = t.parentNode;
+        }
+        return false;
     }
 </script>
 </body>
