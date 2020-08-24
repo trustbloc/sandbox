@@ -46,7 +46,9 @@ services:
       - VIRTUAL_HOST=issuer-adapter.trustbloc.local
       - VIRTUAL_PORT=${ISSUER_ADAPTER_DIDCOMM_PORT}
       - ADAPTER_REST_DSN=mysql://issueradapter:issueradapter-secret-pw@tcp(mysql:3306)/
-      - ADAPTER_REST_DSN_TIMEOUT=45
+      - ADAPTER_REST_DSN_TIMEOUT=120
+      - ADAPTER_REST_GOVERNANCE_VCS_URL=https://governance-vcs.trustbloc.local
+      - ADAPTER_REST_REQUEST_TOKENS=vcs_governance=vcs_governance_rw_token
     ports:
       - ${ISSUER_ADAPTER_PORT}:${ISSUER_ADAPTER_PORT}
       - ${ISSUER_ADAPTER_DIDCOMM_PORT}:${ISSUER_ADAPTER_DIDCOMM_PORT}
@@ -70,7 +72,7 @@ services:
       - ADAPTER_REST_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt
       - ADAPTER_REST_TLS_SERVE_KEY=/etc/tls/trustbloc.local.key
       - ADAPTER_REST_DSN=mysql://rpadapter:rpadapter-secret-pw@tcp(mysql:3306)/
-      - ADAPTER_REST_DSN_TIMEOUT=45
+      - ADAPTER_REST_DSN_TIMEOUT=120
       - ADAPTER_REST_OP_URL=http://TODO.example.com   # TODO currently unused: https://github.com/trustbloc/edge-adapter/issues/24
       - ADAPTER_REST_PRESENTATION_DEFINITIONS_FILE=/etc/testdata/presentationdefinitions.json
       - ADAPTER_REST_DIDCOMM_INBOUND_HOST=${RP_ADAPTER_HOST}:${RP_ADAPTER_DIDCOMM_PORT}
@@ -80,6 +82,8 @@ services:
       - ADAPTER_REST_HYDRA_URL=https://rp-adapter-hydra.trustbloc.local:${RPADAPTER_HYDRA_ADMIN_PORT}
       - VIRTUAL_HOST=rp-adapter.trustbloc.local
       - VIRTUAL_PORT=${RP_ADAPTER_DIDCOMM_PORT}
+      - ADAPTER_REST_GOVERNANCE_VCS_URL=https://governance-vcs.trustbloc.local
+      - ADAPTER_REST_REQUEST_TOKENS=vcs_governance=vcs_governance_rw_token
     ports:
       - ${RP_ADAPTER_PORT}:${RP_ADAPTER_PORT}
       - ${RP_ADAPTER_DIDCOMM_PORT}:${RP_ADAPTER_DIDCOMM_PORT}
