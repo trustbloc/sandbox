@@ -13,7 +13,7 @@ require (
 	github.com/hyperledger/aries-framework-go v0.1.4-0.20200528153636-1d4c39e41ae7
 	github.com/stretchr/testify v1.5.1
 	github.com/trustbloc/edge-core v0.1.4-0.20200814194611-5f3b95f18b63
-	github.com/trustbloc/edge-service v0.1.4-0.20200817151514-625c085f89d1
+	github.com/trustbloc/edge-service v0.1.4-0.20200821195456-41f4b293363b
 	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 )

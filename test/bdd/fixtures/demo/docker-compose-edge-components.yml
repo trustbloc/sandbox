@@ -116,7 +116,7 @@ services:
       - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - UNIVERSAL_RESOLVER_HOST_URL=https://did-resolver.trustbloc.local/1.0/identifiers
-      - VC_REST_MODE=issuer
+      - VC_REST_MODE=governance
       - DATABASE_TYPE=couchdb
       - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - DATABASE_PREFIX=governance
@@ -125,16 +125,19 @@ services:
       - KMSSECRETS_DATABASE_PREFIX=governance
       - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - VC_REST_TLS_SYSTEMCERTPOOL=true
-      - VC_REST_API_TOKEN=vcs_issuer_rw_token
+      - VC_REST_API_TOKEN=vcs_governance_rw_token
       - VIRTUAL_HOST=governance-vcs.trustbloc.local
+      - VIRTUAL_PORT=8066
+      - VC_REST_GOVERNANCE_CLAIMS_FILE=/etc/governance_claims.json
     ports:
       - 8066:8066
     entrypoint: ""
     # wait 20 seconds for couchdb to start
-    command:  /bin/sh -c "sleep 20;vc-rest start"
+    command:  /bin/sh -c "sleep 20;/tmp/scripts/vcs_governance_configure.sh& vc-rest start"
     volumes:
       - ../scripts/:/tmp/scripts
       - ../keys/tls:/etc/tls
+      - ../governance/governance_claims.json:/etc/governance_claims.json
     depends_on:
       - edv.example.com
     networks:
