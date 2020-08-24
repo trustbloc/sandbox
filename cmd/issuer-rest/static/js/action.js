@@ -66,9 +66,9 @@ $(document).ready(function () {
 
     $('#drivingLicense').on('click', function() {
         if (!$(this).data('clicked')) {
-            $('#demoType').val("DIDComm");
-            $('#didCommScope').val("mDL");
-            $('#adapterProfile').val("tb-dl-issuer");
+            $('#demoType').val("nonDIDComm");
+            $('#vcsProfile').val("trustbloc-jsonwebsignature2020-p256");
+            $('#scope').val("mDL");
             $(this).data('clicked', true);
         }
     });
