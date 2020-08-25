@@ -53,7 +53,7 @@ GENERATE_CCS_COMMAND="strapi generate:api creditcardstatements UserID:string met
 $GENERATE_CCS_COMMAND
 
 # generate the drivinglicenses and model
-GENERATE_DL_COMMAND="strapi generate:api mdls UserID:string VcMetadata:json Name:string Degree:json"
+GENERATE_DL_COMMAND="strapi generate:api mdls UserID:string VcMetadata:json Name:string VcCredentialSubject:json"
 
 $GENERATE_DL_COMMAND
 
