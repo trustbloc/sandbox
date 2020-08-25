@@ -33,7 +33,7 @@ SPDX-License-Identifier: Apache-2.0
 
     <style>
         .gradient {
-            background: linear-gradient(90deg, #348F50 20%, #348F50 100%);
+            background: linear-gradient(90deg, #2980B9 60%, #2980B9 100%);
         }
     </style>
 
@@ -71,10 +71,10 @@ SPDX-License-Identifier: Apache-2.0
         </div>
     </nav>
 
-    <section class="bg-white border-b py-32" id="open-bankAccount" style="display:block">
+    <section class="bg-white border-b py-48" id="open-bankAccount" style="display:block">
         <div class="container mx-auto flex  flex-wrap pt-1 pb-4">
-            <h1 class="w-full my-2 text-3xl text-center text-green-800"> Open a Bank Account Online in Canada</h1>
-            <h5 class="w-full my-2 text-xl  text-center text-green-800"> We know you have unique banking needs.
+            <h1 class="w-full my-2 text-3xl text-center text-black"> Open a Bank Account Online in Canada</h1>
+            <h5 class="w-full my-2 text-xl  text-center text-black"> We know you have unique banking needs.
                 That's why we offer a range of bank accounts – from basic savings & chequing to borderless.
             </h5>
 
@@ -96,10 +96,6 @@ SPDX-License-Identifier: Apache-2.0
        </span>
                 </div>
                 <h1 class="w-full my-2 text-5xl text-center text-red-500" id ="msg-board"></h1>
-                <h1 class="w-full my-2 text-2xl  leading-tight text-center text-green-800"> What would you like to do ? </h1>
-                <div class="w-full mb-4">
-                    <div class="h-1 mx-auto gradient w-64 opacity-10 my-0 py-0 rounded-t"></div>
-                </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-1 gap-8 md:gap-8 text-center text-black mt-8">
                     <div class="bg-white rounded-lg shadow-lg">
@@ -115,14 +111,18 @@ SPDX-License-Identifier: Apache-2.0
                             </div>
                             <div>
                                 <p class="font-bold">Our account policy requires below</p>
-                                <p class="text-sm">Make sure your digital wallet is registered.</p>
                                 <p class="text-sm">Make sure you have issued driving license and credit score credential.</p>
+                                <p class="text-sm">Make sure user's digital wallet is registered.</p>
+                                <a class="underline font-bold text-blue-700"
+                                href="https://github.com/trustbloc/edge-sandbox/blob/master/docs/demo/sandbox_nondidcomm_playground.md">Find more here</a>
                             </div>
                         </div>
                     </div>
                 </div>
+         </div>
         </div>
     </section>
+
     <section class="bg-gray-100 py-64" id="failed-verification" style="display:none">
         <div class="w-full mb-4">
             <div class="h-1 mx-auto gradient w-64 opacity-25 my-0 py-0 rounded-t"></div>
@@ -131,7 +131,7 @@ SPDX-License-Identifier: Apache-2.0
             <div class="max-w-sm rounded overflow-hidden shadow-lg">
                 <div class="px-6 py-4">
                     <img class="w-auto" src="img/oops.png">
-                    <h3 class="font-bold text-2xl text-teal-900 mb-2" id="msg-board">Failed to get presentation from wallet, please try again.</h3>
+                    <h3 class="font-bold text-2xl text-teal-900 mb-2" id="msg-board">Failed to get credential from wallet, please try again.</h3>
                     </p>
                 </div>
                 <div class="px-6 py-4">
@@ -141,7 +141,7 @@ SPDX-License-Identifier: Apache-2.0
         </div>
     </section>
 <footer>
-    <section class="container mx-auto text-center py-6 mb-12">
+    <section class="container mx-auto text-center py-2 mb-12">
         <div class="text-lg text-white font py-1">
             Copyright &copy; <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
         </div>

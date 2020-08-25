@@ -16,29 +16,25 @@ SPDX-License-Identifier: Apache-2.0
     <meta name="author" content="">
 
     <link rel="stylesheet" href="https://unpkg.com/tailwindcss/dist/tailwind.min.css">
+    <link rel="stylesheet" href="css/layout.css">
 
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
 
     <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
     <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
-
-    <style>
-        .gradient {
-            background: linear-gradient(90deg, #7474BF 20%, #348ac7 100%);
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 </head>
 
-<body class="leading-normal tracking-normal text-white gradient" style="font-family: 'Source Sans Pro', sans-serif;">
+<body class="leading-normal tracking-normal text-white gradient">
 <!--Nav-->
 <nav id="header" class="fixed w-full z-30 top-0 text-white">
 
     <div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0 py-2">
 
         <div class="pl-4 flex items-center">
-            <a class="toggleColour text-purple-800 no-underline hover:no-underline font-bold text-2xl lg:text-4xl"  href="/">
-                <i class="fa fa-cubes" style="font-size:32px;color:indigo"></i>
+            <a class="toggleColour text-white no-underline hover:no-underline font-bold text-2xl lg:text-4xl"  href="/">
+                <i class="fa fa-cubes heading-text"></i>
                 TrustBloc Issuer
             </a>
         </div>
@@ -52,10 +48,7 @@ SPDX-License-Identifier: Apache-2.0
         <div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden lg:block mt-2 lg:mt-0 bg-white lg:bg-transparent text-black p-4 lg:p-0 z-20" id="nav-content">
             <ul class="list-reset lg:flex justify-end flex-1 items-center">
                 <li class="mr-3">
-                    <a class="inline-block text-black no-underline hover:text-green hover:text-underline py-2 px-4" href="#">About Us</a>
-                </li>
-                <li class="mr-3">
-                    <a class="inline-block text-black no-underline hover:text-green hover:text-underline py-2 px-4" href="https://github.com/trustbloc/edge-sandbox">Github</a>
+                    <a class="inline-block text-gray-400 no-underline hover:text-green hover:text-underline py-2 px-4" href="https://github.com/trustbloc/edge-sandbox"><i class="fa fa-github"></i></a>
                 </li>
             </ul>
         </div>
@@ -75,7 +68,7 @@ SPDX-License-Identifier: Apache-2.0
 </div>
 
 
-<div class="relative -mt-12 lg:-mt-24">
+<div class="relative -mt-12 lg:-mt-32">
     <svg viewBox="0 0 1428 174" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
             <g transform="translate(-2.000000, 44.000000)" fill="#FFFFFF" fill-rule="nonzero">
@@ -90,19 +83,20 @@ SPDX-License-Identifier: Apache-2.0
     </svg>
 </div>
 
-<section class="bg-gray-100 py-8">
-
+<section class="bg-white py-32">
     <div class="container mx-auto px-2 pt-4 pb-12 text-gray-800">
-
         <div class="w-full mb-8">
             <div class="h-1 mx-auto gradient w-64 opacity-25 my-0 py-0 rounded-t"></div>
         </div>
-
         <div class="flex flex-col sm:flex-row justify-center pt-12 my-12 sm:my-4 ">
             <div class="flex flex-col w-5/6 lg:w-1/2 mx-auto lg:mx-0 rounded-lg bg-white mt-4 sm:-mt-6 shadow-lg z-10">
                 <div class="flex-1 bg-white rounded-t rounded-b-none overflow-hidden shadow" >
                     <div>
-                        <h3 class="w-full p-4 text-2xl font-bold text-center" id="title-board">Please authenticate your wallet</h3>
+
+                        <h3 class="w-full p-4 text-2xl font-bold text-center" id="title-board">Let's Begin User Wallet Authentication</h3>
+                        <h6 class="w-full p-4 text-sm text-center">User's wallet must be registered.<a class="underline font-bold text-blue-700"
+                       href="https://github.com/trustbloc/edge-sandbox/blob/master/docs/demo/sandbox_nondidcomm_playground.md"> Find more here</a></h6>
+
                         <h4 class="w-full p-4 text-2xl font-bold text-center text-red-500" id="error-board"></h4>
                         <form action="{{.Path}}" method="POST" id="generate-cred-form">
                             <input type="hidden" name="cred" value="{{.Cred}}">
@@ -126,23 +120,6 @@ SPDX-License-Identifier: Apache-2.0
     </div>
 
 </section>
-
-<svg class="wave-top" viewBox="0 0 1439 147" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g transform="translate(-1.000000, -14.000000)" fill-rule="nonzero">
-            <g class="wave" fill="#f8fafc">
-                <path d="M1440,84 C1383.555,64.3 1342.555,51.3 1317,45 C1259.5,30.824 1206.707,25.526 1169,22 C1129.711,18.326 1044.426,18.475 980,22 C954.25,23.409 922.25,26.742 884,32 C845.122,37.787 818.455,42.121 804,45 C776.833,50.41 728.136,61.77 713,65 C660.023,76.309 621.544,87.729 584,94 C517.525,105.104 484.525,106.438 429,108 C379.49,106.484 342.823,104.484 319,102 C278.571,97.783 231.737,88.736 205,84 C154.629,75.076 86.296,57.743 0,32 L0,0 L1440,0 L1440,84 Z"></path>
-            </g>
-            <g transform="translate(1.000000, 15.000000)" fill="#FFFFFF">
-                <g transform="translate(719.500000, 68.500000) rotate(-180.000000) translate(-719.500000, -68.500000) ">
-                    <path d="M0,0 C90.7283404,0.927527913 147.912752,27.187927 291.910178,59.9119003 C387.908462,81.7278826 543.605069,89.334785 759,82.7326078 C469.336065,156.254352 216.336065,153.6679 0,74.9732496" opacity="0.100000001"></path>
-                    <path d="M100,104.708498 C277.413333,72.2345949 426.147877,52.5246657 546.203633,45.5787101 C666.259389,38.6327546 810.524845,41.7979068 979,55.0741668 C931.069965,56.122511 810.303266,74.8455141 616.699903,111.243176 C423.096539,147.640838 250.863238,145.462612 100,104.708498 Z" opacity="0.100000001"></path>
-                    <path d="M1046,51.6521276 C1130.83045,29.328812 1279.08318,17.607883 1439,40.1656806 L1439,120 C1271.17211,77.9435312 1140.17211,55.1609071 1046,51.6521276 Z" opacity="0.200000003"></path>
-                </g>
-            </g>
-        </g>
-    </g>
-</svg>
 
 <footer>
     <section class="container mx-auto text-center py-6 mb-12">
