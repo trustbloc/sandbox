@@ -32,6 +32,9 @@ Refer [Build](docs/demo/build.md) for more detailed information.
 - [Non DIDComm](docs/demo/sandbox_nondidcomm_playground.md)
 - [DIDComm](docs/demo/sandbox_didcomm_playground.md)
 
+## Component Diagram
+- [Non DIDComm](docs/demo/nondidcomm_component_diagram.svg)
+
 ## Contributing
 Thank you for your interest in contributing. Please see our [community contribution guidelines](https://github.com/trustbloc/community/blob/master/CONTRIBUTING.md) for more information.
 
