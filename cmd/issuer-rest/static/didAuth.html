@@ -23,7 +23,7 @@ SPDX-License-Identifier: Apache-2.0
     <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
     <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
+    <link rel="stylesheet" href="https://pagecdn.io/lib/font-awesome/5.10.0-11/css/all.min.css" integrity="sha256-p9TTWD+813MlLaxMXMbTA7wN/ArzGyW/L7c5+KkjOkM=" crossorigin="anonymous">
 </head>
 
 <body class="leading-normal tracking-normal text-white gradient">
@@ -84,6 +84,11 @@ SPDX-License-Identifier: Apache-2.0
 </div>
 
 <section class="bg-white py-32">
+    <div class="w-full h-full fixed top-0 left-0 bg-black opacity-75 z-50" id="loading-screen" style="display:none">
+        <span class="text-green-500 my-0 mx-auto block fixed w-0 h-0" style="top: 50%;right: 50%;">
+         <i class="fas fa-spinner fa-spin fa-5x"></i>
+       </span>
+    </div>
     <div class="container mx-auto px-2 pt-4 pb-12 text-gray-800">
         <div class="w-full mb-8">
             <div class="h-1 mx-auto gradient w-64 opacity-25 my-0 py-0 rounded-t"></div>
@@ -194,6 +199,7 @@ SPDX-License-Identifier: Apache-2.0
         }
 
         document.getElementById("title-board").innerText = "Authentication Successful, please wait."
+        document.getElementById("loading-screen").style.display = "block";
         document.getElementById("holder-val").value = result.data.holder
         document.getElementById("domain-val").value = domain
         document.getElementById("challenge-val").value = challenge

@@ -211,12 +211,13 @@ SPDX-License-Identifier: Apache-2.0
             M.toast({html: 'null result', classes: 'red lighten-2'});
             return;
         }
-        if (result.data) {
-            $("#success-alert").show()
-        } else {
+        if (result.data == "cancelled") {
             $("#error-alert").show()
+            $("#success-alert").hide()
+        } else {
+            $("#error-alert").hide()
+            $("#success-alert").show()
         }
-
     }
 
     ready(() => {

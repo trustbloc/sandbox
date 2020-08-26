@@ -104,7 +104,7 @@ SPDX-License-Identifier: Apache-2.0
                                 {{range $element := .Scope}}
                                 <label class="md:w-2/3 block text-gray-500 font-bold">
                                     <input class="mr-2 leading-tight filled-in" type="checkbox" id="{{$element}}" value="{{$element}}" name="grant_scope" checked="checked" />
-                                    <span class="text-lg text-black" for="{{$element}}">{{$element}}</span>
+                                    <span class="text-lg text-black" id="scopeName" for="{{$element}}">{{$element}}</span>
                                     {{end}}
                                 </label>
                                 <br>
@@ -137,10 +137,7 @@ SPDX-License-Identifier: Apache-2.0
     </section>
 </footer>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-<script type="text/javascript" src="js/jquery.1.11.1.js"></script>
-<script type="text/javascript" src="js/action.js"></script>
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
 <script>
 
@@ -175,8 +172,28 @@ SPDX-License-Identifier: Apache-2.0
     }
 
 </script>
-
-
+<script type="text/javascript">
+    // todo : Add friendly name for the scope issue-508
+    function getScopeName(name) {
+        var scopes = {
+            'mDL': 'Driving License',
+            'StudentCard': 'Student Card',
+            'TravelCard': 'Travel Card',
+            'UniversityDegreeCredential': 'University Degree',
+            'CertifiedMillTestReport': 'Credit Mill Test Report',
+            'CrudeProductCredential': 'Crude Product Credential',
+            'PermanentResidentCard': 'Permanent Resident Card',
+            'CreditCardStatement': 'Credit Card Statement',
+            'CreditScore': 'Credit Score Report',
+        };
+        return scopes[name];
+    }
+    $(document).ready(function () {
+        var name = document.getElementById("scopeName").innerText
+        var scopeName =  getScopeName(name);
+        document.getElementById("scopeName").innerText = scopeName;
+    });
+</script>
 </body>
 
 </html>
