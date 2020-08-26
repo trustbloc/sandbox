@@ -33,13 +33,14 @@ import (
 )
 
 const (
-	login             = "/login"
-	callback          = "/callback"
-	generate          = "/generate"
-	revoke            = "/revoke"
-	didcommToken      = "/didcomm/token"
-	didcommCallback   = "/didcomm/cb"
-	didcommCredential = "/didcomm/data"
+	login                = "/login"
+	callback             = "/callback"
+	generate             = "/generate"
+	revoke               = "/revoke"
+	didcommToken         = "/didcomm/token"
+	didcommCallback      = "/didcomm/cb"
+	didcommCredential    = "/didcomm/data"
+	didcommAssuranceData = "/didcomm/assurance"
 
 	// http query params
 	stateQueryParam = "state"
@@ -63,6 +64,26 @@ const (
 
 	// store
 	txnStoreName = "issuer_txn"
+
+	// TODO https://github.com/trustbloc/edge-sandbox/issues/513 configure the assurance data (remove hardcoding)
+	// assurance data
+	assuranceData = `{
+	  "data":{
+		  "document_number":"123-456-789",
+		  "evidence_id":"d4d18a776cc6",
+		  "comments":"DL verified physically at Station #531785"
+	  },
+	  "metadata":{
+		  "contexts":[
+			 "https://trustbloc.github.io/context/vc/examples/driver-license-evidence-v1.jsonld"
+		  ],
+		  "scopes":[
+			 "DrivingLicenseEvidence"
+		  ],
+		  "name":"Drivers License Evidence",
+		  "description":"Drivers License Evidence for John Smith"
+	  }
+	}`
 )
 
 var logger = log.New("edge-sandbox-issuer-restapi")
@@ -164,6 +185,7 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(didcommToken, http.MethodPost, c.didcommTokenHandler),
 		support.NewHTTPHandler(didcommCallback, http.MethodGet, c.didcommCallbackHandler),
 		support.NewHTTPHandler(didcommCredential, http.MethodPost, c.didcommCredentialHandler),
+		support.NewHTTPHandler(didcommAssuranceData, http.MethodPost, c.didcommAssuraceHandler),
 	}
 }
 
@@ -472,6 +494,8 @@ func (c *Operation) didcommTokenHandler(w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(respBytes) // nolint: errcheck,gosec
+
+	logger.Infof("didcomm flow token creation : token:%s credential=%s", string(respBytes), string(cred))
 }
 
 func (c *Operation) didcommCallbackHandler(w http.ResponseWriter, r *http.Request) {
@@ -517,6 +541,8 @@ func (c *Operation) didcommCredentialHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	logger.Infof("didcomm flow get user data : token:%s credential=%s", data.Token, string(userData))
+
 	w.WriteHeader(http.StatusOK)
 
 	_, err = w.Write(userData)
@@ -525,6 +551,31 @@ func (c *Operation) didcommCredentialHandler(w http.ResponseWriter, r *http.Requ
 
 		return
 	}
+}
+
+func (c *Operation) didcommAssuraceHandler(w http.ResponseWriter, r *http.Request) {
+	data := &adapterDataReq{}
+
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid request: %s", err.Error()))
+
+		return
+	}
+
+	// make sure token exists
+	_, err := c.store.Get(data.Token)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid token: %s", err.Error()))
+
+		return
+	}
+
+	// TODO configure the data
+
+	logger.Infof("didcomm flow get assurance data : token:%s credential=%s", data.Token, assuranceData)
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(assuranceData)) // nolint: errcheck,gosec
 }
 
 func (c *Operation) validateAdapterCallback(redirectURL string) error {

@@ -1231,6 +1231,56 @@ func TestDIDCommCredentialHandler(t *testing.T) {
 	})
 }
 
+func TestDIDCommAssuranceDataHandler(t *testing.T) {
+	t.Run("test didcomm assurance data - success", func(t *testing.T) {
+		cfg := &Config{StoreProvider: memstore.NewProvider()}
+
+		ops, handler := getHandlerWithOps(t, didcommAssuranceData, cfg)
+
+		tkn := uuid.New().String()
+		err := ops.store.Put(tkn, []byte("data"))
+		require.NoError(t, err)
+
+		req := &adapterDataReq{
+			Token: tkn,
+		}
+
+		reqBytes, jsonErr := json.Marshal(req)
+		require.NoError(t, jsonErr)
+
+		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommAssuranceData, reqBytes)
+		require.Equal(t, http.StatusOK, rr.Code)
+		require.Equal(t, rr.Body.String(), assuranceData)
+	})
+
+	t.Run("test didcomm credential - invalid request", func(t *testing.T) {
+		cfg := &Config{StoreProvider: memstore.NewProvider()}
+
+		_, handler := getHandlerWithOps(t, didcommAssuranceData, cfg)
+
+		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommAssuranceData, []byte("invalid-json"))
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "invalid request")
+	})
+
+	t.Run("test didcomm credential - invalid token", func(t *testing.T) {
+		cfg := &Config{StoreProvider: memstore.NewProvider()}
+
+		_, handler := getHandlerWithOps(t, didcommAssuranceData, cfg)
+
+		req := &adapterDataReq{
+			Token: uuid.New().String(),
+		}
+
+		reqBytes, jsonErr := json.Marshal(req)
+		require.NoError(t, jsonErr)
+
+		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommAssuranceData, reqBytes)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "invalid token")
+	})
+}
+
 func handleRequest(handler Handler, headers map[string]string, path string, addCookie bool) (*bytes.Buffer, int, error) { //nolint:lll
 	var cookie *http.Cookie
 
