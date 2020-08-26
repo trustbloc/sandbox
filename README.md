@@ -34,6 +34,7 @@ Refer [Build](docs/demo/build.md) for more detailed information.
 
 ## Component Diagram
 - [Non DIDComm](docs/demo/nondidcomm_component_diagram.svg)
+- [DIDComm](docs/demo/didcomm_component_diagram.svg)
 
 ## Contributing
 Thank you for your interest in contributing. Please see our [community contribution guidelines](https://github.com/trustbloc/community/blob/master/CONTRIBUTING.md) for more information.
