@@ -52,6 +52,7 @@ const (
 	vcsProfileCookie     = "vcsProfile"
 	demoTypeCookie       = "demoType"
 	adapterProfileCookie = "adapterProfile"
+	assuranceScopeCookie = "assuranceScope"
 	didCommDemo          = "DIDComm"
 	nonDIDCommDemo       = "nonDIDComm"
 
@@ -64,26 +65,6 @@ const (
 
 	// store
 	txnStoreName = "issuer_txn"
-
-	// TODO https://github.com/trustbloc/edge-sandbox/issues/513 configure the assurance data (remove hardcoding)
-	// assurance data
-	assuranceData = `{
-	  "data":{
-		  "document_number":"123-456-789",
-		  "evidence_id":"d4d18a776cc6",
-		  "comments":"DL verified physically at Station #531785"
-	  },
-	  "metadata":{
-		  "contexts":[
-			 "https://trustbloc.github.io/context/vc/examples/driver-license-evidence-v1.jsonld"
-		  ],
-		  "scopes":[
-			 "DrivingLicenseEvidence"
-		  ],
-		  "name":"Drivers License Evidence",
-		  "description":"Drivers License Evidence for John Smith"
-	  }
-	}`
 )
 
 var logger = log.New("edge-sandbox-issuer-restapi")
@@ -206,6 +187,7 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 
 	if demo == nonDIDCommDemo {
 		if len(r.URL.Query()["vcsProfile"]) == 0 {
+			logger.Errorf("vcs profile is empty")
 			c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("vcs profile is empty"))
 
 			return
@@ -220,6 +202,7 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &cookie)
 	} else {
 		if len(r.URL.Query()["adapterProfile"]) == 0 {
+			logger.Errorf("adapterProfile profile is empty")
 			c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("adapterProfile profile is empty"))
 
 			return
@@ -232,6 +215,11 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 
 		cookie = http.Cookie{Name: adapterProfileCookie, Value: r.URL.Query()["adapterProfile"][0], Expires: expire}
 		http.SetCookie(w, &cookie)
+
+		if len(r.URL.Query()["assuranceScope"]) > 0 {
+			cookie = http.Cookie{Name: assuranceScopeCookie, Value: r.URL.Query()["assuranceScope"][0], Expires: expire}
+			http.SetCookie(w, &cookie)
+		}
 	}
 
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
@@ -249,8 +237,9 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 
 	tk, err := c.tokenIssuer.Exchange(r)
 	if err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to exchange code for token: %s", err.Error()))
+		logger.Errorf("failed to exchange code for token: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to exchange code for token: %s", err.Error()))
 
 		return
 	}
@@ -258,38 +247,42 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 	// user info from token will be used for to retrieve data from cms
 	info, err := c.tokenResolver.Resolve(tk.AccessToken)
 	if err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get token info: %s", err.Error()))
+		logger.Errorf("failed to get token info: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get token info: %s", err.Error()))
 
 		return
 	}
 
-	subject, err := c.getCMSData(tk, info)
+	userID, subject, err := c.getCMSData(tk, info)
 	if err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get cms data: %s", err.Error()))
+		logger.Errorf("failed to get cms data: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get cms data: %s", err.Error()))
 
 		return
 	}
 
 	if demoTypeCookie != nil && demoTypeCookie.Value == didCommDemo {
-		c.didcomm(w, r, subject)
+		c.didcomm(w, r, userID, subject)
 
 		return
 	}
 
 	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
 	if err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get cookie: %s", err.Error()))
+		logger.Errorf("failed to get cookie: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get cookie: %s", err.Error()))
 
 		return
 	}
 
 	cred, err := c.prepareCredential(subject, info, vcsProfileCookie.Value)
 	if err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create credential: %s", err.Error()))
+		logger.Errorf("failed to create credential: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create credential: %s", err.Error()))
 
 		return
 	}
@@ -299,7 +292,8 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 	t, err := template.ParseFiles(c.didAuthHTML)
 	if err != nil {
 		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to load html: %s", err.Error()))
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to load html: %s", err.Error()))
 
 		return
 	}
@@ -317,8 +311,9 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
 	if err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get cookie: %s", err.Error()))
+		logger.Errorf("failed to get vcsProfileCookie: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get cookie: %s", err.Error()))
 
 		return
 	}
@@ -342,7 +337,7 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 	cred, err := c.createCredential(r.Form["cred"][0], r.Form["authresp"][0], r.Form["holder"][0],
 		r.Form["domain"][0], r.Form["challenge"][0], vcsProfileCookie.Value)
 	if err != nil {
-		logger.Errorf(err.Error())
+		logger.Errorf("failed to create verifiable credential: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to create verifiable credential: %s", err.Error()))
 
@@ -351,8 +346,9 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 
 	err = c.storeCredential(cred, vcsProfileCookie.Value)
 	if err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to store credential: %s", err.Error()))
+		logger.Errorf("failed to store credential: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to store credential: %s", err.Error()))
 
 		return
 	}
@@ -362,7 +358,8 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles(c.receiveVCHTML)
 	if err != nil {
 		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to load html: %s", err.Error()))
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to load html: %s", err.Error()))
 
 		return
 	}
@@ -375,6 +372,7 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 // revokeVC
 func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
+		logger.Errorf("failed to parse form: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to parse form: %s", err.Error()))
 
@@ -393,6 +391,7 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 	req, err := http.NewRequest("POST", c.vcsURL+vcsUpdateStatusEndpoint,
 		bytes.NewBuffer(reqBytes))
 	if err != nil {
+		logger.Errorf("failed to create new http request: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to create new http request: %s", err.Error()))
 
@@ -401,6 +400,7 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 
 	_, err = sendHTTPRequest(req, c.httpClient, http.StatusOK, c.requestTokens[vcsIssuerRequestTokenName])
 	if err != nil {
+		logger.Errorf("failed to update vc status: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest,
 			fmt.Sprintf("failed to update vc status: %s", err.Error()))
 
@@ -411,6 +411,7 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 
 	t, err := template.ParseFiles(c.vcHTML)
 	if err != nil {
+		logger.Errorf("unable to load html: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("unable to load html: %s", err.Error()))
 
@@ -422,35 +423,61 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request, userData map[string]interface{}) {
+func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request, userID string, subjectData map[string]interface{}) {
 	adapterProfileCookie, err := r.Cookie(adapterProfileCookie)
 	if err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get adapterProfileCookie: %s",
-			err.Error()))
+		logger.Errorf("failed to get adapterProfileCookie: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get adapterProfileCookie: %s", err.Error()))
 
 		return
 	}
 
 	issuerID := adapterProfileCookie.Value
 
-	b, err := json.Marshal(userData)
+	subjectDataBytes, err := json.Marshal(subjectData)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to store state subject mapping : %s", err.Error()))
+		return
+	}
+
+	assuranceScopeCookie, err := r.Cookie(assuranceScopeCookie)
+	if err != nil && !errors.Is(err, http.ErrNoCookie) {
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get assuranceScopeCookie: %s",
+			err.Error()))
+
+		return
+	}
+
+	userData := userDataMap{
+		ID:   userID,
+		Data: subjectDataBytes,
+	}
+
+	if assuranceScopeCookie != nil {
+		userData.AssuranceScope = assuranceScopeCookie.Value
+	}
+
+	userDataBytes, err := json.Marshal(userData)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to marshal data : %s", err.Error()))
 
 		return
 	}
 
 	state := uuid.New().String()
 
-	err = c.store.Put(state, b)
+	err = c.store.Put(state, userDataBytes)
 	if err != nil {
+		logger.Errorf("failed to store state subject mapping : %s", err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to store state subject mapping : %s", err.Error()))
 
 		return
 	}
+
+	logger.Infof("didcomm user data : state=%s data=%s", state, string(userDataBytes))
 
 	http.Redirect(w, r, fmt.Sprintf(c.issuerAdapterURL+"/%s/connect/wallet?state=%s", issuerID, state), http.StatusFound)
 }
@@ -459,6 +486,7 @@ func (c *Operation) didcommTokenHandler(w http.ResponseWriter, r *http.Request) 
 	data := &adapterTokenReq{}
 
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		logger.Errorf("invalid request : %s", err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid request: %s", err.Error()))
 
 		return
@@ -466,7 +494,8 @@ func (c *Operation) didcommTokenHandler(w http.ResponseWriter, r *http.Request) 
 
 	cred, err := c.store.Get(data.State)
 	if err != nil {
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid state: %s", err.Error()))
+		logger.Errorf("invalid state : %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid state : %s", err.Error()))
 
 		return
 	}
@@ -475,6 +504,7 @@ func (c *Operation) didcommTokenHandler(w http.ResponseWriter, r *http.Request) 
 
 	err = c.store.Put(tkn, cred)
 	if err != nil {
+		logger.Errorf("failed to store adapter token and userID mapping : %s", err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to store adapter token and userID mapping : %s", err.Error()))
 
@@ -492,8 +522,7 @@ func (c *Operation) didcommTokenHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write(respBytes) // nolint: errcheck,gosec
+	c.writeResponse(w, http.StatusOK, respBytes)
 
 	logger.Infof("didcomm flow token creation : token:%s credential=%s", string(respBytes), string(cred))
 }
@@ -523,59 +552,108 @@ func (c *Operation) didcommCallbackHandler(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		logger.Errorf(fmt.Sprintf("failed execute didcomm html template: %s", err.Error()))
 	}
+
+	logger.Infof("didcomm callback handler success")
 }
 
 func (c *Operation) didcommCredentialHandler(w http.ResponseWriter, r *http.Request) {
 	data := &adapterDataReq{}
 
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		logger.Errorf("invalid request : %s", err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid request: %s", err.Error()))
 
 		return
 	}
 
-	userData, err := c.store.Get(data.Token)
+	userDataBytes, err := c.store.Get(data.Token)
 	if err != nil {
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid token: %s", err.Error()))
+		logger.Errorf("failed to get token data : %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get token data : %s", err.Error()))
 
 		return
 	}
 
-	logger.Infof("didcomm flow get user data : token:%s credential=%s", data.Token, string(userData))
+	var userData userDataMap
 
-	w.WriteHeader(http.StatusOK)
-
-	_, err = w.Write(userData)
+	err = json.Unmarshal(userDataBytes, &userData)
 	if err != nil {
-		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to write data: %s", err.Error()))
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("user data unmarshal failed: %s", err.Error()))
 
 		return
 	}
+
+	logger.Infof("didcomm flow get user data : token:%s credential=%s", data.Token, string(userData.Data))
+
+	c.writeResponse(w, http.StatusOK, userData.Data)
 }
 
 func (c *Operation) didcommAssuraceHandler(w http.ResponseWriter, r *http.Request) {
 	data := &adapterDataReq{}
 
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		logger.Errorf("invalid request : %s", err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid request: %s", err.Error()))
 
 		return
 	}
 
 	// make sure token exists
-	_, err := c.store.Get(data.Token)
+	userDataBytes, err := c.store.Get(data.Token)
 	if err != nil {
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("invalid token: %s", err.Error()))
+		logger.Errorf("failed to get token data : %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get token data : %s", err.Error()))
 
 		return
 	}
 
-	// TODO configure the data
+	var userData userDataMap
 
-	logger.Infof("didcomm flow get assurance data : token:%s credential=%s", data.Token, assuranceData)
+	err = json.Unmarshal(userDataBytes, &userData)
+	if err != nil {
+		logger.Errorf("user data unmarshal failed : %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("user data unmarshal failed : %s", err.Error()))
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(assuranceData)) // nolint: errcheck,gosec
+		return
+	}
+
+	assuranceData, err := c.getAssuracneData(userData.AssuranceScope, userData.ID)
+	if err != nil {
+		logger.Errorf("failed to get assurance data : %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get assurance data : %s", err.Error()))
+
+		return
+	}
+
+	dataBytes, err := json.Marshal(assuranceData)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to marshal assurance data : %s", err.Error()))
+
+		return
+	}
+
+	logger.Infof("didcomm flow get assurance data : token:%s credential=%s", data.Token, string(dataBytes))
+
+	c.writeResponse(w, http.StatusOK, dataBytes)
+}
+
+func (c *Operation) getAssuracneData(assuranceScope, userID string) (map[string]interface{}, error) {
+	u := c.cmsURL + "/" + assuranceScope + "s?userid=" + userID
+
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	subjectBytes, err := sendHTTPRequest(req, c.httpClient, http.StatusOK, "")
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalSubject(subjectBytes)
 }
 
 func (c *Operation) validateAdapterCallback(redirectURL string) error {
@@ -785,10 +863,6 @@ func (c *Operation) validateAuthResp(authResp []byte, holder, domain, challenge 
 		return fmt.Errorf("invalid auth response, invalid holder proof")
 	}
 
-	if len(vp.Proofs) == 0 {
-		return fmt.Errorf("invalid auth response, missing proof")
-	}
-
 	proofOfInterest := vp.Proofs[0]
 
 	var proofChallenge, proofDomain string
@@ -863,19 +937,24 @@ func prepareUpdateCredentialStatusRequest(cred, status, statusReason string) ([]
 	return json.Marshal(request)
 }
 
-func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) (map[string]interface{}, error) {
-	subjectBytes, err := c.getUserData(tk, info)
+func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) (string, map[string]interface{}, error) {
+	userID, subjectBytes, err := c.getUserData(tk, info)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
-	return unmarshalSubject(subjectBytes)
+	subjectMap, err := unmarshalSubject(subjectBytes)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return userID, subjectMap, nil
 }
 
-func (c *Operation) getUserData(tk *oauth2.Token, info *token.Introspection) ([]byte, error) {
+func (c *Operation) getUserData(tk *oauth2.Token, info *token.Introspection) (string, []byte, error) {
 	user, err := c.getCMSUser(tk, info)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	// scope StudentCard matches studentcards in CMS etc.
@@ -885,10 +964,15 @@ func (c *Operation) getUserData(tk *oauth2.Token, info *token.Introspection) ([]
 
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
-	return sendHTTPRequest(req, httpClient, http.StatusOK, "")
+	respBytes, err := sendHTTPRequest(req, httpClient, http.StatusOK, "")
+	if err != nil {
+		return "", nil, err
+	}
+
+	return user.UserID, respBytes, nil
 }
 
 func sendHTTPRequest(req *http.Request, client *http.Client, status int, httpToken string) ([]byte, error) {
@@ -934,6 +1018,15 @@ func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg s
 	rw.WriteHeader(status)
 
 	if _, err := rw.Write([]byte(msg)); err != nil {
+		logger.Errorf("Unable to send error message, %s", err)
+	}
+}
+
+// writeResponse writes interface value to response
+func (c *Operation) writeResponse(rw http.ResponseWriter, status int, data []byte) {
+	rw.WriteHeader(status)
+
+	if _, err := rw.Write(data); err != nil {
 		logger.Errorf("Unable to send error message, %s", err)
 	}
 }
@@ -986,4 +1079,10 @@ type adapterTokenReq struct {
 // IssuerTokenResp issuer user data token response.
 type adapterTokenResp struct {
 	Token string `json:"token,omitempty"`
+}
+
+type userDataMap struct {
+	ID             string          `json:"id,omitempty"`
+	Data           json.RawMessage `json:"data,omitempty"`
+	AssuranceScope string          `json:"assuranceScope,omitempty"`
 }

@@ -357,5 +357,36 @@
     "authorizer": {
       "handler": "allow"
     }
+  },
+  {
+    "id": "evidences-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi:1337"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.trustbloc.local/mdlevidences<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "noop"
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
   }
 ]
