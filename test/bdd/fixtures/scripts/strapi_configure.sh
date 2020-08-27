@@ -62,6 +62,10 @@ GENERATE_CS_COMMAND="strapi generate:api creditscores UserID:string metadata:jso
 
 $GENERATE_CS_COMMAND
 
+# generate the mdl evidences model
+GENERATE_DLEVIDENCE_COMMAND="strapi generate:api mdlevidences UserID:string metadata:json data:json"
+
+$GENERATE_DLEVIDENCE_COMMAND
 
 sleep 30
 
@@ -207,6 +211,17 @@ result=$(curl --header "Content-Type: application/json" --header "Authorization:
 if [ "$result" != "null" ]
    then
         echo "error insert creditscores data in strapi: $result"
+fi
+
+# Add mdl evidence data.
+result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
+   --request POST \
+   --data '{"userid":"100","metadata":{"contexts":["https://trustbloc.github.io/context/vc/examples/driver-license-evidence-v1.jsonld"],"scopes":[ "DrivingLicenseEvidence"],"name":"Drivers License Evidence","description":"Drivers License Evidence for John Smith"},"data":{"document_number":"123-456-789","evidence_id":"d4d18a776cc6","comments":"DL verified physically at Station #531785"}}' \
+   http://strapi:1337/mdlevidences | jq  -r ".error")
+# check for error
+if [ "$result" != "null" ]
+   then
+        echo "error insert mdlevidences data in strapi: $result"
 fi
 
 echo "STRAPI SETUP IS COMPLETED"

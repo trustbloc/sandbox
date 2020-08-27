@@ -106,6 +106,51 @@ const authResp = `{
     }
 }`
 
+const authRespWithoutChallenge = `{
+    "@context": "https://www.w3.org/2018/credentials/v1",
+    "type": "VerifiablePresentation",
+    "holder": "did:example.com",
+    "proof": {
+        "type": "Ed25519Signature2018",
+        "created": "2020-04-21T21:25:18Z",
+        "verificationMethod": "did:example.com#key-1",
+        "proofPurpose": "authentication",
+        "domain": "issuer.interop.transmute.world",
+        "jws": "6wDkNVRBs3zebe_PSIROTN3K8hBfE18ZI-Ieg_9KYI5-sDA"
+    }
+}`
+
+const authRespWithoutDomain = `{
+    "@context": "https://www.w3.org/2018/credentials/v1",
+    "type": "VerifiablePresentation",
+    "holder": "did:example.com",
+    "proof": {
+        "type": "Ed25519Signature2018",
+        "created": "2020-04-21T21:25:18Z",
+        "verificationMethod": "did:example.com#key-1",
+        "proofPurpose": "authentication",
+        "challenge": "3970cad8-14ff-4ac1-ada9-0995c862df2e",
+        "jws": "6wDkNVRBs3zebe_PSIROTN3K8hBfE18ZI-Ieg_9KYI5-sDA"
+    }
+}`
+const assuranceData = `{
+	  "data":{
+		  "document_number":"123-456-789",
+		  "evidence_id":"d4d18a776cc6",
+		  "comments":"DL verified physically at Station #531785"
+	  },
+	  "metadata":{
+		  "contexts":[
+			 "https://trustbloc.github.io/context/vc/examples/driver-license-evidence-v1.jsonld"
+		  ],
+		  "scopes":[
+			 "DrivingLicenseEvidence"
+		  ],
+		  "name":"Drivers License Evidence",
+		  "description":"Drivers License Evidence for John Smith"
+	  }
+	}`
+
 func TestController_New(t *testing.T) {
 	t.Run("test new - success", func(t *testing.T) {
 		op, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
@@ -148,7 +193,8 @@ func TestOperation_Login(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, status)
 
 	buff, status, err = handleRequest(handler, nil,
-		login+"?didCommScope=CrediCardStatement&demoType=DIDComm&adapterProfile=adapter-123", true)
+		login+"?didCommScope=CrediCardStatement&demoType=DIDComm&adapterProfile=adapter-123&assuranceScope=dlevidence",
+		true)
 	require.NoError(t, err)
 	require.Contains(t, buff.String(), "Temporary Redirect")
 	require.Equal(t, http.StatusTemporaryRedirect, status)
@@ -255,11 +301,27 @@ func TestOperation_Callback(t *testing.T) { // nolint: gocognit
 			StoreProvider: &mockstorage.Provider{}}
 		handler = getHandlerWithConfig(t, callback, cfg)
 
-		fmt.Println("here here 1")
 		body, status, err = handleRequest(handler, headers, callback, true)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusInternalServerError, status)
 		require.Contains(t, body.String(), "failed to create credential: retrieve profile")
+
+		// cms error
+		cmsRouter := mux.NewRouter()
+		cmsRouter.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+		})
+
+		cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			CMSURL: httptest.NewServer(cmsRouter).URL, VCSURL: httptest.NewServer(r).URL, ReceiveVCHTML: file.Name(),
+			DIDAuthHTML:   file.Name(),
+			StoreProvider: &mockstorage.Provider{}}
+		handler = getHandlerWithConfig(t, callback, cfg)
+
+		body, status, err = handleRequest(handler, headers, callback, true)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusBadRequest, status)
+		require.Contains(t, body.String(), "failed to get cms data")
 	})
 
 	t.Run("test callback - didcomm", func(t *testing.T) {
@@ -303,12 +365,13 @@ func TestOperation_Callback(t *testing.T) { // nolint: gocognit
 
 			_, status, err := handleRequestWithCookies(handler, headers, callback,
 				[]*http.Cookie{{Name: vcsProfileCookie, Value: "vc-1"}, {Name: demoTypeCookie, Value: didCommDemo},
-					{Name: adapterProfileCookie, Value: "adapter-123"}})
+					{Name: adapterProfileCookie, Value: "adapter-123"},
+					{Name: assuranceScopeCookie, Value: "assurance123"}})
 			require.NoError(t, err)
 			require.Equal(t, http.StatusFound, status)
 		})
 
-		t.Run("test callback didcomm - success", func(t *testing.T) {
+		t.Run("test callback didcomm - adapter profile error", func(t *testing.T) {
 			vcsRouter := mux.NewRouter()
 			vcsRouter.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
 				writer.WriteHeader(http.StatusOK)
@@ -533,6 +596,20 @@ func TestOperation_GenerateVC(t *testing.T) {
 		svc.generateVC(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to create verifiable credential")
+	})
+
+	t.Run("Validate Auth Resp - validations", func(t *testing.T) {
+		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
+		require.NotNil(t, svc)
+		require.NoError(t, err)
+
+		err = svc.validateAuthResp([]byte(authRespWithoutChallenge), holder, domain, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid auth response proof, missing challenge")
+
+		err = svc.validateAuthResp([]byte(authRespWithoutDomain), holder, domain, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid auth response proof, missing domain")
 	})
 
 	t.Run("generate VC - store error", func(t *testing.T) {
@@ -769,7 +846,7 @@ func TestOperation_GetCMSData_InvalidURL(t *testing.T) {
 	require.NotNil(t, svc)
 	require.NoError(t, err)
 
-	data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
+	_, data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unsupported protocol scheme")
 	require.Nil(t, data)
@@ -782,10 +859,11 @@ func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
 	require.NotNil(t, svc)
 	require.NoError(t, err)
 
-	data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
+	userID, data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid character")
 	require.Nil(t, data)
+	require.Empty(t, userID)
 }
 
 func TestOperation_CreateCredential_Errors(t *testing.T) {
@@ -844,9 +922,10 @@ func TestOperation_GetCMSUser(t *testing.T) {
 		require.NotNil(t, svc)
 		require.NoError(t, err)
 
-		data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
+		userID, data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
 		require.NoError(t, err)
 		require.Equal(t, data["email"], "foo@bar.com")
+		require.NotEmpty(t, userID)
 	})
 	t.Run("no user found", func(t *testing.T) {
 		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -860,10 +939,11 @@ func TestOperation_GetCMSUser(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
-		data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
+		userID, data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "user not found")
 		require.Nil(t, data)
+		require.Empty(t, userID)
 	})
 }
 
@@ -1187,8 +1267,15 @@ func TestDIDCommCredentialHandler(t *testing.T) {
 
 		ops, handler := getHandlerWithOps(t, didcommCredential, cfg)
 
+		userData := userDataMap{
+			Data: []byte(testCredentialRequest),
+		}
+
+		userDataBytes, err := json.Marshal(userData)
+		require.NoError(t, err)
+
 		tkn := uuid.New().String()
-		err := ops.store.Put(tkn, []byte(testCredentialRequest))
+		err = ops.store.Put(tkn, userDataBytes)
 		require.NoError(t, err)
 
 		req := &adapterDataReq{
@@ -1200,7 +1287,7 @@ func TestDIDCommCredentialHandler(t *testing.T) {
 
 		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommCredential, reqBytes)
 		require.Equal(t, http.StatusOK, rr.Code)
-		require.Equal(t, rr.Body.String(), testCredentialRequest)
+		require.Contains(t, rr.Body.String(), "BachelorDegree")
 	})
 
 	t.Run("test didcomm credential - invalid request", func(t *testing.T) {
@@ -1227,18 +1314,33 @@ func TestDIDCommCredentialHandler(t *testing.T) {
 
 		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommCredential, reqBytes)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "invalid token")
+		require.Contains(t, rr.Body.String(), "failed to get token data")
 	})
 }
 
 func TestDIDCommAssuranceDataHandler(t *testing.T) {
 	t.Run("test didcomm assurance data - success", func(t *testing.T) {
-		cfg := &Config{StoreProvider: memstore.NewProvider()}
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintln(w, fmt.Sprintf("[%s]", assuranceData))
+		}))
+		defer cms.Close()
+
+		cfg := &Config{
+			StoreProvider: memstore.NewProvider(),
+			CMSURL:        cms.URL,
+		}
 
 		ops, handler := getHandlerWithOps(t, didcommAssuranceData, cfg)
 
+		userData := userDataMap{
+			Data: []byte(testCredentialRequest),
+		}
+
+		userDataBytes, err := json.Marshal(userData)
+		require.NoError(t, err)
+
 		tkn := uuid.New().String()
-		err := ops.store.Put(tkn, []byte("data"))
+		err = ops.store.Put(tkn, userDataBytes)
 		require.NoError(t, err)
 
 		req := &adapterDataReq{
@@ -1250,7 +1352,7 @@ func TestDIDCommAssuranceDataHandler(t *testing.T) {
 
 		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommAssuranceData, reqBytes)
 		require.Equal(t, http.StatusOK, rr.Code)
-		require.Equal(t, rr.Body.String(), assuranceData)
+		require.Contains(t, rr.Body.String(), "123-456-789")
 	})
 
 	t.Run("test didcomm credential - invalid request", func(t *testing.T) {
@@ -1277,7 +1379,62 @@ func TestDIDCommAssuranceDataHandler(t *testing.T) {
 
 		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommAssuranceData, reqBytes)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "invalid token")
+		require.Contains(t, rr.Body.String(), "failed to get token data")
+	})
+
+	t.Run("test didcomm credential - invalid data from store", func(t *testing.T) {
+		cfg := &Config{StoreProvider: memstore.NewProvider()}
+
+		ops, handler := getHandlerWithOps(t, didcommAssuranceData, cfg)
+
+		tkn := uuid.New().String()
+		err := ops.store.Put(tkn, []byte("invalid-data"))
+		require.NoError(t, err)
+
+		req := &adapterDataReq{
+			Token: tkn,
+		}
+		reqBytes, jsonErr := json.Marshal(req)
+		require.NoError(t, jsonErr)
+
+		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommAssuranceData, reqBytes)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "user data unmarshal failed")
+	})
+
+	t.Run("test didcomm credential - cms error", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		}))
+		defer cms.Close()
+
+		cfg := &Config{
+			StoreProvider: memstore.NewProvider(),
+			CMSURL:        cms.URL,
+		}
+
+		ops, handler := getHandlerWithOps(t, didcommAssuranceData, cfg)
+
+		userData := userDataMap{
+			Data: []byte(testCredentialRequest),
+		}
+
+		userDataBytes, err := json.Marshal(userData)
+		require.NoError(t, err)
+
+		tkn := uuid.New().String()
+		err = ops.store.Put(tkn, userDataBytes)
+		require.NoError(t, err)
+
+		req := &adapterDataReq{
+			Token: tkn,
+		}
+		reqBytes, jsonErr := json.Marshal(req)
+		require.NoError(t, jsonErr)
+
+		rr := serveHTTP(t, handler.Handle(), http.MethodPost, didcommAssuranceData, reqBytes)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get assurance data")
 	})
 }
 

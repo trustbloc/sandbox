@@ -69,6 +69,7 @@ $(document).ready(function () {
             $('#demoType').val("DIDComm");
             $('#didCommScope').val("mDL");
             $('#adapterProfile').val("tb-dl-issuer");
+            $('#assuranceScope').val("mdlevidence");
             $(this).data('clicked', true);
         }
     });
