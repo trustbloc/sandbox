@@ -27,7 +27,10 @@ github.com/btcsuite/goleveldb v0.0.0-20160330041536-7834afc9e8cd/go.mod h1:F+uVa
 github.com/btcsuite/snappy-go v0.0.0-20151229074030-0bdef8d06723/go.mod h1:8woku9dyThutzjeg+3xrA5iCpBRH8XEEg3lh6TiUghc=
 github.com/btcsuite/websocket v0.0.0-20150119174127-31079b680792/go.mod h1:ghJtEyQwv5/p4Mg4C0fgbePVuGr935/5ddU9Z3TmDRY=
 github.com/btcsuite/winsvc v1.0.0/go.mod h1:jsenWakMcC0zFBFurPLEAyrnc/teJEM1O46fmI40EZs=
+github.com/cenkalti/backoff v2.2.1+incompatible h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=
 github.com/cenkalti/backoff v2.2.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=
+github.com/cenkalti/backoff/v4 v4.0.2 h1:JIufpQLbh4DkbQoii76ItQIUFzevQSqOLZca4eamEDs=
+github.com/cenkalti/backoff/v4 v4.0.2/go.mod h1:eEew/i+1Q6OrCDZh3WiXYv3+nJwBASZ8Bog/87DQnVg=
 github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/cespare/xxhash/v2 v2.1.1 h1:6MnRN8NT7+YBpUIWxHtefFZOKTAPgGjpQSxqLNn0+qY=
@@ -64,6 +67,7 @@ github.com/go-kivik/kiviktest v2.0.0+incompatible h1:y1RyPHqWQr+eFlevD30Tr3ipiPC
 github.com/go-kivik/kiviktest v2.0.0+incompatible/go.mod h1:JdhVyzixoYhoIDUt6hRf1yAfYyaDa5/u9SDOindDkfQ=
 github.com/go-logfmt/logfmt v0.3.0/go.mod h1:Qt1PoO58o5twSAckw1HlFXLmHsOX5/0LbT9GBnD5lWE=
 github.com/go-logfmt/logfmt v0.4.0/go.mod h1:3RMwSq7FuexP4Kalkev3ejPJsZTpXXBr9+V4qmtdjCk=
+github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee h1:s+21KNqlpePfkah2I+gwHF8xmJWRjooY+5248k6m4A0=
@@ -161,6 +165,7 @@ github.com/multiformats/go-base32 v0.0.3/go.mod h1:pLiuGC8y0QR3Ue4Zug5UzK9LjgbkL
 github.com/multiformats/go-multibase v0.0.1/go.mod h1:bja2MqRZ3ggyXtZSEDKpl0uO/gviWFaSteVbWT51qgs=
 github.com/multiformats/go-multihash v0.0.13 h1:06x+mk/zj1FoMsgNejLpy6QTvJqlSt/BhLEy87zidlc=
 github.com/multiformats/go-multihash v0.0.13/go.mod h1:VdAWLKTwram9oKAatUcLxBNUjdtcVwxObEQBtRfuyjc=
+github.com/multiformats/go-multihash v0.0.14 h1:QoBceQYQQtNUuf6s7wHxnE2c8bhbMqhfGzNI032se/I=
 github.com/multiformats/go-multihash v0.0.14/go.mod h1:VdAWLKTwram9oKAatUcLxBNUjdtcVwxObEQBtRfuyjc=
 github.com/multiformats/go-varint v0.0.5 h1:XVZwSo04Cs3j/jS0uAEPpT3JY6DzMcVLLoWOSnCxOjg=
 github.com/multiformats/go-varint v0.0.5/go.mod h1:3Ls8CIEsrijN6+B7PbrXRPxHRPuXSrVKRY101jdMZYE=
@@ -236,14 +241,17 @@ github.com/trustbloc/edge-core v0.1.4-0.20200814194611-5f3b95f18b63 h1:gwdHQvxLW
 github.com/trustbloc/edge-core v0.1.4-0.20200814194611-5f3b95f18b63/go.mod h1:mTU1E/HcKcjmHaPCjBOvHERuryGhh5zgVkRSi4slAHg=
 github.com/trustbloc/edge-service v0.1.4-0.20200817151514-625c085f89d1 h1:ZnjGogN9+hSmmQPI+3TBV8LQAzVqtLrw5ct1YOAs20s=
 github.com/trustbloc/edge-service v0.1.4-0.20200817151514-625c085f89d1/go.mod h1:OzkmpVp3cKCjNIiN/D3KWcWedioObjif/KgzivUrZdU=
+github.com/trustbloc/edge-service v0.1.4-0.20200821195456-41f4b293363b h1:uxcipnEP9QIVigSQDxTAO/uuo+Re9qvoqYXCglhMW/I=
 github.com/trustbloc/edge-service v0.1.4-0.20200821195456-41f4b293363b/go.mod h1:CUFj70rO4QWFxtX5GZ0z4htRRia6Hx44aUD7FTTyXrE=
 github.com/trustbloc/edv v0.1.4-0.20200815210630-993f07543815 h1:ydIfG34jrvFRohgsFIpW7301PA6IYoUSmNrUVqAy9I8=
 github.com/trustbloc/edv v0.1.4-0.20200815210630-993f07543815/go.mod h1:TI2UGPN00OOoo/kdTMLstV+lUodsp0U3tCqhcdUQp2s=
 github.com/trustbloc/sidetree-core-go v0.1.4-0.20200702215916-b02022f5ec37 h1:eXOLEJDXvu8ek0GkthyVNWGyE6/CnlsMeNOPSaX3IkM=
 github.com/trustbloc/sidetree-core-go v0.1.4-0.20200702215916-b02022f5ec37/go.mod h1:xCuMVdRtXiCghr58Dcd1RW9t0lCDXPPjkSiACzKGaZc=
+github.com/trustbloc/sidetree-core-go v0.1.4-0.20200818145448-94243b40fa44 h1:ObGsWNBftX/hryVN04jUfxe2w2YDa4hKOAuB5MBcylk=
 github.com/trustbloc/sidetree-core-go v0.1.4-0.20200818145448-94243b40fa44/go.mod h1:prRWqxBavkSxgKtPmUriSxCemrvl47yStMbW4jMFuRs=
 github.com/trustbloc/trustbloc-did-method v0.1.4-0.20200811134027-539ff50d182f h1:OHa+fs5jd5PnObLWzTqr2g7Gke3JC52vMrkO3ELY8h4=
 github.com/trustbloc/trustbloc-did-method v0.1.4-0.20200811134027-539ff50d182f/go.mod h1:u8KKRNZj3Izs1zBFKhjqSn6TlX8qlrb7P1q+c/Aa8D0=
+github.com/trustbloc/trustbloc-did-method v0.1.4-0.20200818182202-98bfa3941500 h1:RWOnNk423GitBtCDeJLguit9SVaybff4DBdixt+bnP8=
 github.com/trustbloc/trustbloc-did-method v0.1.4-0.20200818182202-98bfa3941500/go.mod h1:oRHDkRl5LIIWgZxRqwfWYDi6m3wSUqbUxNn72UjR5KE=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f/go.mod h1:N2zxlSyiKSe5eX1tZViRH5QA0qijqEDrYZiPEAiq3wU=
