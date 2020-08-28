@@ -216,7 +216,7 @@ fi
 # Add mdl evidence data.
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{"userid":"100","metadata":{"contexts":["https://trustbloc.github.io/context/vc/examples/driver-license-evidence-v1.jsonld"],"scopes":[ "DrivingLicenseEvidence"],"name":"Drivers License Evidence","description":"Drivers License Evidence for John Smith"},"data":{"document_number":"123-456-789","evidence_id":"d4d18a776cc6","comments":"DL verified physically at Station #531785"}}' \
+   --data '{"userid":"100","metadata":{"contexts":["https://trustbloc.github.io/context/vc/examples/driver-license-evidence-v1.jsonld"],"scopes":[ "DrivingLicenseEvidence"],"name":"Drivers License Evidence","description":"Drivers License Evidence for John Smith"},"data":{"document_number":"123-456-789","evidence_id":"d4d18a776cc6","comments":"DL verified digitally"}}' \
    http://strapi:1337/mdlevidences | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]
