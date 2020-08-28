@@ -16,7 +16,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/restapi/logspec"
-	"github.com/trustbloc/edge-core/pkg/storage/memstore"
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 
@@ -113,6 +112,7 @@ type rpParameters struct {
 	requestTokens     map[string]string
 	logLevel          string
 	oidcParameters    *oidcParameters
+	dbParams          *common.DBParameters
 }
 
 type oidcParameters struct {
@@ -174,6 +174,11 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			dbParams, err := common.DBParams(cmd)
+			if err != nil {
+				return err
+			}
+
 			parameters := &rpParameters{
 				srv:               srv,
 				hostURL:           strings.TrimSpace(hostURL),
@@ -185,6 +190,7 @@ func createStartCmd(srv server) *cobra.Command {
 				requestTokens:     requestTokens,
 				logLevel:          loggingLevel,
 				oidcParameters:    oidcParams,
+				dbParams:          dbParams,
 			}
 
 			return startRP(parameters)
@@ -282,6 +288,7 @@ func getTLS(cmd *cobra.Command) (*tlsConfig, error) {
 }
 
 func createFlags(startCmd *cobra.Command) {
+	common.Flags(startCmd)
 	startCmd.Flags().StringP(hostURLFlagName, hostURLFlagShorthand, "", hostURLFlagUsage)
 	startCmd.Flags().StringP(tlsCertFileFlagName, "", "", tlsCertFileFlagUsage)
 	startCmd.Flags().StringP(tlsKeyFileFlagName, "", "", tlsKeyFileFlagUsage)
@@ -307,12 +314,17 @@ func startRP(parameters *rpParameters) error {
 		return err
 	}
 
+	transientStore, err := common.InitEdgeStore(parameters.dbParams, logger)
+	if err != nil {
+		return err
+	}
+
 	cfg := &operation.Config{
 		VPHTML:                 "static/vp.html",
 		VCSURL:                 parameters.vcServiceURL,
 		TLSConfig:              &tls.Config{RootCAs: rootCAs},
 		RequestTokens:          parameters.requestTokens,
-		TransientStoreProvider: memstore.NewProvider(),
+		TransientStoreProvider: transientStore,
 		OIDCProviderURL:        parameters.oidcParameters.oidcProviderURL,
 		OIDCClientID:           parameters.oidcParameters.oidcClientID,
 		OIDCClientSecret:       parameters.oidcParameters.oidcClientSecret,

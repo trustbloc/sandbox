@@ -82,19 +82,112 @@ func TestStartCmdValidArgs(t *testing.T) {
 	startCmd.SetArgs(args)
 
 	err := startCmd.Execute()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, log.ERROR, log.GetLevel(""))
 }
 
 func TestStartCmdValidArgsEnvVar(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
-	path, cleanup := newTestOIDCProvider()
 
+	path, cleanup := newTestOIDCProvider()
 	defer cleanup()
+
 	setEnvVars(t, path)
+	defer unsetEnvVars(t)
 
 	err := startCmd.Execute()
-	require.Nil(t, err)
+	require.NoError(t, err)
+}
+
+func TestStartCmd(t *testing.T) {
+	t.Run("missing database url", func(t *testing.T) {
+		oidcProviderURL, cleanup := newTestOIDCProvider()
+		defer cleanup()
+
+		cmd := GetStartCmd(&mockServer{})
+		args := hostURLArg()
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, vcsServiceURLArg()...)
+		args = append(args, requestTokensArg()...)
+		args = append(args, oidcClientIDArg()...)
+		args = append(args, oidcClientSecretArg()...)
+		args = append(args, databaseURLPrefix()...)
+		args = append(args, oidcProviderURLArg(oidcProviderURL)...)
+
+		cmd.SetArgs(args)
+		err := cmd.Execute()
+		require.Error(t, err)
+		require.Contains(t, err.Error(),
+			"Neither database-url (command line flag) nor DATABASE_URL (environment variable) have been set.")
+	})
+
+	t.Run("invalid database url format", func(t *testing.T) {
+		oidcProviderURL, cleanup := newTestOIDCProvider()
+		defer cleanup()
+
+		cmd := GetStartCmd(&mockServer{})
+		args := hostURLArg()
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, vcsServiceURLArg()...)
+		args = append(args, requestTokensArg()...)
+		args = append(args, oidcClientIDArg()...)
+		args = append(args, oidcClientSecretArg()...)
+		args = append(args, flag+common.DatabaseURLFlagName, "invalid_format")
+		args = append(args, databaseURLPrefix()...)
+		args = append(args, oidcProviderURLArg(oidcProviderURL)...)
+
+		cmd.SetArgs(args)
+		err := cmd.Execute()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid dbURL")
+	})
+
+	t.Run("missing database prefix", func(t *testing.T) {
+		oidcProviderURL, cleanup := newTestOIDCProvider()
+		defer cleanup()
+
+		cmd := GetStartCmd(&mockServer{})
+		args := hostURLArg()
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, vcsServiceURLArg()...)
+		args = append(args, requestTokensArg()...)
+		args = append(args, oidcClientIDArg()...)
+		args = append(args, oidcClientSecretArg()...)
+		args = append(args, databaseURLArg()...)
+		args = append(args, oidcProviderURLArg(oidcProviderURL)...)
+
+		cmd.SetArgs(args)
+		err := cmd.Execute()
+		require.Error(t, err)
+		require.Contains(t, err.Error(),
+			"Neither database-prefix (command line flag) nor DATABASE_PREFIX (environment variable) have been set.")
+	})
+
+	t.Run("invalid database timeout", func(t *testing.T) {
+		oidcProviderURL, cleanup := newTestOIDCProvider()
+		defer cleanup()
+
+		cmd := GetStartCmd(&mockServer{})
+		args := hostURLArg()
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, vcsServiceURLArg()...)
+		args = append(args, requestTokensArg()...)
+		args = append(args, oidcClientIDArg()...)
+		args = append(args, oidcClientSecretArg()...)
+		args = append(args, databaseURLArg()...)
+		args = append(args, databaseURLPrefix()...)
+		args = append(args, flag+common.DatabaseTimeoutFlagName, "invalid")
+		args = append(args, oidcProviderURLArg(oidcProviderURL)...)
+
+		cmd.SetArgs(args)
+		err := cmd.Execute()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to parse dbTimeout")
+	})
 }
 
 func checkFlagPropertiesCorrect(t *testing.T, cmd *cobra.Command, flagName, flagShorthand, flagUsage string) {
@@ -119,6 +212,8 @@ func getValidArgs(logLevel, oidcProviderURL string) []string {
 	args = append(args, requestTokensArg()...)
 	args = append(args, oidcClientIDArg()...)
 	args = append(args, oidcClientSecretArg()...)
+	args = append(args, databaseURLArg()...)
+	args = append(args, databaseURLPrefix()...)
 
 	if logLevel != "" {
 		args = append(args, logLevelArg(logLevel)...)
@@ -136,7 +231,9 @@ func TestTLSSystemCertPoolInvalidArgsEnvVar(t *testing.T) {
 
 	path, cleanup := newTestOIDCProvider()
 	defer cleanup()
+
 	setEnvVars(t, path)
+	defer unsetEnvVars(t)
 
 	require.NoError(t, os.Setenv(tlsSystemCertPoolEnvKey, "wrongvalue"))
 
@@ -159,6 +256,35 @@ func setEnvVars(t *testing.T, oidcProviderURL string) {
 	require.Nil(t, err)
 
 	err = os.Setenv(oidcProviderURLEnvKey, oidcProviderURL)
+	require.NoError(t, err)
+
+	err = os.Setenv(common.DatabaseURLEnvKey, "mem://test")
+	require.NoError(t, err)
+
+	err = os.Setenv(common.DatabasePrefixEnvKey, "test")
+	require.NoError(t, err)
+}
+
+func unsetEnvVars(t *testing.T) {
+	err := os.Unsetenv(hostURLEnvKey)
+	require.Nil(t, err)
+
+	err = os.Unsetenv(tlsCertFileEnvKey)
+	require.Nil(t, err)
+
+	err = os.Unsetenv(tlsKeyFileEnvKey)
+	require.Nil(t, err)
+
+	err = os.Unsetenv(vcsURLEnvKey)
+	require.Nil(t, err)
+
+	err = os.Unsetenv(oidcProviderURLEnvKey)
+	require.NoError(t, err)
+
+	err = os.Unsetenv(common.DatabaseURLEnvKey)
+	require.NoError(t, err)
+
+	err = os.Unsetenv(common.DatabasePrefixEnvKey)
 	require.NoError(t, err)
 }
 
@@ -196,6 +322,14 @@ func oidcClientIDArg() []string {
 
 func oidcClientSecretArg() []string {
 	return []string{flag + oidcClientSecretFlagName, uuid.New().String()}
+}
+
+func databaseURLArg() []string {
+	return []string{flag + common.DatabaseURLFlagName, "mem://test"}
+}
+
+func databaseURLPrefix() []string {
+	return []string{flag + common.DatabasePrefixFlagName, "test"}
 }
 
 func newTestOIDCProvider() (string, func()) {

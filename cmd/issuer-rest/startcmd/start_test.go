@@ -225,7 +225,7 @@ func TestStartCmdWithMissingClientScopesArg(t *testing.T) {
 }
 
 func TestDatabaseTypeArg(t *testing.T) {
-	t.Run("test database type - missing arg", func(t *testing.T) {
+	t.Run("test database url - missing arg", func(t *testing.T) {
 		startCmd := GetStartCmd(&mockServer{})
 
 		var args []string
@@ -245,10 +245,10 @@ func TestDatabaseTypeArg(t *testing.T) {
 
 		err := startCmd.Execute()
 		require.Contains(t, err.Error(),
-			"Neither database-type (command line flag) nor DATABASE_TYPE (environment variable) have been set.")
+			"Neither database-url (command line flag) nor DATABASE_URL (environment variable) have been set.")
 	})
 
-	t.Run("test database type - invalid type", func(t *testing.T) {
+	t.Run("test database type - invalid driver", func(t *testing.T) {
 		startCmd := GetStartCmd(&mockServer{})
 
 		var args []string
@@ -264,19 +264,12 @@ func TestDatabaseTypeArg(t *testing.T) {
 		args = append(args, cmsURLArg()...)
 		args = append(args, vcsURLArg()...)
 		args = append(args, issuerAdapterURLArg()...)
-		args = append(args, []string{flag + databaseTypeFlagName, "invalid-db"}...)
+		args = append(args, []string{flag + common.DatabasePrefixFlagName, "test"}...)
+		args = append(args, []string{flag + common.DatabaseURLFlagName, "invalid-driver://test"}...)
 		startCmd.SetArgs(args)
 
 		err := startCmd.Execute()
-		require.Contains(t, err.Error(), "database type 'invalid-db' is invalid")
-	})
-
-	t.Run("test database type - couch db failure", func(t *testing.T) {
-		prov, err := createStoreProviders(&issuerParameters{
-			dbParameters: &dbParameters{databaseType: databaseTypeCouchDBOption}})
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "hostURL for new CouchDB provider can't be blank")
-		require.Nil(t, prov)
+		require.Contains(t, err.Error(), "unsupported storage driver: invalid-driver")
 	})
 }
 
@@ -349,8 +342,11 @@ func setEnvVars(t *testing.T) {
 	err = os.Setenv(issuerAdapterURLEnvKey, "issuer-adapter")
 	require.Nil(t, err)
 
-	err = os.Setenv(databaseTypeEnvKey, "mem")
-	require.Nil(t, err)
+	err = os.Setenv(common.DatabaseURLEnvKey, "mem://test")
+	require.NoError(t, err)
+
+	err = os.Setenv(common.DatabasePrefixEnvKey, "test")
+	require.NoError(t, err)
 }
 
 func checkFlagPropertiesCorrect(t *testing.T, cmd *cobra.Command, flagName, flagShorthand, flagUsage string) {
@@ -381,7 +377,6 @@ func getValidArgs(logLevel string) []string {
 	args = append(args, vcsURLArg()...)
 	args = append(args, requestTokensArg()...)
 	args = append(args, issuerAdapterURLArg()...)
-	args = append(args, databaseTypeArg()...)
 	args = append(args, databaseURLArg()...)
 	args = append(args, databasePrefixArg()...)
 
@@ -448,14 +443,10 @@ func logLevelArg(logLevel string) []string {
 	return []string{flag + common.LogLevelFlagName, logLevel}
 }
 
-func databaseTypeArg() []string {
-	return []string{flag + databaseTypeFlagName, "mem"}
-}
-
 func databaseURLArg() []string {
-	return []string{flag + databaseURLFlagName, "database-url"}
+	return []string{flag + common.DatabaseURLFlagName, "mem://test"}
 }
 
 func databasePrefixArg() []string {
-	return []string{flag + databasePrefixFlagName, "database-prefix"}
+	return []string{flag + common.DatabasePrefixFlagName, "database-prefix"}
 }

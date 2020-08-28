@@ -8,7 +8,6 @@ package startcmd
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,9 +16,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/restapi/logspec"
-	"github.com/trustbloc/edge-core/pkg/storage"
-	couchdbstore "github.com/trustbloc/edge-core/pkg/storage/couchdb"
-	"github.com/trustbloc/edge-core/pkg/storage/memstore"
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 	"golang.org/x/oauth2"
@@ -110,32 +106,10 @@ const (
 	requestTokensFlagUsage = "Tokens used for http request " +
 		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
 
-	databaseTypeFlagName  = "database-type"
-	databaseTypeEnvKey    = "DATABASE_TYPE"
-	databaseTypeFlagUsage = "The type of database to use for everything except key storage. " +
-		"Supported options: mem, couchdb. Alternatively, this can be set with the following environment variable: " +
-		databaseTypeEnvKey
-
-	databaseURLFlagName  = "database-url"
-	databaseURLEnvKey    = "DATABASE_URL"
-	databaseURLFlagUsage = "The URL of the database. Not needed if using memstore." +
-		" For CouchDB, include the username:password@ text if required. Alternatively, this " +
-		"can be set with the following environment variable: " + databaseURLEnvKey
-
-	databasePrefixFlagName  = "database-prefix"
-	databasePrefixEnvKey    = "DATABASE_PREFIX"
-	databasePrefixFlagUsage = "An optional prefix to be used when creating and retrieving underlying databases. " +
-		"Alternatively, this can be set with the following environment variable: " + databasePrefixEnvKey
-
 	// issuer adapter url
 	issuerAdapterURLFlagName  = "issuer-adapter-url"
 	issuerAdapterURLFlagUsage = "Issuer Adapter Service URL. Format: HostName:Port."
 	issuerAdapterURLEnvKey    = "ISSUER_ADAPTER_URL"
-)
-
-const (
-	databaseTypeMemOption     = "mem"
-	databaseTypeCouchDBOption = "couchdb"
 )
 
 var logger = log.New("issuer-rest")
@@ -170,7 +144,7 @@ type issuerParameters struct {
 	requestTokens         map[string]string
 	issuerAdapterURL      string
 	logLevel              string
-	dbParameters          *dbParameters
+	dbParameters          *common.DBParameters
 }
 
 type tlsConfig struct {
@@ -178,12 +152,6 @@ type tlsConfig struct {
 	keyFile        string
 	systemCertPool bool
 	caCerts        []string
-}
-
-type dbParameters struct {
-	databaseType   string
-	databaseURL    string
-	databasePrefix string
 }
 
 // GetStartCmd returns the Cobra start command.
@@ -249,7 +217,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 				return err
 			}
 
-			dbParams, err := getDBParameters(cmd)
+			dbParams, err := common.DBParams(cmd)
 			if err != nil {
 				return err
 			}
@@ -336,6 +304,7 @@ func getTLS(cmd *cobra.Command) (*tlsConfig, error) {
 }
 
 func createFlags(startCmd *cobra.Command) {
+	common.Flags(startCmd)
 	startCmd.Flags().StringP(hostURLFlagName, hostURLFlagShorthand, "", hostURLFlagUsage)
 	startCmd.Flags().StringP(endpointAuthURLFlagName, endpointAuthURLFlagShorthand, "", endpointAuthURLFlagUsage)
 	startCmd.Flags().StringP(endpointTokenURLFlagName, endpointTokenURLFlagShorthand, "", endpointTokenURLFlagUsage)
@@ -352,11 +321,6 @@ func createFlags(startCmd *cobra.Command) {
 		tlsSystemCertPoolFlagUsage)
 	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
 	startCmd.Flags().StringArrayP(requestTokensFlagName, "", []string{}, requestTokensFlagUsage)
-
-	// db
-	startCmd.Flags().StringP(databaseTypeFlagName, "", "", databaseTypeFlagUsage)
-	startCmd.Flags().StringP(databaseURLFlagName, "", "", databaseURLFlagUsage)
-	startCmd.Flags().StringP(databasePrefixFlagName, "", "", databasePrefixFlagUsage)
 
 	// did-comm
 	startCmd.Flags().StringP(issuerAdapterURLFlagName, "", "", issuerAdapterURLFlagUsage)
@@ -377,7 +341,7 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen
 
 	tlsConfig := &tls.Config{RootCAs: rootCAs}
 
-	storeProvider, err := createStoreProviders(parameters)
+	storeProvider, err := common.InitEdgeStore(parameters.dbParameters, logger)
 	if err != nil {
 		return err
 	}
@@ -472,42 +436,4 @@ func getOAuth2Config(cmd *cobra.Command) (*oauth2.Config, error) {
 	}
 
 	return config, nil
-}
-
-func getDBParameters(cmd *cobra.Command) (*dbParameters, error) {
-	databaseType, err := cmdutils.GetUserSetVarFromString(cmd, databaseTypeFlagName,
-		databaseTypeEnvKey, false)
-	if err != nil {
-		return nil, err
-	}
-
-	databaseURL, err := cmdutils.GetUserSetVarFromString(cmd, databaseURLFlagName,
-		databaseURLEnvKey, true)
-	if err != nil {
-		return nil, err
-	}
-
-	databasePrefix, err := cmdutils.GetUserSetVarFromString(cmd, databasePrefixFlagName,
-		databasePrefixEnvKey, true)
-	if err != nil {
-		return nil, err
-	}
-
-	return &dbParameters{
-		databaseType:   databaseType,
-		databaseURL:    databaseURL,
-		databasePrefix: databasePrefix,
-	}, nil
-}
-
-func createStoreProviders(parameters *issuerParameters) (storage.Provider, error) {
-	switch {
-	case strings.EqualFold(parameters.dbParameters.databaseType, databaseTypeMemOption):
-		return memstore.NewProvider(), nil
-	case strings.EqualFold(parameters.dbParameters.databaseType, databaseTypeCouchDBOption):
-		return couchdbstore.NewProvider(parameters.dbParameters.databaseURL,
-			couchdbstore.WithDBPrefix(parameters.dbParameters.databasePrefix))
-	}
-
-	return nil, fmt.Errorf("database type '%s' is invalid", parameters.dbParameters.databaseType)
 }
