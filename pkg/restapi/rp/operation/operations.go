@@ -122,6 +122,7 @@ type oauth2Token interface {
 type Operation struct {
 	handlers         []Handler
 	vpHTML           string
+	didCommVpHTML    string
 	vcsURL           string
 	client           httpClient
 	requestTokens    map[string]string
@@ -137,6 +138,7 @@ type Operation struct {
 // Config defines configuration for rp operations
 type Config struct {
 	VPHTML                 string
+	DIDCOMMVPHTML          string
 	VCSURL                 string
 	TLSConfig              *tls.Config
 	RequestTokens          map[string]string
@@ -161,6 +163,7 @@ type createOIDCRequestResponse struct {
 func New(config *Config) (*Operation, error) {
 	svc := &Operation{
 		vpHTML:           config.VPHTML,
+		didCommVpHTML:    config.DIDCOMMVPHTML,
 		vcsURL:           config.VCSURL,
 		client:           &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
 		requestTokens:    config.RequestTokens,
@@ -368,7 +371,7 @@ func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Operation) didcommDemoResult(w http.ResponseWriter, data string) {
-	t, err := template.ParseFiles(c.vpHTML)
+	t, err := template.ParseFiles(c.didCommVpHTML)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("unable to load html: %s", err.Error()))

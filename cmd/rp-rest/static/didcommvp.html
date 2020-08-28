@@ -1,0 +1,293 @@
+<!--
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta charset="utf-8">
+    <link rel="icon" type="images/x-icon" href="img/logo.png" >
+    <title>DIDComm Verifier</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss/dist/tailwind.min.css">
+
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+
+
+    <style>
+        .gradient {
+            background: linear-gradient(90deg, #2980B9 60%, #2980B9 100%);
+        }
+        pre {
+            padding: 2px;
+            margin: 2px;
+            font-size: 10px;
+            text-align: left
+        }
+    </style>
+
+    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+
+    <script>
+        $(function() {
+            $( "#tabs" ).tabs();
+        });
+    </script>
+</head>
+
+<body class="leading-normal tracking-normal gradient" style="font-family: 'Source Sans Pro', sans-serif;">
+
+<!--Nav-->
+<div class="pt-12">
+    <nav id="header" class="fixed w-full z-30 top-0 text-white ">
+
+        <div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0">
+
+            <div class="pl-6 flex items-center">
+                <a class="toggleColour text-white no-underline hover:no-underline font-bold text-xl lg:text-2xl"  href="#">
+                    <i class="fa fa-cubes" style="font-size:24px;color:white"></i>
+                    Trustbloc Verifier
+                </a>
+            </div>
+
+            <div class="block  lg:hidden pr-4">
+                <button id="nav-toggle" class="flex items-center p-1 text-gray-300 hover:text-gray-900">
+                    <svg class="fill-current h-6 w-6" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/></svg>
+                </button>
+            </div>
+
+            <div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden lg:block mt-2 lg:mt-0 bg-white lg:bg-transparent text-black p-4 lg:p-0 z-20" id="nav-content">
+                <ul class="list-reset lg:flex justify-end flex-1 items-center">
+                    <li class="mr-3">
+                        <a class="inline-block text-gray-400 no-underline hover:text-white hover:text-underline py-2 px-4"
+                           href="https://github.com/trustbloc/edge-sandbox/blob/master/docs/rp/README.md">Doc  <i class="fa fa-wpforms"></i> </a>
+                    </li>
+                    <li class="mr-3">
+                        <a class="inline-block text-gray-400 no-underline hover:text-green hover:text-underline py-2 px-4" href="https://github.com/trustbloc/edge-sandbox">
+                            <i class="fa fa-github"></i></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+
+<section class="bg-white py-4">
+    <div class="container  mx-auto px-1 lg:w-1/3 sm:w-full text-gray-800 ">
+        <div class=" pt-1 text-center">
+            <h4 class="text-xl text-gray-900 leading-tight">Presented Digital ID</h4>
+            <p class="text-xl text-green-600 font-bold" id="successMsg">Successfully Verified <i class="fa fa-check-circle"></i></p>
+        </div>
+        <div class="w-auto mb-4">
+            <div class="h-1 mx-auto gradient w-64 opacity-25 my-0 py-0 rounded-t"></div>
+        </div>
+        <div id ="tabs" class="w-full gradient rounded-lg shadow-xl">
+            <ul class="flex border-b">
+                <li class="-mb-px mr-1">
+                    <a href = "#preview" class="text-center block py-2 px-4 hover:bg-blue-300 text-white">Preview</a>
+                </li>
+                <li class="mr-1">
+                    <a href = "#source" class="text-center block text-white hover:bg-blue-300  py-2 px-4">Source</a>
+                </li>
+            </ul>
+            <div id = "source" class="flex flex-wrap overflow-auto bg-white">
+                <textarea id="vcDataTextArea" style="display:none;">{{.Data}}</textarea>
+                <pre id="vpDataJSON"></pre>
+            </div>
+            <div  id="preview">
+                <table class="text-black w-full shadow-lg bg-white" id="claims"></table>
+            </div>
+            <div class="flex-none mt-auto bg-white rounded-b rounded-t-none overflow-hidden shadow p-6">
+                <div class="flex items-center justify-center">
+                    <a class="mx-auto lg:mx-0 hover:underline gradient text-white font-bold rounded shadow-md my-6 px-6 py-2 shadow-lg" href="javascript:history.back()">
+                        Proceed Now
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="bg-white py-64 hidden" id="failed-verification" style="display:none">
+    <div class="max-w-sm mx-auto flex pt-12 py-12  bg-white rounded-lg shadow-xl">
+        <div class="flex-shrink-0">
+            <img class="h-24 w-24" src="https://i.ibb.co/FHqrHbD/failed.png"></a>
+        </div>
+        <div class="ml-6 pt-1">
+            <h4 class="text-xl text-gray-900 leading-tight">Presented Digital ID</h4>
+            <p class="text-xl text-red-600 leading-normal" id="failMsg">Oops verification is failed, Try again</p>
+        </div>
+    </div>
+</section>
+<footer>
+    <section class="container mx-auto text-center py-2">
+        <div class="text-lg text-white font py-1">
+            Copyright &copy; <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+        </div>
+    </section>
+</footer>
+<script>
+    function ready(fn) {
+        if (document.readyState !== 'loading'){
+            fn();
+        } else {
+            document.addEventListener('DOMContentLoaded', fn);
+        }
+    }
+    ready(() => {
+        if (!{{.Data}}) {
+            document.getElementById("failed-verification").style.display= "block"
+            document.getElementById("successful-verification").style.display= "none"
+            document.getElementById("failMsg").innerText = JSON.stringify(JSON.parse({{.Msg}}));
+        }
+
+        document.getElementById("vpDataJSON").innerHTML = syntaxHighlight(JSON.stringify(JSON.parse({{.Data}}), undefined, 4));
+        console.log("verifiable presentation", JSON.stringify(JSON.parse({{.Data}})));
+        var data =  JSON.parse({{.Data}})
+
+        var flattened = {};
+        flatten(data, flattened);
+    })
+
+    function syntaxHighlight(json) {
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            var cls = 'number';
+            if (/^"/.test(match)) {
+                if (/:$/.test(match)) {
+                    cls = 'key';
+                } else {
+                    cls = 'string';
+                }
+            } else if (/true|false/.test(match)) {
+                cls = 'boolean';
+            } else if (/null/.test(match)) {
+                cls = 'null';
+            }
+            return '<span class="' + cls + '">' + match + '</span>';
+        });
+    }
+
+    function getFriendlyKeyName(name) {
+        var keys = {
+            'family_name': 'Family Name',
+            'given_name': 'Given Name',
+            'document_number': 'Driving License Number',
+            'driving_privileges': 'License Type',
+            'expiry_date': 'Expiry Date',
+            'issue_date': 'Issue Date',
+            'issuing_authority': 'Issuing Authority',
+            'issuing_country': 'Issue Country',
+            'resident_address': 'Resident Address',
+            'resident_city': 'Resident City',
+            'resident_postal_code': 'Postal Code',
+            'resident_state': 'State',
+            'comments': 'Evidence Comment',
+            'evidence_id': 'Evidence ID',
+            'address': 'Address',
+            'birthdate': 'Date of Birth',
+            'report_date': 'Report Date',
+            "score" : 'Score',
+            "driver_license_evidence:remote": 'Driving License Assurance',
+            "driver_license:local": 'Driving License Details',
+            "credit_score:remote": 'Credit Score Statement',
+            "credit_card_stmt:remote": 'Credit Card Statement',
+            "accountId":'Account ID',
+            "billingPeriod": 'Billing Period',
+            "description" :  'Card Description',
+            "paymentDueDate" :'Payment Due Date',
+            "paymentStatus" : 'Payment Status',
+            "url":'Credit Company URL'
+        };
+        return keys[name];
+    }
+
+    function flatten(json, flattened) {
+        var csKey
+        replaceKeys(json['_claim_names'])
+        for (var key in json['_claim_sources']) {
+            for (var key1 in json['_claim_names']) {
+                if (key === json['_claim_names'][key1]){
+                    var table = document.getElementById('claims');
+                    var tr = "<tr>";
+                    tr += "<td class=\"w-1/2 px-4 py-2 bg-blue-100 font-bold  \">" + key1 + "</td><td class=\" px-4 py-2 bg-blue-100 font-bold \"></td></tr>";
+                    table.innerHTML += tr;
+                }
+                csKey = key1
+            }
+            if (csKey === "Credit Card Statement"){
+                flattened = json['_claim_sources'][key]['claims']['stmt']
+                replaceKeys(flattened)
+                console.log("flat here cs", flattened)
+                createClaimTable(flattened)
+            } else {
+                flattened = json['_claim_sources'][key]['claims']
+                replaceKeys(flattened)
+                console.log("flat here", flattened)
+                createClaimTable(flattened)
+            }
+        }
+
+    }
+
+    function replaceKeys(json) {
+        for (var key in json) {
+            var friendlyKeyName =  getFriendlyKeyName(key);
+            json[friendlyKeyName] = json[key];
+            delete json[key];
+        }
+    }
+    function createClaimTable(data){
+        for (var key in data) {
+            if (key !== 'undefined') {
+                var table = document.getElementById('claims');
+                var tr = "<tr>";
+                tr += "<td class=\" px-2 py-1 \">" + key + "</td><td class=\" px-2 py-1 \"> " + data[key] + "</td></tr>";
+                table.innerHTML += tr;
+            }
+        }
+    }
+
+</script>
+
+<script>
+    var navMenuDiv = document.getElementById("nav-content");
+    var navMenu = document.getElementById("nav-toggle");
+
+    document.onclick = check;
+    function check(e){
+        var target = (e && e.target) || (event && event.srcElement);
+
+        //Nav Menu
+        if (!checkParent(target, navMenuDiv)) {
+            // click NOT on the menu
+            if (checkParent(target, navMenu)) {
+                // click on the link
+                if (navMenuDiv.classList.contains("hidden")) {
+                    navMenuDiv.classList.remove("hidden");
+                } else {navMenuDiv.classList.add("hidden");}
+            } else {
+                // click both outside link and outside menu, hide menu
+                navMenuDiv.classList.add("hidden");
+            }
+        }
+    }
+
+    function checkParent(t, elm) {
+        while(t.parentNode) {
+            if( t == elm ) {return true;}
+            t = t.parentNode;
+        }
+        return false;
+    }
+</script>
+</body>
+</html>

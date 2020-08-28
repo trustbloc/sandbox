@@ -458,7 +458,7 @@ func TestHandleOIDCCallback(t *testing.T) {
 				state: []byte(state),
 			},
 		}}
-		config.VPHTML = ""
+		config.DIDCOMMVPHTML = ""
 		svc, err := New(config)
 		require.NoError(t, err)
 		svc.oauth2ConfigFunc = func(...string) oauth2Config {
@@ -525,6 +525,7 @@ func config(t *testing.T) (*Config, func()) {
 			OIDCCallbackURL:        "http://test.com",
 			TransientStoreProvider: memstore.NewProvider(),
 			VPHTML:                 file,
+			DIDCOMMVPHTML:          file,
 		}, func() {
 			oidcCleanup()
 			fileCleanup()

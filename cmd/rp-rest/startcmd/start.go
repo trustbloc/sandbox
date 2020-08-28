@@ -321,6 +321,7 @@ func startRP(parameters *rpParameters) error {
 
 	cfg := &operation.Config{
 		VPHTML:                 "static/vp.html",
+		DIDCOMMVPHTML:          "static/didcommvp.html",
 		VCSURL:                 parameters.vcServiceURL,
 		TLSConfig:              &tls.Config{RootCAs: rootCAs},
 		RequestTokens:          parameters.requestTokens,
@@ -340,8 +341,6 @@ func startRP(parameters *rpParameters) error {
 	router := mux.NewRouter()
 
 	fs := http.FileServer(http.Dir("static"))
-	router.PathPrefix("/reader/").Handler(fs)
-	router.PathPrefix("/css/").Handler(fs)
 	router.PathPrefix("/img/").Handler(fs)
 
 	router.Handle("/", fs)
