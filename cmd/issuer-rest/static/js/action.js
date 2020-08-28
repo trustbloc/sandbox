@@ -78,7 +78,7 @@ $(document).ready(function () {
         if (!$(this).data('clicked')) {
             $('#demoType').val("DIDComm");
             $('#didCommScope').val("CreditScore");
-            $('#adapterProfile').val("tb-cc-issuer");
+            $('#adapterProfile').val("tb-cr-issuer");
             $(this).data('clicked', true);
         }
     });
