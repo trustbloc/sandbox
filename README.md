@@ -29,12 +29,12 @@ Refer [Build](docs/demo/build.md) for more detailed information.
 - [Relying Party](docs/rp/README.md)
 
 ## Demo
-- [Non DIDComm](docs/demo/sandbox_nondidcomm_playground.md)
-- [DIDComm](docs/demo/sandbox_didcomm_playground.md)
+- [TrustBloc VCS](docs/demo/sandbox_vcs_playground.md) : CHAPI + VC Services
+- [TrustBloc Adapter](docs/demo/sandbox_adapter_playground.md) : CHAPI + DIDComm
 
 ## Component Diagram
-- [Non DIDComm](docs/demo/nondidcomm_component_diagram.svg)
-- [DIDComm](docs/demo/didcomm_component_diagram.svg)
+- [TrustBloc VCS](docs/images/vcs_component_diagram.svg)
+- [TrustBloc Adapter](docs/images/adapter_component_diagram.svg)
 
 ## Contributing
 Thank you for your interest in contributing. Please see our [community contribution guidelines](https://github.com/trustbloc/community/blob/master/CONTRIBUTING.md) for more information.
