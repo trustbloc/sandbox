@@ -1,8 +1,8 @@
 {
-  "name": "trustbloc",
+  "name": "TrustBloc Governance",
   "version": "1.0",
   "logo": "https://example.com/logo",
-  "description": "Trustbloc Governs.",
+  "description": "Governs accredited financial institutions, colleges and universities.",
   "docs_uri": "https://example.com/docs",
   "data_uri": "https://example.com/data.json",
   "topics": ["banking"],
