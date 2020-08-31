@@ -118,6 +118,7 @@ services:
           - hydra.trustbloc.local
           - oathkeeper-proxy.trustbloc.local
           - edv.trustbloc.local
+          - kms.trustbloc.local
           - uni-resolver-web.trustbloc.local
           - uni-registrar-web.trustbloc.local
           - did-resolver.trustbloc.local

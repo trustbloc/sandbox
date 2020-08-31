@@ -210,3 +210,21 @@ services:
       - ../keys/tls:/etc/tls
     networks:
       - demo-net
+
+  kms.rest.example.com:
+    container_name: kms.rest.example.com
+    image: ${KMS_REST_IMAGE}:${KMS_REST_TAG}
+    environment:
+      - KMS_REST_HOST_URL=0.0.0.0:8072
+      - DATABASE_TYPE=couchdb
+      - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - DATABASE_PREFIX=keystore
+      - KMS_SECRETS_DATABASE_TYPE=couchdb
+      - KMS_SECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_SECRETS_DATABASE_PREFIX=kms
+      - VIRTUAL_HOST=kms.trustbloc.local
+    ports:
+      - 8072:8072
+    command: start
+    networks:
+      - demo-net
