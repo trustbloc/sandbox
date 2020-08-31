@@ -4,7 +4,7 @@
 drivers license, digital drivers license assurance/evidence and digital credit report.
 
 ## References
-- [Demo Recording](https://www.youtube.com/watch?v=JNUQaOwprT8&feature=youtu.be)
+- [Demo Recording](https://www.youtube.com/watch?v=0ZNmk6E2EFE&feature=youtu.be)
 - [Component Diagram](../images/adapter_component_diagram.svg)
 - [Issuer Adapter](https://github.com/trustbloc/edge-adapter/blob/master/docs/issuer/README.md)
 - [RP Adapter](https://github.com/trustbloc/edge-adapter/blob/master/docs/rp/README.md)
@@ -29,7 +29,7 @@ drivers license, digital drivers license assurance/evidence and digital credit r
      - The `Wallet` registers with the [DIDComm Mediator/Router](https://github.com/hyperledger/aries-framework-go/blob/master/docs/didcomm_mediator.md).
 1. Get Drivers License and Connect to Assurance Issuer: 
    - UI Navigation 
-     - On [`Drivers License + Assurance Issuer`](#components) page, click on `Issuer Driving Licence` button. 
+     - On [`Drivers License + Assurance Issuer`](#components) page, click on `Issue Driving Licence` button. 
      - Login to the account with default username/password and click `agree` on the consent page.
      - Click `Next` on the window, select the `wallet` and click `Store and Connect`.    
    - Details 

@@ -1,8 +1,8 @@
 {
-  "name": "TrustBloc Governance",
+  "name": "TrustBloc Sandbox",
   "version": "1.0",
   "logo": "https://example.com/logo",
-  "description": "Governs accredited financial institutions, colleges and universities.",
+  "description": "Sample governance framework for the TrustBloc sandbox.",
   "docs_uri": "https://example.com/docs",
   "data_uri": "https://example.com/data.json",
   "topics": ["banking"],
