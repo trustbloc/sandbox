@@ -7,16 +7,15 @@ module github.com/trustbloc/edge-sandbox
 go 1.13
 
 require (
-	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.4
-	github.com/hyperledger/aries-framework-go v0.1.4-0.20200528153636-1d4c39e41ae7
+	github.com/hyperledger/aries-framework-go v0.1.4
 	github.com/spf13/cobra v0.0.6
-	github.com/stretchr/testify v1.5.1
-	github.com/trustbloc/edge-core v0.1.4-0.20200814194611-5f3b95f18b63
-	github.com/trustbloc/edge-service v0.1.4-0.20200821195456-41f4b293363b
+	github.com/stretchr/testify v1.6.1
+	github.com/trustbloc/edge-core v0.1.4
+	github.com/trustbloc/edge-service v0.1.4
 	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 )

@@ -826,8 +826,10 @@ func (c *Operation) createCredential(cred, authResp, holder, domain, challenge, 
 		return nil, fmt.Errorf("invalid credential: %w", err)
 	}
 
-	if subject, ok := credential.Subject.(map[string]interface{}); ok {
-		subject["id"] = holder
+	if subject, ok := credential.Subject.([]verifiable.Subject); ok && len(subject) > 0 {
+		subject[0].ID = holder
+	} else {
+		return nil, errors.New("invalid credential subject")
 	}
 
 	credBytes, err := credential.MarshalJSON()
@@ -854,7 +856,7 @@ func (c *Operation) createCredential(cred, authResp, holder, domain, challenge, 
 
 // validateAuthResp validates did auth response against given domain and challenge
 func (c *Operation) validateAuthResp(authResp []byte, holder, domain, challenge string) error {
-	vp, err := verifiable.ParsePresentation(authResp)
+	vp, err := verifiable.ParsePresentation(authResp, verifiable.WithPresDisabledProofCheck())
 	if err != nil {
 		return err
 	}

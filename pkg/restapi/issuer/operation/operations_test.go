@@ -547,13 +547,6 @@ func TestOperation_GenerateVC(t *testing.T) {
 
 		rr = httptest.NewRecorder()
 		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
-		req.Form.Add("challenge", challenge)
-		svc.generateVC(rr, req)
-		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "DID Auth failed: embedded proof is missing")
-
-		rr = httptest.NewRecorder()
-		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "vc-issuer-1"})
 		req.Form.Set("authresp", authResp)
 		req.Form.Set("holder", "")
 		req.Form.Set("domain", domain)
