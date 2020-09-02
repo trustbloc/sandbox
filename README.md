@@ -33,9 +33,9 @@ Refer [Build](docs/demo/build.md) for more detailed information.
 - [TrustBloc Adapter](docs/demo/sandbox_adapter_playground.md) : CHAPI + DIDComm
 - [New Bank Account use case](docs/demo/new-bank-account-usecase.md)
 
-## Component Diagram
-- [TrustBloc VCS](docs/images/vcs_component_diagram.svg)
-- [TrustBloc Adapter](docs/images/adapter_component_diagram.svg)
+## Components
+- [TrustBloc VCS](docs/components/vcs_components.md)
+- [TrustBloc Adapter](docs/components/adapter_components.md)
 
 ## Contributing
 Thank you for your interest in contributing. Please see our [community contribution guidelines](https://github.com/trustbloc/community/blob/master/CONTRIBUTING.md) for more information.
