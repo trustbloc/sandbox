@@ -28,3 +28,9 @@ Issuer Adapter
 CREATE USER 'issueradapter'@'%' IDENTIFIED BY 'issueradapter-secret-pw';
 GRANT ALL PRIVILEGES ON `issueradapter\_%` . * TO 'issueradapter'@'%';
 
+/*
+Router
+*/
+CREATE USER 'router'@'%' IDENTIFIED BY 'router-secret-pw';
+GRANT ALL PRIVILEGES ON * . * TO 'router'@'%';
+
