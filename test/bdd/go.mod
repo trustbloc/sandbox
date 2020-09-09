@@ -11,7 +11,7 @@ require (
 	github.com/hyperledger/fabric-protos-go v0.0.0-20200707132912-fee30f3ccd23
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.4.0
-	github.com/trustbloc/edge-core v0.1.4
+	github.com/trustbloc/edge-core v0.1.5-0.20200902222811-9a73214c780d
 	github.com/trustbloc/fabric-peer-test-common v0.1.4
 )
 

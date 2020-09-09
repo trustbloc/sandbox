@@ -269,8 +269,8 @@ github.com/tidwall/match v1.0.1/go.mod h1:LujAq0jyVjBy028G1WhWfIzbpQfMO8bBZ6Tyb0
 github.com/tidwall/pretty v1.0.0 h1:HsD+QiTn7sK6flMKIvNmpqz1qrpP3Ps6jOKIKMooyg4=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
-github.com/trustbloc/edge-core v0.1.4 h1:qOtQxHY+a6PSxz+o9Cdi8kRzUyA5c4CPd9NsNPzRgXM=
-github.com/trustbloc/edge-core v0.1.4/go.mod h1:mTU1E/HcKcjmHaPCjBOvHERuryGhh5zgVkRSi4slAHg=
+github.com/trustbloc/edge-core v0.1.5-0.20200902222811-9a73214c780d h1:7G6mOPHOoxd4XYFZ3+gCZQIgdAxzkj2lAWucu4V+/5o=
+github.com/trustbloc/edge-core v0.1.5-0.20200902222811-9a73214c780d/go.mod h1:mTU1E/HcKcjmHaPCjBOvHERuryGhh5zgVkRSi4slAHg=
 github.com/trustbloc/fabric-peer-test-common v0.1.4 h1:oD0MvoN2EQgGcWKKE7qdIgfRSkxFGJnyg+O0ABtk1+g=
 github.com/trustbloc/fabric-peer-test-common v0.1.4/go.mod h1:7Cfp0qdzZYjLGoge4HNEO5yuosz0XaT/4F/2688x8Ug=
 github.com/trustbloc/fabric-protos-go-ext v0.1.4-0.20200626180529-18936b36feca h1:XFu6UF1+2kOH+GNVwLDlqcr38HVngfz+/AE/ZaiLJPU=
