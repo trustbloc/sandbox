@@ -69,7 +69,7 @@ You can verify student card data setup by logging in to [admin console](http://l
 
 After you have started sandbox components using 'make demo-start' register user wallet using following step:
 
-Open [user agent register wallet](https://myagent.trustbloc.local/RegisterWallet) and follow the links.
+Open [user agent register wallet](https://myagent.trustbloc.local/login) and follow the links.
 
 ## Demo
 
