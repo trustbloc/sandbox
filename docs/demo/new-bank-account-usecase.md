@@ -17,6 +17,7 @@ drivers license, digital drivers license assurance/evidence and digital credit r
 | Bank                               |                     | [Click Here](https://demo-verifier.dev.trustbloc.dev/bankaccount)  | [Click Here](https://rp.trustbloc.local/bankaccount)        |
 | Drivers License + Assurance Issuer |                     | [Click Here](https://demo-issuer.dev.trustbloc.dev/drivinglicense) | [Click Here](https://issuer.trustbloc.local/drivinglicense) |
 | Credit Report Issuer               |                     | [Click Here](https://demo-issuer.dev.trustbloc.dev/creditscore)    | [Click Here](https://issuer.trustbloc.local/creditscore)    |
+
 *: Refer [here](./build.md) to run the demo locally.
 
 ## Flow details
