@@ -41,7 +41,7 @@ func TestConsent_New(t *testing.T) {
 	for _, test := range tests {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
-			server, err := newConsentServer(tc.adminURL, false, []string{})
+			server, err := newConsentServer(tc.adminURL, loginHTML, consentHTML, false, []string{})
 			if tc.err != "" {
 				require.Contains(t, err.Error(), tc.err)
 				return
@@ -90,11 +90,30 @@ func TestConsent_buildConsentServer(t *testing.T) {
 			err: "failed to read cert",
 		},
 		{
+			name: "initialize with invalid tls system cert pool ENV variable in bank consent",
+			env: map[string]string{
+				adminURLEnvKey:          "sampleURL",
+				tlsSystemCertPoolEnvKey: "false",
+				tlsCACertsEnvKey:        "certs",
+				loginConsentMode:        "bank",
+			},
+			err: "failed to read cert",
+		},
+		{
 			name: "initialize with valid ENV variables",
 			env: map[string]string{
 				adminURLEnvKey:          "sampleURL",
 				tlsSystemCertPoolEnvKey: "true",
 				tlsCACertsEnvKey:        "",
+			},
+		},
+		{
+			name: "initialize with valid ENV variables",
+			env: map[string]string{
+				adminURLEnvKey:          "sampleURL",
+				tlsSystemCertPoolEnvKey: "true",
+				tlsCACertsEnvKey:        "",
+				loginConsentMode:        "bank",
 			},
 		},
 	}
@@ -196,7 +215,7 @@ func TestConsentServer_Login(t *testing.T) {
 	for _, test := range tests {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
-			server, err := newConsentServer(tc.adminURL, false, []string{})
+			server, err := newConsentServer(tc.adminURL, loginHTML, consentHTML, false, []string{})
 			require.NotNil(t, server)
 			require.NoError(t, err)
 
@@ -303,7 +322,7 @@ func TestConsentServer_Consent(t *testing.T) {
 	for _, test := range tests {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
-			server, err := newConsentServer(tc.adminURL, false, []string{})
+			server, err := newConsentServer(tc.adminURL, loginHTML, consentHTML, false, []string{})
 			require.NotNil(t, server)
 			require.NoError(t, err)
 

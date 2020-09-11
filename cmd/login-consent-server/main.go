@@ -30,9 +30,12 @@ const (
 	servePortEnvKey         = "SERVE_PORT"
 	tlsSystemCertPoolEnvKey = "TLS_SYSTEMCERTPOOL"
 	tlsCACertsEnvKey        = "TLS_CACERTS"
+	loginConsentMode        = "LOGIN_CONSENT_MODE"
 
-	loginHTML   = "./templates/login.html"
-	consentHTML = "./templates/consent.html"
+	loginHTML       = "./templates/login.html"
+	consentHTML     = "./templates/consent.html"
+	bankloginHTML   = "./templates/banklogin.html"
+	bankconsentHTML = "./templates/bankconsent.html"
 
 	timeout = 10 * time.Second
 )
@@ -83,22 +86,28 @@ func buildConsentServer() (*consentServer, error) {
 		tlsCACerts = strings.Split(tlsCACertsVal, ",")
 	}
 
-	return newConsentServer(adminURL, tlsSystemCertPool, tlsCACerts)
+	loginConsentModeVal := os.Getenv(loginConsentMode)
+	if loginConsentModeVal == "bank" {
+		return newConsentServer(adminURL, bankloginHTML, bankconsentHTML, tlsSystemCertPool, tlsCACerts)
+	}
+
+	return newConsentServer(adminURL, loginHTML, consentHTML, tlsSystemCertPool, tlsCACerts)
 }
 
 // newConsentServer returns new login consent server instance
-func newConsentServer(adminURL string, tlsSystemCertPool bool, tlsCACerts []string) (*consentServer, error) {
+func newConsentServer(adminURL, loginHTMLPath, consentHTMLPath string, tlsSystemCertPool bool,
+	tlsCACerts []string) (*consentServer, error) {
 	u, err := url.Parse(adminURL)
 	if err != nil {
 		return nil, err
 	}
 
-	loginTemplate, err := template.ParseFiles(loginHTML)
+	loginTemplate, err := template.ParseFiles(loginHTMLPath)
 	if err != nil {
 		return nil, err
 	}
 
-	consentTemplate, err := template.ParseFiles(consentHTML)
+	consentTemplate, err := template.ParseFiles(consentHTMLPath)
 	if err != nil {
 		return nil, err
 	}
