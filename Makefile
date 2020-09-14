@@ -2,22 +2,25 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-GO_CMD          ?= go
-ARCH             = $(shell go env GOARCH)
-ISSUER_REST_PATH = cmd/issuer-rest
-RP_REST_PATH     = cmd/rp-rest
-STRAPI_DEMO_PATH = cmd/strapi-demo
-LOGIN_CONSENT_PATH = cmd/login-consent-server
+GO_CMD          		  ?= go
+ARCH             	      = $(shell go env GOARCH)
+ISSUER_REST_PATH 		  = cmd/issuer-rest
+RP_REST_PATH              = cmd/rp-rest
+UPLOAD_CRED_REST_PATH     = cmd/upload-credential-rest
+STRAPI_DEMO_PATH 		  = cmd/strapi-demo
+LOGIN_CONSENT_PATH        = cmd/login-consent-server
 
-DOCKER_OUTPUT_NS         ?= docker.pkg.github.com
+DOCKER_OUTPUT_NS                  ?= docker.pkg.github.com
 # Namespace for the issuer image
-ISSUER_REST_IMAGE_NAME   ?= trustbloc/edge-sandbox/issuer-rest
+ISSUER_REST_IMAGE_NAME            ?= trustbloc/edge-sandbox/issuer-rest
 # Namespace for the rp image
-RP_REST_IMAGE_NAME       ?= trustbloc/edge-sandbox/rp-rest
+RP_REST_IMAGE_NAME                ?= trustbloc/edge-sandbox/rp-rest
+# Namespace for the upload cred image
+UPLOAD_CRED_REST_IMAGE_NAME       ?= trustbloc/edge-sandbox/upload-cred-rest
 # Namespace for the login consent server image
-LOGIN_CONSENT_SEVER_IMAGE_NAME   ?= trustbloc/edge-sandbox/login-consent-server
+LOGIN_CONSENT_SEVER_IMAGE_NAME    ?= trustbloc/edge-sandbox/login-consent-server
 # ELEMENT API SIDETREE REQUEST URL
-DID_ELEMENT_SIDETREE_REQUEST_URL ?= https://element-did.com/api/v1/sidetree/requests
+DID_ELEMENT_SIDETREE_REQUEST_URL  ?= https://element-did.com/api/v1/sidetree/requests
 
 # Tool commands (overridable)
 ALPINE_VER ?= 3.10
@@ -50,12 +53,12 @@ unit-test:
 	@scripts/check_unit.sh
 
 .PHONY: demo-start
-demo-start: clean generate-test-config issuer-rest-docker rp-rest-docker login-consent-server-docker trustbloc-local-setup
+demo-start: clean generate-test-config issuer-rest-docker rp-rest-docker upload-cred-rest-docker login-consent-server-docker trustbloc-local-setup
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-start-with-sidetree-fabric
 demo-start-with-sidetree-fabric: export START_SIDETREE_FABRIC=true
-demo-start-with-sidetree-fabric: clean generate-test-config issuer-rest-docker rp-rest-docker login-consent-server-docker trustbloc-local-setup populate-fixtures docker-thirdparty fabric-cli
+demo-start-with-sidetree-fabric: clean generate-test-config issuer-rest-docker rp-rest-docker upload-cred-rest-docker login-consent-server-docker trustbloc-local-setup populate-fixtures docker-thirdparty fabric-cli
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-stop
@@ -88,6 +91,13 @@ rp-rest:
 	@cp -r ${RP_REST_PATH}/static ./.build/bin/rp
 	@cd ${RP_REST_PATH} && go build -o ../../.build/bin/rp/rp-rest main.go
 
+
+.PHONY: upload-cred-rest
+upload-cred-rest:
+	@echo "Building upload-cred-rest"
+	@mkdir -p ./.build/bin/upload-cred
+	@cd ${UPLOAD_CRED_REST_PATH} && go build -o ../../.build/bin/upload-cred/upload-cred-rest main.go
+
 .PHONY: login-consent-server
 login-consent-server:
 	@echo "Building login-consent-server"
@@ -106,6 +116,13 @@ issuer-rest-docker:
 rp-rest-docker:
 	@echo "Building rp rest docker image"
 	@docker build -f ./images/rp-rest/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(RP_REST_IMAGE_NAME):latest \
+	--build-arg GO_VER=$(GO_VER) \
+	--build-arg ALPINE_VER=$(ALPINE_VER) .
+
+.PHONY: upload-cred-rest-docker
+upload-cred-rest-docker:
+	@echo "Building upload cred rest docker image"
+	@docker build -f ./images/upload-credential-rest/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(UPLOAD_CRED_REST_IMAGE_NAME):latest \
 	--build-arg GO_VER=$(GO_VER) \
 	--build-arg ALPINE_VER=$(ALPINE_VER) .
 

@@ -67,3 +67,16 @@ services:
       - rp.adapter.rest.example.com
     networks:
       - demo-net
+
+  upload.cred.example.com:
+    container_name: upload.cred.example.com
+    image: ${UPLOAD_CRED_IMAGE}:latest
+    environment:
+      - UPLOAD_CREDENTIAL_HOST_URL=0.0.0.0:5555
+      - VIRTUAL_HOST=upload.cred.trustbloc.local
+    entrypoint: ""
+    command:  /bin/sh -c "upload-cred-rest start"
+    ports:
+      - 5555:5555
+    networks:
+      - demo-net

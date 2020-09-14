@@ -40,4 +40,5 @@ cat > ${SANDBOX_HOME}/hosts <<EOF
 127.0.0.1 rp-adapter-hydra.trustbloc.local
 127.0.0.1 edv.trustbloc.local
 127.0.0.1 shared.couchdb
+127.0.0.1 upload.cred.trustbloc.local
 EOF
