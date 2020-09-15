@@ -8,7 +8,9 @@ package main
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
+	"io"
 	"strings"
 
 	"html/template"
@@ -30,15 +32,25 @@ const (
 	servePortEnvKey         = "SERVE_PORT"
 	tlsSystemCertPoolEnvKey = "TLS_SYSTEMCERTPOOL"
 	tlsCACertsEnvKey        = "TLS_CACERTS"
-	loginConsentMode        = "LOGIN_CONSENT_MODE"
 
 	loginHTML       = "./templates/login.html"
 	consentHTML     = "./templates/consent.html"
 	bankloginHTML   = "./templates/banklogin.html"
 	bankconsentHTML = "./templates/bankconsent.html"
 
+	bankLogin = "banklogin"
+
+	bankFlow    = "bank"
+	defaultFlow = "default"
+
+	loginTypeCookie = "loginType"
+
 	timeout = 10 * time.Second
 )
+
+type htmlTemplate interface {
+	Execute(wr io.Writer, data interface{}) error
+}
 
 func main() {
 	c, err := buildConsentServer()
@@ -86,28 +98,32 @@ func buildConsentServer() (*consentServer, error) {
 		tlsCACerts = strings.Split(tlsCACertsVal, ",")
 	}
 
-	loginConsentModeVal := os.Getenv(loginConsentMode)
-	if loginConsentModeVal == "bank" {
-		return newConsentServer(adminURL, bankloginHTML, bankconsentHTML, tlsSystemCertPool, tlsCACerts)
-	}
-
-	return newConsentServer(adminURL, loginHTML, consentHTML, tlsSystemCertPool, tlsCACerts)
+	return newConsentServer(adminURL, tlsSystemCertPool, tlsCACerts)
 }
 
 // newConsentServer returns new login consent server instance
-func newConsentServer(adminURL, loginHTMLPath, consentHTMLPath string, tlsSystemCertPool bool,
-	tlsCACerts []string) (*consentServer, error) {
+func newConsentServer(adminURL string, tlsSystemCertPool bool, tlsCACerts []string) (*consentServer, error) {
 	u, err := url.Parse(adminURL)
 	if err != nil {
 		return nil, err
 	}
 
-	loginTemplate, err := template.ParseFiles(loginHTMLPath)
+	loginTemplate, err := template.ParseFiles(loginHTML)
 	if err != nil {
 		return nil, err
 	}
 
-	consentTemplate, err := template.ParseFiles(consentHTMLPath)
+	consentTemplate, err := template.ParseFiles(consentHTML)
+	if err != nil {
+		return nil, err
+	}
+
+	bankLoginTemplate, err := template.ParseFiles(bankloginHTML)
+	if err != nil {
+		return nil, err
+	}
+
+	bankConsentTemplate, err := template.ParseFiles(bankconsentHTML)
 	if err != nil {
 		return nil, err
 	}
@@ -120,18 +136,22 @@ func newConsentServer(adminURL, loginHTMLPath, consentHTMLPath string, tlsSystem
 	return &consentServer{
 		hydraClient: client.NewHTTPClientWithConfig(nil,
 			&client.TransportConfig{Schemes: []string{u.Scheme}, Host: u.Host, BasePath: u.Path}),
-		loginTemplate:   loginTemplate,
-		consentTemplate: consentTemplate,
-		httpClient:      &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: rootCAs}}},
+		loginTemplate:       loginTemplate,
+		consentTemplate:     consentTemplate,
+		bankLoginTemplate:   bankLoginTemplate,
+		bankConsentTemplate: bankConsentTemplate,
+		httpClient:          &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: rootCAs}}},
 	}, nil
 }
 
 // ConsentServer hydra login consent server
 type consentServer struct {
-	hydraClient     *client.OryHydra
-	loginTemplate   *template.Template
-	consentTemplate *template.Template
-	httpClient      *http.Client
+	hydraClient         *client.OryHydra
+	loginTemplate       htmlTemplate
+	consentTemplate     htmlTemplate
+	bankLoginTemplate   htmlTemplate
+	bankConsentTemplate htmlTemplate
+	httpClient          *http.Client
 }
 
 func (c *consentServer) login(w http.ResponseWriter, req *http.Request) {
@@ -142,12 +162,30 @@ func (c *consentServer) login(w http.ResponseWriter, req *http.Request) {
 			"login_challenge": challenge,
 		}
 
-		err := c.loginTemplate.Execute(w, fullData)
-		if err != nil {
-			fmt.Fprint(w, err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
+		if strings.Contains(req.Referer(), bankLogin) {
+			expire := time.Now().AddDate(0, 0, 1)
+			cookie := http.Cookie{Name: loginTypeCookie, Value: bankFlow, Expires: expire}
+			http.SetCookie(w, &cookie)
 
-			return
+			err := c.bankLoginTemplate.Execute(w, fullData)
+			if err != nil {
+				fmt.Fprint(w, err.Error())
+				w.WriteHeader(http.StatusInternalServerError)
+
+				return
+			}
+		} else {
+			expire := time.Now().AddDate(0, 0, 1)
+			cookie := http.Cookie{Name: loginTypeCookie, Value: defaultFlow, Expires: expire}
+			http.SetCookie(w, &cookie)
+
+			err := c.loginTemplate.Execute(w, fullData)
+			if err != nil {
+				fmt.Fprint(w, err.Error())
+				w.WriteHeader(http.StatusInternalServerError)
+
+				return
+			}
 		}
 	case "POST":
 		c.acceptLoginRequest(w, req)
@@ -268,10 +306,26 @@ func (c *consentServer) showConsentPage(w http.ResponseWriter, req *http.Request
 		fullData["ClientID"] = consentRequest.Payload.Client.ClientID
 	}
 
-	err = c.consentTemplate.Execute(w, fullData)
-	if err != nil {
+	loginTypeCookie, err := req.Cookie(loginTypeCookie)
+	if err != nil && !errors.Is(err, http.ErrNoCookie) {
 		fmt.Fprint(w, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	if loginTypeCookie.Value == bankFlow {
+		err = c.bankConsentTemplate.Execute(w, fullData)
+		if err != nil {
+			fmt.Fprint(w, err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	} else {
+		err = c.consentTemplate.Execute(w, fullData)
+		if err != nil {
+			fmt.Fprint(w, err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	}
 }
 

@@ -8,6 +8,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -41,7 +42,7 @@ func TestConsent_New(t *testing.T) {
 	for _, test := range tests {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
-			server, err := newConsentServer(tc.adminURL, loginHTML, consentHTML, false, []string{})
+			server, err := newConsentServer(tc.adminURL, false, []string{})
 			if tc.err != "" {
 				require.Contains(t, err.Error(), tc.err)
 				return
@@ -90,16 +91,6 @@ func TestConsent_buildConsentServer(t *testing.T) {
 			err: "failed to read cert",
 		},
 		{
-			name: "initialize with invalid tls system cert pool ENV variable in bank consent",
-			env: map[string]string{
-				adminURLEnvKey:          "sampleURL",
-				tlsSystemCertPoolEnvKey: "false",
-				tlsCACertsEnvKey:        "certs",
-				loginConsentMode:        "bank",
-			},
-			err: "failed to read cert",
-		},
-		{
 			name: "initialize with valid ENV variables",
 			env: map[string]string{
 				adminURLEnvKey:          "sampleURL",
@@ -113,7 +104,6 @@ func TestConsent_buildConsentServer(t *testing.T) {
 				adminURLEnvKey:          "sampleURL",
 				tlsSystemCertPoolEnvKey: "true",
 				tlsCACertsEnvKey:        "",
-				loginConsentMode:        "bank",
 			},
 		},
 	}
@@ -159,8 +149,18 @@ func TestConsentServer_Login(t *testing.T) {
 		form           map[string][]string
 		responseHTML   []string
 		responseStatus int
+		referer        string
+		loginTemplate  htmlTemplate
+		bankTemplate   htmlTemplate
 		err            string
 	}{
+		{
+			name:           "/login Method not allowed",
+			adminURL:       testServer.URL,
+			method:         http.MethodPatch,
+			url:            "?login_challenge=12345",
+			responseStatus: http.StatusMethodNotAllowed,
+		},
 		{
 			name:           "/login GET SUCCESS",
 			adminURL:       testServer.URL,
@@ -168,6 +168,34 @@ func TestConsentServer_Login(t *testing.T) {
 			url:            "?login_challenge=12345",
 			responseHTML:   []string{"<title>Login Page</title>", `name="challenge" value="12345"`},
 			responseStatus: http.StatusOK,
+		},
+		{
+			name:           "/login GET FAILURE (template error)",
+			adminURL:       testServer.URL,
+			method:         http.MethodGet,
+			url:            "?login_challenge=12345",
+			responseStatus: http.StatusOK,
+			err:            "template error",
+			loginTemplate:  &mockTemplate{executeErr: fmt.Errorf("template error")},
+		},
+		{
+			name:           "/bank login GET SUCCESS",
+			adminURL:       testServer.URL,
+			method:         http.MethodGet,
+			url:            "?login_challenge=12345",
+			responseHTML:   []string{"<title>Bank Login Page</title>", `name="challenge" value="12345"`},
+			responseStatus: http.StatusOK,
+			referer:        bankLogin,
+		},
+		{
+			name:           "/bank login GET FAILURE (template error)",
+			adminURL:       testServer.URL,
+			method:         http.MethodGet,
+			url:            "?login_challenge=12345",
+			responseStatus: http.StatusOK,
+			err:            "template error",
+			bankTemplate:   &mockTemplate{executeErr: fmt.Errorf("template error")},
+			referer:        bankLogin,
 		},
 		{
 			name:           "/login POST FAILURE (missing form body)",
@@ -215,9 +243,17 @@ func TestConsentServer_Login(t *testing.T) {
 	for _, test := range tests {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
-			server, err := newConsentServer(tc.adminURL, loginHTML, consentHTML, false, []string{})
+			server, err := newConsentServer(tc.adminURL, false, []string{})
 			require.NotNil(t, server)
 			require.NoError(t, err)
+
+			if tc.loginTemplate != nil {
+				server.loginTemplate = tc.loginTemplate
+			}
+
+			if tc.bankTemplate != nil {
+				server.bankLoginTemplate = tc.bankTemplate
+			}
 
 			req, err := http.NewRequest(tc.method, tc.url, nil)
 			require.NoError(t, err)
@@ -225,6 +261,8 @@ func TestConsentServer_Login(t *testing.T) {
 			if tc.form != nil {
 				req.PostForm = url.Values(tc.form)
 			}
+
+			req.Header.Set("Referer", tc.referer)
 
 			res := httptest.NewRecorder()
 
@@ -255,15 +293,26 @@ func TestConsentServer_Consent(t *testing.T) {
 	defer func() { testServer.Close() }()
 
 	tests := []struct {
-		name           string
-		adminURL       string
-		method         string
-		url            string
-		form           map[string][]string
-		responseHTML   []string
-		responseStatus int
-		err            string
+		name                string
+		adminURL            string
+		method              string
+		url                 string
+		form                map[string][]string
+		responseHTML        []string
+		responseStatus      int
+		cookie              *http.Cookie
+		consentTemplate     htmlTemplate
+		bankConsentTemplate htmlTemplate
+		err                 string
 	}{
+		{
+			name:           "/consent Method not allowed",
+			adminURL:       testServer.URL,
+			method:         http.MethodPatch,
+			url:            "?consent_challenge=12345",
+			responseStatus: http.StatusMethodNotAllowed,
+			cookie:         &http.Cookie{Name: loginTypeCookie, Value: defaultFlow},
+		},
 		{
 			name:           "/consent GET SUCCESS",
 			adminURL:       testServer.URL,
@@ -271,6 +320,36 @@ func TestConsentServer_Consent(t *testing.T) {
 			url:            "?consent_challenge=12345",
 			responseHTML:   []string{"<title>Consent Page</title>"},
 			responseStatus: http.StatusOK,
+			cookie:         &http.Cookie{Name: loginTypeCookie, Value: defaultFlow},
+		},
+		{
+			name:            "/consent GET FAILURE (template error)",
+			adminURL:        testServer.URL,
+			method:          http.MethodGet,
+			url:             "?consent_challenge=12345",
+			responseStatus:  http.StatusOK,
+			err:             "template error",
+			consentTemplate: &mockTemplate{executeErr: fmt.Errorf("template error")},
+			cookie:          &http.Cookie{Name: loginTypeCookie, Value: defaultFlow},
+		},
+		{
+			name:           "/bank consent GET SUCCESS",
+			adminURL:       testServer.URL,
+			method:         http.MethodGet,
+			url:            "?consent_challenge=12345",
+			responseHTML:   []string{"<title>Bank Consent Page</title>"},
+			responseStatus: http.StatusOK,
+			cookie:         &http.Cookie{Name: loginTypeCookie, Value: bankFlow},
+		},
+		{
+			name:                "/bank consent GET FAILURE (template error)",
+			adminURL:            testServer.URL,
+			method:              http.MethodGet,
+			url:                 "?consent_challenge=12345",
+			responseStatus:      http.StatusOK,
+			err:                 "template error",
+			bankConsentTemplate: &mockTemplate{executeErr: fmt.Errorf("template error")},
+			cookie:              &http.Cookie{Name: loginTypeCookie, Value: bankFlow},
 		},
 		{
 			name:           "/consent POST FAILURE (missing form body)",
@@ -278,6 +357,7 @@ func TestConsentServer_Consent(t *testing.T) {
 			method:         http.MethodPost,
 			err:            "missing form body",
 			responseStatus: http.StatusOK,
+			cookie:         &http.Cookie{Name: loginTypeCookie, Value: bankFlow},
 		},
 		{
 			name:           "/consent POST FAILURE (missing submit)",
@@ -286,6 +366,7 @@ func TestConsentServer_Consent(t *testing.T) {
 			form:           map[string][]string{},
 			responseStatus: http.StatusBadRequest,
 			err:            "consent value missing",
+			cookie:         &http.Cookie{Name: loginTypeCookie, Value: defaultFlow},
 		},
 		{
 			name:     "/consent POST FAILURE (invalid submit value)",
@@ -296,6 +377,7 @@ func TestConsentServer_Consent(t *testing.T) {
 			},
 			responseStatus: http.StatusBadRequest,
 			err:            "incorrect consent value",
+			cookie:         &http.Cookie{Name: loginTypeCookie, Value: defaultFlow},
 		},
 		{
 			name:     "/consent POST accept consent value",
@@ -305,6 +387,7 @@ func TestConsentServer_Consent(t *testing.T) {
 				"submit": {"accept"},
 			},
 			responseStatus: http.StatusOK,
+			cookie:         &http.Cookie{Name: loginTypeCookie, Value: defaultFlow},
 		},
 		{
 			name:     "/consent POST accept consent value",
@@ -314,6 +397,7 @@ func TestConsentServer_Consent(t *testing.T) {
 				"submit": {"reject"},
 			},
 			responseStatus: http.StatusOK,
+			cookie:         &http.Cookie{Name: loginTypeCookie, Value: defaultFlow},
 		},
 	}
 
@@ -322,7 +406,7 @@ func TestConsentServer_Consent(t *testing.T) {
 	for _, test := range tests {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
-			server, err := newConsentServer(tc.adminURL, loginHTML, consentHTML, false, []string{})
+			server, err := newConsentServer(tc.adminURL, false, []string{})
 			require.NotNil(t, server)
 			require.NoError(t, err)
 
@@ -332,6 +416,16 @@ func TestConsentServer_Consent(t *testing.T) {
 			if tc.form != nil {
 				req.PostForm = url.Values(tc.form)
 			}
+
+			if tc.consentTemplate != nil {
+				server.consentTemplate = tc.consentTemplate
+			}
+
+			if tc.bankConsentTemplate != nil {
+				server.bankConsentTemplate = tc.bankConsentTemplate
+			}
+
+			req.AddCookie(tc.cookie)
 
 			res := httptest.NewRecorder()
 
@@ -349,4 +443,12 @@ func TestConsentServer_Consent(t *testing.T) {
 			require.Equal(t, tc.responseStatus, res.Code, res.Body.String())
 		})
 	}
+}
+
+type mockTemplate struct {
+	executeErr error
+}
+
+func (m *mockTemplate) Execute(wr io.Writer, data interface{}) error {
+	return m.executeErr
 }
