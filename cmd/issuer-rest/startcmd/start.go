@@ -384,6 +384,9 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen
 	router.PathPrefix("/creditscore").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/creditscore.html")
 	})
+	router.PathPrefix("/uploaddrivinglicense").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/uploaddrivinglicense.html")
+	})
 
 	for _, handler := range handlers {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())

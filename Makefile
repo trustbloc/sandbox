@@ -125,12 +125,6 @@ generate-test-keys: clean
 		--entrypoint "/opt/workspace/edge-sandbox/scripts/generate_test_keys.sh" \
 		frapsoft/openssl
 
-
-.PHONY: docker-thirdparty
-docker-thirdparty:
-    docker pull couchdb:3.1.0
-    docker pull hyperledger/fabric-orderer:$(ARCH)-2.2.0
-
 .PHONY: crypto-gen
 crypto-gen:
 	@echo "Generating crypto directory ..."

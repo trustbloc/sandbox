@@ -142,17 +142,18 @@ func TestConsentServer_Login(t *testing.T) {
 	defer func() { testServer.Close() }()
 
 	tests := []struct {
-		name           string
-		adminURL       string
-		method         string
-		url            string
-		form           map[string][]string
-		responseHTML   []string
-		responseStatus int
-		referer        string
-		loginTemplate  htmlTemplate
-		bankTemplate   htmlTemplate
-		err            string
+		name             string
+		adminURL         string
+		method           string
+		url              string
+		form             map[string][]string
+		responseHTML     []string
+		responseStatus   int
+		referer          string
+		loginTemplate    htmlTemplate
+		bankTemplate     htmlTemplate
+		dlUploadTemplate htmlTemplate
+		err              string
 	}{
 		{
 			name:           "/login Method not allowed",
@@ -196,6 +197,25 @@ func TestConsentServer_Login(t *testing.T) {
 			err:            "template error",
 			bankTemplate:   &mockTemplate{executeErr: fmt.Errorf("template error")},
 			referer:        bankLogin,
+		},
+		{
+			name:           "/dlUpload login GET SUCCESS",
+			adminURL:       testServer.URL,
+			method:         http.MethodGet,
+			url:            "?login_challenge=12345",
+			responseHTML:   []string{"<title>Upload Credential</title>", `name="challenge" value="12345"`},
+			responseStatus: http.StatusOK,
+			referer:        dlUpload,
+		},
+		{
+			name:             "/dlUpload login GET FAILURE (template error)",
+			adminURL:         testServer.URL,
+			method:           http.MethodGet,
+			url:              "?login_challenge=12345",
+			responseStatus:   http.StatusOK,
+			err:              "template error",
+			dlUploadTemplate: &mockTemplate{executeErr: fmt.Errorf("template error")},
+			referer:          dlUpload,
 		},
 		{
 			name:           "/login POST FAILURE (missing form body)",
@@ -255,6 +275,10 @@ func TestConsentServer_Login(t *testing.T) {
 				server.bankLoginTemplate = tc.bankTemplate
 			}
 
+			if tc.dlUploadTemplate != nil {
+				server.dlUploadTemplate = tc.dlUploadTemplate
+			}
+
 			req, err := http.NewRequest(tc.method, tc.url, nil)
 			require.NoError(t, err)
 
@@ -293,17 +317,18 @@ func TestConsentServer_Consent(t *testing.T) {
 	defer func() { testServer.Close() }()
 
 	tests := []struct {
-		name                string
-		adminURL            string
-		method              string
-		url                 string
-		form                map[string][]string
-		responseHTML        []string
-		responseStatus      int
-		cookie              *http.Cookie
-		consentTemplate     htmlTemplate
-		bankConsentTemplate htmlTemplate
-		err                 string
+		name                    string
+		adminURL                string
+		method                  string
+		url                     string
+		form                    map[string][]string
+		responseHTML            []string
+		responseStatus          int
+		cookie                  *http.Cookie
+		consentTemplate         htmlTemplate
+		bankConsentTemplate     htmlTemplate
+		dlUploadConsentTemplate htmlTemplate
+		err                     string
 	}{
 		{
 			name:           "/consent Method not allowed",
@@ -350,6 +375,25 @@ func TestConsentServer_Consent(t *testing.T) {
 			err:                 "template error",
 			bankConsentTemplate: &mockTemplate{executeErr: fmt.Errorf("template error")},
 			cookie:              &http.Cookie{Name: loginTypeCookie, Value: bankFlow},
+		},
+		{
+			name:           "/dlUpload consent GET SUCCESS",
+			adminURL:       testServer.URL,
+			method:         http.MethodGet,
+			url:            "?consent_challenge=12345",
+			responseHTML:   []string{"<title>Consent Page</title>"},
+			responseStatus: http.StatusOK,
+			cookie:         &http.Cookie{Name: loginTypeCookie, Value: dlUploadFlow},
+		},
+		{
+			name:                    "/dlUpload consent GET FAILURE (template error)",
+			adminURL:                testServer.URL,
+			method:                  http.MethodGet,
+			url:                     "?consent_challenge=12345",
+			responseStatus:          http.StatusOK,
+			err:                     "template error",
+			dlUploadConsentTemplate: &mockTemplate{executeErr: fmt.Errorf("template error")},
+			cookie:                  &http.Cookie{Name: loginTypeCookie, Value: dlUploadFlow},
 		},
 		{
 			name:           "/consent POST FAILURE (missing form body)",
@@ -423,6 +467,10 @@ func TestConsentServer_Consent(t *testing.T) {
 
 			if tc.bankConsentTemplate != nil {
 				server.bankConsentTemplate = tc.bankConsentTemplate
+			}
+
+			if tc.dlUploadConsentTemplate != nil {
+				server.dlUploadConsentTemplate = tc.dlUploadConsentTemplate
 			}
 
 			req.AddCookie(tc.cookie)

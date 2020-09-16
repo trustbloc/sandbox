@@ -74,6 +74,16 @@ $(document).ready(function () {
         }
     });
 
+    $('#uploadDrivingLicense').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $('#demoType').val("DIDComm");
+            $('#didCommScope').val("mDL");
+            $('#adapterProfile').val("tb-dl-issuer");
+            $('#assuranceScope').val("mdlevidence");
+            $(this).data('clicked', true);
+        }
+    });
+
     $('#creditScore').on('click', function() {
         if (!$(this).data('clicked')) {
             $('#demoType').val("DIDComm");
