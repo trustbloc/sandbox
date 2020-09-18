@@ -21,6 +21,10 @@ SPDX-License-Identifier: Apache-2.0
     <link rel="stylesheet" href="css/layout.css">
     <!--Replace with your tailwind.css once created-->
 
+    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -76,12 +80,7 @@ SPDX-License-Identifier: Apache-2.0
             <div class="flex-none mt-auto bg-white rounded-b rounded-t-none overflow-hidden shadow p-6">
                 <img class="object-contain h-64 w-full" src="img/credit_score.jpg">
                 <div class="flex justify-center mt-8 pt-2">
-                    <form id="didCommDemo"  action="">
-                        <input type="text" id="demoType" name="demoType" value="" checked hidden>
-                        <input type="text" id="didCommScope" name="didCommScope" value="" checked hidden>
-                        <input type="text" id="adapterProfile" name="adapterProfile" value="" checked hidden>
-                        <input type="submit" id="creditScore" class="lg:mx-0 hover:underline credit-gradient text-white font-bold my-6 py-4 px-8 shadow-lg" value="Get your credit report">
-                    </form>
+                    <input type="submit" id="getDrivingLicense" onclick="getDrivingLicense()" class="lg:mx-0 hover:underline credit-gradient text-white font-bold my-6 py-4 px-8 shadow-lg" value="Get your credit report">
                 </div>
             </div>
         </div>
@@ -131,6 +130,34 @@ SPDX-License-Identifier: Apache-2.0
         return false;
     }
 </script>
+
+<script>
+    installHandler()
+        .catch(e => console.error('Error in installHandler:', e));
+
+    async function installHandler() {
+        console.log('Loading polyfill...');
+        try {
+            await credentialHandlerPolyfill.loadOnce();
+        } catch (e) {
+            console.error('Error in loadOnce:', e);
+        }
+    }
+
+    async function getDrivingLicense() {
+        console.log("get driving license from wallet")
+        axios({
+            method: "GET",
+            url: "/oauth2/request?scope=driver_license:local driver_license_evidence:remote"
+        }).then(
+            resp => {window.location.href = resp.data.request},
+            err => console.error(err)
+        )
+    }
+
+</script>
+
 </body>
 
 </html>
+

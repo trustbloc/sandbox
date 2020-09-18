@@ -18,7 +18,7 @@ JsonWebSignature2020). Type in a friendly name and click save. If successful, th
 [this](#wallet-dids) for more info on supported DIDs.
 3. Issue a Credential : Go to [Demo Issuer](#components), click on  `Issue Permanent Residence Card` in `Issue Local Credentials` 
 section, select `TrustBloc ED` and click `issue` button. Refer [this](#issuer-options) for more info on issuer profiles and action.
-4. Login to the Issuer: With default user email as `foo@bar.com` and password, click the `Login` button. Consent to 
+4. Login to the Issuer: With default user email as `john.smith@example.com` and password, click the `Login` button. Consent to 
 sharing the data on next page by clicking `Agree` button.
 5. Authenticate Wallet with Issuer : Click on `Authenticate` button select the registered `wallet`. 
 Select a wallet identity (subject DID) and click `Authenticate`. After success, the page displays the verifiable credential (vc).

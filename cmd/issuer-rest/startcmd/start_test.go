@@ -6,6 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 package startcmd
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -270,6 +271,41 @@ func TestDatabaseTypeArg(t *testing.T) {
 
 		err := startCmd.Execute()
 		require.Contains(t, err.Error(), "unsupported storage driver: invalid-driver")
+	})
+}
+
+func TestGetCertPool(t *testing.T) {
+	require.Error(t, startIssuer(&issuerParameters{tlsCACerts: []string{"ww"}}))
+}
+
+func TestOIDCParam(t *testing.T) {
+	t.Run("test oidc param - error", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+		temp := getOIDCParametersFunc
+		getOIDCParametersFunc = func(cmd *cobra.Command) (*oidcParameters, error) {
+			return nil, fmt.Errorf("oidc param error")
+		}
+		defer func() { getOIDCParametersFunc = temp }()
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, endpointAuthURLArg()...)
+		args = append(args, endpointTokenURLArg()...)
+		args = append(args, clientRedirectURLArg()...)
+		args = append(args, clientIDArg()...)
+		args = append(args, clientSecretArg()...)
+		args = append(args, tokenIntrospectionURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, cmsURLArg()...)
+		args = append(args, vcsURLArg()...)
+		args = append(args, issuerAdapterURLArg()...)
+		args = append(args, databaseURLArg()...)
+		args = append(args, databasePrefixArg()...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Contains(t, err.Error(), "oidc param error")
 	})
 }
 

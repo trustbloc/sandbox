@@ -24,6 +24,10 @@ RUN make issuer-rest
 
 
 FROM alpine:${ALPINE_VER}
+RUN apk add --no-cache \
+    bash \
+    curl \
+    jq;
 
 # copy build artifacts from build container
 COPY --from=edge-sandbox /opt/workspace/edge-sandbox/.build/bin/issuer /usr/local/bin

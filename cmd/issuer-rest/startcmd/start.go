@@ -110,9 +110,32 @@ const (
 	issuerAdapterURLFlagName  = "issuer-adapter-url"
 	issuerAdapterURLFlagUsage = "Issuer Adapter Service URL. Format: HostName:Port."
 	issuerAdapterURLEnvKey    = "ISSUER_ADAPTER_URL"
+
+	// OIDC flags
+	oidcProviderURLFlagName  = "oidc-opurl"
+	oidcProviderURLFlagUsage = "URL for the OIDC provider." +
+		" Alternatively, this can be set with the following environment variable: " + oidcProviderURLEnvKey
+	oidcProviderURLEnvKey = "ISSUER_OIDC_OPURL"
+
+	oidcClientIDFlagName  = "oidc-clientid"
+	oidcClientIDFlagUsage = "OAuth2 client_id for OIDC." +
+		" Alternatively, this can be set with the following environment variable: " + oidcClientIDEnvKey
+	oidcClientIDEnvKey = "ISSUER_OIDC_CLIENTID"
+
+	oidcClientSecretFlagName  = "oidc-clientsecret" //nolint:gosec
+	oidcClientSecretFlagUsage = "OAuth2 client secret for OIDC." +
+		" Alternatively, this can be set with the following environment variable: " + oidcClientSecretEnvKey
+	oidcClientSecretEnvKey = "ISSUER_OIDC_CLIENTSECRET" //nolint:gosec
+
+	oidcCallbackURLFlagName  = "oidc-callback"
+	oidcCallbackURLFlagUsage = "Base URL for the OAuth2 callback endpoints." +
+		" Alternatively, this can be set with the following environment variable: " + oidcCallbackURLEnvKey
+	oidcCallbackURLEnvKey = "ISSUER_OIDC_CALLBACK"
 )
 
 var logger = log.New("issuer-rest")
+
+var getOIDCParametersFunc = getOIDCParameters // nolint: gochecknoglobals
 
 type server interface {
 	ListenAndServe(host, certFile, keyFile string, router http.Handler) error
@@ -145,6 +168,7 @@ type issuerParameters struct {
 	issuerAdapterURL      string
 	logLevel              string
 	dbParameters          *common.DBParameters
+	oidcParameters        *oidcParameters
 }
 
 type tlsConfig struct {
@@ -152,6 +176,13 @@ type tlsConfig struct {
 	keyFile        string
 	systemCertPool bool
 	caCerts        []string
+}
+
+type oidcParameters struct {
+	oidcProviderURL  string
+	oidcClientID     string
+	oidcClientSecret string
+	oidcCallbackURL  string
 }
 
 // GetStartCmd returns the Cobra start command.
@@ -222,6 +253,11 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 				return err
 			}
 
+			oidcParams, err := getOIDCParametersFunc(cmd)
+			if err != nil {
+				return err
+			}
+
 			parameters := &issuerParameters{
 				srv:                   srv,
 				hostURL:               strings.TrimSpace(hostURL),
@@ -237,11 +273,42 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 				issuerAdapterURL:      issuerAdapterURL,
 				logLevel:              loggingLevel,
 				dbParameters:          dbParams,
+				oidcParameters:        oidcParams,
 			}
 
 			return startIssuer(parameters)
 		},
 	}
+}
+
+func getOIDCParameters(cmd *cobra.Command) (*oidcParameters, error) {
+	oidcProviderURL, err := cmdutils.GetUserSetVarFromString(cmd, oidcProviderURLFlagName, oidcProviderURLEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	oidcClientID, err := cmdutils.GetUserSetVarFromString(cmd, oidcClientIDFlagName, oidcClientIDEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	oidcClientSecret, err := cmdutils.GetUserSetVarFromString(
+		cmd, oidcClientSecretFlagName, oidcClientSecretEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	oidcCallbackURL, err := cmdutils.GetUserSetVarFromString(cmd, oidcCallbackURLFlagName, oidcCallbackURLEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return &oidcParameters{
+		oidcProviderURL:  oidcProviderURL,
+		oidcClientID:     oidcClientID,
+		oidcClientSecret: oidcClientSecret,
+		oidcCallbackURL:  oidcCallbackURL,
+	}, nil
 }
 
 func getRequestTokens(cmd *cobra.Command) (map[string]string, error) {
@@ -327,6 +394,12 @@ func createFlags(startCmd *cobra.Command) {
 
 	// default log level
 	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
+
+	// OIDC
+	startCmd.Flags().StringP(oidcProviderURLFlagName, "", "", oidcProviderURLFlagUsage)
+	startCmd.Flags().StringP(oidcClientIDFlagName, "", "", oidcClientIDFlagUsage)
+	startCmd.Flags().StringP(oidcClientSecretFlagName, "", "", oidcClientSecretFlagUsage)
+	startCmd.Flags().StringP(oidcCallbackURLFlagName, "", "", oidcCallbackURLFlagUsage)
 }
 
 func startIssuer(parameters *issuerParameters) error { //nolint:funlen
@@ -355,10 +428,15 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen
 		ReceiveVCHTML:    "static/receiveVC.html",
 		VCHTML:           "static/vc.html",
 		DIDCommHTML:      "static/didcomm.html",
+		DIDCOMMVPHTML:    "static/didcommvp.html",
 		TLSConfig:        tlsConfig,
 		RequestTokens:    parameters.requestTokens,
 		IssuerAdapterURL: parameters.issuerAdapterURL,
 		StoreProvider:    storeProvider,
+		OIDCProviderURL:  parameters.oidcParameters.oidcProviderURL,
+		OIDCClientID:     parameters.oidcParameters.oidcClientID,
+		OIDCClientSecret: parameters.oidcParameters.oidcClientSecret,
+		OIDCCallbackURL:  parameters.oidcParameters.oidcCallbackURL,
 	}
 
 	issuerService, err := issuer.New(cfg)
@@ -380,6 +458,9 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen
 	router.Handle("/", fs)
 	router.PathPrefix("/drivinglicense").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/drivinglicense.html")
+	})
+	router.PathPrefix("/creditscorenologin").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/creditscorenologin.html")
 	})
 	router.PathPrefix("/creditscore").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/creditscore.html")

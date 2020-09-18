@@ -86,6 +86,23 @@ func TestStartCmdValidArgs(t *testing.T) {
 	require.Equal(t, log.ERROR, log.GetLevel(""))
 }
 
+func TestOIDCParam(t *testing.T) {
+	startCmd := GetStartCmd(&mockServer{})
+
+	temp := getOIDCParametersFunc
+	getOIDCParametersFunc = func(cmd *cobra.Command) (*oidcParameters, error) {
+		return nil, fmt.Errorf("oidc param error")
+	}
+
+	defer func() { getOIDCParametersFunc = temp }()
+
+	args := getValidArgs(log.ParseString(log.ERROR), "")
+	startCmd.SetArgs(args)
+
+	err := startCmd.Execute()
+	require.Error(t, err)
+}
+
 func TestStartCmdValidArgsEnvVar(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 

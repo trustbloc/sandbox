@@ -8,6 +8,7 @@ package operation
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -18,6 +19,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	oidcclient "github.com/trustbloc/edge-sandbox/pkg/restapi/internal/common/oidc"
 
 	"github.com/google/uuid"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
@@ -34,6 +37,7 @@ import (
 
 const (
 	login                = "/login"
+	getCreditScore       = "/getCreditScore"
 	callback             = "/callback"
 	generate             = "/generate"
 	revoke               = "/revoke"
@@ -41,6 +45,8 @@ const (
 	didcommCallback      = "/didcomm/cb"
 	didcommCredential    = "/didcomm/data"
 	didcommAssuranceData = "/didcomm/assurance"
+	oauth2GetRequestPath = "/oauth2/request"
+	oauth2CallbackPath   = "/oauth2/callback"
 
 	// http query params
 	stateQueryParam = "state"
@@ -65,6 +71,8 @@ const (
 
 	// store
 	txnStoreName = "issuer_txn"
+
+	scopeQueryParam = "scope"
 )
 
 var logger = log.New("edge-sandbox-issuer-restapi")
@@ -74,6 +82,11 @@ type Handler interface {
 	Path() string
 	Method() string
 	Handle() http.HandlerFunc
+}
+
+type oidcClient interface {
+	CreateOIDCRequest(state, scope string) (string, error)
+	HandleOIDCCallback(reqContext context.Context, code string) ([]byte, error)
 }
 
 // Operation defines handlers for authorization service
@@ -87,10 +100,12 @@ type Operation struct {
 	didAuthHTML      string
 	vcHTML           string
 	didCommHTML      string
+	didCommVpHTML    string
 	httpClient       *http.Client
 	requestTokens    map[string]string
 	issuerAdapterURL string
 	store            storage.Store
+	oidcClient       oidcClient
 }
 
 // Config defines configuration for issuer operations
@@ -103,10 +118,15 @@ type Config struct {
 	DIDAuthHTML      string
 	VCHTML           string
 	DIDCommHTML      string
+	DIDCOMMVPHTML    string
 	TLSConfig        *tls.Config
 	RequestTokens    map[string]string
 	IssuerAdapterURL string
 	StoreProvider    storage.Provider
+	OIDCProviderURL  string
+	OIDCClientID     string
+	OIDCClientSecret string
+	OIDCCallbackURL  string
 }
 
 // vc struct used to return vc data to html
@@ -125,6 +145,10 @@ type tokenResolver interface {
 	Resolve(token string) (*token.Introspection, error)
 }
 
+type createOIDCRequestResponse struct {
+	Request string `json:"request"`
+}
+
 // New returns authorization instance
 func New(config *Config) (*Operation, error) {
 	store, err := getTxnStore(config.StoreProvider)
@@ -141,11 +165,22 @@ func New(config *Config) (*Operation, error) {
 		receiveVCHTML:    config.ReceiveVCHTML,
 		vcHTML:           config.VCHTML,
 		didCommHTML:      config.DIDCommHTML,
+		didCommVpHTML:    config.DIDCOMMVPHTML,
 		httpClient:       &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
 		requestTokens:    config.RequestTokens,
 		issuerAdapterURL: config.IssuerAdapterURL,
 		store:            store,
 	}
+
+	if config.OIDCProviderURL != "" {
+		svc.oidcClient, err = oidcclient.New(&oidcclient.Config{OIDCClientID: config.OIDCClientID,
+			OIDCClientSecret: config.OIDCClientSecret, OIDCCallbackURL: config.OIDCCallbackURL,
+			OIDCProviderURL: config.OIDCProviderURL, TLSConfig: config.TLSConfig})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create oidc client : %w", err)
+		}
+	}
+
 	svc.registerHandler()
 
 	return svc, nil
@@ -156,6 +191,7 @@ func (c *Operation) registerHandler() {
 	// Add more protocol endpoints here to expose them as controller API endpoints
 	c.handlers = []Handler{
 		support.NewHTTPHandler(login, http.MethodGet, c.login),
+		support.NewHTTPHandler(getCreditScore, http.MethodGet, c.getCreditScore),
 		support.NewHTTPHandler(callback, http.MethodGet, c.callback),
 
 		// chapi
@@ -167,6 +203,10 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(didcommCallback, http.MethodGet, c.didcommCallbackHandler),
 		support.NewHTTPHandler(didcommCredential, http.MethodPost, c.didcommCredentialHandler),
 		support.NewHTTPHandler(didcommAssuranceData, http.MethodPost, c.didcommAssuraceHandler),
+
+		// oidc
+		support.NewHTTPHandler(oauth2GetRequestPath, http.MethodGet, c.createOIDCRequest),
+		support.NewHTTPHandler(oauth2CallbackPath, http.MethodGet, c.handleOIDCCallback),
 	}
 }
 
@@ -254,7 +294,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 		return
 	}
 
-	userID, subject, err := c.getCMSData(tk, info)
+	userID, subject, err := c.getCMSData(tk, "email="+info.Subject, info.Scope)
 	if err != nil {
 		logger.Errorf("failed to get cms data: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest,
@@ -264,7 +304,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 	}
 
 	if demoTypeCookie != nil && demoTypeCookie.Value == didCommDemo {
-		c.didcomm(w, r, userID, subject)
+		c.didcomm(w, r, userID, subject, "")
 
 		return
 	}
@@ -303,6 +343,123 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 		"Cred": string(cred),
 	}); err != nil {
 		logger.Errorf(fmt.Sprintf("failed execute qr html template: %s", err.Error()))
+	}
+}
+
+func (c *Operation) getCreditScore(w http.ResponseWriter, r *http.Request) {
+	userID, subject, err := c.getCMSData(nil, "name="+url.QueryEscape(r.URL.Query()["givenName"][0]+" "+
+		r.URL.Query()["familyName"][0]), r.URL.Query()["didCommScope"][0])
+	if err != nil {
+		logger.Errorf("failed to get cms data: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get cms data: %s", err.Error()))
+
+		return
+	}
+
+	c.didcomm(w, r, userID, subject, r.URL.Query()["adapterProfile"][0])
+}
+
+func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) {
+	scope := r.URL.Query().Get(scopeQueryParam)
+	if scope == "" {
+		c.writeErrorResponse(w, http.StatusBadRequest, "missing scope")
+
+		return
+	}
+
+	// TODO validate scope
+	state := uuid.New().String()
+
+	redirectURL, err := c.oidcClient.CreateOIDCRequest(state, scope)
+	if err != nil {
+		c.writeErrorResponse(w,
+			http.StatusInternalServerError, fmt.Sprintf("failed to create oidc request : %s", err))
+
+		return
+	}
+
+	response, err := json.Marshal(&createOIDCRequestResponse{
+		Request: redirectURL,
+	})
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to marshal response : %s", err))
+
+		return
+	}
+
+	err = c.store.Put(state, []byte(state))
+	if err != nil {
+		c.writeErrorResponse(w,
+			http.StatusInternalServerError, fmt.Sprintf("failed to write state to transient store : %s", err))
+
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+
+	_, err = w.Write(response)
+	if err != nil {
+		logger.Errorf("failed to write response : %s", err)
+	}
+}
+
+func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
+	state := r.URL.Query().Get("state")
+	if state == "" {
+		logger.Errorf("missing state")
+		c.didcommDemoResult(w, "missing state")
+
+		return
+	}
+
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		logger.Errorf("missing code")
+		c.didcommDemoResult(w, "missing code")
+
+		return
+	}
+
+	_, err := c.store.Get(state)
+	if errors.Is(err, storage.ErrValueNotFound) {
+		logger.Errorf("invalid state parameter")
+		c.didcommDemoResult(w, "invalid state parameter")
+
+		return
+	}
+
+	if err != nil {
+		logger.Errorf("failed to query transient store for state : %s", err)
+		c.didcommDemoResult(w, fmt.Sprintf("failed to query transient store for state : %s", err))
+
+		return
+	}
+
+	data, err := c.oidcClient.HandleOIDCCallback(r.Context(), code)
+	if err != nil {
+		logger.Errorf("failed to handle oidc callback : %s", err)
+		c.didcommDemoResult(w, fmt.Sprintf("failed to handle oidc callback: %s", err))
+
+		return
+	}
+
+	c.didcommDemoResult(w, string(data))
+}
+
+func (c *Operation) didcommDemoResult(w http.ResponseWriter, data string) {
+	t, err := template.ParseFiles(c.didCommVpHTML)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to load html: %s", err.Error()))
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	if err := t.Execute(w, vc{Data: data}); err != nil {
+		logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
 }
 
@@ -423,17 +580,20 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request, userID string, subjectData map[string]interface{}) {
-	adapterProfileCookie, err := r.Cookie(adapterProfileCookie)
-	if err != nil {
-		logger.Errorf("failed to get adapterProfileCookie: %s", err.Error())
-		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to get adapterProfileCookie: %s", err.Error()))
+func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request, userID string, subjectData map[string]interface{},
+	issuerID string) {
+	if issuerID == "" {
+		adapterProfileCookie, err := r.Cookie(adapterProfileCookie)
+		if err != nil {
+			logger.Errorf("failed to get adapterProfileCookie: %s", err.Error())
+			c.writeErrorResponse(w, http.StatusBadRequest,
+				fmt.Sprintf("failed to get adapterProfileCookie: %s", err.Error()))
 
-		return
+			return
+		}
+
+		issuerID = adapterProfileCookie.Value
 	}
-
-	issuerID := adapterProfileCookie.Value
 
 	subjectDataBytes, err := json.Marshal(subjectData)
 	if err != nil {
@@ -677,10 +837,13 @@ func (c *Operation) validateAdapterCallback(redirectURL string) error {
 	return nil
 }
 
-func (c *Operation) getCMSUser(tk *oauth2.Token, info *token.Introspection) (*cmsUser, error) {
-	userURL := c.cmsURL + "/users?email=" + info.Subject
+func (c *Operation) getCMSUser(tk *oauth2.Token, searchQuery string) (*cmsUser, error) {
+	userURL := c.cmsURL + "/users?" + searchQuery
 
-	httpClient := c.tokenIssuer.Client(tk)
+	httpClient := c.httpClient
+	if tk != nil {
+		httpClient = c.tokenIssuer.Client(tk)
+	}
 
 	req, err := http.NewRequest("GET", userURL, nil)
 	if err != nil {
@@ -939,8 +1102,8 @@ func prepareUpdateCredentialStatusRequest(cred, status, statusReason string) ([]
 	return json.Marshal(request)
 }
 
-func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) (string, map[string]interface{}, error) {
-	userID, subjectBytes, err := c.getUserData(tk, info)
+func (c *Operation) getCMSData(tk *oauth2.Token, searchQuery, scope string) (string, map[string]interface{}, error) {
+	userID, subjectBytes, err := c.getUserData(tk, searchQuery, scope)
 	if err != nil {
 		return "", nil, err
 	}
@@ -953,16 +1116,19 @@ func (c *Operation) getCMSData(tk *oauth2.Token, info *token.Introspection) (str
 	return userID, subjectMap, nil
 }
 
-func (c *Operation) getUserData(tk *oauth2.Token, info *token.Introspection) (string, []byte, error) {
-	user, err := c.getCMSUser(tk, info)
+func (c *Operation) getUserData(tk *oauth2.Token, searchQuery, scope string) (string, []byte, error) {
+	user, err := c.getCMSUser(tk, searchQuery)
 	if err != nil {
 		return "", nil, err
 	}
 
 	// scope StudentCard matches studentcards in CMS etc.
-	u := c.cmsURL + "/" + strings.ToLower(info.Scope) + "s?userid=" + user.UserID
+	u := c.cmsURL + "/" + strings.ToLower(scope) + "s?userid=" + user.UserID
 
-	httpClient := c.tokenIssuer.Client(tk)
+	httpClient := c.httpClient
+	if tk != nil {
+		httpClient = c.tokenIssuer.Client(tk)
+	}
 
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {

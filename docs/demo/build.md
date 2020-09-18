@@ -73,6 +73,6 @@ Open [user agent register wallet](https://myagent.trustbloc.local/login) and fol
 
 ## Demo
 
-To create student card verifiable credential open [issuer home page](https://issuer.trustbloc.local/) and follow the links. You can login as our pre-defined user foo@bar.com or set-up your own user using Strapi admin application.
+To create student card verifiable credential open [issuer home page](https://issuer.trustbloc.local/) and follow the links. You can login as our pre-defined user john.smith@example.com or set-up your own user using Strapi admin application.
 
 After creating student card verifiable credential open [rp home page](https://rp.trustbloc.local/) and follow the links.
