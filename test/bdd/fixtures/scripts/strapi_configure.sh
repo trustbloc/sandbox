@@ -95,7 +95,7 @@ fi
 # Add user data
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{"userid":"100","name":"Foo Bar","email":"foo@bar.com","type":"user"}' \
+   --data '{"userid":"100","name":"John Smith","email":"john.smith@example.com","type":"user"}' \
    http://strapi:1337/users | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]
@@ -106,7 +106,7 @@ fi
 # Add student card data for above created user
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{"userid":"100","vcmetadata":{"name": "Student Card", "description": "Student Card for Mr.Foo"},"studentid":"1234568","name":"Foo","email":"foo@bar.com","university":"Faber College","semester":"3","type":"StudentCard"}' \
+   --data '{"userid":"100","vcmetadata":{"name": "Student Card", "description": "Student Card for Mr.Foo"},"studentid":"1234568","name":"John","email":"john.smith@example.com","university":"Faber College","semester":"3","type":"StudentCard"}' \
    http://strapi:1337/studentcards | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]
@@ -117,7 +117,7 @@ fi
 # Add transcripts data for above created user
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{"userid":"100","vcmetadata":{"name": "Degree Transcript", "description": "Degree Transcript for Mr.Foo"}, "studentid":"323456898","name":"Foo","university":"Faber College","status":"graduated","totalcredits":"100","course":"Bachelors in Computing Science","type":"Transcript"}' \
+   --data '{"userid":"100","vcmetadata":{"name": "Degree Transcript", "description": "Degree Transcript for Mr.John"}, "studentid":"323456898","name":"John","university":"Faber College","status":"graduated","totalcredits":"100","course":"Bachelors in Computing Science","type":"Transcript"}' \
    http://strapi:1337/transcripts | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]
@@ -128,7 +128,7 @@ fi
 # Add travel card data for above created user
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{"userid":"100","vcmetadata":{"name": "Travel Card", "description": "Travel Card for Mr.Foo"}, "travelcardid":"123-456-765","name":"Foo","sex":"M","country":"Canada","dob":"12-06-1989","issuedate":"01-06-2018","cardexpires":"01-06-2023","type":"TravelCard"}' \
+   --data '{"userid":"100","vcmetadata":{"name": "Travel Card", "description": "Travel Card for Mr.John"}, "travelcardid":"123-456-765","name":"John","sex":"M","country":"Canada","dob":"12-06-1989","issuedate":"01-06-2018","cardexpires":"01-06-2023","type":"TravelCard"}' \
    http://strapi:1337/travelcards | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]

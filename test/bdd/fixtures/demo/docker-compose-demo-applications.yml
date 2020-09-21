@@ -29,14 +29,16 @@ services:
       - ISSUER_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - ISSUER_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
       - ISSUER_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
+      - ISSUER_OIDC_OPURL=https://rp-adapter-hydra.trustbloc.local:${RPADAPTER_HYDRA_PUBLIC_PORT}/
+      - ISSUER_OIDC_CALLBACK=https://issuer.trustbloc.local
       - VIRTUAL_HOST=issuer.trustbloc.local
     ports:
       - 5556:5556
     entrypoint: ""
-    # wait 20 seconds for couchdb to start
-    command:  /bin/sh -c "sleep 20;issuer-rest start"
+    command: /bin/bash /tmp/scripts/issuer-rest_start.sh
     volumes:
       - ../keys/tls:/etc/tls
+      - ../scripts/:/tmp/scripts
     networks:
       - demo-net
     depends_on:

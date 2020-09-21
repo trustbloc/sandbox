@@ -85,6 +85,8 @@ const (
 
 var logger = log.New("rp-rest")
 
+var getOIDCParametersFunc = getOIDCParameters // nolint: gochecknoglobals
+
 type server interface {
 	ListenAndServe(host, certFile, keyFile string, router http.Handler) error
 }
@@ -169,7 +171,7 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
-			oidcParams, err := getOIDCParameters(cmd)
+			oidcParams, err := getOIDCParametersFunc(cmd)
 			if err != nil {
 				return err
 			}

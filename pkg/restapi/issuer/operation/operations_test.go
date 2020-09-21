@@ -8,6 +8,7 @@ package operation
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,11 +19,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/trustbloc/edge-core/pkg/storage/memstore"
-
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+	"github.com/trustbloc/edge-core/pkg/storage/memstore"
 	mockstorage "github.com/trustbloc/edge-core/pkg/storage/mockstore"
 	"golang.org/x/oauth2"
 
@@ -172,6 +172,11 @@ func TestController_New(t *testing.T) {
 		})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "issuer store provider : store open error")
+		require.Nil(t, op)
+
+		op, err = New(&Config{StoreProvider: &mockstorage.Provider{}, OIDCProviderURL: "url"})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to create oidc client")
 		require.Nil(t, op)
 	})
 }
@@ -839,7 +844,7 @@ func TestOperation_GetCMSData_InvalidURL(t *testing.T) {
 	require.NotNil(t, svc)
 	require.NoError(t, err)
 
-	_, data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
+	_, data, err := svc.getCMSData(&oauth2.Token{}, "", "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unsupported protocol scheme")
 	require.Nil(t, data)
@@ -852,7 +857,7 @@ func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
 	require.NotNil(t, svc)
 	require.NoError(t, err)
 
-	userID, data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
+	userID, data, err := svc.getCMSData(&oauth2.Token{}, "", "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid character")
 	require.Nil(t, data)
@@ -915,7 +920,7 @@ func TestOperation_GetCMSUser(t *testing.T) {
 		require.NotNil(t, svc)
 		require.NoError(t, err)
 
-		userID, data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
+		userID, data, err := svc.getCMSData(&oauth2.Token{}, "", "")
 		require.NoError(t, err)
 		require.Equal(t, data["email"], "foo@bar.com")
 		require.NotEmpty(t, userID)
@@ -932,7 +937,7 @@ func TestOperation_GetCMSUser(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
-		userID, data, err := svc.getCMSData(&oauth2.Token{}, &token.Introspection{})
+		userID, data, err := svc.getCMSData(&oauth2.Token{}, "", "")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "user not found")
 		require.Nil(t, data)
@@ -1005,6 +1010,204 @@ func TestOperation_SendHTTPRequest_WrongStatus(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "200 OK")
 	require.Nil(t, data)
+}
+
+func TestGetCreditScore(t *testing.T) {
+	t.Run("test success", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+		}))
+		defer cms.Close()
+
+		handler := getHandlerWithConfig(t, getCreditScore,
+			&Config{StoreProvider: mockstorage.NewMockStoreProvider(), CMSURL: cms.URL})
+
+		_, status, err := handleRequest(handler, nil,
+			getCreditScore+"?givenName=first&familyName=last&didCommScope=scope&adapterProfile=profile", true)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusFound, status)
+	})
+
+	t.Run("test failed to get cms data", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		}))
+		defer cms.Close()
+
+		handler := getHandlerWithConfig(t, getCreditScore,
+			&Config{StoreProvider: mockstorage.NewMockStoreProvider(), CMSURL: cms.URL})
+
+		body, status, err := handleRequest(handler, nil,
+			getCreditScore+"?givenName=first&familyName=last&didCommScope=scope&adapterProfile=profile", true)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusBadRequest, status)
+		require.Contains(t, body.String(), "failed to get cms data")
+	})
+}
+
+func TestCreateOIDCRequest(t *testing.T) {
+	t.Run("returns oidc request", func(t *testing.T) {
+		const scope = "CreditCardStatement"
+		svc, err := New(&Config{StoreProvider: mockstorage.NewMockStoreProvider()})
+		require.NoError(t, err)
+		svc.oidcClient = &mockOIDCClient{createOIDCRequest: "request"}
+		w := httptest.NewRecorder()
+		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest(scope))
+		require.Equal(t, http.StatusOK, w.Code)
+		result := &createOIDCRequestResponse{}
+		err = json.NewDecoder(w.Body).Decode(result)
+		require.NoError(t, err)
+		require.Equal(t, "request", result.Request)
+	})
+
+	t.Run("failed to create oidc request", func(t *testing.T) {
+		const scope = "CreditCardStatement"
+		svc, err := New(&Config{StoreProvider: mockstorage.NewMockStoreProvider()})
+		require.NoError(t, err)
+		svc.oidcClient = &mockOIDCClient{createOIDCRequestErr: fmt.Errorf("failed to create")}
+		w := httptest.NewRecorder()
+		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest(scope))
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		require.Contains(t, w.Body.String(), "failed to create")
+	})
+
+	t.Run("bad request if scope is missing", func(t *testing.T) {
+		svc, err := New(&Config{StoreProvider: mockstorage.NewMockStoreProvider()})
+		require.NoError(t, err)
+		svc.oidcClient = &mockOIDCClient{}
+		w := httptest.NewRecorder()
+		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest(""))
+		require.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("internal server error if transient store fails", func(t *testing.T) {
+		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{
+			Store:  make(map[string][]byte),
+			ErrPut: errors.New("test")}}})
+		require.NoError(t, err)
+		svc.oidcClient = &mockOIDCClient{}
+		w := httptest.NewRecorder()
+		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest("CreditCardStatement"))
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+}
+
+func TestHandleOIDCCallback(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		state := uuid.New().String()
+		code := uuid.New().String()
+
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		o, err := New(&Config{StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{
+			Store: map[string][]byte{state: []byte(state)}}},
+			DIDCOMMVPHTML: file.Name()})
+		require.NoError(t, err)
+
+		o.oidcClient = &mockOIDCClient{}
+
+		result := httptest.NewRecorder()
+		o.handleOIDCCallback(result, newOIDCCallback(state, code))
+		require.Equal(t, http.StatusOK, result.Code)
+	})
+
+	t.Run("failed to handle oidc callback", func(t *testing.T) {
+		state := uuid.New().String()
+		code := uuid.New().String()
+
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		o, err := New(&Config{StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{
+			Store: map[string][]byte{state: []byte(state)}}},
+			DIDCOMMVPHTML: file.Name()})
+		require.NoError(t, err)
+
+		o.oidcClient = &mockOIDCClient{handleOIDCCallbackErr: fmt.Errorf("failed to handle oidc callback")}
+
+		result := httptest.NewRecorder()
+		o.handleOIDCCallback(result, newOIDCCallback(state, code))
+		require.Equal(t, http.StatusOK, result.Code)
+	})
+
+	t.Run("error missing state", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		svc, err := New(&Config{StoreProvider: mockstorage.NewMockStoreProvider(), DIDCOMMVPHTML: file.Name()})
+		require.NoError(t, err)
+		result := httptest.NewRecorder()
+		svc.handleOIDCCallback(result, newOIDCCallback("", "code"))
+		require.Equal(t, http.StatusOK, result.Code)
+	})
+
+	t.Run("error missing code", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		svc, err := New(&Config{StoreProvider: mockstorage.NewMockStoreProvider(), DIDCOMMVPHTML: file.Name()})
+		require.NoError(t, err)
+		result := httptest.NewRecorder()
+		svc.handleOIDCCallback(result, newOIDCCallback("state", ""))
+		require.Equal(t, http.StatusOK, result.Code)
+	})
+
+	t.Run("error invalid state parameter", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		svc, err := New(&Config{StoreProvider: mockstorage.NewMockStoreProvider(), DIDCOMMVPHTML: file.Name()})
+		require.NoError(t, err)
+		result := httptest.NewRecorder()
+		svc.handleOIDCCallback(result, newOIDCCallback("state", "code"))
+		require.Equal(t, http.StatusOK, result.Code)
+	})
+
+	t.Run("generic transient store error", func(t *testing.T) {
+		state := uuid.New().String()
+
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{
+			Store: &mockstorage.MockStore{
+				Store: map[string][]byte{
+					state: []byte(state)}, ErrGet: errors.New("generic"),
+			}}, DIDCOMMVPHTML: file.Name()})
+		require.NoError(t, err)
+		result := httptest.NewRecorder()
+		svc.handleOIDCCallback(result, newOIDCCallback(state, "code"))
+		require.Equal(t, http.StatusOK, result.Code)
+	})
+
+	t.Run("test vp html not exist", func(t *testing.T) {
+		state := uuid.New().String()
+		code := uuid.New().String()
+
+		o, err := New(&Config{StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{
+			Store: map[string][]byte{state: []byte(state)}}}})
+		require.NoError(t, err)
+
+		o.oidcClient = &mockOIDCClient{}
+
+		result := httptest.NewRecorder()
+		o.handleOIDCCallback(result, newOIDCCallback(state, code))
+		require.Equal(t, http.StatusInternalServerError, result.Code)
+		require.Contains(t, result.Body.String(), "unable to load html")
+	})
 }
 
 func TestRevokeVC(t *testing.T) {
@@ -1569,4 +1772,27 @@ func (r *mockTokenResolver) Resolve(tk string) (*token.Introspection, error) {
 	}
 
 	return &token.Introspection{}, nil
+}
+
+type mockOIDCClient struct {
+	createOIDCRequest     string
+	createOIDCRequestErr  error
+	handleOIDCCallbackErr error
+}
+
+func (m *mockOIDCClient) CreateOIDCRequest(state, scope string) (string, error) {
+	return m.createOIDCRequest, m.createOIDCRequestErr
+}
+
+func (m *mockOIDCClient) HandleOIDCCallback(reqContext context.Context, code string) ([]byte, error) {
+	return nil, m.handleOIDCCallbackErr
+}
+
+func newCreateOIDCHTTPRequest(scope string) *http.Request {
+	return httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://example.com/oauth2/request?scope=%s", scope), nil)
+}
+
+func newOIDCCallback(state, code string) *http.Request {
+	return httptest.NewRequest(http.MethodGet,
+		fmt.Sprintf("http://example.com/oauth2/callback?state=%s&code=%s", state, code), nil)
 }

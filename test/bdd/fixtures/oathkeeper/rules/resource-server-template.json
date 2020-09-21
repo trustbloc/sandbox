@@ -12,11 +12,7 @@
     },
     "authenticators": [
       {
-        "handler": "oauth2_introspection",
-        "config": {
-          "required_scope": [
-          ]
-        }
+        "handler": "noop"
       }
     ],
     "mutators": [
@@ -335,12 +331,7 @@
     },
     "authenticators": [
       {
-        "handler": "oauth2_introspection",
-        "config": {
-          "required_scope": [
-            "CreditScore"
-          ]
-        }
+        "handler": "noop"
       }
     ],
     "mutators": [
