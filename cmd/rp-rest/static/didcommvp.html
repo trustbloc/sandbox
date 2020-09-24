@@ -230,6 +230,12 @@ SPDX-License-Identifier: Apache-2.0
                 createClaimTable(flattened)
                 document.getElementById("proceedClick").href = '/creditsuccess';
 
+            } else if (csKey === "Credit Card Statement" && csKey === "Driving License") {
+                flattened = json['_claim_sources'][key]['claims']
+                replaceKeys(flattened)
+                console.log("flat here", flattened)
+                createClaimTable(flattened)
+                document.getElementById("proceedClick").href = '/govsuccess';
             } else {
                 flattened = json['_claim_sources'][key]['claims']
                 replaceKeys(flattened)
@@ -237,6 +243,7 @@ SPDX-License-Identifier: Apache-2.0
                 createClaimTable(flattened)
                 document.getElementById("proceedClick").href = '/success';
             }
+
         }
 
     }
