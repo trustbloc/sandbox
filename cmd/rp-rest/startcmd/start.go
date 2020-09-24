@@ -340,21 +340,7 @@ func startRP(parameters *rpParameters) error {
 	}
 
 	handlers := rpService.GetOperations()
-	router := mux.NewRouter()
-
-	fs := http.FileServer(http.Dir("static"))
-	router.PathPrefix("/img/").Handler(fs)
-
-	router.Handle("/", fs)
-	router.PathPrefix("/bankaccount").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/bankaccount.html")
-	})
-	router.PathPrefix("/success").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/success.html")
-	})
-	router.PathPrefix("/creditsuccess").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/creditsuccess.html")
-	})
+	router := pathPrefix()
 
 	for _, handler := range handlers {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
@@ -365,4 +351,29 @@ func startRP(parameters *rpParameters) error {
 	}
 
 	return parameters.srv.ListenAndServe(parameters.hostURL, parameters.tlsCertFile, parameters.tlsKeyFile, router)
+}
+
+func pathPrefix() *mux.Router {
+	router := mux.NewRouter()
+
+	fs := http.FileServer(http.Dir("static"))
+	router.PathPrefix("/img/").Handler(fs)
+
+	router.PathPrefix("/bankaccount").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/bankaccount.html")
+	})
+	router.PathPrefix("/success").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/success.html")
+	})
+	router.PathPrefix("/creditsuccess").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/creditsuccess.html")
+	})
+	router.PathPrefix("/govsuccess").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/governmentsuccess.html")
+	})
+	router.PathPrefix("/government").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/government.html")
+	})
+
+	return router
 }
