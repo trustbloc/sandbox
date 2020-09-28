@@ -57,7 +57,7 @@ drivers license, digital drivers license assurance/evidence and digital credit r
       - Click `Next` on the window and select the `wallet`.
       - The next page shows the `Drivers License` along with `Drivers License Assurance` and `Credit Report` issuer.
       - Select all 3 and click on `Share`.
-      - The user data will be displayed on the page with `success message`
+      - The user data will be displayed on the page with `success message`. Click `source` tab to view the raw json data.
    - Details
      - RP connects to RP adapter through OIDC protocol. 
      - The RP adapter provides following details to wallet through [CHAPI](https://w3c-ccg.github.io/credential-handler-api/).
