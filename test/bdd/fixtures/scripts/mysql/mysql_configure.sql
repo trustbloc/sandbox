@@ -31,6 +31,6 @@ GRANT ALL PRIVILEGES ON `issueradapter\_%` . * TO 'issueradapter'@'%';
 /*
 Router
 */
-CREATE USER 'router'@'%' IDENTIFIED BY 'router-secret-pw';
-GRANT ALL PRIVILEGES ON * . * TO 'router'@'%';
+CREATE USER 'hubrouter'@'%' IDENTIFIED BY 'hubrouter-secret-pw';
+GRANT ALL PRIVILEGES ON * . * TO 'hubrouter'@'%';
 
