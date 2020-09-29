@@ -10,28 +10,35 @@ services:
 
   router.agent.example.com:
     container_name: router.agent.example.com
-    image: ${ARIES_AGENT_REST_IMAGE}:${ARIES_AGENT_REST_IMAGE_TAG}
+    image: ${HUB_ROUTER_IMAGE}:${HUB_ROUTER_IMAGE_TAG}
     environment:
-      - ARIESD_API_HOST=${DIDCOMM_ROUTER_HOST}:${DIDCOMM_ROUTER_API_PORT}
-      - ARIESD_INBOUND_HOST=${HTTP_SCHEME}@${DIDCOMM_ROUTER_HOST}:${DIDCOMM_ROUTER_HTTP_INBOUND_PORT},${WS_SCHEME}@${DIDCOMM_ROUTER_HOST}:${DIDCOMM_ROUTER_WS_INBOUND_PORT}
-      # TODO https://github.com/trustbloc/edge-sandbox/issues/392 Expose multiple ports per virtual host
-      - ARIESD_INBOUND_HOST_EXTERNAL=${HTTP_SCHEME}@http://router.agent.example.com:${DIDCOMM_ROUTER_HTTP_INBOUND_PORT},${WS_SCHEME}@ws://localhost:${DIDCOMM_ROUTER_WS_INBOUND_PORT}
-      - ARIESD_DATABASE_TYPE=mysql
-      - ARIESD_DATABASE_URL=router:router-secret-pw@tcp(mysql:3306)/
-      - ARIESD_DATABASE_PREFIX=router
-      - ARIESD_DEFAULT_LABEL=trustbloc-router-agent
-      - ARIESD_OUTBOUND_TRANSPORT=${HTTP_SCHEME},${WS_SCHEME}
-      - ARIESD_AUTO_ACCEPT=true
+      - HUB_ROUTER_HOST_URL=${DIDCOMM_ROUTER_HOST}:${DIDCOMM_ROUTER_API_PORT}
+      - HUB_ROUTER_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - HUB_ROUTER_TLS_SYSTEMCERTPOOL=true
+      - HUB_ROUTER_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt
+      - HUB_ROUTER_TLS_SERVE_KEY=/etc/tls/trustbloc.local.key
+      - HUB_ROUTER_DIDCOMM_HTTP_HOST=${DIDCOMM_ROUTER_HOST}:${DIDCOMM_ROUTER_HTTP_INBOUND_PORT}
+      - HUB_ROUTER_DIDCOMM_HTTP_HOST_EXTERNAL=https://router.trustbloc.local
+      - HUB_ROUTER_DIDCOMM_WS_HOST=${DIDCOMM_ROUTER_HOST}:${DIDCOMM_ROUTER_WS_INBOUND_PORT}
+      - HUB_ROUTER_DIDCOMM_WS_HOST_EXTERNAL=wss://router.trustbloc.local:${DIDCOMM_ROUTER_WS_INBOUND_PORT}
+      - HUB_ROUTER_DSN_PERSISTENT=mysql://hubrouter:hubrouter-secret-pw@tcp(mysql:3306)/
+      - HUB_ROUTER_DSN_TRANSIENT=mysql://hubrouter:hubrouter-secret-pw@tcp(mysql:3306)/
+      - HUB_ROUTER_DSN_TIMEOUT=120
       - VIRTUAL_HOST=router.trustbloc.local
-      - VIRTUAL_PORT=${DIDCOMM_ROUTER_API_PORT}
-      - ARIESD_DATABASE_TIMEOUT=120
+      - VIRTUAL_PORT=${DIDCOMM_ROUTER_HTTP_INBOUND_PORT}
+      - VIRTUAL_PROTO=https
     ports:
+      - ${DIDCOMM_ROUTER_API_PORT}:${DIDCOMM_ROUTER_API_PORT}
       - ${DIDCOMM_ROUTER_HTTP_INBOUND_PORT}:${DIDCOMM_ROUTER_HTTP_INBOUND_PORT}
       - ${DIDCOMM_ROUTER_WS_INBOUND_PORT}:${DIDCOMM_ROUTER_WS_INBOUND_PORT}
-      - ${DIDCOMM_ROUTER_API_PORT}:${DIDCOMM_ROUTER_API_PORT}
-    command: start
+    entrypoint: ""
+    command: /bin/sh -c "hub-router start"
+    volumes:
+      - ../keys/tls:/etc/tls
     networks:
       - demo-net
+    depends_on:
+      - mysql
 
   issuer.adapter.rest.example.com:
     container_name: issuer.adapter.rest.example.com
