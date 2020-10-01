@@ -122,15 +122,11 @@ $(document).ready(function () {
 
             $('#demoSetupForm').attr('action', '/login?');
 
-        } else if ($("#travelCard").data('clicked')) {
-
-            $('#demoSetupForm').attr('action', '/login?');
-
         }  else if ($("#prCard").data('clicked')) {
 
             $('#demoSetupForm').attr('action', '/login?');
 
-        }  else if ($("#revokeVCBtn").data('clicked')) {
+        } else if ($("#revokeVCBtn").data('clicked')) {
 
             $('#demoSetupForm').attr('action', 'view/revoke.html');
 
