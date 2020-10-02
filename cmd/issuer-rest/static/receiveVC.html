@@ -95,61 +95,65 @@ SPDX-License-Identifier: Apache-2.0
 </div>
 
 
-<section class="bg-gray-100 py-8">
+<section id="main-section" class="bg-gray-100 py-8">
     <div class="container mx-auto px-2 pt-4 pb-12 text-gray-800 overflow-auto">
-            <div class="bg-green-200 border border-teal-500 justify-center text-center rounded-b text-teal-900 px-32 py-3 shadow-md" role="alert" id="success-alert">
-                <strong class="font-bold">Success!</strong> Credential is saved successfully.
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-
-            <div class="bg-red-200 border border-red-400 justify-center  text-center text-red-700 px-16 py-3 rounded" role="alert" id="error-alert">
-                <strong class="font-bold">Holy smokes!</strong> operation is cancelled or something went wrong.
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+        
+        <div style="text-align:center;"><i id="success-img" class="fa fa-check-circle" style="padding:30px;font-size:140px;color:green"></i></div>
+        <div class="bg-green-200 border border-teal-500 justify-center text-center rounded-b text-teal-900 px-32 py-3 shadow-md" role="alert" id="success-alert">
+            <strong class="font-bold">Success!</strong> Credential is saved successfully.
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    
+        <div class="bg-red-200 border border-red-400 justify-center  text-center text-red-700 px-16 py-3 rounded" role="alert" id="error-alert">
+            <strong class="font-bold">Holy smokes!</strong> operation is cancelled or something went wrong.
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
         </div>
 
-        <h1 class="w-full my-2 text-3xl font-bold leading-tight text-center text-gray-800">Here is your generated credential</h1>
-        <div class="w-full mb-4">
-            <div class="h-1 mx-auto gradient w-64 opacity-25 my-0 py-0 rounded-t"></div>
-        </div>
-        <div id ="tabs" class="gradient">
-            <ul class="flex border-b">
-                <li class="-mb-px mr-1">
-                    <a href = "#preview" class="text-center block  py-2 px-4 hover:bg-blue-300 text-white">Preview</a>
-                </li>
-                <li class="mr-1">
-                    <a href = "#source" class="text-center block  text-white hover:bg-blue-300  py-2 px-4">Source</a>
-                </li>
-            </ul>
-            <div id = "source" class="flex flex-wrap overflow-auto bg-white">
-                <textarea id="vcDataTextArea" style="display:none;">{{.Data}}</textarea>
-                <pre id="vcDataJSON"></pre>
+        <div id="generated-cred">
+            <h1 class="w-full my-2 text-3xl font-bold leading-tight text-center text-gray-800">Here is your generated credential</h1>
+            <div class="w-full mb-4">
+                <div class="h-1 mx-auto gradient w-64 opacity-25 my-0 py-0 rounded-t"></div>
             </div>
-            <div  id="preview">
-                <table class="table-auto bg-white text-black w-full">
-                    <thead>
-                    <tr>
-                        <td class="w-1/2 px-4 py-2 font-bold" >Credential</td>
-                    </tr>
-                    </thead>
-                    <tbody id="credential">
-                    </tbody>
-                    <thead>
-                    <tr>
-                        <td class="w-1/2 px-4 py-2 font-bold">Subject</td>
-                    </tr>
-                    </thead>
-                    <tbody id="subject">
-                    </tbody>
-                </table>
+            <div id ="tabs" class="gradient">
+                <ul class="flex border-b">
+                    <li class="-mb-px mr-1">
+                        <a href = "#preview" class="text-center block  py-2 px-4 hover:bg-blue-300 text-white">Preview</a>
+                    </li>
+                    <li class="mr-1">
+                        <a href = "#source" class="text-center block  text-white hover:bg-blue-300  py-2 px-4">Source</a>
+                    </li>
+                </ul>
+                <div id = "source" class="flex flex-wrap overflow-auto bg-white">
+                    <textarea id="vcDataTextArea" style="display:none;">{{.Data}}</textarea>
+                    <pre id="vcDataJSON"></pre>
+                </div>
+                <div  id="preview">
+                    <table class="table-auto bg-white text-black w-full">
+                        <thead>
+                        <tr>
+                            <td class="w-1/2 px-4 py-2 font-bold" >Credential</td>
+                        </tr>
+                        </thead>
+                        <tbody id="credential">
+                        </tbody>
+                        <thead>
+                        <tr>
+                            <td class="w-1/2 px-4 py-2 font-bold">Subject</td>
+                        </tr>
+                        </thead>
+                        <tbody id="subject">
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-        <div class="flex-none mt-auto bg-white rounded-b rounded-t-none overflow-hidden shadow p-6">
-            <div class="flex items-center justify-center">
-                <button id='storeVCBtn' class="mx-auto lg:mx-0 hover:underline gradient text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg">Save your credential</button>
+            <div class="flex-none mt-auto bg-white rounded-b rounded-t-none overflow-hidden shadow p-6">
+                <div class="flex items-center justify-center">
+                    <button id='storeVCBtn' class="mx-auto lg:mx-0 hover:underline gradient text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg">Save your credential</button>
+                </div>
             </div>
         </div>
     </div>
@@ -216,12 +220,16 @@ SPDX-License-Identifier: Apache-2.0
             $("#success-alert").hide()
         } else {
             $("#error-alert").hide()
+            $("#generated-cred").hide()
+            $("#main-section").addClass("py-48").removeClass("py-8")
             $("#success-alert").show()
+            $("#success-img").show()
         }
     }
 
     ready(() => {
         $("#success-alert").hide()
+        $('#success-img').hide()
         $("#error-alert").hide()
 
         document.getElementById("vcDataJSON").innerHTML = syntaxHighlight(JSON.stringify(JSON.parse({{.Data}}), undefined, 4));
