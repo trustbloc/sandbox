@@ -106,6 +106,7 @@ type Operation struct {
 	issuerAdapterURL string
 	store            storage.Store
 	oidcClient       oidcClient
+	homePage         string
 }
 
 // Config defines configuration for issuer operations
@@ -170,6 +171,7 @@ func New(config *Config) (*Operation, error) {
 		requestTokens:    config.RequestTokens,
 		issuerAdapterURL: config.IssuerAdapterURL,
 		store:            store,
+		homePage:         config.OIDCCallbackURL,
 	}
 
 	if config.OIDCProviderURL != "" {
@@ -267,6 +269,12 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 
 // callback for oauth2 login
 func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint: funlen,gocyclo
+	if len(r.URL.Query()["error"]) != 0 {
+		if r.URL.Query()["error"][0] == "access_denied" {
+			http.Redirect(w, r, c.homePage, http.StatusTemporaryRedirect)
+		}
+	}
+
 	demoTypeCookie, err := r.Cookie(demoTypeCookie)
 	if err != nil && !errors.Is(err, http.ErrNoCookie) {
 		logger.Errorf(err.Error())
