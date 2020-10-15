@@ -37,6 +37,7 @@ import (
 
 const (
 	login                = "/login"
+	settings             = "/settings"
 	getCreditScore       = "/getCreditScore"
 	callback             = "/callback"
 	generate             = "/generate"
@@ -193,6 +194,7 @@ func (c *Operation) registerHandler() {
 	// Add more protocol endpoints here to expose them as controller API endpoints
 	c.handlers = []Handler{
 		support.NewHTTPHandler(login, http.MethodGet, c.login),
+		support.NewHTTPHandler(settings, http.MethodGet, c.settings),
 		support.NewHTTPHandler(getCreditScore, http.MethodGet, c.getCreditScore),
 		support.NewHTTPHandler(callback, http.MethodGet, c.callback),
 
@@ -262,6 +264,33 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 			cookie = http.Cookie{Name: assuranceScopeCookie, Value: r.URL.Query()["assuranceScope"][0], Expires: expire}
 			http.SetCookie(w, &cookie)
 		}
+	}
+
+	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+}
+
+func (c *Operation) settings(w http.ResponseWriter, r *http.Request) {
+	u := c.homePage
+
+	demo := nonDIDCommDemo
+
+	demoType := r.URL.Query()["demoType"]
+	if len(demoType) > 0 {
+		demo = demoType[0]
+	}
+
+	expire := time.Now().AddDate(0, 0, 1)
+
+	if demo == nonDIDCommDemo {
+		if len(r.URL.Query()["vcsProfile"]) == 0 {
+			logger.Errorf("vcs profile is empty")
+			c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("vcs profile is empty"))
+
+			return
+		}
+
+		cookie := http.Cookie{Name: vcsProfileCookie, Value: r.URL.Query()["vcsProfile"][0], Expires: expire}
+		http.SetCookie(w, &cookie)
 	}
 
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)

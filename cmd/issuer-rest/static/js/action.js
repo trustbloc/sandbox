@@ -55,6 +55,14 @@ $(document).ready(function () {
         }
     });
 
+    $('#studentCard, #prCard, #travelCard, #cpr, #universityDegree, #cmtr').on('click', function() {
+        if (document.cookie.split('vcsProfile').length > 1) {
+            var cookieValue = document.cookie.split("vcsProfile=")[1].split(';')[0];
+            $('#vcsProfile').val(cookieValue);
+        }
+        document.getElementById('formSubmit').click();
+    });
+    
     $('#creditCard').on('click', function() {
         if (!$(this).data('clicked')) {
             $('#demoType').val("DIDComm");
