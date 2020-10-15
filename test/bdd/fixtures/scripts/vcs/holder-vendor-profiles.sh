@@ -32,30 +32,31 @@ do
    sleep 5
 done
 
-n=0
-maxAttempts=30
-until [ $n -ge $maxAttempts ]
-do
-   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
-   --request POST \
-   --data '{"name":"vc-holder-didv1", "signatureType":"Ed25519Signature2018", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driverId=driver-universalregistrar/driver-did-v1"}, "didKeyType":"Ed25519"}' \
-   http://holder.vcs.example.com:8067/holder/profile | jq -r '.created' 2>/dev/null)
-   echo "'created' field from profile vc-holder-didv1 response is: $responseCreatedTime"
-
-   if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]
-   then
-      break
-   fi
-   echo "Invalid 'created' field from vc-holder-didv1 response when trying to create a profile (attempt $((n+1))/$maxAttempts)."
-
-   n=$((n+1))
-   if [ $n -eq $maxAttempts ]
-   then
-     echo "failed to create holder profile : vc-holder-didv1"
-     exit 1
-   fi
-   sleep 5
-done
+# TODO driver-did-v1 latest not working
+#n=0
+#maxAttempts=30
+#until [ $n -ge $maxAttempts ]
+#do
+#   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
+#   --request POST \
+#   --data '{"name":"vc-holder-didv1", "signatureType":"Ed25519Signature2018", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driverId=driver-universalregistrar/driver-did-v1"}, "didKeyType":"Ed25519"}' \
+#   http://holder.vcs.example.com:8067/holder/profile | jq -r '.created' 2>/dev/null)
+#   echo "'created' field from profile vc-holder-didv1 response is: $responseCreatedTime"
+#
+#   if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]
+#   then
+#      break
+#   fi
+#   echo "Invalid 'created' field from vc-holder-didv1 response when trying to create a profile (attempt $((n+1))/$maxAttempts)."
+#
+#   n=$((n+1))
+#   if [ $n -eq $maxAttempts ]
+#   then
+#     echo "failed to create holder profile : vc-holder-didv1"
+#     exit 1
+#   fi
+#   sleep 5
+#done
 
 n=0
 maxAttempts=30

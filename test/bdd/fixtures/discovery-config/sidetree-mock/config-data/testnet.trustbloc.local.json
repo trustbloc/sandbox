@@ -1,13 +1,21 @@
 {
-  "domain": "testnet.trustbloc.local",
-  "did": "did:trustbloc:testnet.trustbloc.local:zQ1234567890987654321",
-  "policy": {
-    "cache": {"max_age": 600}
-  },
-  "members": [
-    {
-      "domain": "stakeholder-one.trustbloc.local"
+  "consortium_data": {
+    "domain": "testnet.trustbloc.local",
+    "policy": {
+      "cache": {
+        "max_age": 600
+      },
+      "num_queries": 2
     }
-  ],
-  "previous": ""
+  },
+  "members_data": [
+    {
+      "domain": "stakeholder-one.trustbloc.local",
+      "policy": {"cache": {"max_age": 300}},
+      "endpoints": [
+        "https://sidetree-mock.trustbloc.local/sidetree/0.0.1"
+      ],
+      "privateKeyJwkPath": "./test/bdd/fixtures/discovery-config/sidetree-mock/config-data/stakeholder_jwk.json"
+    }
+  ]
 }
