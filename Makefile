@@ -30,7 +30,7 @@ FABRIC_TOOLS_TAG     ?= $(ARCH)-$(FABRIC_TOOLS_VERSION)
 
 # This can be a commit hash or a tag (or any git ref)
 export FABRIC_CLI_EXT_VERSION ?= ee1ac92038f866f622bcb1590259ff5284e3f974
-export TRUSTBLOC_DID_METHOD ?= 3ac2378ae93c5062ac0baaab4ffbac30635066a5
+export TRUSTBLOC_DID_METHOD ?= 7efb6e22a0aa4049da64e753c0fa513db3dcb4fe
 
 .PHONY: all
 all: checks unit-test
@@ -56,7 +56,7 @@ demo-start: clean did-method-cli issuer-rest-docker rp-rest-docker login-consent
 
 .PHONY: demo-start-with-sidetree-fabric
 demo-start-with-sidetree-fabric: export START_SIDETREE_FABRIC=true
-demo-start-with-sidetree-fabric: clean did-method-cli issuer-rest-docker rp-rest-docker login-consent-server-docker trustbloc-local-setup populate-fixtures docker-thirdparty fabric-cli
+demo-start-with-sidetree-fabric: clean did-method-cli issuer-rest-docker rp-rest-docker login-consent-server-docker trustbloc-local-setup populate-fixtures fabric-cli
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-stop
@@ -170,3 +170,4 @@ clean-build:
 	@rm -Rf ./test/bdd/fixtures/fabric/crypto-config
 	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-mock/config
 	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-mock/temp
+	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-fabric/config

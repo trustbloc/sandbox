@@ -6,7 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 package bdd
 
 import (
+	"bytes"
+	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/cucumber/godog"
@@ -110,6 +113,37 @@ func (d *FabricCLISteps) execute(strArgs string) error {
 	return nil
 }
 
+func (d *FabricCLISteps) setupScript(scriptPath string) error {
+	logger.Infof("Executing setup script %s", scriptPath)
+
+	_, err := execCMD(scriptPath)
+
+	return err
+}
+
+func execCMD(command string, args ...string) (string, error) {
+	cmd := exec.Command(command, args...) // nolint: gosec
+
+	var out bytes.Buffer
+
+	var er bytes.Buffer
+
+	cmd.Stdout = &out
+	cmd.Stderr = &er
+
+	err := cmd.Start()
+	if err != nil {
+		return "", fmt.Errorf(er.String())
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		return "", fmt.Errorf(er.String())
+	}
+
+	return out.String(), nil
+}
+
 // RegisterSteps registers transient data steps
 func (d *FabricCLISteps) RegisterSteps(s *godog.Suite) {
 	s.BeforeScenario(d.BDDContext.BeforeScenario)
@@ -119,4 +153,5 @@ func (d *FabricCLISteps) RegisterSteps(s *godog.Suite) {
 	s.Step(`^fabric-cli context "([^"]*)" is defined on channel "([^"]*)" with org "([^"]*)", peers "([^"]*)" and user "([^"]*)"$`, d.defineContext) //nolint: lll
 	s.Step(`^fabric-cli context "([^"]*)" is used$`, d.useContext)
 	s.Step(`^fabric-cli is executed with args "([^"]*)"$`, d.execute)
+	s.Step(`^fabric-cli setup script "([^"]*)" is executed$`, d.setupScript)
 }
