@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-// NewHTTPHandler returns instance of HTTPHandler which can be used to handle http requests
+// NewHTTPHandler returns instance of HTTPHandler which can be used to handle http requests2
 func NewHTTPHandler(path, method string, handle http.HandlerFunc) *HTTPHandler {
 	return &HTTPHandler{path: path, method: method, handle: handle}
 }
