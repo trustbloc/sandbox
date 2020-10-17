@@ -164,7 +164,7 @@ clean: clean-build
 .PHONY: clean-build
 clean-build:
 	@rm -Rf ./.build
-	@rm -Rf ./coverage.txt
+	@rm -Rf ./coverage.out
 	@rm -Rf ./test/bdd/fixtures/oathkeeper/rules/resource-server.json
 	@rm -Rf ./test/bdd/fixtures/fabric/channel
 	@rm -Rf ./test/bdd/fixtures/fabric/crypto-config
