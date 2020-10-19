@@ -158,6 +158,11 @@ create-element-did: clean
 did-method-cli: clean
 	@scripts/build-did-method-cli.sh
 
+.PHONY: generate-config-hash
+generate-config-hash: did-method-cli
+	@echo "Generate config hash"
+	@scripts/generate_config_hash.sh
+
 .PHONY: clean
 clean: clean-build
 
