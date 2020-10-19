@@ -7,7 +7,7 @@
 
 echo "Adding issuer interop profiles"
 n=0
-maxAttempts=30
+maxAttempts=40
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
@@ -33,7 +33,7 @@ done
 
 
 n=0
-maxAttempts=30
+maxAttempts=40
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
@@ -59,7 +59,7 @@ done
 
 
 n=0
-maxAttempts=30
+maxAttempts=40
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
@@ -84,7 +84,7 @@ do
 done
 
 n=0
-maxAttempts=30
+maxAttempts=40
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
@@ -111,7 +111,7 @@ done
 ## this profile used for w3c test will not show in GUI
 ## will be removed soon
 n=0
-maxAttempts=30
+maxAttempts=40
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \

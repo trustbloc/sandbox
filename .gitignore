@@ -38,3 +38,4 @@ test/bdd/fixtures/fabric/channel/
 test/bdd/fixtures/discovery-config/sidetree-mock/config
 test/bdd/fixtures/discovery-config/sidetree-mock/temp
 test/bdd/fixtures/discovery-config/sidetree-fabric/config
+test/bdd/fixtures/discovery-config/sidetree-fabric/config-data-generated

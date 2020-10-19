@@ -1,6 +1,7 @@
 {
   "consortium_data": {
     "domain": "testnet.trustbloc.local",
+    "genesis_block": "%s",
     "policy": {
       "cache": {
         "max_age": 600

@@ -1,4 +1,5 @@
 {
-  "Namespace": "did:trustbloc:testnet.trustbloc.local",
+  "Namespace": "did:trustbloc:AzhMb",
+  "Aliases": ["did:trustbloc:testnet.trustbloc.local"],
   "BasePath": "/sidetree/0.0.1"
 }

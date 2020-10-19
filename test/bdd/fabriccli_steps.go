@@ -8,6 +8,7 @@ package bdd
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -113,10 +114,31 @@ func (d *FabricCLISteps) execute(strArgs string) error {
 	return nil
 }
 
-func (d *FabricCLISteps) setupScript(scriptPath string) error {
-	logger.Infof("Executing setup script %s", scriptPath)
+func (d *FabricCLISteps) setupScript(path, previousHashVar string) error {
+	previousHash, exist := bddtests.GetVar(previousHashVar)
+	if !exist {
+		return fmt.Errorf("%s var not exist", previousHashVar)
+	}
 
-	_, err := execCMD(scriptPath)
+	configPath := path + "config-data/testnet.trustbloc.local.json"
+
+	read, err := ioutil.ReadFile(configPath) // nolint: gosec
+	if err != nil {
+		return err
+	}
+
+	if errMkdir := os.Mkdir(path+"config-data-generated", 0700); errMkdir != nil {
+		logger.Warnf(errMkdir.Error())
+	}
+
+	configPath = path + "config-data-generated/testnet.trustbloc.local.json"
+
+	err = ioutil.WriteFile(configPath, []byte(fmt.Sprintf(string(read), previousHash)), 0700)
+	if err != nil {
+		return err
+	}
+
+	_, err = execCMD(path + "generate_did_method_config_fabric.sh")
 
 	return err
 }
@@ -153,5 +175,5 @@ func (d *FabricCLISteps) RegisterSteps(s *godog.Suite) {
 	s.Step(`^fabric-cli context "([^"]*)" is defined on channel "([^"]*)" with org "([^"]*)", peers "([^"]*)" and user "([^"]*)"$`, d.defineContext) //nolint: lll
 	s.Step(`^fabric-cli context "([^"]*)" is used$`, d.useContext)
 	s.Step(`^fabric-cli is executed with args "([^"]*)"$`, d.execute)
-	s.Step(`^fabric-cli setup script "([^"]*)" is executed$`, d.setupScript)
+	s.Step(`^fabric-cli setup script "([^"]*)" is executed with previousHash "([^"]*)"$`, d.setupScript)
 }

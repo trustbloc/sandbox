@@ -56,22 +56,26 @@ Feature:
     Given variable "token_fileidx_w" is assigned the value "TOKEN_FILEIDX_W"
 
     # generate trustbloc config file
-    Then fabric-cli setup script "./fixtures/discovery-config/sidetree-fabric/generate_did_method_config_fabric.sh" is executed
+    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/0.0.1/blockchain/blocks?from-time=1&max-blocks=1"
+    Then the JSON path "#" of the response has 1 items
+    And the JSON path "0.header.number" of the response equals "1"
+    And the JSON path "0.header.previous_hash" of the response is saved to variable "previous-hash"
+    Then fabric-cli setup script "./fixtures/discovery-config/sidetree-fabric/" is executed with previousHash "previous-hash"
 
     # Create a file index document
     Then fabric-cli context "org1-context" is used
-    When fabric-cli is executed with args "file createidx --path /.well-known/did-trustbloc --url https://peer0-org1.trustbloc.local/file --recoverykeyfile ./fixtures/keys/recover/public.pem --updatekeyfile ./fixtures/keys/update/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    When fabric-cli is executed with args "file createidx --path /.well-known/did-trustbloc --url https://peer0-org1.trustbloc.local/file/operations --recoverykeyfile ./fixtures/keys/recover/public.pem --updatekeyfile ./fixtures/keys/update/public.pem --authtoken ${token_fileidx_w} --noprompt"
     And the JSON path "id" of the response is saved to variable "fileIdxID"
 
-    When fabric-cli is executed with args "file createidx --path /.well-known --url https://peer0-org1.trustbloc.local/file --recoverykeyfile ./fixtures/keys/recover-org1/public.pem --updatekeyfile ./fixtures/keys/update-org1/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    When fabric-cli is executed with args "file createidx --path /.well-known --url https://peer0-org1.trustbloc.local/file/operations --recoverykeyfile ./fixtures/keys/recover-org1/public.pem --updatekeyfile ./fixtures/keys/update-org1/public.pem --authtoken ${token_fileidx_w} --noprompt"
     And the JSON path "id" of the response is saved to variable "org1FileIdxID"
 
     Then fabric-cli context "org2-context" is used
-    When fabric-cli is executed with args "file createidx --path /.well-known --url https://peer0-org2.trustbloc.local/file --recoverykeyfile ./fixtures/keys/recover-org2/public.pem --updatekeyfile ./fixtures/keys/update-org2/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    When fabric-cli is executed with args "file createidx --path /.well-known --url https://peer0-org2.trustbloc.local/file/operations --recoverykeyfile ./fixtures/keys/recover-org2/public.pem --updatekeyfile ./fixtures/keys/update-org2/public.pem --authtoken ${token_fileidx_w} --noprompt"
     And the JSON path "id" of the response is saved to variable "org2FileIdxID"
 
     Then fabric-cli context "org3-context" is used
-    When fabric-cli is executed with args "file createidx --path /.well-known --url https://peer0-org3.trustbloc.local/file --recoverykeyfile ./fixtures/keys/recover-org3/public.pem --updatekeyfile ./fixtures/keys/update-org3/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    When fabric-cli is executed with args "file createidx --path /.well-known --url https://peer0-org3.trustbloc.local/file/operations --recoverykeyfile ./fixtures/keys/recover-org3/public.pem --updatekeyfile ./fixtures/keys/update-org3/public.pem --authtoken ${token_fileidx_w} --noprompt"
     And the JSON path "id" of the response is saved to variable "org3FileIdxID"
 
     Then we wait 10 seconds
@@ -89,20 +93,20 @@ Feature:
 
     Then we wait 10 seconds
 
-    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/file/${fileIdxID}"
+    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/file/identifiers/${fileIdxID}"
     Then the JSON path "didDocument.id" of the response equals "${fileIdxID}"
 
-    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/file/${org1FileIdxID}"
+    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/file/identifiers/${org1FileIdxID}"
     Then the JSON path "didDocument.id" of the response equals "${org1FileIdxID}"
 
-    When an HTTP GET is sent to "https://peer0-org2.trustbloc.local/file/${org2FileIdxID}"
+    When an HTTP GET is sent to "https://peer0-org2.trustbloc.local/file/identifiers/${org2FileIdxID}"
     Then the JSON path "didDocument.id" of the response equals "${org2FileIdxID}"
 
-    When an HTTP GET is sent to "https://peer0-org3.trustbloc.local/file/${org3FileIdxID}"
+    When an HTTP GET is sent to "https://peer0-org3.trustbloc.local/file/identifiers/${org3FileIdxID}"
     Then the JSON path "didDocument.id" of the response equals "${org3FileIdxID}"
 
   # Upload a couple of files and add them to the file index document
-    When fabric-cli is executed with args "file upload --url https://peer0-org1.trustbloc.local/.well-known/did-trustbloc --files ./fixtures/discovery-config/sidetree-fabric/config/did-trustbloc/testnet.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/did-trustbloc/org1.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/did-trustbloc/org2.trustbloc.local.json;fixtures/discovery-config/sidetree-fabric/config/did-trustbloc/org3.trustbloc.local.json --idxurl https://peer0-org1.trustbloc.local/file/${fileIdxID} --signingkeyfile ./fixtures/keys/update/key.pem --nextupdatekeyfile ./fixtures/keys/update2/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    When fabric-cli is executed with args "file upload --url https://peer0-org1.trustbloc.local/.well-known/did-trustbloc --files ./fixtures/discovery-config/sidetree-fabric/config/did-trustbloc/testnet.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/did-trustbloc/org1.trustbloc.local.json;./fixtures/discovery-config/sidetree-fabric/config/did-trustbloc/org2.trustbloc.local.json;fixtures/discovery-config/sidetree-fabric/config/did-trustbloc/org3.trustbloc.local.json --idxurl https://peer0-org1.trustbloc.local/file/identifiers/${fileIdxID} --signingkeyfile ./fixtures/keys/update/key.pem --nextupdatekeyfile ./fixtures/keys/update2/public.pem --authtoken ${token_fileidx_w} --noprompt"
     Then the JSON path "#" of the response has 4 items
     And the JSON path "0.Name" of the response equals "testnet.trustbloc.local.json"
     And the JSON path "0.ContentType" of the response equals "application/json"
@@ -113,17 +117,17 @@ Feature:
     And the JSON path "3.Name" of the response equals "org3.trustbloc.local.json"
     And the JSON path "3.ContentType" of the response equals "application/json"
 
-    When fabric-cli is executed with args "file upload --url https://peer0-org1.trustbloc.local/.well-known --files ./fixtures/discovery-config/sidetree-fabric/config/org1.trustbloc.local/did-configuration.json --idxurl https://peer0-org1.trustbloc.local/file/${org1FileIdxID} --signingkeyfile ./fixtures/keys/update-org1/key.pem --nextupdatekeyfile ./fixtures/keys/update2-org1/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    When fabric-cli is executed with args "file upload --url https://peer0-org1.trustbloc.local/.well-known --files ./fixtures/discovery-config/sidetree-fabric/config/org1.trustbloc.local/did-configuration.json --idxurl https://peer0-org1.trustbloc.local/file/identifiers/${org1FileIdxID} --signingkeyfile ./fixtures/keys/update-org1/key.pem --nextupdatekeyfile ./fixtures/keys/update2-org1/public.pem --authtoken ${token_fileidx_w} --noprompt"
     Then the JSON path "#" of the response has 1 items
     And the JSON path "0.Name" of the response equals "did-configuration.json"
     And the JSON path "0.ContentType" of the response equals "application/json"
 
-    When fabric-cli is executed with args "file upload --url https://peer0-org2.trustbloc.local/.well-known --files ./fixtures/discovery-config/sidetree-fabric/config/org2.trustbloc.local/did-configuration.json --idxurl https://peer0-org2.trustbloc.local/file/${org2FileIdxID} --signingkeyfile ./fixtures/keys/update-org2/key.pem --nextupdatekeyfile ./fixtures/keys/update2-org2/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    When fabric-cli is executed with args "file upload --url https://peer0-org2.trustbloc.local/.well-known --files ./fixtures/discovery-config/sidetree-fabric/config/org2.trustbloc.local/did-configuration.json --idxurl https://peer0-org2.trustbloc.local/file/identifiers/${org2FileIdxID} --signingkeyfile ./fixtures/keys/update-org2/key.pem --nextupdatekeyfile ./fixtures/keys/update2-org2/public.pem --authtoken ${token_fileidx_w} --noprompt"
     Then the JSON path "#" of the response has 1 items
     And the JSON path "0.Name" of the response equals "did-configuration.json"
     And the JSON path "0.ContentType" of the response equals "application/json"
 
-    When fabric-cli is executed with args "file upload --url https://peer0-org3.trustbloc.local/.well-known --files ./fixtures/discovery-config/sidetree-fabric/config/org3.trustbloc.local/did-configuration.json --idxurl https://peer0-org3.trustbloc.local/file/${org3FileIdxID} --signingkeyfile ./fixtures/keys/update-org3/key.pem --nextupdatekeyfile ./fixtures/keys/update2-org3/public.pem --authtoken ${token_fileidx_w} --noprompt"
+    When fabric-cli is executed with args "file upload --url https://peer0-org3.trustbloc.local/.well-known --files ./fixtures/discovery-config/sidetree-fabric/config/org3.trustbloc.local/did-configuration.json --idxurl https://peer0-org3.trustbloc.local/file/identifiers/${org3FileIdxID} --signingkeyfile ./fixtures/keys/update-org3/key.pem --nextupdatekeyfile ./fixtures/keys/update2-org3/public.pem --authtoken ${token_fileidx_w} --noprompt"
     Then the JSON path "#" of the response has 1 items
     And the JSON path "0.Name" of the response equals "did-configuration.json"
     And the JSON path "0.ContentType" of the response equals "application/json"
