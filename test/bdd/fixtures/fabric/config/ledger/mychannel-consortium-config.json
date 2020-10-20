@@ -1,9 +1,8 @@
-
 {
   "MspID": "general",
   "Apps": [
     {
-      "AppName": "did:trustbloc:testnet.trustbloc.local",
+      "AppName": "did:trustbloc:AzhMb",
       "Version": "1",
       "Tags": ["sidetree"],
       "Config": "file://./did-sidetree-config.yaml",
@@ -11,8 +10,8 @@
       "Components": [
         {
           "Name": "protocol",
-          "Version": "1.0",
-          "Config": "file://./did-sidetree-protocol-v1_0.json",
+          "Version": "0.1",
+          "Config": "file://./did-sidetree-protocol-v0_1.json",
           "Format": "json",
           "Tags": ["sidetree"]
         }
@@ -33,8 +32,8 @@
       "Components": [
         {
           "Name": "protocol",
-          "Version": "1.0",
-          "Config": "file://./did-sidetree-protocol-v1_0.json",
+          "Version": "0.1",
+          "Config": "file://./did-sidetree-protocol-v0_1.json",
           "Format": "json",
           "Tags": ["sidetree"]
         }

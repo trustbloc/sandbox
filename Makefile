@@ -29,7 +29,7 @@ FABRIC_TOOLS_VERSION ?= 2.0.0-alpha
 FABRIC_TOOLS_TAG     ?= $(ARCH)-$(FABRIC_TOOLS_VERSION)
 
 # This can be a commit hash or a tag (or any git ref)
-export FABRIC_CLI_EXT_VERSION ?= ee1ac92038f866f622bcb1590259ff5284e3f974
+export FABRIC_CLI_EXT_VERSION ?= 2527b62c4df24e47bea267cece46495f9aeb9a2a
 export TRUSTBLOC_DID_METHOD ?= 7efb6e22a0aa4049da64e753c0fa513db3dcb4fe
 
 .PHONY: all
@@ -176,3 +176,4 @@ clean-build:
 	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-mock/config
 	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-mock/temp
 	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-fabric/config
+	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-fabric/config-data-generated
