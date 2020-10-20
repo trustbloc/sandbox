@@ -24,6 +24,7 @@ mkdir -p test/bdd/fixtures/keys/update2-org2
 mkdir -p test/bdd/fixtures/keys/recover-org3
 mkdir -p test/bdd/fixtures/keys/update-org3
 mkdir -p test/bdd/fixtures/keys/update2-org3
+mkdir -p test/bdd/fixtures/keys/session_cookies
 
 localhostSSLConf=$(mktemp)
 echo "subjectKeyIdentifier=hash
@@ -95,5 +96,9 @@ openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/upda
 openssl ec -in test/bdd/fixtures/keys/update-org3/key.pem -pubout -out test/bdd/fixtures/keys/update-org3/public.pem
 openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/update2-org3/key.pem
 openssl ec -in test/bdd/fixtures/keys/update2-org3/key.pem -pubout -out test/bdd/fixtures/keys/update2-org3/public.pem
+
+# create session cookie keys
+openssl rand -out test/bdd/fixtures/keys/session_cookies/auth.key 32
+openssl rand -out test/bdd/fixtures/keys/session_cookies/enc.key 32
 
 echo "done generating edge-sandbox PKI"
