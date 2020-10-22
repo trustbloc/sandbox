@@ -191,11 +191,13 @@ services:
       - HTTP_SERVER_OIDC_CLIENTID=TODO
       - HTTP_SERVER_OIDC_CLIENTSECRET=TODO
       - HTTP_SERVER_OIDC_CALLBACK=http://TODO.com/callback
-      - TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - HTTP_SERVER_COOKIE_AUTH_KEY=/etc/keys/session_cookies/auth.key
+      - HTTP_SERVER_COOKIE_ENC_KEY=/etc/keys/session_cookies/enc.key
+      - TLS_CACERTS=/etc/keys/tls/trustbloc-dev-ca.crt
     ports:
       - 8091:8091
     volumes:
-      - ../keys/tls:/etc/tls
+      - ../keys:/etc/keys
     command: start
     depends_on:
       - rp-adapter-hydra.trustbloc.local
