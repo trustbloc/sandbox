@@ -194,6 +194,7 @@ services:
       - HTTP_SERVER_COOKIE_AUTH_KEY=/etc/keys/session_cookies/auth.key
       - HTTP_SERVER_COOKIE_ENC_KEY=/etc/keys/session_cookies/enc.key
       - TLS_CACERTS=/etc/keys/tls/trustbloc-dev-ca.crt
+      - BLINDED_ROUTING=${SUPPORT_BLINDED_ROUTING}
     ports:
       - 8091:8091
     volumes:
