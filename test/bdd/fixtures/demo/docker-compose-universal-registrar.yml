@@ -15,7 +15,7 @@ services:
       - demo-net
 
   uni-registrar-web:
-    image: universalregistrar/uni-registrar-web:latest
+    image: honeyblock/uni-registrar-web:custom_v1.0
     environment:
       - VIRTUAL_HOST=uni-registrar-web.trustbloc.local
       - VIRTUAL_PORT=9080
