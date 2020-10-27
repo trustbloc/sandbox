@@ -357,6 +357,7 @@ func pathPrefix() *mux.Router {
 	router := mux.NewRouter()
 
 	fs := http.FileServer(http.Dir("static"))
+	router.Handle("/", fs)
 	router.PathPrefix("/img/").Handler(fs)
 
 	router.PathPrefix("/bankaccount").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
