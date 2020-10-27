@@ -62,7 +62,7 @@ $(document).ready(function () {
         }
         document.getElementById('formSubmit').click();
     });
-    
+
     $('#creditCard').on('click', function() {
         if (!$(this).data('clicked')) {
             $('#demoType').val("DIDComm");
@@ -158,6 +158,9 @@ $(document).ready(function () {
             $('#didCommDemo').attr('action', '/login?');
 
         } else if ($("#creditScore").data('clicked'))
+        {
+            $('#didCommDemo').attr('action', '/login?');
+        } else if ($("#uploadDrivingLicense").data('clicked'))
         {
             $('#didCommDemo').attr('action', '/login?');
         }
