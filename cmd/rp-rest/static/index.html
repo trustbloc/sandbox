@@ -415,7 +415,7 @@ SPDX-License-Identifier: Apache-2.0
     async function getCreditCardStatement() {
         axios({
             method: "GET",
-            url: "/oauth2/request?scope=credit_card_stmt:remote"
+            url: "/oauth2/request?flow=credit&scope=credit_card_stmt:remote"
         }).then(
             resp => {window.location.href = resp.data.request},
             err => console.error(err)

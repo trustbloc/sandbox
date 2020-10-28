@@ -16,6 +16,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/trustbloc/edge-core/pkg/log"
@@ -36,7 +37,7 @@ const (
 
 	// api path params
 	scopeQueryParam = "scope"
-
+	flowQueryParam  = "flow"
 	// edge-service verifier endpoints
 	verifyPresentationURLFormat = "/%s" + "/verifier/presentations"
 
@@ -46,6 +47,7 @@ const (
 	vcsVerifierRequestTokenName = "vcs_verifier" //nolint: gosec
 
 	transientStoreName = "rp-rest-transient"
+	flowTypeCookie     = "flowType"
 )
 
 var logger = log.New("edge-sandbox-rp-restapi")
@@ -95,12 +97,14 @@ type Config struct {
 
 // vc struct used to return vc data to html
 type vc struct {
-	Data string `json:"data"`
-	Msg  string `json:"msg"`
+	Data     string `json:"data"`
+	Msg      string `json:"msg"`
+	FlowType string `json:"flowType"`
 }
 
 type createOIDCRequestResponse struct {
-	Request string `json:"request"`
+	Request  string `json:"request"`
+	FlowType string `json:"flowType"`
 }
 
 // New returns rp operation instance
@@ -172,6 +176,13 @@ func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	flowType := r.URL.Query().Get(flowQueryParam)
+	if flowType == "" {
+		c.writeErrorResponse(w, http.StatusBadRequest, "missing flow type")
+
+		return
+	}
+
 	// TODO validate scope
 	state := uuid.New().String()
 
@@ -184,7 +195,8 @@ func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response, err := json.Marshal(&createOIDCRequestResponse{
-		Request: redirectURL,
+		Request:  redirectURL,
+		FlowType: flowType,
 	})
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to marshal response : %s", err))
@@ -200,6 +212,10 @@ func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	expire := time.Now().AddDate(0, 0, 1)
+	cookie := http.Cookie{Name: flowTypeCookie, Value: flowType, Expires: expire}
+	http.SetCookie(w, &cookie)
+
 	w.Header().Set("content-type", "application/json")
 
 	_, err = w.Write(response)
@@ -212,7 +228,7 @@ func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 	state := r.URL.Query().Get("state")
 	if state == "" {
 		logger.Errorf("missing state")
-		c.didcommDemoResult(w, "missing state")
+		c.didcommDemoResult(w, "missing state", "")
 
 		return
 	}
@@ -220,22 +236,31 @@ func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		logger.Errorf("missing code")
-		c.didcommDemoResult(w, "missing code")
+		c.didcommDemoResult(w, "missing code", "")
 
 		return
 	}
 
-	_, err := c.transientStore.Get(state)
+	flowTypeCookie, err := r.Cookie(flowTypeCookie)
+	if err != nil && !errors.Is(err, http.ErrNoCookie) {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get flowType cookie: %s",
+			err.Error()))
+
+		return
+	}
+
+	_, err = c.transientStore.Get(state)
 	if errors.Is(err, storage.ErrValueNotFound) {
 		logger.Errorf("invalid state parameter")
-		c.didcommDemoResult(w, "invalid state parameter")
+		c.didcommDemoResult(w, "invalid state parameter", "")
 
 		return
 	}
 
 	if err != nil {
 		logger.Errorf("failed to query transient store for state : %s", err)
-		c.didcommDemoResult(w, fmt.Sprintf("failed to query transient store for state : %s", err))
+		c.didcommDemoResult(w, fmt.Sprintf("failed to query transient store for state : %s", err), "")
 
 		return
 	}
@@ -243,15 +268,15 @@ func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 	data, err := c.oidcClient.HandleOIDCCallback(r.Context(), code)
 	if err != nil {
 		logger.Errorf("failed to handle oidc callback : %s", err)
-		c.didcommDemoResult(w, fmt.Sprintf("failed to handle oidc callback: %s", err))
+		c.didcommDemoResult(w, fmt.Sprintf("failed to handle oidc callback: %s", err), "")
 
 		return
 	}
 
-	c.didcommDemoResult(w, string(data))
+	c.didcommDemoResult(w, string(data), flowTypeCookie.Value)
 }
 
-func (c *Operation) didcommDemoResult(w http.ResponseWriter, data string) {
+func (c *Operation) didcommDemoResult(w http.ResponseWriter, data, flowType string) {
 	t, err := template.ParseFiles(c.didCommVpHTML)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -262,7 +287,7 @@ func (c *Operation) didcommDemoResult(w http.ResponseWriter, data string) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	if err := t.Execute(w, vc{Data: data}); err != nil {
+	if err := t.Execute(w, vc{Data: data, FlowType: flowType}); err != nil {
 		logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
 }

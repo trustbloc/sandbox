@@ -53,7 +53,7 @@ SPDX-License-Identifier: Apache-2.0
         <div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0">
 
             <div class="pl-6 flex items-center">
-                <a class="toggleColour text-white no-underline hover:no-underline font-bold text-xl lg:text-2xl"  href="/bankaccount">
+                <a class="toggleColour text-white no-underline hover:no-underline font-bold text-xl lg:text-2xl"  href="/">
                     <i class="fa fa-cubes" style="font-size:24px;color:white"></i>
                     Trustbloc Verifier
                 </a>
@@ -101,6 +101,7 @@ SPDX-License-Identifier: Apache-2.0
             </ul>
             <div id = "source" class="flex flex-wrap overflow-auto bg-white">
                 <textarea id="vcDataTextArea" style="display:none;">{{.Data}}</textarea>
+                <textarea id="flow" class="hidden">{{.FlowType}}</textarea>
                 <pre id="vpDataJSON"></pre>
             </div>
             <div  id="preview">
@@ -151,10 +152,12 @@ SPDX-License-Identifier: Apache-2.0
 
         document.getElementById("vpDataJSON").innerHTML = syntaxHighlight(JSON.stringify(JSON.parse({{.Data}}), undefined, 4));
         console.log("verifiable presentation", JSON.stringify(JSON.parse({{.Data}})));
-        var data =  JSON.parse({{.Data}})
+        var data =  JSON.parse({{.Data}});
+        var flowType =  document.getElementById("flow").innerText;
+        console.log("flow type", flowType)
 
         var flattened = {};
-        flatten(data, flattened);
+        flatten(data, flattened, flowType);
     })
 
     function syntaxHighlight(json) {
@@ -210,8 +213,7 @@ SPDX-License-Identifier: Apache-2.0
         return keys[name];
     }
 
-    function flatten(json, flattened) {
-        var csKey
+    function flatten(json, flattened, flowType) {
         replaceKeys(json['_claim_names'])
         for (var key in json['_claim_sources']) {
             for (var key1 in json['_claim_names']) {
@@ -221,29 +223,23 @@ SPDX-License-Identifier: Apache-2.0
                     tr += "<td class=\"w-1/2 px-4 py-2 bg-blue-100 font-bold  \">" + key1 + "</td><td class=\" px-4 py-2 bg-blue-100 font-bold \"></td></tr>";
                     table.innerHTML += tr;
                 }
-                csKey = key1
             }
-            if (csKey === "Credit Card Statement"){
+            if (flowType === "credit"){
                 flattened = json['_claim_sources'][key]['claims']['stmt']
                 replaceKeys(flattened)
-                console.log("flat here cs", flattened)
                 createClaimTable(flattened)
                 document.getElementById("proceedClick").href = '/creditsuccess';
-
-            } else if (csKey === "Credit Card Statement" && csKey === "Driving License") {
+            } else if (flowType === "government") {
                 flattened = json['_claim_sources'][key]['claims']
                 replaceKeys(flattened)
-                console.log("flat here", flattened)
                 createClaimTable(flattened)
                 document.getElementById("proceedClick").href = '/govsuccess';
             } else {
                 flattened = json['_claim_sources'][key]['claims']
                 replaceKeys(flattened)
-                console.log("flat here", flattened)
                 createClaimTable(flattened)
                 document.getElementById("proceedClick").href = '/success';
             }
-
         }
 
     }
