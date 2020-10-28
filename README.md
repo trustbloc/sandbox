@@ -31,8 +31,8 @@ Refer [Build](docs/demo/build.md) for more detailed information.
 ## Demo
 - [TrustBloc VCS](docs/demo/sandbox_vcs_playground.md) : CHAPI + VC Services
 - [TrustBloc Adapter](docs/demo/sandbox_adapter_playground.md) : CHAPI + DIDComm
-- [New Bank Account use case](docs/demo/new-bank-account-usecase.md)
-- [Register property use case](docs/demo/register-property-usecase.md)
+  - [New Bank Account use case](docs/demo/new-bank-account-usecase.md)
+  - [Register property use case](docs/demo/register-property-usecase.md)
 
 ## Components
 - [TrustBloc VCS](docs/components/vcs_components.md)
