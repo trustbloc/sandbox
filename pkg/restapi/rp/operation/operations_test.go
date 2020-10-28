@@ -210,7 +210,6 @@ func TestVerifyVP(t *testing.T) {
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
 		m["vcDataInput"] = []string{validVP}
-
 		svc.verifyVP(rr, &http.Request{Form: m})
 		require.Equal(t, http.StatusOK, rr.Code)
 	})
@@ -219,13 +218,15 @@ func TestVerifyVP(t *testing.T) {
 func TestCreateOIDCRequest(t *testing.T) {
 	t.Run("returns oidc request", func(t *testing.T) {
 		const scope = "CreditCardStatement"
+		const flowType = "CreditCard"
 		config, cleanup := config(t)
 		defer cleanup()
 		svc, err := New(config)
 		require.NoError(t, err)
 		svc.oidcClient = &mockOIDCClient{createOIDCRequest: "request"}
 		w := httptest.NewRecorder()
-		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest(scope))
+		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest(scope, flowType))
+		require.Equal(t, http.StatusOK, w.Code)
 		require.Equal(t, http.StatusOK, w.Code)
 		result := &createOIDCRequestResponse{}
 		err = json.NewDecoder(w.Body).Decode(result)
@@ -235,13 +236,14 @@ func TestCreateOIDCRequest(t *testing.T) {
 
 	t.Run("failed to create oidc request", func(t *testing.T) {
 		const scope = "CreditCardStatement"
+		const flowType = "CreditCard"
 		config, cleanup := config(t)
 		defer cleanup()
 		svc, err := New(config)
 		require.NoError(t, err)
 		svc.oidcClient = &mockOIDCClient{createOIDCRequestErr: fmt.Errorf("failed to create")}
 		w := httptest.NewRecorder()
-		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest(scope))
+		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest(scope, flowType))
 		require.Equal(t, http.StatusInternalServerError, w.Code)
 		require.Contains(t, w.Body.String(), "failed to create")
 	})
@@ -253,7 +255,17 @@ func TestCreateOIDCRequest(t *testing.T) {
 		require.NoError(t, err)
 		svc.oidcClient = &mockOIDCClient{}
 		w := httptest.NewRecorder()
-		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest(""))
+		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest("", ""))
+		require.Equal(t, http.StatusBadRequest, w.Code)
+	})
+	t.Run("bad request if flow type is missing", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+		svc, err := New(config)
+		require.NoError(t, err)
+		svc.oidcClient = &mockOIDCClient{}
+		w := httptest.NewRecorder()
+		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest("test", ""))
 		require.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
@@ -271,7 +283,7 @@ func TestCreateOIDCRequest(t *testing.T) {
 		require.NoError(t, err)
 		svc.oidcClient = &mockOIDCClient{}
 		w := httptest.NewRecorder()
-		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest("CreditCardStatement"))
+		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest("CreditCardStatement", "CreditCard"))
 		require.Equal(t, http.StatusInternalServerError, w.Code)
 	})
 }
@@ -298,6 +310,7 @@ func TestHandleOIDCCallback(t *testing.T) {
 		o.oidcClient = &mockOIDCClient{}
 
 		result := httptest.NewRecorder()
+
 		o.handleOIDCCallback(result, newOIDCCallback(state, code))
 		require.Equal(t, http.StatusOK, result.Code)
 	})
@@ -406,13 +419,18 @@ func TestHandleOIDCCallback(t *testing.T) {
 	})
 }
 
-func newCreateOIDCHTTPRequest(scope string) *http.Request {
-	return httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://example.com/oauth2/request?scope=%s", scope), nil)
+func newCreateOIDCHTTPRequest(scope, flowType string) *http.Request {
+	return httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://example.com/oauth2/request?scope=%s&flow=%s",
+		scope, flowType), nil)
 }
 
-func newOIDCCallback(state, code string) *http.Request {
-	return httptest.NewRequest(http.MethodGet,
+func newOIDCCallback(state, code string) (req *http.Request) {
+	cookie := &http.Cookie{Name: flowTypeCookie, Value: "credit"}
+	req = httptest.NewRequest(http.MethodGet,
 		fmt.Sprintf("http://example.com/oauth2/callback?state=%s&code=%s", state, code), nil)
+	req.AddCookie(cookie)
+
+	return req
 }
 
 func tmpFile(t *testing.T) (string, func()) {
