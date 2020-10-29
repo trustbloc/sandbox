@@ -1,34 +1,25 @@
-/*
+<!--
 Copyright SecureKey Technologies Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
-*/
+-->
 
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/img/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+    <div class="mx-auto bg-center bg">
+        <router-view></router-view>
+    </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
-export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
+    export default {
+      name: 'App',
+      watch: {
+          $route: {
+              immediate: true,
+              handler(to) {
+                  document.title = to.meta.title || 'Login Page';
+              }
+          },
+      }
+  };
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
