@@ -10,14 +10,13 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"io"
-	"strings"
-
 	"html/template"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-openapi/strfmt"
@@ -156,7 +155,8 @@ func newConsentServer(adminURL string, tlsSystemCertPool bool, tlsCACerts []stri
 		bankConsentTemplate:     bankConsentTemplate,
 		dlUploadTemplate:        dlUploadTemplate,
 		dlUploadConsentTemplate: dlUploadConsentTemplate,
-		httpClient:              &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: rootCAs}}},
+		httpClient: &http.Client{Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{RootCAs: rootCAs, MinVersion: tls.VersionTLS12}}},
 	}, nil
 }
 

@@ -9,12 +9,11 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
-	"strings"
-
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"

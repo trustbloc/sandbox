@@ -133,7 +133,7 @@ func (d *FabricCLISteps) setupScript(path, previousHashVar string) error {
 
 	configPath = path + "config-data-generated/testnet.trustbloc.local.json"
 
-	err = ioutil.WriteFile(configPath, []byte(fmt.Sprintf(string(read), previousHash)), 0700)
+	err = ioutil.WriteFile(configPath, []byte(fmt.Sprintf(string(read), previousHash)), 0700) //nolint:gosec
 	if err != nil {
 		return err
 	}

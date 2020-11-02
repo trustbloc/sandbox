@@ -18,7 +18,7 @@ import (
 )
 
 func TestOpts(t *testing.T) {
-	tokenIssuer := New(nil, WithTLSConfig(&tls.Config{ServerName: "name"}))
+	tokenIssuer := New(nil, WithTLSConfig(&tls.Config{ServerName: "name", MinVersion: tls.VersionTLS12}))
 	require.NotNil(t, tokenIssuer.tlsConfig)
 }
 

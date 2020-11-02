@@ -17,11 +17,10 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/oauth2"
-
 	"github.com/coreos/go-oidc"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 )
 
 func TestCreateOIDCRequest(t *testing.T) {

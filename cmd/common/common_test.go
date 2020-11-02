@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-
 	"github.com/stretchr/testify/require"
 	"github.com/trustbloc/edge-core/pkg/log"
 )

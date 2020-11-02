@@ -20,8 +20,6 @@ import (
 	"strings"
 	"time"
 
-	oidcclient "github.com/trustbloc/edge-sandbox/pkg/restapi/internal/common/oidc"
-
 	"github.com/google/uuid"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
@@ -32,6 +30,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/edge-sandbox/pkg/internal/common/support"
+	oidcclient "github.com/trustbloc/edge-sandbox/pkg/restapi/internal/common/oidc"
 	"github.com/trustbloc/edge-sandbox/pkg/token"
 )
 
@@ -229,10 +228,10 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 	cookie := http.Cookie{Name: demoTypeCookie, Value: demo, Expires: expire}
 	http.SetCookie(w, &cookie)
 
-	if demo == nonDIDCommDemo {
+	if demo == nonDIDCommDemo { //nolint:nestif
 		if len(r.URL.Query()["vcsProfile"]) == 0 {
 			logger.Errorf("vcs profile is empty")
-			c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("vcs profile is empty"))
+			c.writeErrorResponse(w, http.StatusBadRequest, "vcs profile is empty")
 
 			return
 		}
@@ -247,7 +246,7 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 	} else {
 		if len(r.URL.Query()["adapterProfile"]) == 0 {
 			logger.Errorf("adapterProfile profile is empty")
-			c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("adapterProfile profile is empty"))
+			c.writeErrorResponse(w, http.StatusBadRequest, "adapterProfile profile is empty")
 
 			return
 		}
@@ -284,7 +283,7 @@ func (c *Operation) settings(w http.ResponseWriter, r *http.Request) {
 	if demo == nonDIDCommDemo {
 		if len(r.URL.Query()["vcsProfile"]) == 0 {
 			logger.Errorf("vcs profile is empty")
-			c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("vcs profile is empty"))
+			c.writeErrorResponse(w, http.StatusBadRequest, "vcs profile is empty")
 
 			return
 		}
