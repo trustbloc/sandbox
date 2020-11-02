@@ -1,7 +1,7 @@
 # Edge sandbox - Build
 
 ## Prerequisites (General)
-- Go 1.13
+- Go 1.15
 - [git-lfs](https://github.com/git-lfs/git-lfs/blob/master/README.md)
 
 ## Developer Setup
@@ -13,7 +13,7 @@ Run the following command using your newly generated personal token:
 docker login -u <username> -p <github token with read:packages and repo permission> docker.pkg.github.com
 ```
 ## Prerequisites (for running tests and demos)
-- Go 1.13
+- Go 1.15
 - Docker
 - Docker-Compose
 - Make

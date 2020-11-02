@@ -4,7 +4,7 @@
 
 module github.com/trustbloc/edge-sandbox/test/bdd
 
-go 1.13
+go 1.15
 
 require (
 	github.com/cucumber/godog v0.8.1

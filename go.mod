@@ -4,7 +4,7 @@
 
 module github.com/trustbloc/edge-sandbox
 
-go 1.13
+go 1.15
 
 require (
 	github.com/cenkalti/backoff/v4 v4.0.2
