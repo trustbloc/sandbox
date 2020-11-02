@@ -57,7 +57,7 @@ const (
 	tlsCACertsEnvKey = "RP_TLS_CACERTS"
 
 	requestTokensFlagName  = "request-tokens"
-	requestTokensEnvKey    = "RP_REQUEST_TOKENS" //nolint: gosec
+	requestTokensEnvKey    = "RP_REQUEST_TOKENS" //nolint:gosec
 	requestTokensFlagUsage = "Tokens used for http request " +
 		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
 
@@ -81,6 +81,8 @@ const (
 	oidcCallbackURLFlagUsage = "Base URL for the OAuth2 callback endpoints." +
 		" Alternatively, this can be set with the following environment variable: " + oidcCallbackURLEnvKey
 	oidcCallbackURLEnvKey = "RP_OIDC_CALLBACK"
+
+	tokenLength2 = 2
 )
 
 var logger = log.New("rp-rest")
@@ -242,7 +244,7 @@ func getRequestTokens(cmd *cobra.Command) (map[string]string, error) {
 	for _, token := range requestTokens {
 		split := strings.Split(token, "=")
 		switch len(split) {
-		case 2:
+		case tokenLength2:
 			tokens[split[0]] = split[1]
 		default:
 			logger.Warnf("invalid token '%s'", token)
@@ -325,7 +327,7 @@ func startRP(parameters *rpParameters) error {
 		VPHTML:                 "static/vp.html",
 		DIDCOMMVPHTML:          "static/didcommvp.html",
 		VCSURL:                 parameters.vcServiceURL,
-		TLSConfig:              &tls.Config{RootCAs: rootCAs},
+		TLSConfig:              &tls.Config{RootCAs: rootCAs, MinVersion: tls.VersionTLS12},
 		RequestTokens:          parameters.requestTokens,
 		TransientStoreProvider: transientStore,
 		OIDCProviderURL:        parameters.oidcParameters.oidcProviderURL,

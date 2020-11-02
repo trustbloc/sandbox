@@ -102,7 +102,7 @@ const (
 	tlsCACertsEnvKey = "ISSUER_TLS_CACERTS"
 
 	requestTokensFlagName  = "request-tokens"
-	requestTokensEnvKey    = "ISSUER_REQUEST_TOKENS" //nolint: gosec
+	requestTokensEnvKey    = "ISSUER_REQUEST_TOKENS" //nolint:gosec
 	requestTokensFlagUsage = "Tokens used for http request " +
 		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
 
@@ -131,6 +131,8 @@ const (
 	oidcCallbackURLFlagUsage = "Base URL for the OAuth2 callback endpoints." +
 		" Alternatively, this can be set with the following environment variable: " + oidcCallbackURLEnvKey
 	oidcCallbackURLEnvKey = "ISSUER_OIDC_CALLBACK"
+
+	tokenLength2 = 2
 )
 
 var logger = log.New("issuer-rest")
@@ -323,7 +325,7 @@ func getRequestTokens(cmd *cobra.Command) (map[string]string, error) {
 	for _, token := range requestTokens {
 		split := strings.Split(token, "=")
 		switch len(split) {
-		case 2:
+		case tokenLength2:
 			tokens[split[0]] = split[1]
 		default:
 			logger.Warnf("invalid token '%s'", token)
@@ -412,7 +414,7 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen
 		return err
 	}
 
-	tlsConfig := &tls.Config{RootCAs: rootCAs}
+	tlsConfig := &tls.Config{RootCAs: rootCAs, MinVersion: tls.VersionTLS12}
 
 	storeProvider, err := common.InitEdgeStore(parameters.dbParameters, logger)
 	if err != nil {
@@ -494,7 +496,7 @@ func getOAuth2Config(cmd *cobra.Command) (*oauth2.Config, error) {
 	hydra := oauth2.Endpoint{
 		AuthURL:   strings.TrimSpace(authURL),
 		TokenURL:  strings.TrimSpace(tokenURL),
-		AuthStyle: 2, // basic
+		AuthStyle: oauth2.AuthStyleInHeader, // basic
 	}
 
 	redirectURL, err := cmdutils.GetUserSetVarFromString(cmd, clientRedirectURLFlagName, clientRedirectURLEnvKey, false)

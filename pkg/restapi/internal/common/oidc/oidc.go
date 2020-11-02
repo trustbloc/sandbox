@@ -15,9 +15,8 @@ import (
 	"strings"
 
 	"github.com/coreos/go-oidc"
-	"golang.org/x/oauth2"
-
 	"github.com/trustbloc/edge-core/pkg/log"
+	"golang.org/x/oauth2"
 )
 
 const (

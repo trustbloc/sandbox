@@ -230,13 +230,14 @@ func TestOperation_Login3(t *testing.T) {
 	require.Equal(t, http.StatusTemporaryRedirect, rr.Code)
 }
 
-func TestOperation_Callback(t *testing.T) { // nolint: gocognit
+func TestOperation_Callback(t *testing.T) {
 	headers := make(map[string]string)
 	headers["Authorization"] = authHeader
 
 	t.Run("test callback - non didcomm", func(t *testing.T) {
 		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+			fmt.Fprintf(w, "[%s]", foo)
+			fmt.Fprintln(w)
 		}))
 		defer cms.Close()
 
@@ -314,7 +315,8 @@ func TestOperation_Callback(t *testing.T) { // nolint: gocognit
 		// cms error
 		cmsRouter := mux.NewRouter()
 		cmsRouter.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+			fmt.Fprintf(w, "[%s]", foo)
+			fmt.Fprintln(w)
 		})
 
 		cfg = &Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
@@ -331,7 +333,8 @@ func TestOperation_Callback(t *testing.T) { // nolint: gocognit
 
 	t.Run("test callback - didcomm", func(t *testing.T) {
 		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+			fmt.Fprintf(w, "[%s]", foo)
+			fmt.Fprintln(w)
 		}))
 		defer cms.Close()
 
@@ -447,7 +450,8 @@ func TestOperation_GenerateVC(t *testing.T) {
 	t.Run("generate VC success", func(t *testing.T) {
 		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if strings.Contains(r.URL.String(), "users") {
-				fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+				fmt.Fprintf(w, "[%s]", foo)
+				fmt.Fprintln(w)
 			} else {
 				fmt.Fprintln(w, jsonArray)
 			}
@@ -613,7 +617,8 @@ func TestOperation_GenerateVC(t *testing.T) {
 	t.Run("generate VC - store error", func(t *testing.T) {
 		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if strings.Contains(r.URL.String(), "users") {
-				fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+				fmt.Fprintf(w, "[%s]", foo)
+				fmt.Fprintln(w)
 			} else {
 				fmt.Fprintln(w, jsonArray)
 			}
@@ -673,7 +678,8 @@ func TestOperation_GenerateVC(t *testing.T) {
 	t.Run("generate VC - template errors", func(t *testing.T) {
 		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if strings.Contains(r.URL.String(), "users") {
-				fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+				fmt.Fprintf(w, "[%s]", foo)
+				fmt.Fprintln(w)
 			} else {
 				fmt.Fprintln(w, jsonArray)
 			}
@@ -911,7 +917,8 @@ func TestOperation_GetCMSUser(t *testing.T) {
 
 	t.Run("test success", func(t *testing.T) {
 		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+			fmt.Fprintf(w, "[%s]", foo)
+			fmt.Fprintln(w)
 		}))
 		defer cms.Close()
 
@@ -964,7 +971,7 @@ func TestOperation_UnmarshalUser(t *testing.T) {
 		require.Nil(t, data)
 	})
 	t.Run("multiple users error", func(t *testing.T) {
-		data, err := unmarshalUser([]byte(fmt.Sprintf("[{},{}]")))
+		data, err := unmarshalUser([]byte("[{},{}]"))
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "multiple users found")
 		require.Nil(t, data)
@@ -990,7 +997,7 @@ func TestOperation_UnmarshalSubject(t *testing.T) {
 		require.Nil(t, data)
 	})
 	t.Run("multiple records error", func(t *testing.T) {
-		data, err := unmarshalSubject([]byte(fmt.Sprintf("[{},{}]")))
+		data, err := unmarshalSubject([]byte("[{},{}]"))
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "multiple records found")
 		require.Nil(t, data)
@@ -1015,7 +1022,8 @@ func TestOperation_SendHTTPRequest_WrongStatus(t *testing.T) {
 func TestGetCreditScore(t *testing.T) {
 	t.Run("test success", func(t *testing.T) {
 		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintln(w, fmt.Sprintf("[%s]", foo))
+			fmt.Fprintf(w, "[%s]", foo)
+			fmt.Fprintln(w)
 		}))
 		defer cms.Close()
 
@@ -1517,7 +1525,8 @@ func TestDIDCommCredentialHandler(t *testing.T) {
 func TestDIDCommAssuranceDataHandler(t *testing.T) {
 	t.Run("test didcomm assurance data - success", func(t *testing.T) {
 		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintln(w, fmt.Sprintf("[%s]", assuranceData))
+			fmt.Fprintf(w, "[%s]", assuranceData)
+			fmt.Fprintln(w)
 		}))
 		defer cms.Close()
 
