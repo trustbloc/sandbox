@@ -20,8 +20,8 @@ LOGIN_CONSENT_SEVER_IMAGE_NAME   ?= trustbloc/edge-sandbox/login-consent-server
 DID_ELEMENT_SIDETREE_REQUEST_URL ?= https://element-did.com/api/v1/sidetree/requests
 
 # Tool commands (overridable)
-ALPINE_VER ?= 3.10
-GO_VER     ?= 1.13.1
+ALPINE_VER ?= 3.12
+GO_VER     ?= 1.15
 
 # Fabric tools docker image (overridable)
 FABRIC_TOOLS_IMAGE   ?= hyperledger/fabric-tools

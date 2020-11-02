@@ -51,7 +51,7 @@ const (
 	DatabaseTimeoutFlagName = "database-timeout"
 	// DatabaseTimeoutFlagUsage describes the usage.
 	DatabaseTimeoutFlagUsage = "Total time in seconds to wait until the datasource is available before giving up." +
-		" Default: " + string(DatabaseTimeoutDefault) + " seconds." +
+		" Default: " + string(rune(DatabaseTimeoutDefault)) + " seconds." +
 		" Alternatively, this can be set with the following environment variable: " + DatabaseTimeoutEnvKey
 	// DatabaseTimeoutEnvKey is the database timeout.
 	DatabaseTimeoutEnvKey = "DATABASE_TIMEOUT"
