@@ -46,7 +46,7 @@ Feature:
     # Check blockchain endpoint
     When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/0.0.1/blockchain/version"
     Then the JSON path "name" of the response equals "Hyperledger Fabric"
-    And the JSON path "version" of the response equals "2.2.0"
+    And the JSON path "version" of the response equals "2.2.1"
 
     # Check cas endpoint
     When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/0.0.1/cas/version"

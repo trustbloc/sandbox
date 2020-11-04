@@ -29,8 +29,8 @@ FABRIC_TOOLS_VERSION ?= 2.0.0-alpha
 FABRIC_TOOLS_TAG     ?= $(ARCH)-$(FABRIC_TOOLS_VERSION)
 
 # This can be a commit hash or a tag (or any git ref)
-export FABRIC_CLI_EXT_VERSION ?= 2527b62c4df24e47bea267cece46495f9aeb9a2a
-export TRUSTBLOC_DID_METHOD ?= 7efb6e22a0aa4049da64e753c0fa513db3dcb4fe
+export FABRIC_CLI_EXT_VERSION ?= 2af29d47bf7aac4025c9036df17e3e3153f0b637
+export TRUSTBLOC_DID_METHOD ?= 5c75ee984ed012f34e1526f7d2f9b12d0ef11de8
 
 .PHONY: all
 all: checks unit-test
