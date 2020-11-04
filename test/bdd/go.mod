@@ -12,7 +12,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.4.0
 	github.com/trustbloc/edge-core v0.1.5-0.20200902222811-9a73214c780d
-	github.com/trustbloc/fabric-peer-test-common v0.1.4
+	github.com/trustbloc/fabric-peer-test-common v0.1.5-0.20201029180125-c96c1cfc0bd0
 )
 
 replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.4-0.20200626180529-18936b36feca

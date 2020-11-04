@@ -1,6 +1,6 @@
 {
   "genesisTime": 1,
-  "hashAlgorithmInMultihashCode": 18,
+  "multihashAlgorithm": 18,
   "hashAlgorithm": 5,
   "maxOperationSize": 200000,
   "maxOperationCount": 10,
@@ -9,5 +9,6 @@
   "maxMapFileSize": 1000000,
   "maxChunkFileSize": 10000000,
   "signatureAlgorithms": ["EdDSA", "ES256", "ES256K"],
-  "keyAlgorithms": ["Ed25519", "P-256", "secp256k1"]
+  "keyAlgorithms": ["Ed25519", "P-256", "secp256k1"],
+  "patches": ["add-public-keys", "remove-public-keys", "add-services", "remove-services", "ietf-json-patch"]
 }
