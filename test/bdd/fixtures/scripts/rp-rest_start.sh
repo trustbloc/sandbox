@@ -19,7 +19,7 @@ registerRPTenant() {
         response=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" \
         --header "Content-Type: application/json" \
         --request POST \
-        --data '{"label": "rp.trustbloc.local", "callback": "'$callbackURL'", "scopes": ["credit_card_stmt:remote","driver_license:local","credit_score:remote","driver_license_evidence:remote"]}' \
+        --data '{"label": "rp.trustbloc.local", "callback": "'$callbackURL'", "scopes": ["credit_card_stmt:remote","driver_license:local","credit_score:remote","driver_license_evidence:remote"], "requiresBlindedRoute": true}' \
         $rpAdapterURL)
 
         code=${response//*RESPONSE_CODE=/}
@@ -56,8 +56,9 @@ clientID=$(echo $registration | jq -r .clientID)
 clientSecret=$(echo $registration | jq -r .clientSecret)
 publicDID=$(echo $registration | jq -r .publicDID)
 scopes=$(echo $registration | jq -r .scopes)
+requiresBlindedRoute=$(echo $registration | jq -r .requiresBlindedRoute)
 
-echo "RP Tenant ClientID=$clientID Callback=$callbackURL Scopes=$scopes PublicDID=$publicDID"
+echo "RP Tenant ClientID=$clientID Callback=$callbackURL Scopes=$scopes PublicDID=$publicDID requiresBlindedRoute=$requiresBlindedRoute"
 echo ""
 
 echo "Starting rp.example.com..."
