@@ -24,6 +24,7 @@ while true
 do
 if .build/did-method-cli/cli create-config --sidetree-url https://sidetree-mock.trustbloc.local/sidetree/0.0.1 \
 --tls-cacerts ./test/bdd/fixtures/keys/tls/trustbloc-dev-ca.crt --sidetree-write-token rw_token \
+--recoverykey-file ./test/bdd/fixtures/keys/recover/public.pem --updatekey-file ./test/bdd/fixtures/keys/update/public.pem \
 --config-file ./test/bdd/fixtures/discovery-config/sidetree-mock/config-data/testnet.trustbloc.local.json --output-directory ./test/bdd/fixtures/discovery-config/sidetree-mock/temp > /dev/null 2>&1; then
   echo "create did-method config successfully"
   break
