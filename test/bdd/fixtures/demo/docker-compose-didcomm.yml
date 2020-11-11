@@ -110,7 +110,7 @@ services:
 
   rp-adapter-hydra.trustbloc.local:
     container_name: rp-adapter-hydra.trustbloc.local
-    image: oryd/hydra:v1.3.2-alpine
+    image: oryd/hydra:${HYDRA_IMAGE_TAG}
     ports:
       - ${RPADAPTER_HYDRA_PUBLIC_PORT}:${RPADAPTER_HYDRA_PUBLIC_PORT}
       - ${RPADAPTER_HYDRA_ADMIN_PORT}:${RPADAPTER_HYDRA_ADMIN_PORT}

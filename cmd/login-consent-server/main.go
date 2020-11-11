@@ -174,7 +174,7 @@ type consentServer struct {
 
 func (c *consentServer) login(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
-	case "GET":
+	case http.MethodGet:
 		challenge := req.URL.Query().Get("login_challenge")
 		fullData := map[string]interface{}{
 			"login_challenge": challenge,
@@ -219,7 +219,7 @@ func (c *consentServer) login(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-	case "POST":
+	case http.MethodPost:
 		c.acceptLoginRequest(w, req)
 		return
 	default:

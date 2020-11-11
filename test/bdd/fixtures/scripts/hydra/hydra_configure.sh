@@ -18,3 +18,17 @@ hydra clients create \
     --skip-tls-verify \
     --callbacks https://issuer.trustbloc.local/callback
 echo "Finish Creating client"
+
+echo "Creating hub-auth client"
+# will use --skip-tls-verify because hydra doesn't trust self-signed certificate
+# remove it when using real certificate
+hydra clients create \
+    --endpoint https://hydra.trustbloc.local:4445 \
+    --id hub-auth \
+    --secret hub-auth-secret \
+    --grant-types authorization_code,refresh_token \
+    --response-types code,id_token \
+    --scope openid,profile,email \
+    --skip-tls-verify \
+    --callbacks https://auth-rest.trustbloc.local/oauth2/callback
+echo "Finished creating hub-auth client"

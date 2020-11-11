@@ -187,22 +187,23 @@ services:
       - ARIESD_HTTP_RESOLVER=${HTTP_RESOLVER}
       - WALLET_MEDIATOR_URL=${WALLET_ROUTER_URL}
       - ARIESD_DEFAULT_LABEL=user-agent
-      - HTTP_SERVER_OIDC_OPURL=https://rp-adapter-hydra.trustbloc.local:${RPADAPTER_HYDRA_PUBLIC_PORT}/ # TODO replace with hub-auth's hydra
+      - HTTP_SERVER_OIDC_OPURL=https://auth-rest-hydra.trustbloc.local:11201/
+      - HTTP_SERVER_OIDC_CLIENTID=user-agent
+      - HTTP_SERVER_OIDC_CLIENTSECRET=user-agent-secret
+      - HTTP_SERVER_OIDC_CALLBACK=https://myagent.trustbloc.local/oidc/callback
       - HTTP_SERVER_DEP_MAXRETRIES=180
-      - HTTP_SERVER_OIDC_CLIENTID=TODO
-      - HTTP_SERVER_OIDC_CLIENTSECRET=TODO
-      - HTTP_SERVER_OIDC_CALLBACK=http://TODO.com/callback
       - HTTP_SERVER_COOKIE_AUTH_KEY=/etc/keys/session_cookies/auth.key
       - HTTP_SERVER_COOKIE_ENC_KEY=/etc/keys/session_cookies/enc.key
       - TLS_CACERTS=/etc/keys/tls/trustbloc-dev-ca.crt
       - BLINDED_ROUTING=${SUPPORT_BLINDED_ROUTING}
+      - ARIESD_LOG_LEVEL=DEBUG
     ports:
       - 8091:8091
     volumes:
       - ../keys:/etc/keys
     command: start
     depends_on:
-      - rp-adapter-hydra.trustbloc.local
+      - auth-rest-hydra.trustbloc.local
     networks:
       - demo-net
 
@@ -237,5 +238,72 @@ services:
     ports:
       - 8072:8072
     command: start
+    networks:
+      - demo-net
+
+  auth.rest.example.com:
+    container_name: auth.rest.example.com
+    image: ${AUTH_REST_IMAGE}:${AUTH_REST_IMAGE_TAG}
+    environment:
+      - AUTH_REST_HOST_URL=0.0.0.0:11101
+      - AUTH_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - AUTH_REST_TLS_SYSTEMCERTPOOL=true
+      - AUTH_REST_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt
+      - AUTH_REST_TLS_SERVE_KEY=/etc/tls/trustbloc.local.key
+      - AUTH_REST_DATABASE_TYPE=mysql
+      - AUTH_REST_DATABASE_URL=authrest:authrest-secret-pw@tcp(mysql:3306)/
+      - AUTH_REST_DATABASE_PREFIX=authrest
+      - AUTH_REST_OIDC_CALLBACK=https://auth-rest.trustbloc.local/oauth2/callback
+      - AUTH_REST_GOOGLE_URL=https://hydra.trustbloc.local/
+      - AUTH_REST_GOOGLE_CLIENTID=hub-auth
+      - AUTH_REST_GOOGLE_CLIENTSECRET=hub-auth-secret
+      - AUTH_REST_HYDRA_URL=https://auth-rest-hydra.trustbloc.local:11202
+      - AUTH_REST_LOG_LEVEL=DEBUG
+      - AUTH_REST_SDS_URL=TODO        # onboard user: https://github.com/trustbloc/hub-auth/issues/38
+      - AUTH_REST_KEYSERVER_URL=TODO  # onboard user: https://github.com/trustbloc/hub-auth/issues/38
+      - VIRTUAL_HOST=auth-rest.trustbloc.local
+      - VIRTUAL_PORT=11101
+      - VIRTUAL_PROTO=https
+    ports:
+      - 11101:11101
+    entrypoint: ""
+    command:  /bin/sh -c "sleep 30 && auth-rest start"
+    volumes:
+      - ../keys/tls:/etc/tls
+    depends_on:
+      - auth-rest-hydra.trustbloc.local
+      - hydra
+      - mysql
+    networks:
+      - demo-net
+
+  auth-rest-hydra.trustbloc.local:
+    container_name: auth-rest-hydra.trustbloc.local
+    image: oryd/hydra:${HYDRA_IMAGE_TAG}
+    ports:
+      - 11201:11201 # Public port
+      - 11202:11202 # Admin port
+    command:  /bin/sh -c "hydra migrate sql --read-from-env --yes; tmp/hydra_configure.sh& hydra serve all"
+    entrypoint: ""
+    environment:
+      - DSN=mysql://authresthydra:authresthydra-secret-pw@tcp(mysql:3306)/authresthydra?max_conns=20&max_idle_conns=4
+      - URLS_SELF_ISSUER=https://auth-rest-hydra.trustbloc.local:11201/
+      - URLS_CONSENT=https://auth-rest.trustbloc.local/hydra/consent
+      - URLS_LOGIN=https://auth-rest.trustbloc.local/hydra/login
+      - SECRETS_SYSTEM=testSecretsSystem
+      - OIDC_SUBJECT_TYPES_SUPPORTED=public
+      - OIDC_SUBJECT_TYPE_PAIRWISE_SALT=testSecretsSystem
+      - SERVE_TLS_KEY_PATH=/etc/tls/trustbloc.local.key
+      - SERVE_TLS_CERT_PATH=/etc/tls/trustbloc.local.crt
+      - SERVE_PUBLIC_PORT=11201
+      - SERVE_ADMIN_PORT=11202
+      - VIRTUAL_HOST=auth-rest-hydra.trustbloc.local
+      - VIRTUAL_PORT=11201
+    restart: unless-stopped
+    volumes:
+      - ../scripts/hydra/auth-rest-hydra_configure.sh:/tmp/hydra_configure.sh
+      - ../keys/tls:/etc/tls
+    depends_on:
+      - mysql
     networks:
       - demo-net
