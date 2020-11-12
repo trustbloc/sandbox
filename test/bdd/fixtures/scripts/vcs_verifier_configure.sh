@@ -9,7 +9,7 @@ apk --no-cache add curl jq
 
 echo "Adding verifier profiles"
 n=0
-maxAttempts=40
+maxAttempts=60
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_verifier_rw_token" \

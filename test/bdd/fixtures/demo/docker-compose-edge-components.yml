@@ -188,6 +188,7 @@ services:
       - WALLET_MEDIATOR_URL=${WALLET_ROUTER_URL}
       - ARIESD_DEFAULT_LABEL=user-agent
       - HTTP_SERVER_OIDC_OPURL=https://rp-adapter-hydra.trustbloc.local:${RPADAPTER_HYDRA_PUBLIC_PORT}/ # TODO replace with hub-auth's hydra
+      - HTTP_SERVER_DEP_MAXRETRIES=180
       - HTTP_SERVER_OIDC_CLIENTID=TODO
       - HTTP_SERVER_OIDC_CLIENTSECRET=TODO
       - HTTP_SERVER_OIDC_CALLBACK=http://TODO.com/callback
