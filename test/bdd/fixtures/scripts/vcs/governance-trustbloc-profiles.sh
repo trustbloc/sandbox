@@ -13,7 +13,7 @@ echo "Adding governance profiles"
 
 
 n=0
-maxAttempts=40
+maxAttempts=60
 while true
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_governance_rw_token" \

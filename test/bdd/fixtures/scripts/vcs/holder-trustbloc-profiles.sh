@@ -8,7 +8,7 @@
 echo "Adding holder(trustbloc) profiles"
 
 n=0
-maxAttempts=40
+maxAttempts=60
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
@@ -33,7 +33,7 @@ do
 done
 
 n=0
-maxAttempts=40
+maxAttempts=60
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
@@ -58,7 +58,7 @@ do
 done
 
 n=0
-maxAttempts=40
+maxAttempts=60
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \

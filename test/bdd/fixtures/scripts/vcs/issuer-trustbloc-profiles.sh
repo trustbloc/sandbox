@@ -10,7 +10,7 @@ echo "Adding issuer trustbloc profiles"
 
 
 n=0
-maxAttempts=40
+maxAttempts=60
 while true
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
@@ -37,7 +37,7 @@ done
 
 
 n=0
-maxAttempts=40
+maxAttempts=60
 while true
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
@@ -62,7 +62,7 @@ do
 done
 
 n=0
-maxAttempts=40
+maxAttempts=60
 while true
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \

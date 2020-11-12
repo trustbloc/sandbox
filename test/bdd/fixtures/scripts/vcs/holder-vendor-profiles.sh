@@ -8,7 +8,7 @@
 echo "Adding holder(vendor) profiles"
 
 n=0
-maxAttempts=40
+maxAttempts=60
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
@@ -34,7 +34,7 @@ done
 
 # TODO driver-did-v1 latest not working
 #n=0
-#maxAttempts=40
+#maxAttempts=60
 #until [ $n -ge $maxAttempts ]
 #do
 #   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
@@ -59,7 +59,7 @@ done
 #done
 
 n=0
-maxAttempts=40
+maxAttempts=60
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
@@ -84,7 +84,7 @@ do
 done
 
 n=0
-maxAttempts=40
+maxAttempts=60
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \

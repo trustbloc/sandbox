@@ -1,11 +1,11 @@
 {
   "genesisTime": 1,
   "multihashAlgorithm": 18,
-  "hashAlgorithm": 5,
   "maxOperationSize": 200000,
   "maxOperationCount": 10,
   "compressionAlgorithm": "GZIP",
   "maxAnchorFileSize": 1000000,
+  "maxProofFileSize": 2000000,
   "maxMapFileSize": 1000000,
   "maxChunkFileSize": 10000000,
   "signatureAlgorithms": ["EdDSA", "ES256", "ES256K"],

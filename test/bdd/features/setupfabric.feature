@@ -59,7 +59,7 @@ Feature:
     When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/0.0.1/blockchain/blocks?from-time=1&max-blocks=1"
     Then the JSON path "#" of the response has 1 items
     And the JSON path "0.header.number" of the response equals "1"
-    And the JSON path "0.header.previous_hash" of the response is saved to variable "previous-hash"
+    And the JSON path "0.header.previousHash" of the response is saved to variable "previous-hash"
     Then fabric-cli setup script "./fixtures/discovery-config/sidetree-fabric/" is executed with previousHash "previous-hash"
 
     # Create a file index document

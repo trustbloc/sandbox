@@ -10,7 +10,7 @@ apk --no-cache add curl jq
 echo "Adding Issuer Adapter profiles"
 
 n=0
-maxAttempts=40
+maxAttempts=60
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl -k --header "Content-Type: application/json" \
@@ -35,7 +35,7 @@ do
 done
 
 n=0
-maxAttempts=40
+maxAttempts=60
 until [ $n -ge $maxAttempts ]
 do
    responseCreatedTime=$(curl -k --header "Content-Type: application/json" \
