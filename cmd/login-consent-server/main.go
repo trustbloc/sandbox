@@ -39,7 +39,7 @@ const (
 	dlUploadHTML        = "./templates/uploadCred.html"
 	dlUploadConsentHTML = "./templates/uploadCredConsent.html"
 
-	bankLogin = "banklogin"
+	bankLogin = "selectProvider"
 	dlUpload  = "uploaddrivinglicense"
 
 	bankFlow     = "bank"
@@ -50,6 +50,9 @@ const (
 
 	timeout = 10 * time.Second
 )
+
+// nolint: gochecknoglobals
+var cardNumToEmail = map[string]string{"4506 4456 4307 3456": "john.smith@example.com"}
 
 type htmlTemplate interface {
 	Execute(wr io.Writer, data interface{}) error
@@ -272,6 +275,13 @@ func (c *consentServer) acceptLoginRequest(w http.ResponseWriter, req *http.Requ
 	}
 
 	username, usernameSet := req.Form["email"]
+
+	cardNum, cardNumSet := req.Form["cardNum"]
+	if cardNumSet && !usernameSet {
+		usernameSet = true
+		username = []string{cardNumToEmail[cardNum[0]]}
+	}
+
 	password, passwordSet := req.Form["password"]
 	challenge, challengeSet := req.Form["challenge"]
 
