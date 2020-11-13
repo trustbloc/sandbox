@@ -1,18 +1,18 @@
 {
-  "consortium_data": {
+  "consortiumData": {
     "domain": "testnet.trustbloc.local",
-    "genesis_block": "%s",
+    "genesisBlock": "%s",
     "policy": {
       "cache": {
-        "max_age": 600
+        "maxAge": 600
       },
-      "num_queries": 2
+      "numQueries": 2
     }
   },
-  "members_data": [
+  "membersData": [
     {
       "domain": "org1.trustbloc.local",
-      "policy": {"cache": {"max_age": 300}},
+      "policy": {"cache": {"maxAge": 300}},
       "endpoints": [
         "https://peer0-org1.trustbloc.local/sidetree/0.0.1",
         "https://peer1-org1.trustbloc.local/sidetree/0.0.1"
@@ -21,7 +21,7 @@
     },
     {
       "domain": "org2.trustbloc.local",
-      "policy": {"cache": {"max_age": 300}},
+      "policy": {"cache": {"maxAge": 300}},
       "endpoints": [
         "https://peer0-org2.trustbloc.local/sidetree/0.0.1",
         "https://peer1-org2.trustbloc.local/sidetree/0.0.1"
@@ -30,7 +30,7 @@
     },
     {
       "domain": "org3.trustbloc.local",
-      "policy": {"cache": {"max_age": 300}},
+      "policy": {"cache": {"maxAge": 300}},
       "endpoints": [
         "https://peer0-org3.trustbloc.local/sidetree/0.0.1",
         "https://peer1-org3.trustbloc.local/sidetree/0.0.1"
