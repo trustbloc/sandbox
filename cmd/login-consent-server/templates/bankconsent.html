@@ -86,8 +86,14 @@ SPDX-License-Identifier: Apache-2.0
                                 <div class="text-center py-2"></div>
                             </div>
                             <form action="" method="POST">
-                                <p class="text-black text-lg"><input class="mr-2 leading-tight filled-in" type="checkbox" name="agree" checked="checked" />
-                                    I agree with the above terms and conditions {{.User}} , application <strong>{{.ClientID}}</strong> can access the resource</p>
+                                <p class="text-black text-lg">I agree with the above terms and conditions {{.User}} , application <strong>{{.ClientID}}</strong> can access the resource</p>
+                                <br>
+                                {{range $element := .Scope}}
+                                <label class="md:w-2/3 block text-gray-500 font-bold">
+                                    <input {{if eq $element "openid"}} type="hidden"{{end}} class="mr-2 leading-tight filled-in" type="checkbox" id="{{$element}}" value="{{$element}}" name="grant_scope" checked="checked" />
+                                    <span {{if eq $element "openid"}} hidden{{end}} class="text-lg text-black" id="scopeName" for="{{$element}}">{{$element}}</span>
+                                    {{end}}
+                                </label>
                                 <br>
                                 <p>
                                     <input type="hidden" name="challenge" value="{{.Challenge}}">
