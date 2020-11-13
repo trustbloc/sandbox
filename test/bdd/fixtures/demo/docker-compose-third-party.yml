@@ -10,7 +10,7 @@ services:
 
   hydra:
     container_name: hydra.trustbloc.local
-    image: oryd/hydra:v1.3.2-alpine
+    image: oryd/hydra:${HYDRA_IMAGE_TAG}
     ports:
       - "4444:4444" # Public port
       - "4445:4445" # Admin port
@@ -32,7 +32,7 @@ services:
       - VIRTUAL_PROTO=https
     restart: unless-stopped
     volumes:
-      - ../scripts/hydra_configure.sh:/tmp/hydra_configure.sh
+      - ../scripts/hydra/hydra_configure.sh:/tmp/hydra_configure.sh
       - ../keys/tls:/etc/tls
     depends_on:
       - mysql
@@ -138,6 +138,8 @@ services:
           - org1.trustbloc.local
           - org2.trustbloc.local
           - org3.trustbloc.local
+          - auth-rest.trustbloc.local
+          - auth-rest-hydra.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb
