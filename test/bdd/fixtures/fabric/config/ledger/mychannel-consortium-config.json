@@ -2,7 +2,7 @@
   "MspID": "general",
   "Apps": [
     {
-      "AppName": "did:trustbloc:AzhMb",
+      "AppName": "did:trustbloc:4vSjd",
       "Version": "1",
       "Tags": ["sidetree"],
       "Config": "file://./did-sidetree-config.yaml",

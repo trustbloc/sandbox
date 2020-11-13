@@ -1,18 +1,18 @@
 {
-  "consortium_data": {
+  "consortiumData": {
     "domain": "testnet.trustbloc.local",
-    "genesis_block": "6e2f978e16b59df1d6a1dfbacb92e7d3eddeb8b3fd825e573138b3fd77d77264",
+    "genesisBlock": "6e2f978e16b59df1d6a1dfbacb92e7d3eddeb8b3fd825e573138b3fd77d77264",
     "policy": {
       "cache": {
-        "max_age": 600
+        "maxAge": 600
       },
-      "num_queries": 2
+      "numQueries": 1
     }
   },
-  "members_data": [
+  "membersData": [
     {
       "domain": "stakeholder-one.trustbloc.local",
-      "policy": {"cache": {"max_age": 300}},
+      "policy": {"cache": {"maxAge": 300}},
       "endpoints": [
         "https://sidetree-mock.trustbloc.local/sidetree/0.0.1"
       ],
