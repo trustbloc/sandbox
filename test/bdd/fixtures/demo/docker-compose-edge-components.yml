@@ -197,6 +197,11 @@ services:
       - TLS_CACERTS=/etc/keys/tls/trustbloc-dev-ca.crt
       - BLINDED_ROUTING=${SUPPORT_BLINDED_ROUTING}
       - ARIESD_LOG_LEVEL=DEBUG
+      # TODO configure this (added dummy values as to unblock -
+      # ref https://github.com/trustbloc/edge-agent/pull/482/files#diff-0325567f17eab8064d99ba9a4ac40c08a40d423010c14d597c0ab8eae6e62ce1R78-R80)
+      - HTTP_SERVER_RP_DISPLAY_NAME=trustbloc
+      - HTTP_SERVER_RP_ORIGIN_NAME=localhost
+      - HTTP_SERVER_RP_ID=http://localhost
     ports:
       - 8091:8091
     volumes:
