@@ -239,10 +239,15 @@ services:
       - KMS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - KMS_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt
       - KMS_TLS_SERVE_KEY=/etc/tls/trustbloc.local.key
-      # TODO https://github.com/trustbloc/edge-sandbox/issues/655 use couchdb
-      - KMS_DATABASE_TYPE=mem
-      - KMS_SECRETS_DATABASE_TYPE=mem
-      - KMS_OPERATIONAL_KMS_STORAGE_TYPE=mem
+      - KMS_DATABASE_TYPE=couchdb
+      - KMS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_DATABASE_PREFIX=keystore
+      - KMS_SECRETS_DATABASE_TYPE=couchdb
+      - KMS_SECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_SECRETS_DATABASE_PREFIX=kms
+      - KMS_OPERATIONAL_KMS_STORAGE_TYPE=couchdb
+      - KMS_OPERATIONAL_KMS_STORAGE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_OPERATIONAL_KMS_STORAGE_PREFIX=ops
       - VIRTUAL_HOST=authz-kms.trustbloc.local
       - VIRTUAL_PROTO=https
     ports:
@@ -264,9 +269,12 @@ services:
       - KMS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - KMS_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt
       - KMS_TLS_SERVE_KEY=/etc/tls/trustbloc.local.key
-      # TODO https://github.com/trustbloc/edge-sandbox/issues/655 use couchdb
-      - KMS_DATABASE_TYPE=mem
-      - KMS_SECRETS_DATABASE_TYPE=mem
+      - KMS_DATABASE_TYPE=couchdb
+      - KMS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_DATABASE_PREFIX=keystore
+      - KMS_SECRETS_DATABASE_TYPE=couchdb
+      - KMS_SECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_SECRETS_DATABASE_PREFIX=kms
       - KMS_OPERATIONAL_KMS_STORAGE_TYPE=sds
       - KMS_OPERATIONAL_KMS_STORAGE_URL=https://edv.trustbloc.local
       - VIRTUAL_HOST=ops-kms.trustbloc.local
