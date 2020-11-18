@@ -141,6 +141,7 @@ services:
           - auth-rest.trustbloc.local
           - auth-rest-hydra.trustbloc.local
           - authz-kms.trustbloc.local
+          - ops-kms.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb
