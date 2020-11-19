@@ -200,11 +200,12 @@ services:
       # TODO configure this (added dummy values as to unblock -
       # ref https://github.com/trustbloc/edge-agent/pull/482/files#diff-0325567f17eab8064d99ba9a4ac40c08a40d423010c14d597c0ab8eae6e62ce1R78-R80)
       - HTTP_SERVER_RP_DISPLAY_NAME=trustbloc
-      - HTTP_SERVER_RP_ORIGIN_NAME=localhost
-      - HTTP_SERVER_RP_ID=http://localhost
+      - HTTP_SERVER_RP_ORIGIN_NAME=https://myagent.trustbloc.local
+      - HTTP_SERVER_RP_ID=myagent.trustbloc.local
       - HTTP_SERVER_AUTHZ_KMS_URL=https://authz-kms.trustbloc.local
       - HTTP_SERVER_OPS_KMS_URL=https://ops-kms.trustbloc.local
-      - HTTP_SERVER_KEY_SDS_URL=https://edv.trustbloc.local
+      - HTTP_SERVER_KEY_SDS_URL=https://edv.trustbloc.local/encrypted-data-vaults
+      - HTTP_SERVER_USER_SDS_URL=https://edv.trustbloc.local/encrypted-data-vaults
     ports:
       - 8091:8091
     volumes:
