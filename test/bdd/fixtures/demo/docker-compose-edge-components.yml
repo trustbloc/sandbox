@@ -296,21 +296,24 @@ services:
     image: ${AUTH_REST_IMAGE}:${AUTH_REST_IMAGE_TAG}
     environment:
       - AUTH_REST_HOST_URL=0.0.0.0:11101
-      - AUTH_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - AUTH_REST_TLS_CACERTS=/etc/keys/tls/trustbloc-dev-ca.crt
       - AUTH_REST_TLS_SYSTEMCERTPOOL=true
-      - AUTH_REST_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt
-      - AUTH_REST_TLS_SERVE_KEY=/etc/tls/trustbloc.local.key
+      - AUTH_REST_TLS_SERVE_CERT=/etc/keys/tls/trustbloc.local.crt
+      - AUTH_REST_TLS_SERVE_KEY=/etc/keys/tls/trustbloc.local.key
       - AUTH_REST_DATABASE_TYPE=mysql
       - AUTH_REST_DATABASE_URL=authrest:authrest-secret-pw@tcp(mysql:3306)/
       - AUTH_REST_DATABASE_PREFIX=authrest
       - AUTH_REST_OIDC_CALLBACK=https://auth-rest.trustbloc.local/oauth2/callback
-      - AUTH_REST_GOOGLE_URL=https://hydra.trustbloc.local/
-      - AUTH_REST_GOOGLE_CLIENTID=hub-auth
-      - AUTH_REST_GOOGLE_CLIENTSECRET=hub-auth-secret
+      - AUTH_REST_OIDC_PROVIDERS_CONFIG=/etc/auth-rest-config/oidc-providers.yaml
       - AUTH_REST_HYDRA_URL=https://auth-rest-hydra.trustbloc.local:11202
       - AUTH_REST_LOG_LEVEL=DEBUG
-      - AUTH_REST_SDS_URL=TODO        # onboard user: https://github.com/trustbloc/hub-auth/issues/38
-      - AUTH_REST_KEYSERVER_URL=TODO  # onboard user: https://github.com/trustbloc/hub-auth/issues/38
+      - AUTH_REST_SDS_DOCS_URL=https://TODO.docs.sds.org/
+      - AUTH_REST_SDS_OPSKEYS_URL=https://TODO.keys.sds.org/
+      - AUTH_REST_KEYSERVER_AUTH_URL=https://TODO.auth.keyserver.org/
+      - AUTH_REST_KEYSERVER_OPS_URL=https://TODO.ops.keyserver.org/
+      - AUTH_REST_COOKIE_AUTH_KEY=/etc/keys/session_cookies/auth.key
+      - AUTH_REST_COOKIE_ENC_KEY=/etc/keys/session_cookies/enc.key
+      - AUTH_REST_API_TOKEN=authkms-token
       - VIRTUAL_HOST=auth-rest.trustbloc.local
       - VIRTUAL_PORT=11101
       - VIRTUAL_PROTO=https
@@ -319,7 +322,8 @@ services:
     entrypoint: ""
     command:  /bin/sh -c "sleep 30 && auth-rest start"
     volumes:
-      - ../keys/tls:/etc/tls
+      - ../keys:/etc/keys
+      - ./auth-rest-config:/etc/auth-rest-config
     depends_on:
       - auth-rest-hydra.trustbloc.local
       - hydra
