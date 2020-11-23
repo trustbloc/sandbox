@@ -182,11 +182,11 @@ services:
     environment:
       - AGENT_UI_URL=https://myagent.trustbloc.local
       - HTTP_SERVER_HOST_URL=0.0.0.0:8092
-      - VIRTUAL_HOST=myagent.support.trustbloc.local
+      - VIRTUAL_HOST=myagent-support.trustbloc.local
       - HTTP_SERVER_OIDC_OPURL=https://auth-rest-hydra.trustbloc.local:11201/
       - HTTP_SERVER_OIDC_CLIENTID=user-agent
       - HTTP_SERVER_OIDC_CLIENTSECRET=user-agent-secret
-      - HTTP_SERVER_OIDC_CALLBACK=https://myagent.support.trustbloc.local/oidc/callback
+      - HTTP_SERVER_OIDC_CALLBACK=https://myagent-support.trustbloc.local/oidc/callback
       - HTTP_SERVER_DEP_MAXRETRIES=180
       - HTTP_SERVER_COOKIE_AUTH_KEY=/etc/keys/session_cookies/auth.key
       - HTTP_SERVER_COOKIE_ENC_KEY=/etc/keys/session_cookies/enc.key
@@ -225,7 +225,7 @@ services:
       - HTTP_RESOLVER_URL=${HTTP_RESOLVER}
       - AGENT_DEFAULT_LABEL=user-agent
       - BLOC_DOMAIN=${BLOC_DOMAIN}
-      - EDGE_AGENT_SERVER=https://myagent.support.trustbloc.local
+      - EDGE_AGENT_SERVER=https://myagent-support.trustbloc.local
       - WALLET_MEDIATOR_URL=${WALLET_ROUTER_URL}
       - BLINDED_ROUTING=${SUPPORT_BLINDED_ROUTING}
       - STORAGE_TYPE=indexedDB

@@ -16,5 +16,5 @@ hydra clients create \
     --response-types code,id_token \
     --scope openid,profile,email \
     --skip-tls-verify \
-    --callbacks https://myagent.support.trustbloc.local/oidc/callback
+    --callbacks https://myagent-support.trustbloc.local/oidc/callback
 echo "Finish Creating client"
