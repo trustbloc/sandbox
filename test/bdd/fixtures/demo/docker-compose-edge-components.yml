@@ -183,6 +183,7 @@ services:
       - AGENT_UI_URL=https://myagent.trustbloc.local
       - HTTP_SERVER_HOST_URL=0.0.0.0:8092
       - VIRTUAL_HOST=myagent-support.trustbloc.local
+      - HTTP_SERVER_HUB_AUTH_URL=https://auth-rest.trustbloc.local
       - HTTP_SERVER_OIDC_OPURL=https://auth-rest-hydra.trustbloc.local:11201/
       - HTTP_SERVER_OIDC_CLIENTID=user-agent
       - HTTP_SERVER_OIDC_CLIENTSECRET=user-agent-secret
@@ -262,9 +263,10 @@ services:
       - KMS_SECRETS_DATABASE_TYPE=couchdb
       - KMS_SECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - KMS_SECRETS_DATABASE_PREFIX=kms
-      - KMS_OPERATIONAL_KMS_STORAGE_TYPE=couchdb
-      - KMS_OPERATIONAL_KMS_STORAGE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
-      - KMS_OPERATIONAL_KMS_STORAGE_PREFIX=ops
+      - KMS_KEY_MANAGER_STORAGE_TYPE=couchdb
+      - KMS_KEY_MANAGER_STORAGE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_KEY_MANAGER_STORAGE_PREFIX=ops
+      - KMS_SECRETS_MASTER_KEY_PATH=/etc/tls/service-lock.key
       - VIRTUAL_HOST=authz-kms.trustbloc.local
       - VIRTUAL_PROTO=https
     ports:
@@ -292,8 +294,8 @@ services:
       - KMS_SECRETS_DATABASE_TYPE=couchdb
       - KMS_SECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - KMS_SECRETS_DATABASE_PREFIX=kms
-      - KMS_OPERATIONAL_KMS_STORAGE_TYPE=sds
-      - KMS_OPERATIONAL_KMS_STORAGE_URL=https://edv.trustbloc.local
+      - KMS_KEY_MANAGER_STORAGE_TYPE=edv
+      - KMS_KEY_MANAGER_STORAGE_URL=https://edv.trustbloc.local
       - VIRTUAL_HOST=ops-kms.trustbloc.local
       - VIRTUAL_PROTO=https
     ports:
