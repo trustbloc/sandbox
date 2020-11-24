@@ -39,11 +39,13 @@ fi
    sleep 5
 done
 
-rm -rf ./test/bdd/fixtures/discovery-config/sidetree-mock/config/did-trustbloc
-mv ./test/bdd/fixtures/discovery-config/sidetree-mock/temp/did-trustbloc ./test/bdd/fixtures/discovery-config/sidetree-mock/config
-mv ./test/bdd/fixtures/discovery-config/sidetree-mock/temp/stakeholder-one.trustbloc.local/did-configuration.json ./test/bdd/fixtures/discovery-config/sidetree-mock/config
+rm -rf ./test/bdd/fixtures/discovery-config/sidetree-mock/config
+mkdir -p ./test/bdd/fixtures/discovery-config/sidetree-mock/config/did-trustbloc
+cp ./test/bdd/fixtures/discovery-config/sidetree-mock/temp/did-trustbloc/* ./test/bdd/fixtures/discovery-config/sidetree-mock/config/did-trustbloc
+cp ./test/bdd/fixtures/discovery-config/sidetree-mock/temp/stakeholder-one.trustbloc.local/did-configuration.json ./test/bdd/fixtures/discovery-config/sidetree-mock/config
 
 rm -rf ./test/bdd/fixtures/discovery-config/sidetree-mock/temp
+(cd test/bdd/fixtures/demo ; (docker-compose $dockerComposeFiles restart static-file-server stakeholder.one))
 }
 
 # select compose files
