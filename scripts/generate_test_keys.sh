@@ -101,4 +101,7 @@ openssl ec -in test/bdd/fixtures/keys/update2-org3/key.pem -pubout -out test/bdd
 openssl rand -out test/bdd/fixtures/keys/session_cookies/auth.key 32
 openssl rand -out test/bdd/fixtures/keys/session_cookies/enc.key 32
 
+# create secrete lock key
+openssl rand 32 | base64 | sed 's/+/-/g; s/\//_/g' > test/bdd/fixtures/keys/tls/service-lock.key
+
 echo "done generating edge-sandbox PKI"
