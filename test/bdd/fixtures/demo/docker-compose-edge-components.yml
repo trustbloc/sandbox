@@ -229,7 +229,8 @@ services:
       - EDGE_AGENT_SERVER=https://myagent-support.trustbloc.local
       - WALLET_MEDIATOR_URL=${WALLET_ROUTER_URL}
       - BLINDED_ROUTING=${SUPPORT_BLINDED_ROUTING}
-      - STORAGE_TYPE=indexedDB
+      - EDV_SERVER_URL=https://edv.trustbloc.local/encrypted-data-vaults
+      - STORAGE_TYPE=edv
     networks:
       - demo-net
 
