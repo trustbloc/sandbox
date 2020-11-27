@@ -58,30 +58,31 @@ done
 #   sleep 5
 #done
 
-n=0
-maxAttempts=60
-until [ $n -ge $maxAttempts ]
-do
-   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
-   --request POST \
-   --data '{"name":"vc-holder-didsov", "signatureType":"Ed25519Signature2018","signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uniregistrar.io/1.0/register?driverId=driver-universalregistrar/driver-did-sov","options": {"network":"danube"}},"didKeyType":"Ed25519"}' \
-   http://holder.vcs.example.com:8067/holder/profile | jq -r '.created' 2>/dev/null)
-   echo "'created' field from profile vc-holder-didsov response is: $responseCreatedTime"
-
-   if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]
-   then
-      break
-   fi
-   echo "Invalid 'created' field from vc-holder-didsov response when trying to create a profile (attempt $((n+1))/$maxAttempts)."
-
-   n=$((n+1))
-   if [ $n -eq $maxAttempts ]
-   then
-     echo "failed to create holder profile : vc-holder-didsov"
-     exit 1
-   fi
-   sleep 5
-done
+# TODO enable it
+#n=0
+#maxAttempts=60
+#until [ $n -ge $maxAttempts ]
+#do
+#   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_holder_rw_token" \
+#   --request POST \
+#   --data '{"name":"vc-holder-didsov", "signatureType":"Ed25519Signature2018","signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uniregistrar.io/1.0/register?driverId=driver-universalregistrar/driver-did-sov","options": {"network":"danube"}},"didKeyType":"Ed25519"}' \
+#   http://holder.vcs.example.com:8067/holder/profile | jq -r '.created' 2>/dev/null)
+#   echo "'created' field from profile vc-holder-didsov response is: $responseCreatedTime"
+#
+#   if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]
+#   then
+#      break
+#   fi
+#   echo "Invalid 'created' field from vc-holder-didsov response when trying to create a profile (attempt $((n+1))/$maxAttempts)."
+#
+#   n=$((n+1))
+#   if [ $n -eq $maxAttempts ]
+#   then
+#     echo "failed to create holder profile : vc-holder-didsov"
+#     exit 1
+#   fi
+#   sleep 5
+#done
 
 n=0
 maxAttempts=60

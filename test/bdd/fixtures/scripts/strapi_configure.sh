@@ -71,7 +71,7 @@ sleep 30
 
 # Create admin user
 n=0
-until [ $n -ge 5 ]
+until [ $n -ge 10 ]
 do
    token=$(curl --header "Content-Type: application/json" \
    --request POST \
@@ -89,7 +89,7 @@ done
 if [ -z "$token" ]
    then
      echo "strapi token is empty"
-     exit
+     exit -2
 fi
 
 # Add user data

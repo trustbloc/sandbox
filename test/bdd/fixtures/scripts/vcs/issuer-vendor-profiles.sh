@@ -57,30 +57,31 @@ do
    sleep 5
 done
 
-n=0
-maxAttempts=60
-until [ $n -ge $maxAttempts ]
-do
-   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
-   --request POST \
-   --data '{"name":"sov-ed25519signature2018-ed25519", "uri":"http://example.com", "signatureType":"Ed25519Signature2018","signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uniregistrar.io/1.0/register?driverId=driver-universalregistrar/driver-did-sov","options": {"network":"danube"}},"disableVCStatus":true,"didKeyType":"Ed25519"}' \
-   http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
-   echo "'created' field from profile sov-ed25519signature2018-ed25519 response is: $responseCreatedTime"
-
-   if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]
-   then
-      break
-   fi
-   echo "Invalid 'created' field from sov-ed25519signature2018-ed25519 response when trying to create a profile (attempt $((n+1))/$maxAttempts)."
-
-   n=$((n+1))
-   if [ $n -eq $maxAttempts ]
-   then
-     echo "failed to create sov-ed25519signature2018-ed25519 profile"
-     exit 1
-   fi
-   sleep 5
-done
+# TODO enable it
+#n=0
+#maxAttempts=60
+#until [ $n -ge $maxAttempts ]
+#do
+#   responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
+#   --request POST \
+#   --data '{"name":"sov-ed25519signature2018-ed25519", "uri":"http://example.com", "signatureType":"Ed25519Signature2018","signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uniregistrar.io/1.0/register?driverId=driver-universalregistrar/driver-did-sov","options": {"network":"danube"}},"disableVCStatus":true,"didKeyType":"Ed25519"}' \
+#   http://issuer.vcs.example.com:8070/profile | jq -r '.created' 2>/dev/null)
+#   echo "'created' field from profile sov-ed25519signature2018-ed25519 response is: $responseCreatedTime"
+#
+#   if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]
+#   then
+#      break
+#   fi
+#   echo "Invalid 'created' field from sov-ed25519signature2018-ed25519 response when trying to create a profile (attempt $((n+1))/$maxAttempts)."
+#
+#   n=$((n+1))
+#   if [ $n -eq $maxAttempts ]
+#   then
+#     echo "failed to create sov-ed25519signature2018-ed25519 profile"
+#     exit 1
+#   fi
+#   sleep 5
+#done
 
 n=0
 maxAttempts=60
