@@ -301,6 +301,7 @@ services:
       - KMS_KEY_MANAGER_STORAGE_URL=https://edv.trustbloc.local
       - VIRTUAL_HOST=ops-kms.trustbloc.local
       - VIRTUAL_PROTO=https
+      - KMS_ZCAP_ENABLE=false
     ports:
       - 8073:8073
     entrypoint: ""
