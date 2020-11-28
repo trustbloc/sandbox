@@ -169,6 +169,10 @@ services:
       - EDV_DATABASE_TYPE=couchdb
       - EDV_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - EDV_DATABASE_PREFIX=edv
+      - EDV_AUTH_ENABLE=true
+      - EDV_LOCALKMS_SECRETS_DATABASE_TYPE=couchdb
+      - EDV_LOCALKMS_SECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - EDV_LOCALKMS_SECRETS_DATABASE_PREFIX=edv_kms
       - VIRTUAL_HOST=edv.trustbloc.local
     ports:
       - 8081:8081
@@ -231,6 +235,8 @@ services:
       - BLINDED_ROUTING=${SUPPORT_BLINDED_ROUTING}
       - EDV_SERVER_URL=https://edv.trustbloc.local/encrypted-data-vaults
       - STORAGE_TYPE=edv
+      - USE_EDV_CACHE=true
+      - CLEAR_CACHE=10m
     networks:
       - demo-net
 
@@ -257,8 +263,6 @@ services:
       - KMS_HOST_URL=0.0.0.0:8072
       - KMS_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - KMS_TLS_SYSTEMCERTPOOL=true
-      - KMS_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt
-      - KMS_TLS_SERVE_KEY=/etc/tls/trustbloc.local.key
       - KMS_DATABASE_TYPE=couchdb
       - KMS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - KMS_DATABASE_PREFIX=keystore
@@ -270,7 +274,7 @@ services:
       - KMS_KEY_MANAGER_STORAGE_PREFIX=ops
       - KMS_MASTER_KEY_PATH=/etc/tls/service-lock.key
       - VIRTUAL_HOST=authz-kms.trustbloc.local
-      - VIRTUAL_PROTO=https
+      - VIRTUAL_PORT=8072
     ports:
       - 8072:8072
     entrypoint: ""
