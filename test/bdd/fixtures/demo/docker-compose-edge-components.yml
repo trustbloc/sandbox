@@ -178,6 +178,8 @@ services:
       - EDV_LOCALKMS_SECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - EDV_LOCALKMS_SECRETS_DATABASE_PREFIX=edv_kms
       - VIRTUAL_HOST=edv.trustbloc.local
+      - EDV_EXTENSIONS=ReturnFullDocumentsOnQuery
+      - EDV_DATABASE_TIMEOUT=60
     ports:
       - 8081:8081
     command: start
