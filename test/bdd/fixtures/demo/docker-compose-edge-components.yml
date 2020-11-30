@@ -14,6 +14,7 @@ services:
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8070
       - VC_REST_HOST_URL_EXTERNAL=https://issuer-vcs.trustbloc.local
+      # TODO switch to edv proxy need to pass access token
       - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - UNIVERSAL_RESOLVER_HOST_URL=https://did-resolver.trustbloc.local/1.0/identifiers
@@ -47,6 +48,7 @@ services:
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8069
       - VC_REST_HOST_URL_EXTERNAL=https://rp-vcs.trustbloc.local
+      # TODO switch to edv proxy need to pass access token
       - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - UNIVERSAL_RESOLVER_HOST_URL=https://did-resolver.trustbloc.local/1.0/identifiers
@@ -80,6 +82,7 @@ services:
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8067
       - VC_REST_HOST_URL_EXTERNAL=https://holder-vcs.trustbloc.local
+      # TODO switch to edv proxy need to pass access token
       - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - UNIVERSAL_RESOLVER_HOST_URL=https://did-resolver.trustbloc.local/1.0/identifiers
@@ -113,6 +116,7 @@ services:
     environment:
       - VC_REST_HOST_URL=0.0.0.0:8066
       - VC_REST_HOST_URL_EXTERNAL=https://governance-vcs.trustbloc.local
+      # TODO switch to edv proxy need to pass access token
       - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
       - BLOC_DOMAIN=${BLOC_DOMAIN}
       - UNIVERSAL_RESOLVER_HOST_URL=https://did-resolver.trustbloc.local/1.0/identifiers
@@ -204,8 +208,8 @@ services:
       - HTTP_SERVER_RP_ID=myagent.trustbloc.local
       - HTTP_SERVER_AUTHZ_KMS_URL=https://authz-kms.trustbloc.local
       - HTTP_SERVER_OPS_KMS_URL=https://ops-kms.trustbloc.local
-      - HTTP_SERVER_KEY_EDV_URL=https://edv.trustbloc.local/encrypted-data-vaults
-      - HTTP_SERVER_USER_EDV_URL=https://edv.trustbloc.local/encrypted-data-vaults
+      - HTTP_SERVER_KEY_EDV_URL=https://edv-oathkeeper-proxy.trustbloc.local/encrypted-data-vaults
+      - HTTP_SERVER_USER_EDV_URL=https://edv-oathkeeper-proxy.trustbloc.local/encrypted-data-vaults
     ports:
       - 8092:8092
     volumes:
@@ -233,7 +237,7 @@ services:
       - EDGE_AGENT_SERVER=https://myagent-support.trustbloc.local
       - WALLET_MEDIATOR_URL=${WALLET_ROUTER_URL}
       - BLINDED_ROUTING=${SUPPORT_BLINDED_ROUTING}
-      - EDV_SERVER_URL=https://edv.trustbloc.local/encrypted-data-vaults
+      - EDV_SERVER_URL=https://edv-oathkeeper-proxy.trustbloc.local/encrypted-data-vaults
       - STORAGE_TYPE=edv
       - USE_EDV_CACHE=true
       - CLEAR_CACHE=10m
@@ -302,7 +306,7 @@ services:
       - KMS_SECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - KMS_SECRETS_DATABASE_PREFIX=kms
       - KMS_KEY_MANAGER_STORAGE_TYPE=edv
-      - KMS_KEY_MANAGER_STORAGE_URL=https://edv.trustbloc.local
+      - KMS_KEY_MANAGER_STORAGE_URL=https://edv-oathkeeper-proxy.trustbloc.local
       - VIRTUAL_HOST=ops-kms.trustbloc.local
       - VIRTUAL_PROTO=https
       - KMS_ZCAP_ENABLE=false
