@@ -40,7 +40,7 @@ services:
       - demo-net
 
   oathkeeper-proxy:
-    image: oryd/oathkeeper:v0.35.1-alpine
+    image: oryd/oathkeeper:v0.38.4-alpine
     ports:
       - "4455:4455"
     # will add self-signed certificate to the “trusted list” because oathkeeper doesn't trust self-signed certificate
@@ -58,6 +58,32 @@ services:
     restart: on-failure
     volumes:
       - ../oathkeeper:/oathkeeper
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo-net
+
+
+  edv-oathkeeper-proxy:
+    image: oryd/oathkeeper:v0.38.4-alpine
+    ports:
+      - "4457:4457"
+    # will add self-signed certificate to the “trusted list” because oathkeeper doesn't trust self-signed certificate
+    # https://github.com/ory/oathkeeper/issues/181
+    # remove it when using real certificate
+    command:  /bin/sh -c "cp /etc/tls/trustbloc-dev-ca.crt /usr/local/share/ca-certificates/;update-ca-certificates;oathkeeper serve proxy --config /oathkeeper/config.yaml"
+    user: root
+    entrypoint: ""
+    environment:
+      - LOG_LEVEL=debug
+      - PORT=4457
+      - ISSUER_URL=https://edv-oathkeeper-proxy.trustbloc.local
+      - SERVE_PROXY_CORS_ENABLED=true
+      - SERVE_PROXY_CORS_ALLOWED_HEADERS=Capability-Invocation,Content-Type,Digest,Signature
+      - VIRTUAL_HOST=edv-oathkeeper-proxy.trustbloc.local
+      - VIRTUAL_PORT=4457
+    restart: on-failure
+    volumes:
+      - ../edv-oathkeeper:/oathkeeper
       - ../keys/tls:/etc/tls
     networks:
       - demo-net
@@ -117,6 +143,7 @@ services:
           - governance-vcs.trustbloc.local
           - hydra.trustbloc.local
           - oathkeeper-proxy.trustbloc.local
+          - edv-oathkeeper-proxy.trustbloc.local
           - edv.trustbloc.local
           - kms.trustbloc.local
           - uni-resolver-web.trustbloc.local
