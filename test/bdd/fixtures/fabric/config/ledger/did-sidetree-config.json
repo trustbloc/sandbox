@@ -1,5 +1,6 @@
 {
   "Namespace": "did:trustbloc:4vSjd",
   "Aliases": ["did:trustbloc:testnet.trustbloc.local"],
-  "BasePath": "/sidetree/0.0.1"
+  "BasePath": "/sidetree/0.0.1",
+  "DocumentCacheSize": 10000
 }

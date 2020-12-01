@@ -4,5 +4,6 @@
   "DocType": "FILE_INDEX",
   "Authorization":{
     "WriteTokens": ["fileidx_w"]
-  }
+  },
+  "DocumentCacheSize": 10000
 }
