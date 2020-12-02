@@ -243,6 +243,7 @@ services:
       - STORAGE_TYPE=edv
       - USE_EDV_CACHE=true
       - CLEAR_CACHE=10m
+      - KMS_TYPE=webkms
     networks:
       - demo-net
 
