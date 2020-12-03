@@ -208,8 +208,8 @@ services:
       - HTTP_SERVER_RP_DISPLAY_NAME=trustbloc
       - HTTP_SERVER_RP_ORIGIN_NAME=https://myagent.trustbloc.local
       - HTTP_SERVER_RP_ID=myagent.trustbloc.local
-      - HTTP_SERVER_AUTHZ_KMS_URL=https://authz-kms.trustbloc.local
-      - HTTP_SERVER_OPS_KMS_URL=https://ops-kms.trustbloc.local
+      - HTTP_SERVER_AUTHZ_KMS_URL=https://oathkeeper-auth-keyserver.trustbloc.local
+      - HTTP_SERVER_OPS_KMS_URL=https://oathkeeper-ops-keyserver.trustbloc.local
       - HTTP_SERVER_KEY_EDV_URL=https://edv-oathkeeper-proxy.trustbloc.local/encrypted-data-vaults
       - HTTP_SERVER_USER_EDV_URL=https://edv-oathkeeper-proxy.trustbloc.local/encrypted-data-vaults
     ports:
@@ -264,8 +264,8 @@ services:
     networks:
       - demo-net
 
-  authz-kms.rest.example.com:
-    container_name: authz-kms.rest.example.com
+  authz-kms-rest.example.com:
+    container_name: authz-kms-rest.example.com
     image: ${KMS_REST_IMAGE}:${KMS_REST_TAG}
     environment:
       - KMS_HOST_URL=0.0.0.0:8072
@@ -354,8 +354,8 @@ services:
       - AUTH_REST_LOG_LEVEL=DEBUG
       - AUTH_REST_SDS_DOCS_URL=https://TODO.docs.sds.org/
       - AUTH_REST_SDS_OPSKEYS_URL=https://TODO.keys.sds.org/
-      - AUTH_REST_KEYSERVER_AUTH_URL=https://TODO.auth.keyserver.org/
-      - AUTH_REST_KEYSERVER_OPS_URL=https://TODO.ops.keyserver.org/
+      - AUTH_REST_KEYSERVER_AUTH_URL=https://oathkeeper-auth-keyserver.trustbloc.local
+      - AUTH_REST_KEYSERVER_OPS_URL=https://oathkeeper-ops-keyserver.trustbloc.local
       - AUTH_REST_COOKIE_AUTH_KEY=/etc/keys/session_cookies/auth.key
       - AUTH_REST_COOKIE_ENC_KEY=/etc/keys/session_cookies/enc.key
       - AUTH_REST_API_TOKEN=authkms-token

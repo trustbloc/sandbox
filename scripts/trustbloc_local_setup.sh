@@ -42,4 +42,8 @@ cat > ${SANDBOX_HOME}/hosts <<EOF
 127.0.0.1 shared.couchdb
 127.0.0.1 auth-rest.trustbloc.local
 127.0.0.1 auth-rest-hydra.trustbloc.local
+127.0.0.1 oathkeeper-auth-keyserver.trustbloc.local
+127.0.0.1 oathkeeper-ops-keyserver.trustbloc.local
+127.0.0.1 ops-kms.trustbloc.local
 EOF
+# TODO remove ops-kms.trustbloc.local after this is fixed: https://github.com/trustbloc/edge-agent/issues/574.
