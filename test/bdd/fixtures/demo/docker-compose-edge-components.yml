@@ -241,9 +241,9 @@ services:
       - BLINDED_ROUTING=${SUPPORT_BLINDED_ROUTING}
       - EDV_SERVER_URL=https://edv-oathkeeper-proxy.trustbloc.local/encrypted-data-vaults
       - STORAGE_TYPE=edv
-      - USE_EDV_CACHE=false
+      - USE_EDV_CACHE=true
       - EDV_CLEAR_CACHE=10m
-      - EDV_BATCH_LIMIT=0
+      - EDV_BATCH_THREAD_LIMIT=100
       - KMS_TYPE=webkms
     networks:
       - demo-net
