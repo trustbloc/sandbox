@@ -7,6 +7,18 @@
 serve:
   proxy:
     port: 4460
+    cors:
+      enabled: true
+      allowed_headers:
+        - Content-Type
+        - Authorization
+        - Hub-Kms-Secret
+        - Capability-Invocation
+        - Digest
+        - Signature
+      allowed_origins:
+        - https://myagent.trustbloc.local
+      allow_credentials: true
   api:
     port: 4458
 
