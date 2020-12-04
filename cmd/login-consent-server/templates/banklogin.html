@@ -71,11 +71,11 @@ SPDX-License-Identifier: Apache-2.0
                         <input type="hidden" name="challenge" value="{{.login_challenge}}">
 
                         <div class="mb-4">
-                            <label class="block text-white text-lg font-bold mb-2 text-left" for="cardNum">
-                                Client Card or Username (required)
+                            <label class="block text-white text-lg font-bold mb-2 text-left" for="email">
+                                Email ID (required)
                             </label>
                             <input class="shadow appearance-none border w-full py-2 px-8 text-gray-700
-                        leading-tight focus:outline-none focus:shadow-outline" name='cardNum' id='cardNum' type="tel" inputmode="numeric" pattern="[0-9\s]{13,19}" maxlength="19" value="4506 4456 4307 3456" required>
+                        leading-tight focus:outline-none focus:shadow-outline" name='email' id='email' type="email" inputmode="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" maxlength="30" value="john.smith@example.com" required>
                         </div>
 
                         <div class="mb-6">
