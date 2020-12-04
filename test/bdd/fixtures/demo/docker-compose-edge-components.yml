@@ -269,8 +269,7 @@ services:
     image: ${KMS_REST_IMAGE}:${KMS_REST_TAG}
     environment:
       - KMS_HOST_URL=0.0.0.0:8072
-      # TODO this should be oathkeeper url ref: https://github.com/trustbloc/edge-agent/issues/580
-      - KMS_BASE_URL=https://authz-kms.trustbloc.local
+      - KMS_BASE_URL=https://oathkeeper-auth-keyserver.trustbloc.local
       - KMS_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - KMS_TLS_SYSTEMCERTPOOL=true
       - KMS_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt
@@ -309,8 +308,7 @@ services:
     image: ${KMS_REST_IMAGE}:${KMS_REST_TAG}
     environment:
       - KMS_HOST_URL=0.0.0.0:8073
-      # TODO this should be oathkeeper url ref: https://github.com/trustbloc/edge-agent/issues/580
-      - KMS_BASE_URL=https://ops-kms.trustbloc.local
+      - KMS_BASE_URL=https://oathkeeper-ops-keyserver.trustbloc.local
       - KMS_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - KMS_TLS_SYSTEMCERTPOOL=true
       - KMS_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt
@@ -328,7 +326,7 @@ services:
       - KMS_KEY_MANAGER_STORAGE_URL=https://edv-oathkeeper-proxy.trustbloc.local
       - VIRTUAL_HOST=ops-kms.trustbloc.local
       - VIRTUAL_PROTO=https
-      - KMS_ZCAP_ENABLE=false
+      - KMS_ZCAP_ENABLE=true
     ports:
       - 8073:8073
     entrypoint: ""
