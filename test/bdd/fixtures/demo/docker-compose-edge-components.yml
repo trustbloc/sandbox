@@ -243,7 +243,6 @@ services:
       - STORAGE_TYPE=edv
       - USE_EDV_CACHE=true
       - EDV_CLEAR_CACHE=10m
-      - EDV_BATCH_THREAD_LIMIT=100
       - KMS_TYPE=webkms
       - USE_EDV_BATCH=true
     networks:
