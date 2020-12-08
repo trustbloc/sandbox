@@ -1,7 +1,10 @@
 # TrustBloc VCS Components
 
-## Architecture Diagram
-![VCS Architecture diagram](../images/vcs_component_diagram.svg)
+## Architecture Diagram (v0.1.5)
+![VCS Architecture diagram v0.1.5](../images/vcs_component_diagram_v0.1.5.svg)
+
+## Architecture Diagram (v0.1.4)
+![VCS Architecture diagram v0.1.4](../images/vcs_component_diagram_v0.1.4.svg)
 
 ## Component Details
 ### Core
