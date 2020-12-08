@@ -92,8 +92,8 @@ SPDX-License-Identifier: Apache-2.0
                                 <label class="md:w-2/3 block text-gray-500 font-bold">
                                     <input {{if eq $element "openid"}} type="hidden"{{end}} class="mr-2 leading-tight filled-in" type="checkbox" id="{{$element}}" value="{{$element}}" name="grant_scope" checked="checked" />
                                     <span {{if eq $element "openid"}} hidden{{end}} class="text-lg text-black" id="scopeName" for="{{$element}}">{{$element}}</span>
-                                    {{end}}
                                 </label>
+                                {{end}}
                                 <br>
                                 <p>
                                     <input type="hidden" name="challenge" value="{{.Challenge}}">
