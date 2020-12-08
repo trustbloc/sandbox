@@ -7,7 +7,7 @@
 
 # Release Parameters
 BASE_VERSION=0.1.5
-IS_RELEASE=false
+IS_RELEASE=true
 
 SOURCE_REPO=edge-sandbox
 BASE_RP_PKG_NAME=rp-rest
