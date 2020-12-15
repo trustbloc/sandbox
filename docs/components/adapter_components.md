@@ -1,7 +1,7 @@
 # TrustBloc Adapter Components
 
 ## v0.1.5
-## Architecture Diagram 
+### Architecture Diagram 
 ![Adapter Architecture diagram v0.1.5](../images/adapter_component_diagram_v0.1.5.svg)
 
 ### Component Details

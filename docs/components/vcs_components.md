@@ -5,6 +5,7 @@
 ![VCS Architecture diagram v0.1.5](../images/vcs_component_diagram_v0.1.5.svg)
 
 ### Component Details
+#### Core
 | Component                   | Source URL                                                                   | Sample Docker Configuration                                                                                                         |
 |-----------------------------|------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
 | Router                      | [Source](https://github.com/trustbloc/hub-router)                            | [Docker](https://github.com/trustbloc/edge-sandbox/blob/v0.1.5/test/bdd/fixtures/demo/docker-compose-didcomm.yml#L11-L41)           |
