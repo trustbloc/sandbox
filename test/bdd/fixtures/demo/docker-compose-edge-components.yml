@@ -245,6 +245,7 @@ services:
       - EDV_CLEAR_CACHE=10m
       - KMS_TYPE=webkms
       - USE_EDV_BATCH=true
+      - LOG_LEVEL=WARNING
     networks:
       - demo-net
 
