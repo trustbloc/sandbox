@@ -5,7 +5,6 @@
 module github.com/trustbloc/edge-sandbox/cmd/issuer-rest
 
 replace (
-	github.com/kilic/bls12-381 => github.com/trustbloc/bls12-381 v0.0.0-20201104214312-31de2a204df8
 	github.com/trustbloc/edge-core => github.com/trustbloc/edge-core v0.1.5-0.20201126210935-53388acb41fc
 	github.com/trustbloc/edge-sandbox => ../..
 )
