@@ -50,7 +50,7 @@
       "url": "https://ops-kms.trustbloc.local"
     },
     "match": {
-      "url": "http://oathkeeper-ops-keyserver.trustbloc.local/healthcheck",
+      "url": "https://oathkeeper-ops-keyserver.trustbloc.local/healthcheck",
       "methods": ["GET"]
     },
     "authenticators": [{

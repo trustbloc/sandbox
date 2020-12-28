@@ -44,4 +44,10 @@ cat > ${SANDBOX_HOME}/hosts <<EOF
 127.0.0.1 auth-rest-hydra.trustbloc.local
 127.0.0.1 oathkeeper-auth-keyserver.trustbloc.local
 127.0.0.1 oathkeeper-ops-keyserver.trustbloc.local
+127.0.0.1 uni-registrar-web.trustbloc.local
+127.0.0.1 issuer-vcs.trustbloc.local
+127.0.0.1 rp-vcs.trustbloc.local
+127.0.0.1 holder-vcs.trustbloc.local
+127.0.0.1 governance-vcs.trustbloc.local
+127.0.0.1 did-method.trustbloc.local
 EOF

@@ -1,0 +1,123 @@
+#
+# SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '3'
+
+services:
+
+  auth.rest.example.com:
+    container_name: auth.rest.example.com
+    image: ${AUTH_REST_IMAGE}:${AUTH_REST_IMAGE_TAG}
+    environment:
+      - AUTH_REST_HOST_URL=0.0.0.0:11101
+      - AUTH_REST_TLS_CACERTS=/etc/keys/tls/trustbloc-dev-ca.crt
+      - AUTH_REST_TLS_SYSTEMCERTPOOL=true
+      - AUTH_REST_TLS_SERVE_CERT=/etc/keys/tls/trustbloc.local.crt
+      - AUTH_REST_TLS_SERVE_KEY=/etc/keys/tls/trustbloc.local.key
+      - AUTH_REST_DATABASE_TYPE=mysql
+      - AUTH_REST_DATABASE_URL=authrest:authrest-secret-pw@tcp(mysql:3306)/
+      - AUTH_REST_DATABASE_PREFIX=authrest
+      - AUTH_REST_OIDC_CALLBACK=https://auth-rest.trustbloc.local/oauth2/callback
+      - AUTH_REST_OIDC_PROVIDERS_CONFIG=/etc/auth-rest-config/oidc-providers.yaml
+      - AUTH_REST_HYDRA_URL=https://auth-rest-hydra.trustbloc.local:11202
+      - AUTH_REST_LOG_LEVEL=DEBUG
+      - AUTH_REST_SDS_DOCS_URL=https://TODO.docs.sds.org/
+      - AUTH_REST_SDS_OPSKEYS_URL=https://TODO.keys.sds.org/
+      - AUTH_REST_KEYSERVER_AUTH_URL=https://oathkeeper-auth-keyserver.trustbloc.local
+      - AUTH_REST_KEYSERVER_OPS_URL=https://oathkeeper-ops-keyserver.trustbloc.local
+      - AUTH_REST_COOKIE_AUTH_KEY=/etc/keys/session_cookies/auth.key
+      - AUTH_REST_COOKIE_ENC_KEY=/etc/keys/session_cookies/enc.key
+      - AUTH_REST_API_TOKEN=authkms-token
+      - VIRTUAL_HOST=auth-rest.trustbloc.local
+      - VIRTUAL_PORT=11101
+      - VIRTUAL_PROTO=https
+    ports:
+      - 11101:11101
+    entrypoint: ""
+    command:  /bin/sh -c "auth-rest start"
+    volumes:
+      - ../keys:/etc/keys
+      - ../auth-rest-config:/etc/auth-rest-config
+    networks:
+      - demo_demo-net
+
+  auth-rest-hydra.trustbloc.local:
+    container_name: auth-rest-hydra.trustbloc.local
+    image: oryd/hydra:${HYDRA_IMAGE_TAG}
+    ports:
+      - 11201:11201 # Public port
+      - 11202:11202 # Admin port
+    command:  /bin/sh -c "hydra migrate sql --read-from-env --yes; tmp/hydra_configure.sh& hydra serve all"
+    entrypoint: ""
+    environment:
+      - DSN=mysql://authresthydra:authresthydra-secret-pw@tcp(mysql:3306)/authresthydra?max_conns=20&max_idle_conns=4
+      - URLS_SELF_ISSUER=https://auth-rest-hydra.trustbloc.local:11201/
+      - URLS_CONSENT=https://auth-rest.trustbloc.local/hydra/consent
+      - URLS_LOGIN=https://auth-rest.trustbloc.local/hydra/login
+      - SECRETS_SYSTEM=testSecretsSystem
+      - OIDC_SUBJECT_TYPES_SUPPORTED=public
+      - OIDC_SUBJECT_TYPE_PAIRWISE_SALT=testSecretsSystem
+      - SERVE_TLS_KEY_PATH=/etc/tls/trustbloc.local.key
+      - SERVE_TLS_CERT_PATH=/etc/tls/trustbloc.local.crt
+      - SERVE_PUBLIC_PORT=11201
+      - SERVE_ADMIN_PORT=11202
+      - VIRTUAL_HOST=auth-rest-hydra.trustbloc.local
+      - VIRTUAL_PORT=11201
+    restart: unless-stopped
+    volumes:
+      - ../scripts/hydra/auth-rest-hydra_configure.sh:/tmp/hydra_configure.sh
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo_demo-net
+
+  hydra:
+    container_name: hydra.trustbloc.local
+    image: oryd/hydra:${HYDRA_IMAGE_TAG}
+    ports:
+      - "4444:4444" # Public port
+      - "4445:4445" # Admin port
+    command:  /bin/sh -c "hydra migrate sql --read-from-env --yes;tmp/hydra_configure.sh& hydra serve all"
+    entrypoint: ""
+    environment:
+      - DSN=mysql://root:secret@tcp(mysql:3306)/mysql?max_conns=20&max_idle_conns=4
+      - URLS_SELF_ISSUER=https://hydra.trustbloc.local
+      - URLS_CONSENT=https://consent-login.trustbloc.local/consent
+      - URLS_LOGIN=https://consent-login.trustbloc.local/login
+      - URLS_LOGOUT=https://consent-login.trustbloc.local/logout
+      - SECRETS_SYSTEM=testSecretsSystem
+      - OIDC_SUBJECT_TYPES_SUPPORTED=public,pairwise
+      - OIDC_SUBJECT_TYPE_PAIRWISE_SALT=testSecretsSystem
+      - SERVE_TLS_KEY_PATH=/etc/tls/trustbloc.local.key
+      - SERVE_TLS_CERT_PATH=/etc/tls/trustbloc.local.crt
+      - VIRTUAL_HOST=hydra.trustbloc.local
+      - VIRTUAL_PORT=4444
+      - VIRTUAL_PROTO=https
+    restart: unless-stopped
+    volumes:
+      - ../scripts/hydra/hydra_configure.sh:/tmp/hydra_configure.sh
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo_demo-net
+
+  consent.login.com:
+    container_name: consent.login.com
+    image: ${CONSENT_LOGIN_SERVER_IMAGE}:latest
+    environment:
+      # will access hydra admin through container directly because nginx-proxy doesn't support multiple ports per virtual host
+      - ADMIN_URL=${HYDRA_ADMIN_URL}
+      - SERVE_PORT=3300
+      - TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - VIRTUAL_HOST=consent-login.trustbloc.local
+    ports:
+      - 3300:3300
+    volumes:
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo_demo-net
+
+networks:
+  demo_demo-net:
+    external: true

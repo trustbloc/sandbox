@@ -40,9 +40,7 @@ services:
       - ../keys/tls:/etc/tls
       - ../scripts/:/tmp/scripts
     networks:
-      - demo-net
-    depends_on:
-      - shared.couchdb
+      - demo_demo-net
 
   rp.example.com:
     container_name: rp.example.com
@@ -65,7 +63,9 @@ services:
     volumes:
       - ../keys/tls:/etc/tls
       - ../scripts/:/tmp/scripts
-    depends_on:
-      - rp.adapter.rest.example.com
     networks:
-      - demo-net
+      - demo_demo-net
+
+networks:
+  demo_demo-net:
+    external: true

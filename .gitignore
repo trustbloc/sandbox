@@ -33,6 +33,7 @@ test/bdd/fixtures/oathkeeper/rules/resource-server.json
 
 .build
 test/bdd/fixtures/fabric/crypto-config/
+test/bdd/fixtures/demo/docker.log
 test/bdd/fixtures/fabric/channel/
 .fabriccli
 test/bdd/fixtures/discovery-config/sidetree-mock/config

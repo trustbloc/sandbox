@@ -1,0 +1,57 @@
+#
+# SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '3'
+
+services:
+
+  oathkeeper-proxy:
+    image: oryd/oathkeeper:v0.38.4-alpine
+    ports:
+      - "4455:4455"
+    # will add self-signed certificate to the “trusted list” because oathkeeper doesn't trust self-signed certificate
+    # https://github.com/ory/oathkeeper/issues/181
+    # remove it when using real certificate
+    command:  /bin/sh -c "cp /etc/tls/trustbloc-dev-ca.crt /usr/local/share/ca-certificates/;update-ca-certificates;oathkeeper serve proxy --config /oathkeeper/config.yaml"
+    user: root
+    entrypoint: ""
+    environment:
+      - LOG_LEVEL=debug
+      - PORT=4455
+      - ISSUER_URL=https://oathkeeper-proxy.trustbloc.local
+      - VIRTUAL_HOST=oathkeeper-proxy.trustbloc.local
+      - VIRTUAL_PORT=4455
+    restart: on-failure
+    volumes:
+      - ../oathkeeper:/oathkeeper
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo_demo-net
+
+  strapi:
+    container_name: strapi
+    image: strapi/strapi:3.0.6-alpine
+    entrypoint: ""
+    command:  /bin/sh -c "/usr/local/bin/docker-entrypoint.sh strapi;/tmp/strapi_configure.sh& strapi develop"
+    environment:
+      - DATABASE_CLIENT=mysql
+      - DATABASE_HOST=mysql
+      - DATABASE_PORT=3306
+      - DATABASE_NAME=strapi
+      - DATABASE_USERNAME=user
+      - DATABASE_PASSWORD=secret
+      - VIRTUAL_HOST=cms.trustbloc.local
+    ports:
+      - 1337:1337
+    volumes:
+      - ../scripts/strapi_configure.sh:/tmp/strapi_configure.sh
+      - ../oathkeeper:/oathkeeper
+    networks:
+      - demo_demo-net
+
+networks:
+  demo_demo-net:
+    external: true
