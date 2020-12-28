@@ -55,5 +55,24 @@
     "authorizer": {
       "handler": "allow"
     }
+  },
+  {
+    "id": "edv-health",
+    "upstream": {
+      "url": "https://edv.trustbloc.local"
+    },
+    "match": {
+      "url": "http://edv-oathkeeper-proxy.trustbloc.local/healthcheck",
+      "methods": ["GET"]
+    },
+    "authenticators": [{
+      "handler": "noop"
+    }],
+    "mutators": [{
+      "handler": "noop"
+    }],
+    "authorizer": {
+      "handler": "allow"
+    }
   }
 ]

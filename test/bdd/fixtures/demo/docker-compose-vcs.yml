@@ -1,0 +1,137 @@
+#
+# SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '3'
+
+services:
+
+  issuer.vcs.example.com:
+    container_name: issuer.vcs.example.com
+    image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
+    environment:
+      - VC_REST_HOST_URL=0.0.0.0:8070
+      - VC_REST_HOST_URL_EXTERNAL=https://issuer-vcs.trustbloc.local
+      # TODO switch to edv proxy need to pass access token
+      - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
+      - BLOC_DOMAIN=${BLOC_DOMAIN}
+      - UNIVERSAL_RESOLVER_HOST_URL=https://did-resolver.trustbloc.local/1.0/identifiers
+      - VC_REST_MODE=issuer
+      - DATABASE_TYPE=couchdb
+      - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - DATABASE_PREFIX=issuer
+      - KMSSECRETS_DATABASE_TYPE=couchdb
+      - KMSSECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMSSECRETS_DATABASE_PREFIX=issuer
+      - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - VC_REST_TLS_SYSTEMCERTPOOL=true
+      - VC_REST_API_TOKEN=vcs_issuer_rw_token
+      - VIRTUAL_HOST=issuer-vcs.trustbloc.local
+    ports:
+      - 8070:8070
+    entrypoint: ""
+    command:  /bin/sh -c "vc-rest start"
+    volumes:
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo_demo-net
+
+  rp.vcs.example.com:
+    container_name: rp.vcs.example.com
+    image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
+    environment:
+      - VC_REST_HOST_URL=0.0.0.0:8069
+      - VC_REST_HOST_URL_EXTERNAL=https://rp-vcs.trustbloc.local
+      # TODO switch to edv proxy need to pass access token
+      - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
+      - BLOC_DOMAIN=${BLOC_DOMAIN}
+      - UNIVERSAL_RESOLVER_HOST_URL=https://did-resolver.trustbloc.local/1.0/identifiers
+      - VC_REST_MODE=verifier
+      - DATABASE_TYPE=couchdb
+      - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - DATABASE_PREFIX=verifier
+      - KMSSECRETS_DATABASE_TYPE=couchdb
+      - KMSSECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMSSECRETS_DATABASE_PREFIX=verifier
+      - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - VC_REST_API_TOKEN=vcs_verifier_rw_token
+      - VC_REST_REQUEST_TOKENS=csl=vcs_issuer_rw_token
+      - VIRTUAL_HOST=rp-vcs.trustbloc.local
+    entrypoint: ""
+    command:  /bin/sh -c "vc-rest start"
+    volumes:
+      - ../keys/tls:/etc/tls
+    ports:
+      - 8069:8069
+    networks:
+      - demo_demo-net
+
+  holder.vcs.example.com:
+    container_name: holder.vcs.example.com
+    image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
+    environment:
+      - VC_REST_HOST_URL=0.0.0.0:8067
+      - VC_REST_HOST_URL_EXTERNAL=https://holder-vcs.trustbloc.local
+      # TODO switch to edv proxy need to pass access token
+      - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
+      - BLOC_DOMAIN=${BLOC_DOMAIN}
+      - UNIVERSAL_RESOLVER_HOST_URL=https://did-resolver.trustbloc.local/1.0/identifiers
+      - VC_REST_MODE=holder
+      - DATABASE_TYPE=couchdb
+      - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - DATABASE_PREFIX=holder
+      - KMSSECRETS_DATABASE_TYPE=couchdb
+      - KMSSECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMSSECRETS_DATABASE_PREFIX=holder
+      - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - VC_REST_TLS_SYSTEMCERTPOOL=true
+      - VC_REST_API_TOKEN=vcs_holder_rw_token
+      - VIRTUAL_HOST=holder-vcs.trustbloc.local
+    entrypoint: ""
+    command:  /bin/sh -c "vc-rest start"
+    volumes:
+      - ../keys/tls:/etc/tls
+    ports:
+      - 8067:8067
+    networks:
+      - demo_demo-net
+
+  governance.vcs.example.com:
+    container_name: governance.vcs.example.com
+    image: ${VCS_IMAGE}:${VCS_IMAGE_TAG}
+    environment:
+      - VC_REST_HOST_URL=0.0.0.0:8066
+      - VC_REST_HOST_URL_EXTERNAL=https://governance-vcs.trustbloc.local
+      # TODO switch to edv proxy need to pass access token
+      - EDV_REST_HOST_URL=https://edv.trustbloc.local/encrypted-data-vaults
+      - BLOC_DOMAIN=${BLOC_DOMAIN}
+      - UNIVERSAL_RESOLVER_HOST_URL=https://did-resolver.trustbloc.local/1.0/identifiers
+      - VC_REST_MODE=governance
+      - DATABASE_TYPE=couchdb
+      - DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - DATABASE_PREFIX=governance
+      - KMSSECRETS_DATABASE_TYPE=couchdb
+      - KMSSECRETS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMSSECRETS_DATABASE_PREFIX=governance
+      - VC_REST_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - VC_REST_TLS_SYSTEMCERTPOOL=true
+      - VC_REST_API_TOKEN=vcs_governance_rw_token
+      - VIRTUAL_HOST=governance-vcs.trustbloc.local
+      - VIRTUAL_PORT=8066
+      - VC_REST_GOVERNANCE_CLAIMS_FILE=/etc/governance_claims.json
+    ports:
+      - 8066:8066
+    entrypoint: ""
+    command:  /bin/sh -c "vc-rest start"
+    volumes:
+      - ../keys/tls:/etc/tls
+      - ../governance/governance_claims.json:/etc/governance_claims.json
+    networks:
+      - demo_demo-net
+
+
+networks:
+  demo_demo-net:
+    external: true

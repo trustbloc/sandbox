@@ -1,0 +1,128 @@
+#
+# SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '3'
+
+services:
+  authz-kms-rest.example.com:
+    container_name: authz-kms-rest.example.com
+    image: ${KMS_REST_IMAGE}:${KMS_REST_TAG}
+    environment:
+      - KMS_HOST_URL=0.0.0.0:8072
+      - KMS_BASE_URL=https://oathkeeper-auth-keyserver.trustbloc.local
+      - KMS_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - KMS_TLS_SYSTEMCERTPOOL=true
+      - KMS_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt
+      - KMS_TLS_SERVE_KEY=/etc/tls/trustbloc.local.key
+      - KMS_DATABASE_TYPE=couchdb
+      - KMS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_DATABASE_PREFIX=authzkeystore
+      - KMS_SECRET_LOCK_KEY_PATH=/etc/tls/service-lock.key
+      - KMS_PRIMARY_KEY_DATABASE_TYPE=couchdb
+      - KMS_PRIMARY_KEY_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_PRIMARY_KEY_DATABASE_PREFIX=authzkmspk
+      - KMS_LOCAL_KMS_DATABASE_TYPE=couchdb
+      - KMS_LOCAL_KMS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_LOCAL_KMS_DATABASE_PREFIX=authzkmslocal
+      - KMS_KEY_MANAGER_STORAGE_TYPE=couchdb
+      - KMS_KEY_MANAGER_STORAGE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_KEY_MANAGER_STORAGE_PREFIX=authzkmskm
+      - KMS_HUB_AUTH_URL=https://auth-rest.trustbloc.local
+      - KMS_HUB_AUTH_API_TOKEN=authkms-token
+      - VIRTUAL_HOST=authz-kms.trustbloc.local
+      - VIRTUAL_PORT=8072
+      - VIRTUAL_PROTO=https
+    ports:
+      - 8072:8072
+    entrypoint: ""
+    command: /bin/sh -c "kms-rest start"
+    volumes:
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo_demo-net
+
+  ops-kms.rest.example.com:
+    container_name: ops-kms.rest.example.com
+    image: ${KMS_REST_IMAGE}:${KMS_REST_TAG}
+    environment:
+      - KMS_HOST_URL=0.0.0.0:8073
+      - KMS_BASE_URL=https://oathkeeper-ops-keyserver.trustbloc.local
+      - KMS_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - KMS_TLS_SYSTEMCERTPOOL=true
+      - KMS_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt
+      - KMS_TLS_SERVE_KEY=/etc/tls/trustbloc.local.key
+      - KMS_DATABASE_TYPE=couchdb
+      - KMS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_DATABASE_PREFIX=keystore
+      - KMS_PRIMARY_KEY_DATABASE_TYPE=couchdb
+      - KMS_PRIMARY_KEY_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_PRIMARY_KEY_DATABASE_PREFIX=kmspk
+      - KMS_LOCAL_KMS_DATABASE_TYPE=couchdb
+      - KMS_LOCAL_KMS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - KMS_LOCAL_KMS_DATABASE_PREFIX=kmslocal
+      - KMS_KEY_MANAGER_STORAGE_TYPE=edv
+      - KMS_KEY_MANAGER_STORAGE_URL=https://edv-oathkeeper-proxy.trustbloc.local
+      - VIRTUAL_HOST=ops-kms.trustbloc.local
+      - VIRTUAL_PROTO=https
+      - KMS_ZCAP_ENABLE=true
+    ports:
+      - 8073:8073
+    entrypoint: ""
+    command: /bin/sh -c "kms-rest start"
+    volumes:
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo_demo-net
+
+  oathkeeper-auth-keyserver.trustbloc.local:
+    container_name: oathkeeper-auth-keyserver.trustbloc.local
+    image: oryd/oathkeeper:v0.38.4-alpine
+    ports:
+      - 4459:4459
+    command: /bin/sh -c "cp /etc/tls/trustbloc-dev-ca.crt /usr/local/share/ca-certificates/;update-ca-certificates;oathkeeper serve proxy --config /oathkeeper/config.yaml"
+    user: root
+    entrypoint: ""
+    environment:
+      - LOG_LEVEL=debug
+      - PORT=4459
+      - ISSUER_URL=https://oathkeeper-proxy.trustbloc.local
+      - SERVE_PROXY_TLS_KEY_PATH=/etc/tls/trustbloc.local.key
+      - SERVE_PROXY_TLS_CERT_PATH=/etc/tls/trustbloc.local.crt
+      - VIRTUAL_HOST=oathkeeper-auth-keyserver.trustbloc.local
+      - VIRTUAL_PORT=4459
+      - VIRTUAL_PROTO=https
+    volumes:
+      - ../hubkms-oathkeeper/auth-keyserver:/oathkeeper
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo_demo-net
+
+  oathkeeper-ops-keyserver.trustbloc.local:
+    container_name: oathkeeper-ops-keyserver.trustbloc.local
+    image: oryd/oathkeeper:v0.38.4-alpine
+    ports:
+      - 4460:4460
+    command: /bin/sh -c "cp /etc/tls/trustbloc-dev-ca.crt /usr/local/share/ca-certificates/;update-ca-certificates;oathkeeper serve proxy --config /oathkeeper/config.yaml"
+    user: root
+    entrypoint: ""
+    environment:
+      - LOG_LEVEL=debug
+      - PORT=4460
+      - ISSUER_URL=https://oathkeeper-proxy.trustbloc.local
+      - SERVE_PROXY_TLS_KEY_PATH=/etc/tls/trustbloc.local.key
+      - SERVE_PROXY_TLS_CERT_PATH=/etc/tls/trustbloc.local.crt
+      - VIRTUAL_HOST=oathkeeper-ops-keyserver.trustbloc.local
+      - VIRTUAL_PORT=4460
+      - VIRTUAL_PROTO=https
+    volumes:
+      - ../hubkms-oathkeeper/ops-keyserver:/oathkeeper
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo_demo-net
+
+networks:
+  demo_demo-net:
+    external: true

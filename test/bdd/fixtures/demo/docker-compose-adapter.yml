@@ -8,38 +8,6 @@ version: '3'
 
 services:
 
-  router.agent.example.com:
-    container_name: router.agent.example.com
-    image: ${HUB_ROUTER_IMAGE}:${HUB_ROUTER_IMAGE_TAG}
-    environment:
-      - HUB_ROUTER_HOST_URL=${DIDCOMM_ROUTER_HOST}:${DIDCOMM_ROUTER_API_PORT}
-      - HUB_ROUTER_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
-      - HUB_ROUTER_TLS_SYSTEMCERTPOOL=true
-      - HUB_ROUTER_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt
-      - HUB_ROUTER_TLS_SERVE_KEY=/etc/tls/trustbloc.local.key
-      - HUB_ROUTER_DIDCOMM_HTTP_HOST=${DIDCOMM_ROUTER_HOST}:${DIDCOMM_ROUTER_HTTP_INBOUND_PORT}
-      - HUB_ROUTER_DIDCOMM_HTTP_HOST_EXTERNAL=https://router.trustbloc.local
-      - HUB_ROUTER_DIDCOMM_WS_HOST=${DIDCOMM_ROUTER_HOST}:${DIDCOMM_ROUTER_WS_INBOUND_PORT}
-      - HUB_ROUTER_DIDCOMM_WS_HOST_EXTERNAL=wss://router.trustbloc.local:${DIDCOMM_ROUTER_WS_INBOUND_PORT}
-      - HUB_ROUTER_DSN_PERSISTENT=mysql://hubrouter:hubrouter-secret-pw@tcp(mysql:3306)/
-      - HUB_ROUTER_DSN_TRANSIENT=mysql://hubrouter:hubrouter-secret-pw@tcp(mysql:3306)/
-      - HUB_ROUTER_DSN_TIMEOUT=120
-      - VIRTUAL_HOST=router.trustbloc.local
-      - VIRTUAL_PORT=${DIDCOMM_ROUTER_HTTP_INBOUND_PORT}
-      - VIRTUAL_PROTO=https
-    ports:
-      - ${DIDCOMM_ROUTER_API_PORT}:${DIDCOMM_ROUTER_API_PORT}
-      - ${DIDCOMM_ROUTER_HTTP_INBOUND_PORT}:${DIDCOMM_ROUTER_HTTP_INBOUND_PORT}
-      - ${DIDCOMM_ROUTER_WS_INBOUND_PORT}:${DIDCOMM_ROUTER_WS_INBOUND_PORT}
-    entrypoint: ""
-    command: /bin/sh -c "hub-router start"
-    volumes:
-      - ../keys/tls:/etc/tls
-    networks:
-      - demo-net
-    depends_on:
-      - mysql
-
   issuer.adapter.rest.example.com:
     container_name: issuer.adapter.rest.example.com
     image: ${ISSUER_ADAPTER_REST_IMAGE}:${ISSUER_ADAPTER_REST_IMAGE_TAG}
@@ -63,14 +31,12 @@ services:
       - ${ISSUER_ADAPTER_PORT}:${ISSUER_ADAPTER_PORT}
       - ${ISSUER_ADAPTER_DIDCOMM_PORT}:${ISSUER_ADAPTER_DIDCOMM_PORT}
     entrypoint: ""
-    command:  /bin/sh -c "sleep 20;/tmp/scripts/didcomm/issuer_adapter_configure.sh& adapter-rest start"
+    command:  /bin/sh -c "/tmp/scripts/didcomm/issuer_adapter_configure.sh& adapter-rest start"
     volumes:
       - ../keys/tls:/etc/tls
       - ../scripts/:/tmp/scripts
     networks:
-      - demo-net
-    depends_on:
-      - mysql
+      - demo_demo-net
 
   rp.adapter.rest.example.com:
     container_name: rp.adapter.rest.example.com
@@ -101,12 +67,9 @@ services:
     command:  /bin/sh -c "adapter-rest start"
     volumes:
       - ../keys/tls:/etc/tls
-      - ./adapter-config/rp:/etc/testdata
+      - ../adapter-config/rp:/etc/testdata
     networks:
-      - demo-net
-    depends_on:
-      - rp-adapter-hydra.trustbloc.local
-      - mysql
+      - demo_demo-net
 
   rp-adapter-hydra.trustbloc.local:
     container_name: rp-adapter-hydra.trustbloc.local
@@ -133,7 +96,9 @@ services:
     restart: unless-stopped
     volumes:
       - ../keys/tls:/etc/tls
-    depends_on:
-      - mysql
     networks:
-      - demo-net
+      - demo_demo-net
+
+networks:
+  demo_demo-net:
+    external: true

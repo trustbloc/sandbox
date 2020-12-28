@@ -52,7 +52,7 @@
       "url": "https://authz-kms.trustbloc.local"
     },
     "match": {
-      "url": "http://oathkeeper-auth-keyserver.trustbloc.local/healthcheck",
+      "url": "https://oathkeeper-auth-keyserver.trustbloc.local/healthcheck",
       "methods": ["GET"]
     },
     "authenticators": [{
