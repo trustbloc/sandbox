@@ -19,7 +19,7 @@ do
    responseCreatedTime=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer vcs_governance_rw_token" \
    --request POST \
    --data '{"name":"governance", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "signatureRepresentation":1,"didKeyType":"Ed25519"}' \
-   http://governance.vcs.example.com:8066/governance/profile | jq -r '.created' 2>/dev/null)
+   --insecure http://governance.vcs.example.com:8066/governance/profile | jq -r '.created' 2>/dev/null)
    echo "'created' field from profile governance response is: $responseCreatedTime"
 
    if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]

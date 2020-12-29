@@ -16,7 +16,7 @@ do
    responseCreatedTime=$(curl -k --header "Content-Type: application/json" \
    --request POST \
    --data '{"id":"tb-cc-issuer", "name":"TrustBloc - Credit Card Data Issuer", "url":"https://issuer.trustbloc.local/didcomm", "supportedVCContexts" : ["https://trustbloc.github.io/context/vc/examples/credit-card-v1.jsonld"]}' \
-   https://issuer.adapter.rest.example.com:10061/profile | jq -r '.createdAt' 2>/dev/null)
+   --insecure https://issuer.adapter.rest.example.com:10061/profile | jq -r '.createdAt' 2>/dev/null)
    echo "'created' field from profile tb-cc-issuer response is: $responseCreatedTime"
 
    if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]
@@ -41,7 +41,7 @@ do
    responseCreatedTime=$(curl -k --header "Content-Type: application/json" \
    --request POST \
    --data '{"id":"tb-cr-issuer", "name":"TrustBloc - Credit Report Issuer", "url":"https://issuer.trustbloc.local/didcomm", "supportedVCContexts" : ["https://trustbloc.github.io/context/vc/examples/credit-score-v1.jsonld"], "requiresBlindedRoute": true}' \
-   https://issuer.adapter.rest.example.com:10061/profile | jq -r '.createdAt' 2>/dev/null)
+   --insecure https://issuer.adapter.rest.example.com:10061/profile | jq -r '.createdAt' 2>/dev/null)
    echo "'created' field from profile tb-cr-issuer response is: $responseCreatedTime"
 
    if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]
@@ -65,7 +65,7 @@ do
    responseCreatedTime=$(curl -k --header "Content-Type: application/json" \
    --request POST \
    --data '{"id":"tb-dl-issuer", "name":"TrustBloc - Driving License + Assurance Issuer", "url":"https://issuer.trustbloc.local/didcomm", "supportedVCContexts" : ["https://trustbloc.github.io/context/vc/examples/driver-license-evidence-v1.jsonld"], "supportsAssuranceCredential" : true, "requiresBlindedRoute": true}' \
-   https://issuer.adapter.rest.example.com:10061/profile | jq -r '.createdAt' 2>/dev/null)
+   --insecure https://issuer.adapter.rest.example.com:10061/profile | jq -r '.createdAt' 2>/dev/null)
    echo "'created' field from profile tb-dl-issuer response is: $responseCreatedTime"
 
    if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]

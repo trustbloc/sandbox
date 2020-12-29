@@ -34,6 +34,7 @@ issuerAdapterHealthCheckURL=https://issuer-adapter.trustbloc.local:10061/healthc
 rpHealthCheckURL=https://rp.trustbloc.local/bankaccount
 issuerHealthCheckURL=https://issuer.trustbloc.local/drivinglicense
 cmsHealthCheckURL=https://cms.trustbloc.local/
+sidetreePeer=https://sidetree-mock.trustbloc.local
 
 checkMYSQLDB()
 {
@@ -45,7 +46,7 @@ echo "check mysql db '$1' exist please wait for max $maxAttempts seconds"
 until [ $n -ge $maxAttempts ]
 do
 
-  response=$(docker exec  mysql  mysql --user=$mysqlUser --password=$mysqlPassword -e "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '$1'" 2>&1)
+  response=$(docker exec  -e MYSQL_PWD=$mysqlPassword mysql  mysql --user=$mysqlUser -e "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '$1'" 2>&1)
 
   if [[ $response == *"$1"* ]]
   then
@@ -78,7 +79,7 @@ echo "health check for $1 url $2 please wait for max $maxAttempts seconds"
 
 until [ $n -ge $maxAttempts ]
 do
-  response=$(curl -H 'Cache-Control: no-cache' -o /dev/null -s -w "%{http_code}" "$2")
+  response=$(curl -H 'Cache-Control: no-cache' -o /dev/null -s -w "%{http_code}" --insecure "$2")
    if [ "$response" == "$3" ]
    then
      echo "${GREEN}$1 is up"
@@ -182,6 +183,7 @@ pingHost peer localhost 7051
 (cd test/bdd && go test)
 else
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-sidetree-mock.yml down && docker-compose -f docker-compose-sidetree-mock.yml up --force-recreate) > docker.log 2>&1 & )
+healthCheck sidetree $sidetreePeer 404
 generateDIDMethodConfigMock
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-sidetree-mock-discovery.yml down && docker-compose -f docker-compose-sidetree-mock-discovery.yml up --force-recreate) > docker.log 2>&1 & )
 fi
