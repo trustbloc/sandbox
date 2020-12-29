@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Copyright SecureKey Technologies Inc. All Rights Reserved.
 #
@@ -99,6 +100,43 @@ done
 }
 
 
+pingHost()
+{
+# TODO need to add nginx conf
+# for now we wait until nginx pick up the VIRTUAL_HOST
+sleep 3
+n=0
+maxAttempts=120
+echo "ping for $1 host $2 port $3 please wait for max $maxAttempts seconds"
+
+
+until [ $n -ge $maxAttempts ]
+do
+
+   nc -z -v -G5 "$2" "$3" &> /dev/null
+   result=$?
+
+   if [ "$result" == 0  ]
+   then
+     echo "${GREEN}$1 is up"
+     tput init
+     break
+   fi
+
+   n=$((n+1))
+   if [ $n -eq $maxAttempts ]
+   then
+     echo "${RED}failed ping for $1 host $2 port $3"
+     tput init
+     exit -1
+   fi
+   sleep 1
+
+done
+
+}
+
+
 generateDIDMethodConfigMock(){
 echo "generate did-method config"
 
@@ -138,9 +176,15 @@ echo "#### Step 1 is complete"
 
 ### Step 2
 echo "#### Step 2 start demo sidetree"
+if [ "$START_SIDETREE_FABRIC" = true ] ; then
+(cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-sidetree-fabric.yml down && docker-compose -f docker-compose-sidetree-fabric.yml up --force-recreate) > docker.log 2>&1 & )
+pingHost peer localhost 7051
+(cd test/bdd && go test)
+else
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-sidetree-mock.yml down && docker-compose -f docker-compose-sidetree-mock.yml up --force-recreate) > docker.log 2>&1 & )
 generateDIDMethodConfigMock
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-sidetree-mock-discovery.yml down && docker-compose -f docker-compose-sidetree-mock-discovery.yml up --force-recreate) > docker.log 2>&1 & )
+fi
 healthCheck sidetree-discovery $sidetreeDiscovery 200
 echo "#### Step 2 is complete"
 ###
