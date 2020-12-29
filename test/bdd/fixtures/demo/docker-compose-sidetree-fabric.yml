@@ -31,7 +31,7 @@ services:
       - ../fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls:/etc/hyperledger/tls/orderer
       - ../fabric/crypto-config/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls/ca.crt:/etc/hyperledger/mutual_tls/orderer/ca.crt
     networks:
-      - demo-net
+      - demo_demo-net
 
   peer0.org1.example.com:
     container_name: peer0.org1.example.com
@@ -94,10 +94,9 @@ services:
       - ../fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt:/etc/hyperledger/fabric/tls/orderer-ca-cert.pem
       - ../fabric/crypto-config/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls:/etc/hyperledger/mutual_tls/peer
     depends_on:
-      - builder
       - orderer.example.com
     networks:
-      - demo-net
+      - demo_demo-net
 
   peer1.org1.example.com:
     container_name: peer1.org1.example.com
@@ -161,10 +160,9 @@ services:
       - ../fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt:/etc/hyperledger/fabric/tls/orderer-ca-cert.pem
       - ../fabric/crypto-config/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls:/etc/hyperledger/mutual_tls/peer
     depends_on:
-      - builder
       - orderer.example.com
     networks:
-      - demo-net
+      - demo_demo-net
 
   peer0.org2.example.com:
     container_name: peer0.org2.example.com
@@ -227,10 +225,9 @@ services:
       - ../fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt:/etc/hyperledger/fabric/tls/orderer-ca-cert.pem
       - ../fabric/crypto-config/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls:/etc/hyperledger/mutual_tls/peer
     depends_on:
-      - builder
       - orderer.example.com
     networks:
-      - demo-net
+      - demo_demo-net
 
   peer1.org2.example.com:
     container_name: peer1.org2.example.com
@@ -294,10 +291,9 @@ services:
       - ../fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt:/etc/hyperledger/fabric/tls/orderer-ca-cert.pem
       - ../fabric/crypto-config/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls:/etc/hyperledger/mutual_tls/peer
     depends_on:
-      - builder
       - orderer.example.com
     networks:
-      - demo-net
+      - demo_demo-net
 
   peer0.org3.example.com:
     container_name: peer0.org3.example.com
@@ -360,10 +356,9 @@ services:
       - ../fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt:/etc/hyperledger/fabric/tls/orderer-ca-cert.pem
       - ../fabric/crypto-config/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls:/etc/hyperledger/mutual_tls/peer
     depends_on:
-      - builder
       - orderer.example.com
     networks:
-      - demo-net
+      - demo_demo-net
 
   peer1.org3.example.com:
     container_name: peer1.org3.example.com
@@ -427,13 +422,11 @@ services:
       - ../fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt:/etc/hyperledger/fabric/tls/orderer-ca-cert.pem
       - ../fabric/crypto-config/peerOrganizations/tls.example.com/users/User1@tls.example.com/tls:/etc/hyperledger/mutual_tls/peer
     depends_on:
-      - builder
       - orderer.example.com
     networks:
-      - demo-net
-
-  # builder is only here to create a dependency on the image (not used as part of compose)
-  builder:
-    image: ${FABRIC_NS}/${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
+      - demo_demo-net
 
 
+networks:
+  demo_demo-net:
+    external: true
