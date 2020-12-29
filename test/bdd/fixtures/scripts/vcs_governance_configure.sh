@@ -10,7 +10,7 @@ RED=$(tput setaf 1)
 trustbloc_governance=$(curl -o /dev/null -s -w "%{http_code}" --header "Content-Type: application/json" --header "Authorization: Bearer vcs_governance_rw_token" \
    --request POST \
    --data '{"name":"governance", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "signatureRepresentation":1,"didKeyType":"Ed25519"}' \
-   https://governance-vcs.trustbloc.local/governance/profile)
+   --insecure https://governance-vcs.trustbloc.local/governance/profile)
 
 checkProfileIsCreated()
 {

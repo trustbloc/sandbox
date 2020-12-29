@@ -11,7 +11,7 @@ RED=$(tput setaf 1)
 trustbloc_ed25519signature2018_ed25519=$(curl -o /dev/null -s -w "%{http_code}" --header "Content-Type: application/json" --header "Authorization: Bearer vcs_verifier_rw_token" \
    --request POST \
    --data '{"id":"verifier1","name":"Verifier", "credentialChecks":["proof","status"], "presentationChecks":["proof"]}' \
-   https://rp-vcs.trustbloc.local/verifier/profile)
+   --insecure https://rp-vcs.trustbloc.local/verifier/profile)
 
 checkProfileIsCreated()
 {

@@ -20,7 +20,7 @@ registerRPTenant() {
         --header "Content-Type: application/json" \
         --request POST \
         --data '{"label": "issuer.trustbloc.local", "callback": "'$callbackURL'", "scopes": ["driver_license:local","driver_license_evidence:remote"]}' \
-        $rpAdapterURL)
+        --insecure $rpAdapterURL)
 
         code=${response//*RESPONSE_CODE=/}
 
