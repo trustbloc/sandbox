@@ -173,6 +173,7 @@ clean-build:
 	@rm -Rf ./test/bdd/fixtures/oathkeeper/rules/resource-server.json
 	@rm -Rf ./test/bdd/fixtures/fabric/channel
 	@rm -Rf ./test/bdd/fixtures/fabric/crypto-config
+	@rm -Rf ./test/bdd/fixtures/discovery-config/genesis-configs/*
 	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-mock/config
 	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-mock/temp
 	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-fabric/config
