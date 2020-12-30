@@ -11,3 +11,6 @@ rm -rf ./fixtures/discovery-config/sidetree-fabric/config
 --tls-cacerts ./fixtures/keys/tls/trustbloc-dev-ca.crt --sidetree-write-token rw_token \
 --recoverykey-file ./fixtures/keys/recover/public.pem --updatekey-file ./fixtures/keys/update/public.pem \
 --config-file ./fixtures/discovery-config/sidetree-fabric/config-data-generated/testnet.trustbloc.local.json --output-directory ./fixtures/discovery-config/sidetree-fabric/config
+
+mkdir -p ./fixtures/discovery-config/genesis-configs
+cp ./fixtures/discovery-config/sidetree-fabric/config/did-trustbloc/testnet.trustbloc.local.json ./fixtures/discovery-config/genesis-configs

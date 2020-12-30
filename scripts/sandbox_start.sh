@@ -51,7 +51,7 @@ do
   if [[ $response == *"$1"* ]]
   then
      echo "${GREEN}$1 db is exist"
-     tput init
+     tput sgr0
      break
    fi
 
@@ -59,7 +59,7 @@ do
    if [ $n -eq $maxAttempts ]
    then
      echo "${RED}$1 db is not exist"
-     tput init
+     tput sgr0
      exit -1
    fi
    sleep 1
@@ -83,7 +83,7 @@ do
    if [ "$response" == "$3" ]
    then
      echo "${GREEN}$1 is up"
-     tput init
+     tput sgr0
      break
    fi
 
@@ -91,7 +91,7 @@ do
    if [ $n -eq $maxAttempts ]
    then
      echo "${RED}failed health check for $1 url $2 response code $response"
-     tput init
+     tput sgr0
      exit -1
    fi
    sleep 1
@@ -114,13 +114,13 @@ echo "ping for $1 host $2 port $3 please wait for max $maxAttempts seconds"
 until [ $n -ge $maxAttempts ]
 do
 
-   nc -z -v -G5 "$2" "$3" &> /dev/null
+   nc -z -v -w 5 "$2" "$3" &> /dev/null
    result=$?
 
    if [ "$result" == 0  ]
    then
      echo "${GREEN}$1 is up"
-     tput init
+     tput sgr0
      break
    fi
 
@@ -128,7 +128,7 @@ do
    if [ $n -eq $maxAttempts ]
    then
      echo "${RED}failed ping for $1 host $2 port $3"
-     tput init
+     tput sgr0
      exit -1
    fi
    sleep 1
@@ -152,10 +152,14 @@ mkdir -p ./test/bdd/fixtures/discovery-config/sidetree-mock/config/did-trustbloc
 cp ./test/bdd/fixtures/discovery-config/sidetree-mock/temp/did-trustbloc/* ./test/bdd/fixtures/discovery-config/sidetree-mock/config/did-trustbloc
 cp ./test/bdd/fixtures/discovery-config/sidetree-mock/temp/stakeholder-one.trustbloc.local/did-configuration.json ./test/bdd/fixtures/discovery-config/sidetree-mock/config
 
+# TODO: this mkdir and copy are needed after config files are generated for sidetree-fabric as well
+mkdir -p ./test/bdd/fixtures/discovery-config/genesis-configs
+cp ./test/bdd/fixtures/discovery-config/sidetree-mock/temp/did-trustbloc/testnet.trustbloc.local.json ./test/bdd/fixtures/discovery-config/genesis-configs
+
 rm -rf ./test/bdd/fixtures/discovery-config/sidetree-mock/temp
 
 echo "${GREEN}create did-method config successfully"
-tput init
+tput sgr0
 }
 
 

@@ -36,6 +36,7 @@ test/bdd/fixtures/fabric/crypto-config/
 test/bdd/fixtures/demo/docker.log
 test/bdd/fixtures/fabric/channel/
 .fabriccli
+test/bdd/fixtures/discovery-config/genesis-configs/*
 test/bdd/fixtures/discovery-config/sidetree-mock/config
 test/bdd/fixtures/discovery-config/sidetree-mock/temp
 test/bdd/fixtures/discovery-config/sidetree-fabric/config
