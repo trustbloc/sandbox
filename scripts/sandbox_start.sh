@@ -173,6 +173,7 @@ healthCheck couchdb $couchdbHealthCheckURL 200
 checkMYSQLDB strapi
 checkMYSQLDB rpadapter_hydra
 checkMYSQLDB authresthydra
+checkMYSQLDB edgeagent_aries
 echo "#### Step 1 is complete"
 ###
 

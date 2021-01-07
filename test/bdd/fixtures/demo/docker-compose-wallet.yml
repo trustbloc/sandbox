@@ -64,6 +64,8 @@ services:
       - HTTP_SERVER_OPS_KMS_URL=https://oathkeeper-ops-keyserver.trustbloc.local
       - HTTP_SERVER_KEY_EDV_URL=https://edv-oathkeeper-proxy.trustbloc.local/encrypted-data-vaults
       - HTTP_SERVER_USER_EDV_URL=https://edv-oathkeeper-proxy.trustbloc.local/encrypted-data-vaults
+      - EDGE_AGENT_DSN_PERSISTENT=mysql://edgeagent:edgeagent-secret-pw@tcp(mysql:3306)/
+      - EDGE_AGENT_DSN_TIMEOUT=45
     ports:
       - 8092:8092
     volumes:
