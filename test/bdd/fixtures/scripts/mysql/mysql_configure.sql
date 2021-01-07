@@ -46,3 +46,10 @@ auth rest hydra
 CREATE USER 'authresthydra'@'%' IDENTIFIED BY 'authresthydra-secret-pw';
 CREATE DATABASE authresthydra;
 GRANT ALL PRIVILEGES ON authresthydra.* TO 'authresthydra'@'%';
+
+/*
+edge agent rest
+*/
+CREATE USER 'edgeagent'@'%' IDENTIFIED BY 'edgeagent-secret-pw';
+CREATE DATABASE edgeagent_aries;
+GRANT ALL PRIVILEGES ON `edgeagent\_%`.* TO 'edgeagent'@'%';
