@@ -9,13 +9,13 @@ RP_REST_PATH     = cmd/rp-rest
 STRAPI_DEMO_PATH = cmd/strapi-demo
 LOGIN_CONSENT_PATH = cmd/login-consent-server
 
-DOCKER_OUTPUT_NS         ?= docker.pkg.github.com
+DOCKER_OUTPUT_NS         ?= ghcr.io
 # Namespace for the issuer image
-ISSUER_REST_IMAGE_NAME   ?= trustbloc/edge-sandbox/issuer-rest
+ISSUER_REST_IMAGE_NAME   ?= trustbloc/sandbox-issuer
 # Namespace for the rp image
-RP_REST_IMAGE_NAME       ?= trustbloc/edge-sandbox/rp-rest
+RP_REST_IMAGE_NAME       ?= trustbloc/sandbox-rp
 # Namespace for the login consent server image
-LOGIN_CONSENT_SEVER_IMAGE_NAME   ?= trustbloc/edge-sandbox/login-consent-server
+LOGIN_CONSENT_SEVER_IMAGE_NAME   ?= trustbloc/sandbox-login-consent-server
 # ELEMENT API SIDETREE REQUEST URL
 DID_ELEMENT_SIDETREE_REQUEST_URL ?= https://element-did.com/api/v1/sidetree/requests
 
@@ -51,12 +51,12 @@ unit-test:
 	@scripts/check_unit.sh
 
 .PHONY: demo-start
-demo-start: clean did-method-cli issuer-rest-docker rp-rest-docker login-consent-server-docker trustbloc-local-setup
+demo-start: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker trustbloc-local-setup
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-start-with-sidetree-fabric
 demo-start-with-sidetree-fabric: export START_SIDETREE_FABRIC=true
-demo-start-with-sidetree-fabric: clean did-method-cli issuer-rest-docker rp-rest-docker login-consent-server-docker trustbloc-local-setup populate-fixtures fabric-cli
+demo-start-with-sidetree-fabric: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker trustbloc-local-setup populate-fixtures fabric-cli
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-stop
@@ -96,15 +96,15 @@ login-consent-server:
 	@cp -r ${LOGIN_CONSENT_PATH}/templates ./.build/bin/login-consent
 	@cd ${LOGIN_CONSENT_PATH} && go build -o ../../.build/bin/login-consent/server main.go
 
-.PHONY: issuer-rest-docker
-issuer-rest-docker:
+.PHONY: sandbox-issuer-docker
+sandbox-issuer-docker:
 	@echo "Building issuer rest docker image"
 	@docker build -f ./images/issuer-rest/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(ISSUER_REST_IMAGE_NAME):latest \
 	--build-arg GO_VER=$(GO_VER) \
 	--build-arg ALPINE_VER=$(ALPINE_VER) .
 
-.PHONY: rp-rest-docker
-rp-rest-docker:
+.PHONY: sandbox-rp-docker
+sandbox-rp-docker:
 	@echo "Building rp rest docker image"
 	@docker build -f ./images/rp-rest/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(RP_REST_IMAGE_NAME):latest \
 	--build-arg GO_VER=$(GO_VER) \
