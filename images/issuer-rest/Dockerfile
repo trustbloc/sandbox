@@ -24,6 +24,8 @@ RUN make issuer-rest
 
 
 FROM alpine:${ALPINE_VER}
+LABEL org.opencontainers.image.source https://github.com/trustbloc/edge-sandbox
+
 RUN apk add --no-cache \
     bash \
     curl \

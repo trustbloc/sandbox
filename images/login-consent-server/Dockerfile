@@ -24,6 +24,7 @@ RUN make login-consent-server
 
 
 FROM alpine:${ALPINE_VER}
+LABEL org.opencontainers.image.source https://github.com/trustbloc/edge-sandbox
 
 # copy build artifacts from build container
 COPY --from=edge-sandbox /opt/workspace/edge-sandbox/.build/bin/login-consent /usr/local/bin
