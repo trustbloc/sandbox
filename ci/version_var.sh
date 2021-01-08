@@ -10,11 +10,11 @@ BASE_VERSION=0.1.6
 IS_RELEASE=false
 
 SOURCE_REPO=edge-sandbox
-BASE_RP_PKG_NAME=rp-rest
-BASE_ISSUER_PKG_NAME=issuer-rest
-BASE_LOGIN_PKG_NAME=login-consent-server
-RELEASE_REPO=docker.pkg.github.com/trustbloc/${SOURCE_REPO}
-SNAPSHOT_REPO=docker.pkg.github.com/trustbloc-cicd/snapshot
+BASE_RP_PKG_NAME=sandbox-rp
+BASE_ISSUER_PKG_NAME=sandbox-issuer
+BASE_LOGIN_PKG_NAME=sandbox-login-consent-server
+RELEASE_REPO=ghcr.io/trustbloc
+SNAPSHOT_REPO=ghcr.io/trustbloc-cicd
 
 if [ ${IS_RELEASE} = false ]
 then
