@@ -13,7 +13,7 @@
 # Setup CA and hostnames
 Run trustbloc-local-setup(`make trustbloc-local-setup`) this target will generate:
 
-- TLS CA located in ~/.trustbloc-local/sandbox/trustbloc-dev-ca.crt (you need to import in cert chain)
+- TLS CA located in ~/.trustbloc-local/sandbox/certs/trustbloc-dev-ca.crt (you need to import in cert chain)
 
 - Hosts entries located in ~/.trustbloc-local/sandbox/hosts (you need copy it to /etc/hosts)
 
