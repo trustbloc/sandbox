@@ -993,7 +993,7 @@ func getCustomContext(existingContext []string, customCtx map[string]interface{}
 	return existingContext
 }
 
-func (c *Operation) retrieveProfile(profileName string) (*vcprofile.DataProfile, error) {
+func (c *Operation) retrieveProfile(profileName string) (*vcprofile.IssuerProfile, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf(c.vcsURL+"/profile/%s", profileName), nil)
 	if err != nil {
 		return nil, err
@@ -1004,7 +1004,7 @@ func (c *Operation) retrieveProfile(profileName string) (*vcprofile.DataProfile,
 		return nil, err
 	}
 
-	profileResponse := &vcprofile.DataProfile{}
+	profileResponse := &vcprofile.IssuerProfile{}
 
 	err = json.Unmarshal(respBytes, profileResponse)
 	if err != nil {
