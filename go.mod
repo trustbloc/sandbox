@@ -15,7 +15,7 @@ require (
 	github.com/spf13/cobra v0.0.6
 	github.com/stretchr/testify v1.6.1
 	github.com/trustbloc/edge-core v0.1.5
-	github.com/trustbloc/edge-service v0.1.5
+	github.com/trustbloc/edge-service v0.1.6-0.20210111132647-d1b80d867c7a
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 )
 
