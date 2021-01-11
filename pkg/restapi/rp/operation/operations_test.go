@@ -49,15 +49,13 @@ const (
 			},
 			"issuanceDate": "2010-01-01T19:23:24Z",
 			"credentialStatus": {
-				"id": "https://example.gov/status/24",
-				"type": "CredentialStatusList2017"
-			}
+                "id": "https://example.gov/status/24#94567",
+                "type": "RevocationList2020Status",
+                "revocationListIndex": "94567",
+                "revocationListCredential": "https://example.gov/status/24"
+            }
 		}],
-		"holder": "did:example:ebfeb1f712ebc6f1c276e12ec21",
-		"refreshService": {
-			"id": "https://example.edu/refresh/3732",
-			"type": "ManualRefreshService2018"
-		}
+		"holder": "did:example:ebfeb1f712ebc6f1c276e12ec21"
 	}`
 )
 

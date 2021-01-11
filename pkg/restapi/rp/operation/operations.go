@@ -147,9 +147,7 @@ func (c *Operation) verifyVP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inputData := "vpDataInput"
-	// TODO https://github.com/trustbloc/edge-sandbox/issues/194 RP Verifier - Support to configure
-	//  checks for Credential and Presentation verifications
-	checks := []string{"proof"}
+	checks := []string{"proof", "status"}
 
 	domain := r.Form.Get("domain")
 	challenge := r.Form.Get("challenge")
