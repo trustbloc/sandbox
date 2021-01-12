@@ -9,7 +9,7 @@ version: '3'
 services:
   authz-kms-rest.example.com:
     container_name: authz-kms-rest.example.com
-    image: ${KMS_REST_IMAGE}:${KMS_REST_TAG}
+    image: ${KMS_IMAGE}:${KMS_IMAGE_TAG}
     environment:
       - KMS_HOST_URL=0.0.0.0:8072
       - KMS_BASE_URL=https://oathkeeper-auth-keyserver.trustbloc.local
@@ -46,7 +46,7 @@ services:
 
   ops-kms.rest.example.com:
     container_name: ops-kms.rest.example.com
-    image: ${KMS_REST_IMAGE}:${KMS_REST_TAG}
+    image: ${KMS_IMAGE}:${KMS_IMAGE_TAG}
     environment:
       - KMS_HOST_URL=0.0.0.0:8073
       - KMS_BASE_URL=https://oathkeeper-ops-keyserver.trustbloc.local
