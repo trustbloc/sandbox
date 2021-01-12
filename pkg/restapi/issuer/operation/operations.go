@@ -563,7 +563,7 @@ func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 }
 
 // revokeVC
-func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
+func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) { //nolint: funlen,gocyclo
 	if err := r.ParseForm(); err != nil {
 		logger.Errorf("failed to parse form: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -572,8 +572,40 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reqBytes, err := prepareUpdateCredentialStatusRequest(r.Form.Get("vcDataInput"),
-		"Revoked", "Disciplinary action")
+	vp, err := verifiable.ParsePresentation([]byte(r.Form.Get("vcDataInput")),
+		verifiable.WithPresDisabledProofCheck())
+	if err != nil {
+		logger.Errorf("failed to parse presentation: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to parse presentation: %s", err.Error()))
+
+		return
+	}
+
+	creds := make([]json.RawMessage, 0)
+
+	for _, cred := range vp.Credentials() {
+		cre, ok := cred.(map[string]interface{})
+		if !ok {
+			logger.Errorf("failed to cast credential")
+			c.writeErrorResponse(w, http.StatusInternalServerError, "failed to cast credential")
+
+			return
+		}
+
+		credBytes, errMarshal := json.Marshal(cre)
+		if errMarshal != nil {
+			logger.Errorf("failed to marshal credentials: %s", errMarshal.Error())
+			c.writeErrorResponse(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed to marshal credentials: %s", errMarshal.Error()))
+
+			return
+		}
+
+		creds = append(creds, credBytes)
+	}
+
+	reqBytes, err := prepareUpdateCredentialStatusRequest(creds)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to prepare update credential status request: %s", err.Error()))
@@ -1128,11 +1160,9 @@ func prepareStoreVCRequest(cred []byte, profile string) ([]byte, error) {
 	return json.Marshal(storeVCRequest)
 }
 
-func prepareUpdateCredentialStatusRequest(cred, status, statusReason string) ([]byte, error) {
-	request := updateCredentialStatusRequest{
-		Credential:   cred,
-		Status:       status,
-		StatusReason: statusReason,
+func prepareUpdateCredentialStatusRequest(creds []json.RawMessage) ([]byte, error) {
+	request := edgesvcops.UpdateCredentialStatusRequest{
+		Credentials: creds,
 	}
 
 	return json.Marshal(request)
@@ -1252,13 +1282,6 @@ func getTxnStore(prov storage.Provider) (storage.Store, error) {
 	}
 
 	return txnStore, nil
-}
-
-// updateCredentialStatusRequest request struct for updating vc status
-type updateCredentialStatusRequest struct {
-	Credential   string `json:"credential"`
-	Status       string `json:"status"`
-	StatusReason string `json:"statusReason"`
 }
 
 type storeVC struct {

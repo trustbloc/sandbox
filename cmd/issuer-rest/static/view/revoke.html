@@ -39,7 +39,7 @@ SPDX-License-Identifier: Apache-2.0
     }
 
     async function onClickGet() {
-        const credentialQuery = JSON.parse('{"web": {"VerifiableCredential": {}}}');
+        const credentialQuery = JSON.parse('{"web":{"VerifiablePresentation":{"query":[{"type":"QueryByExample","credentialQuery":{"reason":"Please present a credential to revoke","example":{}}}]}}}');
         const result = await navigator.credentials.get(credentialQuery);
 
         if (!result || !result.data) {

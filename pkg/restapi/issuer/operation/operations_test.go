@@ -151,6 +151,38 @@ const assuranceData = `{
 	  }
 	}`
 
+const validVP = `{
+		"@context": [
+			"https://www.w3.org/2018/credentials/v1",
+			"https://www.w3.org/2018/credentials/examples/v1"
+		],
+		"id": "urn:uuid:3978344f-8596-4c3a-a978-8fcaba3903c5",
+		"type": "VerifiablePresentation",
+		"verifiableCredential": [{
+			"@context": [
+				"https://www.w3.org/2018/credentials/v1",
+				"https://www.w3.org/2018/credentials/examples/v1"
+			],
+			"id": "http://example.edu/credentials/1872",
+			"type": "VerifiableCredential",
+			"credentialSubject": {
+				"id": "did:example:ebfeb1f712ebc6f1c276e12ec21"
+			},
+			"issuer": {
+				"id": "did:example:76e12ec712ebc6f1c221ebfeb1f",
+				"name": "Example University"
+			},
+			"issuanceDate": "2010-01-01T19:23:24Z",
+			"credentialStatus": {
+                "id": "https://example.gov/status/24#94567",
+                "type": "RevocationList2020Status",
+                "revocationListIndex": "94567",
+                "revocationListCredential": "https://example.gov/status/24"
+            }
+		}],
+		"holder": "did:example:ebfeb1f712ebc6f1c276e12ec21"
+	}`
+
 func TestController_New(t *testing.T) {
 	t.Run("test new - success", func(t *testing.T) {
 		op, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
@@ -1229,6 +1261,20 @@ func TestRevokeVC(t *testing.T) {
 		require.Contains(t, rr.Body.String(), "failed to parse form")
 	})
 
+	t.Run("test error from parse presentation", func(t *testing.T) {
+		svc, err := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			StoreProvider: &mockstorage.Provider{}})
+		require.NotNil(t, svc)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+		m := make(map[string][]string)
+		m["vcDataInput"] = []string{"wrong"}
+		svc.revokeVC(rr, &http.Request{Form: m})
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to parse presentation")
+	})
+
 	t.Run("test error from create http request", func(t *testing.T) {
 		svc, err := New(&Config{TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 			VCSURL:        "http://vcs\\",
@@ -1238,7 +1284,7 @@ func TestRevokeVC(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
-		m["vcDataInput"] = []string{"vc"}
+		m["vcDataInput"] = []string{validVP}
 		svc.revokeVC(rr, &http.Request{Form: m})
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to create new http request")
@@ -1250,7 +1296,7 @@ func TestRevokeVC(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
-		m["vcDataInput"] = []string{"vc"}
+		m["vcDataInput"] = []string{validVP}
 		svc.revokeVC(rr, &http.Request{Form: m})
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to update vc status")
@@ -1271,7 +1317,7 @@ func TestRevokeVC(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
-		m["vcDataInput"] = []string{"vc"}
+		m["vcDataInput"] = []string{validVP}
 		svc.revokeVC(rr, &http.Request{Form: m})
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "unable to load html")
@@ -1296,7 +1342,7 @@ func TestRevokeVC(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
-		m["vcDataInput"] = []string{"vc"}
+		m["vcDataInput"] = []string{validVP}
 
 		svc.revokeVC(rr, &http.Request{Form: m})
 		require.Equal(t, http.StatusOK, rr.Code)
