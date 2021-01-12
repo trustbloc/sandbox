@@ -90,9 +90,9 @@ SPDX-License-Identifier: Apache-2.0
         <div class="flex-shrink-0">
             <img class="h-24 w-24" src="https://i.ibb.co/FHqrHbD/failed.png"></a>
         </div>
-        <div class="ml-6 pt-1">
+        <div class="ml-6 pt-1 px-4">
             <h4 class="text-xl text-gray-900 leading-tight">Presented Digital ID</h4>
-            <p class="text-xl text-red-600 leading-normal" id="failMsg">Oops verification is failed, Try again</p>
+            <p class="text-xl text-red-600 font-bold" id="failMsg">{{.Msg}}</p>
         </div>
     </div>
 </section>
@@ -116,7 +116,7 @@ SPDX-License-Identifier: Apache-2.0
             document.getElementById("failed-verification").style.display= "block"
             document.getElementById("successful-verification").style.display= "none"
             document.getElementById("failMsg").innerText = JSON.stringify(JSON.parse({{.Msg}}));
-         }
+        }
 
         console.log("verifiable presentation", JSON.stringify(JSON.parse({{.Data}})));
     })
