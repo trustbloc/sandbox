@@ -73,7 +73,7 @@ healthCheck()
 # for now we wait until nginx pick up the VIRTUAL_HOST
 sleep 3
 n=0
-maxAttempts=180
+maxAttempts=200
 echo "health check for $1 url $2 please wait for max $maxAttempts seconds"
 
 

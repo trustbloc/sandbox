@@ -14,8 +14,10 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -322,7 +324,7 @@ func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, ht
 		return
 	}
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK { //nolint:nestif
 		failedMsg := ""
 
 		respBytes, respErr := ioutil.ReadAll(resp.Body)
@@ -330,6 +332,10 @@ func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, ht
 			failedMsg = fmt.Sprintf("failed to read response body: %s", respErr)
 		} else {
 			failedMsg = string(respBytes)
+			isStatusRevoked := checkVCStatus(failedMsg, w, t)
+			if isStatusRevoked {
+				return
+			}
 		}
 
 		defer func() {
@@ -349,6 +355,30 @@ func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, ht
 	if err := t.Execute(w, vc{Msg: "Successfully verified", Data: r.Form.Get(inputData)}); err != nil {
 		logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
+}
+
+func checkVCStatus(failedMsg string, rw io.Writer, t *template.Template) bool {
+	isStatusRevoked := checkSubstrings(failedMsg, "Revoked")
+
+	if isStatusRevoked {
+		if err := t.Execute(rw, vc{Msg: "Oops verification is failed. VC is revoked"}); err != nil {
+			logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
+		}
+	}
+
+	return isStatusRevoked
+}
+
+func checkSubstrings(str string, subs ...string) bool {
+	isCompleteMatch := false
+
+	for _, sub := range subs {
+		if strings.Contains(str, sub) {
+			isCompleteMatch = true
+		}
+	}
+
+	return isCompleteMatch
 }
 
 func (c *Operation) sendHTTPRequest(method, url string, body []byte, contentType,
