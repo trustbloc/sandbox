@@ -17,7 +17,7 @@
 | Authz KMS Oathkeeper        | [Source](https://github.com/ory/oathkeeper )                                 | [Docker](https://github.com/trustbloc/edge-sandbox/blob/v0.1.5/test/bdd/fixtures/demo/docker-compose-third-party.yml#L91-L112)      |
 | TrustBloc SignIn (Hub-Auth) | [Source](https://github.com/trustbloc/hub-auth)                              | [Docker](https://github.com/trustbloc/edge-sandbox/blob/v0.1.5/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L168-L187) |
 | TrustBloc SignIn (Hydra)    | [Source](https://github.com/ory/hydra)                                       | [Docker](https://github.com/trustbloc/edge-sandbox/blob/v0.1.5/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L381-L410) |
-| DID Resolver                | [Source](https://github.com/trustbloc/edge-service/tree/master/cmd/did-rest) | [Docker](https://github.com/trustbloc/edge-sandbox/blob/v0.1.5/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L150-L166) |
+| DID Resolver                | [Source](https://github.com/trustbloc/edge-service/tree/main/cmd/did-rest)   | [Docker](https://github.com/trustbloc/edge-sandbox/blob/v0.1.5/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L150-L166) |
 | TrustBloc DID Method        | [Source](https://github.com/trustbloc/trustbloc-did-method)                  | [Docker](https://github.com/trustbloc/edge-sandbox/blob/v0.1.5/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L251-L265) |
 | Sidetree Fabric             | [Source](https://github.com/trustbloc/sidetree-fabric)                       | [Docker](https://github.com/trustbloc/edge-sandbox/blob/v0.1.5/test/bdd/fixtures/demo/docker-compose-sidetree-fabric.yml)           |
 
@@ -52,7 +52,7 @@
 | Component            | Source URL                                                                   | Sample Docker Configuration                                                                                                         |
 |----------------------|------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
 | EDV                  | [Source](https://github.com/trustbloc/edv)                                   | [Docker](https://github.com/trustbloc/edge-sandbox/blob/v0.1.4/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L164-L177) |
-| DID Resolver         | [Source](https://github.com/trustbloc/edge-service/tree/master/cmd/did-rest) | [Docker](https://github.com/trustbloc/edge-sandbox/blob/v0.1.4/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L146-L162) |
+| DID Resolver         | [Source](https://github.com/trustbloc/edge-service/tree/main/cmd/did-rest)   | [Docker](https://github.com/trustbloc/edge-sandbox/blob/v0.1.4/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L146-L162) |
 | TrustBloc DID Method | [Source](https://github.com/trustbloc/trustbloc-did-method)                  | [Docker](https://github.com/trustbloc/edge-sandbox/blob/v0.1.4/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L198-L212) |
 | Sidetree Fabric      | [Source](https://github.com/trustbloc/sidetree-fabric)                       | [Docker](https://github.com/trustbloc/edge-sandbox/blob/v0.1.4/test/bdd/fixtures/demo/docker-compose-sidetree-fabric.yml)           |
 
