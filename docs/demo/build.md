@@ -38,7 +38,7 @@ The following components are started when you run 'make demo-start':
 
 Edge Components:
 - [Edge Service](https://github.com/trustbloc/edge-service) for creating, storing and verifying credentials
-- [User Agent](https://github.com/trustbloc/edge-agent/tree/master/cmd/user-agent) is WASM agent for storing and retrieving verifiable credentials using CHAPI
+- [User Agent](https://github.com/trustbloc/edge-agent/tree/main/cmd/user-agent) is WASM agent for storing and retrieving verifiable credentials using CHAPI
 
 Demo Applications:
 - [Issuer](../issuer/README.md)

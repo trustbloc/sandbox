@@ -6,8 +6,8 @@ drivers license, digital drivers license assurance/evidence and digital credit r
 ## References
 - [Demo Recording](https://www.youtube.com/watch?v=0ZNmk6E2EFE&feature=youtu.be)
 - [Component Diagram](../images/adapter_component_diagram.svg)
-- [Issuer Adapter](https://github.com/trustbloc/edge-adapter/blob/master/docs/issuer/README.md)
-- [RP Adapter](https://github.com/trustbloc/edge-adapter/blob/master/docs/rp/README.md)
+- [Issuer Adapter](https://github.com/trustbloc/edge-adapter/blob/main/docs/issuer/README.md)
+- [RP Adapter](https://github.com/trustbloc/edge-adapter/blob/main/docs/rp/README.md)
 
 ## Components
 
@@ -26,7 +26,7 @@ drivers license, digital drivers license assurance/evidence and digital credit r
      - Go to [`Wallet`](#components) and click on Login button with default user name and password.
    - Details 
      - A new [DID]((https://w3c.github.io/did-core/)) (identity) gets created for the user.
-     - The `Wallet` registers with the [DIDComm Mediator/Router](https://github.com/hyperledger/aries-framework-go/blob/master/docs/didcomm_mediator.md).
+     - The `Wallet` registers with the [DIDComm Mediator/Router](https://github.com/hyperledger/aries-framework-go/blob/main/docs/didcomm_mediator.md).
 1. Get Drivers License and Connect to Assurance Issuer: 
    - UI Navigation 
      - On [`Drivers License + Assurance Issuer`](#components) page, click on `Issue Driving Licence` button. 
