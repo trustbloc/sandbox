@@ -64,8 +64,13 @@ services:
       - HTTP_SERVER_OPS_KMS_URL=https://oathkeeper-ops-keyserver.trustbloc.local
       - HTTP_SERVER_KEY_EDV_URL=https://edv-oathkeeper-proxy.trustbloc.local/encrypted-data-vaults
       - HTTP_SERVER_USER_EDV_URL=https://edv-oathkeeper-proxy.trustbloc.local/encrypted-data-vaults
-      - EDGE_AGENT_DSN_PERSISTENT=mysql://edgeagent:edgeagent-secret-pw@tcp(mysql:3306)/
-      - EDGE_AGENT_DSN_TIMEOUT=45
+      - ARIESD_INBOUND_HOST=http@0.0.0.0:8093
+      - ARIESD_INBOUND_HOST_EXTERNAL=http@https://user.agent.example.com:8093
+      - ARIESD_DEFAULT_LABEL=user-agent
+      - ARIESD_DATABASE_TYPE=mysql
+      - ARIESD_DATABASE_PREFIX=edgeagent_usragdb
+      - ARIESD_DATABASE_TIMEOUT=60
+      - ARIESD_DATABASE_URL=edgeagent:edgeagent-secret-pw@tcp(mysql:3306)/
     ports:
       - 8092:8092
     volumes:
