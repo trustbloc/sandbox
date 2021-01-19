@@ -26,7 +26,8 @@ Refer [Build](docs/demo/build.md) for more detailed information.
 
 ## Sample Applications
 - [Issuer](docs/issuer/README.md)
-- [Relying Party](docs/rp/README.md)
+- [Relying Party/Verifier](docs/rp/README.md)
+- [Anonymous Comparator Relying Party (AC-RP)](docs/rp/README.md)
 
 ## Demo
 - [TrustBloc VCS](docs/demo/sandbox_vcs_playground.md) : CHAPI + VC Services
