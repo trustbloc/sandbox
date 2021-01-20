@@ -17,7 +17,7 @@ var logger = log.New("acrp-rest")
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use: "rp",
+		Use: "acrp",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.HelpFunc()(cmd, args)
 		},
