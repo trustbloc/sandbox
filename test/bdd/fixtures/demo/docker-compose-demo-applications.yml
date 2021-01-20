@@ -66,6 +66,22 @@ services:
     networks:
       - demo_demo-net
 
+  acrp.example.com:
+    container_name: acrp.example.com
+    image: ${ACRP_IMAGE}:latest
+    environment:
+      - ACRP_HOST_URL=0.0.0.0:5558
+      - ACRP_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - ACRP_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
+      - VIRTUAL_HOST=acrp.trustbloc.local
+    ports:
+      - 5558:5558
+    command: start
+    volumes:
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo_demo-net
+
 networks:
   demo_demo-net:
     external: true

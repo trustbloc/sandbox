@@ -6,6 +6,7 @@ GO_CMD          ?= go
 ARCH             = $(shell go env GOARCH)
 ISSUER_REST_PATH = cmd/issuer-rest
 RP_REST_PATH     = cmd/rp-rest
+ACRP_REST_PATH   = cmd/acrp-rest
 STRAPI_DEMO_PATH = cmd/strapi-demo
 LOGIN_CONSENT_PATH = cmd/login-consent-server
 
@@ -14,6 +15,8 @@ DOCKER_OUTPUT_NS         ?= ghcr.io
 ISSUER_REST_IMAGE_NAME   ?= trustbloc/sandbox-issuer
 # Namespace for the rp image
 RP_REST_IMAGE_NAME       ?= trustbloc/sandbox-rp
+# Namespace for the acrp image
+ACRP_REST_IMAGE_NAME       ?= trustbloc/sandbox-acrp
 # Namespace for the login consent server image
 LOGIN_CONSENT_SEVER_IMAGE_NAME   ?= trustbloc/sandbox-login-consent-server
 # ELEMENT API SIDETREE REQUEST URL
@@ -51,12 +54,12 @@ unit-test:
 	@scripts/check_unit.sh
 
 .PHONY: demo-start
-demo-start: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker trustbloc-local-setup
+demo-start: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker sandbox-acrp-docker trustbloc-local-setup
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-start-with-sidetree-fabric
 demo-start-with-sidetree-fabric: export START_SIDETREE_FABRIC=true
-demo-start-with-sidetree-fabric: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker trustbloc-local-setup populate-fixtures fabric-cli
+demo-start-with-sidetree-fabric: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker sandbox-acrp-docker trustbloc-local-setup populate-fixtures fabric-cli
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-stop
@@ -89,6 +92,13 @@ rp-rest:
 	@cp -r ${RP_REST_PATH}/static ./.build/bin/rp
 	@cd ${RP_REST_PATH} && go build -o ../../.build/bin/rp/rp-rest main.go
 
+.PHONY: acrp-rest
+acrp-rest:
+	@echo "Building acrp-rest"
+	@mkdir -p ./.build/bin/acrp
+	@cp -r ${ACRP_REST_PATH}/static ./.build/bin/acrp
+	@cd ${ACRP_REST_PATH} && go build -o ../../.build/bin/acrp/acrp-rest main.go
+
 .PHONY: login-consent-server
 login-consent-server:
 	@echo "Building login-consent-server"
@@ -107,6 +117,13 @@ sandbox-issuer-docker:
 sandbox-rp-docker:
 	@echo "Building rp rest docker image"
 	@docker build -f ./images/rp-rest/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(RP_REST_IMAGE_NAME):latest \
+	--build-arg GO_VER=$(GO_VER) \
+	--build-arg ALPINE_VER=$(ALPINE_VER) .
+
+.PHONY: sandbox-acrp-docker
+sandbox-acrp-docker:
+	@echo "Building acrp rest docker image"
+	@docker build -f ./images/acrp-rest/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(ACRP_REST_IMAGE_NAME):latest \
 	--build-arg GO_VER=$(GO_VER) \
 	--build-arg ALPINE_VER=$(ALPINE_VER) .
 

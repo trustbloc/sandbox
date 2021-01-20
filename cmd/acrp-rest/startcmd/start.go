@@ -29,18 +29,18 @@ const (
 	tlsCertFileFlagName  = "tls-cert-file"
 	tlsCertFileFlagUsage = "tls certificate file." +
 		" Alternatively, this can be set with the following environment variable: " + tlsCertFileEnvKey
-	tlsCertFileEnvKey = "ACRP__TLS_CERT_FILE"
+	tlsCertFileEnvKey = "ACRP_TLS_CERT_FILE"
 
 	tlsKeyFileFlagName  = "tls-key-file"
 	tlsKeyFileFlagUsage = "tls key file." +
 		" Alternatively, this can be set with the following environment variable: " + tlsKeyFileEnvKey
-	tlsKeyFileEnvKey = "ACRP__TLS_KEY_FILE"
+	tlsKeyFileEnvKey = "ACRP_TLS_KEY_FILE"
 
 	tlsSystemCertPoolFlagName  = "tls-systemcertpool"
 	tlsSystemCertPoolFlagUsage = "Use system certificate pool." +
 		" Possible values [true] [false]. Defaults to false if not set." +
 		" Alternatively, this can be set with the following environment variable: " + tlsSystemCertPoolEnvKey
-	tlsSystemCertPoolEnvKey = "ACRP__TLS_SYSTEMCERTPOOL"
+	tlsSystemCertPoolEnvKey = "ACRP_TLS_SYSTEMCERTPOOL"
 
 	tlsCACertsFlagName  = "tls-cacerts"
 	tlsCACertsFlagUsage = "Comma-Separated list of ca certs path." +

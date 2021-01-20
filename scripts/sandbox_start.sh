@@ -33,6 +33,7 @@ rpAdapterHealthCheckURL=https://rp-adapter.trustbloc.local:10161/healthcheck
 issuerAdapterHealthCheckURL=https://issuer-adapter.trustbloc.local:10061/healthcheck
 rpHealthCheckURL=https://rp.trustbloc.local/bankaccount
 issuerHealthCheckURL=https://issuer.trustbloc.local/drivinglicense
+acRpHealthCheckURL=https://acrp.trustbloc.local
 cmsHealthCheckURL=https://cms.trustbloc.local/
 sidetreePeer=https://sidetree-mock.trustbloc.local
 
@@ -272,6 +273,7 @@ echo "#### Step 12 start demo application"
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-demo-applications.yml down && docker-compose -f docker-compose-demo-applications.yml up --force-recreate) > docker.log 2>&1 & )
 healthCheck issuer $issuerHealthCheckURL 200
 healthCheck rp $rpHealthCheckURL 200
+healthCheck acrp $acRpHealthCheckURL 200
 echo "#### Step 12 is complete"
 ###
 ### Step 13
