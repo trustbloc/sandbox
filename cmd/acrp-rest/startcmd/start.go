@@ -18,6 +18,8 @@ import (
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
 
 	"github.com/trustbloc/edge-sandbox/cmd/common"
+	"github.com/trustbloc/edge-sandbox/pkg/restapi/acrp"
+	"github.com/trustbloc/edge-sandbox/pkg/restapi/acrp/operation"
 )
 
 const (
@@ -182,6 +184,22 @@ func startRP(parameters *rpParameters) error {
 	}
 
 	router := pathPrefix()
+
+	cfg := &operation.Config{
+		DashboardHTML: "static/dashboard.html",
+		RegisterHTML:  "static/register.html",
+	}
+
+	acrpService, err := acrp.New(cfg)
+	if err != nil {
+		return err
+	}
+
+	handlers := acrpService.GetOperations()
+
+	for _, handler := range handlers {
+		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
+	}
 
 	for _, handler := range logspec.New().GetOperations() {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
