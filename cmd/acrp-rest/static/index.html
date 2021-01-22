@@ -35,7 +35,8 @@ SPDX-License-Identifier: Apache-2.0
 
     <style>
         .gradient {
-            background: linear-gradient(90deg, #66afe9 20%, #afd9ee 100%);
+            /*background: linear-gradient(90deg, #66afe9 20%, #afd9ee 100%);*/
+            background:#4d004d;
         }
     </style>
 
@@ -46,12 +47,11 @@ SPDX-License-Identifier: Apache-2.0
 <!--Nav-->
 <nav id="header" class="fixed w-full z-30 top-0 text-white">
 
-    <div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0 py-2">
-
+    <div class="w-full container mx-auto flex flex-wrap items-center justify-between my-auto py-3">
         <div class="pl-4 flex items-center">
-            <a class="toggleColour text-blue-900 no-underline hover:no-underline font-bold text-2xl lg:text-4xl"
+            <a class="toggleColour text-white-900 no-underline hover:no-underline font-bold text-2xl lg:text-4xl"
                href="/">
-                <i class="fa fa-cubes" style="font-size:32px;color:midnightblue"></i>
+                <i class="fa fa-cubes" style="font-size:32px;color:white"></i>
                 TrustBloc Anonymous Comparator RP
             </a>
         </div>
@@ -81,10 +81,13 @@ SPDX-License-Identifier: Apache-2.0
 
 <div class="pt-12">
 
-    <div class="container px-3 mx-auto flex flex-wrap flex-col md:flex-row items-center">
+    <div class="container p-2 m-auto flex flex-wrap flex-col md:flex-row items-center">
         <!--Left Col-->
         <div class="flex flex-col w-full md:w-2/5 justify-center items-start text-center md:text-left">
             <h1 class="my-4 text-4xl font-bold text-blue-100">Welcome to Anonymous Comparator Service</h1>
+
+            <a href="/register">Register</a>
+            <a href="/login">Login</a>
 
         </div>
         <!--Right Col-->
@@ -134,12 +137,12 @@ SPDX-License-Identifier: Apache-2.0
 </svg>
 
 <footer>
-    <section class="container mx-auto text-center py-6 mb-12">
+    <div class="container text-center">
         <div class="text-lg text-white font py-1">
-            Copyright &copy; <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> and the
-            TrustBloc Contributors.
+            <small>&copy; Copyright <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> |
+                TrustBloc Contributors</small>
         </div>
-    </section>
+    </div>
 </footer>
 
 
