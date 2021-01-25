@@ -77,16 +77,18 @@ SPDX-License-Identifier: Apache-2.0
                     <form method="post" id="vpForm" action="/createAccount">
                     <table style="width:80%; color:#000; font-size: x-large;" class="border my-5">
                         <tr>
-                            <td><label for="username">Username</label></td>
-                            <td><input type="text" id="username" name="username" class="border"></td>
+                            <td><label for="username">EmailID</label></td>
+                            <td><input type="email" id="username" name="username" inputmode="email"
+                                       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" maxlength="30" class="border" value="john.smith@example.com" oninvalid="setCustomValidity('Invalid email')">
+                            </td>
                         </tr>
                         <tr>
                             <td><label for="password">Password</label></td>
-                            <td><input type="text" id="password" name="password" class="border"></td>
+                            <td><input type="password" id="password" name="password" class="border" value="f00B@r!23"></td>
                         </tr>
                         <tr>
                             <td><label for="nationalID">National ID</label></td>
-                            <td><input type="text" id="nationalID" name="nationalID" class="border"></td>
+                            <td><input type="text" id="nationalID" name="nationalID" pattern="\d{3}-?\d{2}-?\d{4}" class="border" value="555-55-5555" oninvalid="setCustomValidity('Valid format is 123-45-6789')"></td>
                         </tr>
                         <tr>
                             <td></td>
