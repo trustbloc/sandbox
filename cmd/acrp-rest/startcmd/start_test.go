@@ -90,12 +90,45 @@ func getValidArgs(logLevel string) []string {
 	args = append(args, hostURLArg()...)
 	args = append(args, tlsCertFileArg()...)
 	args = append(args, tlsKeyFileArg()...)
+	args = append(args, databaseURLArg()...)
+	args = append(args, databasePrefixArg()...)
 
 	if logLevel != "" {
 		args = append(args, logLevelArg(logLevel)...)
 	}
 
 	return args
+}
+
+func TestDatabaseTypeArg(t *testing.T) {
+	t.Run("test database url - missing arg", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Contains(t, err.Error(),
+			"Neither database-url (command line flag) nor DATABASE_URL (environment variable) have been set.")
+	})
+
+	t.Run("test database type - invalid driver", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, []string{flag + common.DatabasePrefixFlagName, "test"}...)
+		args = append(args, []string{flag + common.DatabaseURLFlagName, "invalid-driver://test"}...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Contains(t, err.Error(), "unsupported storage driver: invalid-driver")
+	})
 }
 
 func TestTLSSystemCertPoolInvalidArgsEnvVar(t *testing.T) {
@@ -159,4 +192,12 @@ func tlsKeyFileArg() []string {
 
 func logLevelArg(logLevel string) []string {
 	return []string{flag + common.LogLevelFlagName, logLevel}
+}
+
+func databaseURLArg() []string {
+	return []string{flag + common.DatabaseURLFlagName, "mem://test"}
+}
+
+func databasePrefixArg() []string {
+	return []string{flag + common.DatabasePrefixFlagName, "database-prefix"}
 }
