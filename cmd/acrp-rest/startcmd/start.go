@@ -76,6 +76,7 @@ type rpParameters struct {
 	tlsSystemCertPool bool
 	tlsCACerts        []string
 	logLevel          string
+	dbParams          *common.DBParameters
 }
 
 type tlsConfig struct {
@@ -105,6 +106,11 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			dbParams, err := common.DBParams(cmd)
+			if err != nil {
+				return err
+			}
+
 			tlsConfg, err := getTLS(cmd)
 			if err != nil {
 				return err
@@ -123,6 +129,7 @@ func createStartCmd(srv server) *cobra.Command {
 				tlsSystemCertPool: tlsConfg.systemCertPool,
 				tlsCACerts:        tlsConfg.caCerts,
 				logLevel:          loggingLevel,
+				dbParams:          dbParams,
 			}
 
 			return startRP(parameters)
@@ -185,7 +192,13 @@ func startRP(parameters *rpParameters) error {
 
 	router := pathPrefix()
 
+	storeProvider, err := common.InitEdgeStore(parameters.dbParams, logger)
+	if err != nil {
+		return err
+	}
+
 	cfg := &operation.Config{
+		StoreProvider: storeProvider,
 		DashboardHTML: "static/dashboard.html",
 		RegisterHTML:  "static/register.html",
 	}

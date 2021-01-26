@@ -7,11 +7,13 @@ SPDX-License-Identifier: Apache-2.0
 package operation
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 
 	"github.com/trustbloc/edge-core/pkg/log"
+	"github.com/trustbloc/edge-core/pkg/storage"
 
 	"github.com/trustbloc/edge-sandbox/pkg/internal/common/support"
 )
@@ -20,6 +22,9 @@ const (
 	// api paths
 	register      = "/register"
 	createAccount = "/createAccount"
+
+	// store
+	txnStoreName = "issuer_txn"
 )
 
 var logger = log.New("acrp-restapi")
@@ -33,6 +38,7 @@ type Handler interface {
 
 // Operation defines handlers.
 type Operation struct {
+	store         storage.Store
 	handlers      []Handler
 	dashboardHTML string
 	registerHTML  string
@@ -40,20 +46,27 @@ type Operation struct {
 
 // Config config.
 type Config struct {
+	StoreProvider storage.Provider
 	RegisterHTML  string
 	DashboardHTML string
 }
 
 // New returns acrp operation instance.
-func New(config *Config) *Operation {
+func New(config *Config) (*Operation, error) {
+	store, err := getTxnStore(config.StoreProvider)
+	if err != nil {
+		return nil, fmt.Errorf("acrp store provider : %w", err)
+	}
+
 	op := &Operation{
+		store:         store,
 		dashboardHTML: config.DashboardHTML,
 		registerHTML:  config.RegisterHTML,
 	}
 
 	op.registerHandler()
 
-	return op
+	return op, nil
 }
 
 // registerHandler register handlers to be exposed from this service as REST API endpoints
@@ -82,10 +95,29 @@ func (o *Operation) createAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO remove loggger and save the user data to db
-	logger.Infof("username=%s", r.FormValue("username"))
-	logger.Infof("password=%s", r.FormValue("password"))
+	password, err := o.store.Get(r.FormValue("username"))
+	if err != nil && !errors.Is(err, storage.ErrValueNotFound) {
+		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to get user data: %s", err.Error()))
+
+		return
+	}
+
+	if password != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest, "username already exists")
+
+		return
+	}
+
+	// TODO call TrustBloc services and save nationalID in EDV
 	logger.Infof("nationalID=%s", r.FormValue("nationalID"))
+
+	err = o.store.Put(r.FormValue("username"), []byte(r.FormValue("password")))
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to save user data: %s", err.Error()))
+
+		return
+	}
 
 	o.loadHTML(w, o.dashboardHTML, map[string]interface{}{
 		"UserName": r.FormValue("username"),
@@ -115,4 +147,18 @@ func (o *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg s
 	if _, err := write([]byte(msg)); err != nil {
 		logger.Errorf("Unable to send error message, %s", err)
 	}
+}
+
+func getTxnStore(prov storage.Provider) (storage.Store, error) {
+	err := prov.CreateStore(txnStoreName)
+	if err != nil && !errors.Is(err, storage.ErrDuplicateStore) {
+		return nil, err
+	}
+
+	txnStore, err := prov.OpenStore(txnStoreName)
+	if err != nil {
+		return nil, err
+	}
+
+	return txnStore, nil
 }

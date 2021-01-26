@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package operation
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -15,13 +16,28 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	mockstorage "github.com/trustbloc/edge-core/pkg/storage/mockstore"
+)
+
+const (
+	sampleUserName = "john.smith@example.com"
 )
 
 func TestNew(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		svc := New(&Config{})
+		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
+		require.NoError(t, err)
 		require.NotNil(t, svc)
 		require.Equal(t, 2, len(svc.GetRESTHandlers()))
+	})
+
+	t.Run("error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{ErrOpenStoreHandle: errors.New("store open error")},
+		})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "acrp store provider : store open error")
+		require.Nil(t, svc)
 	})
 }
 
@@ -32,9 +48,11 @@ func TestRegister(t *testing.T) {
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-		svc := New(&Config{
-			RegisterHTML: file.Name(),
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+			RegisterHTML:  file.Name(),
 		})
+		require.NoError(t, err)
 		require.NotNil(t, svc)
 
 		rr := httptest.NewRecorder()
@@ -45,7 +63,8 @@ func TestRegister(t *testing.T) {
 	})
 
 	t.Run("html error", func(t *testing.T) {
-		svc := New(&Config{})
+		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
+		require.NoError(t, err)
 		require.NotNil(t, svc)
 
 		rr := httptest.NewRecorder()
@@ -63,19 +82,62 @@ func TestCreateAccount(t *testing.T) {
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-		svc := New(&Config{
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
 			DashboardHTML: file.Name(),
 		})
-		require.NotNil(t, svc)
 		require.NoError(t, err)
+		require.NotNil(t, svc)
 
 		rr := httptest.NewRecorder()
 
 		req := &http.Request{Form: make(map[string][]string)}
-		req.Form.Add("username", "john.smith")
+		req.Form.Add("username", "john.smith@example.com")
 
 		svc.createAccount(rr, req)
+		fmt.Println(rr.Body.String())
 		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("user exists", func(t *testing.T) {
+		s := make(map[string][]byte)
+		s[sampleUserName] = []byte("password")
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: s},
+			},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Form.Add("username", sampleUserName)
+
+		svc.createAccount(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "username already exists")
+	})
+
+	t.Run("save user data error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPut: errors.New("save error")},
+			},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Form.Add("username", sampleUserName)
+
+		svc.createAccount(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to save user data")
 	})
 
 	t.Run("parse form error", func(t *testing.T) {
@@ -84,9 +146,11 @@ func TestCreateAccount(t *testing.T) {
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-		svc := New(&Config{
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
 			DashboardHTML: file.Name(),
 		})
+		require.NoError(t, err)
 		require.NotNil(t, svc)
 
 		rr := httptest.NewRecorder()

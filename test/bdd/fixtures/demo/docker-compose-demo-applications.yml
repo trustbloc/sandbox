@@ -73,6 +73,8 @@ services:
       - ACRP_HOST_URL=0.0.0.0:5558
       - ACRP_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - ACRP_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
+      - DATABASE_URL=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - DATABASE_PREFIX=acrprest
       - VIRTUAL_HOST=acrp.trustbloc.local
     ports:
       - 5558:5558

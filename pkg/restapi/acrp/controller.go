@@ -7,6 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package acrp
 
 import (
+	"fmt"
+
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/acrp/operation"
 )
 
@@ -14,7 +16,10 @@ import (
 func New(config *operation.Config) (*Controller, error) {
 	var allHandlers []operation.Handler
 
-	acrpService := operation.New(config)
+	acrpService, err := operation.New(config)
+	if err != nil {
+		return nil, fmt.Errorf("create acrp operation : %w", err)
+	}
 
 	allHandlers = append(allHandlers, acrpService.GetRESTHandlers()...)
 
