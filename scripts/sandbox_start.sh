@@ -108,7 +108,7 @@ pingHost()
 # for now we wait until nginx pick up the VIRTUAL_HOST
 sleep 3
 n=0
-maxAttempts=120
+maxAttempts=200
 echo "ping for $1 host $2 port $3 please wait for max $maxAttempts seconds"
 
 
