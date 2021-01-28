@@ -21,6 +21,7 @@ import (
 
 const (
 	sampleUserName = "john.smith@example.com"
+	samplePassword = "pa$$word"
 )
 
 func TestNew(t *testing.T) {
@@ -28,7 +29,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 2, len(svc.GetRESTHandlers()))
+		require.Equal(t, 3, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -158,5 +159,86 @@ func TestCreateAccount(t *testing.T) {
 		svc.createAccount(rr, &http.Request{Method: http.MethodPost})
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "unable to parse form data")
+	})
+}
+
+func TestLogin(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		s := make(map[string][]byte)
+		s[sampleUserName] = []byte(samplePassword)
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			DashboardHTML: file.Name(),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Form.Add("username", sampleUserName)
+		req.Form.Add("password", samplePassword)
+
+		svc.login(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("invalid username", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		s := make(map[string][]byte)
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			DashboardHTML: file.Name(),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Form.Add("username", sampleUserName)
+		req.Form.Add("password", samplePassword)
+
+		svc.login(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to get user data")
+	})
+
+	t.Run("invalid password", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		s := make(map[string][]byte)
+		s[sampleUserName] = []byte(samplePassword)
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			DashboardHTML: file.Name(),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Form.Add("username", sampleUserName)
+		req.Form.Add("password", sampleUserName)
+
+		svc.login(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "invalid password")
 	})
 }
