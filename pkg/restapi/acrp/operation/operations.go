@@ -22,6 +22,7 @@ const (
 	// api paths
 	register      = "/register"
 	createAccount = "/createAccount"
+	login         = "/login"
 
 	// store
 	txnStoreName = "issuer_txn"
@@ -74,6 +75,7 @@ func (o *Operation) registerHandler() {
 	o.handlers = []Handler{
 		support.NewHTTPHandler(register, http.MethodGet, o.register),
 		support.NewHTTPHandler(createAccount, http.MethodPost, o.createAccount),
+		support.NewHTTPHandler(login, http.MethodPost, o.login),
 	}
 }
 
@@ -115,6 +117,33 @@ func (o *Operation) createAccount(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("unable to save user data: %s", err.Error()))
+
+		return
+	}
+
+	o.loadHTML(w, o.dashboardHTML, map[string]interface{}{
+		"UserName": r.FormValue("username"),
+	})
+}
+
+func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to parse form data: %s", err.Error()))
+
+		return
+	}
+
+	password, err := o.store.Get(r.FormValue("username"))
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to get user data: %s", err.Error()))
+
+		return
+	}
+
+	if r.FormValue("password") != string(password) {
+		o.writeErrorResponse(w, http.StatusBadRequest, "invalid password")
 
 		return
 	}
