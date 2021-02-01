@@ -200,7 +200,6 @@ func startRP(parameters *rpParameters) error {
 	cfg := &operation.Config{
 		StoreProvider: storeProvider,
 		DashboardHTML: "static/dashboard.html",
-		RegisterHTML:  "static/register.html",
 	}
 
 	acrpService, err := acrp.New(cfg)
@@ -229,6 +228,9 @@ func pathPrefix() *mux.Router {
 	router.PathPrefix("/img/").Handler(fs)
 	router.PathPrefix("/showlogin").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/login.html")
+	})
+	router.PathPrefix("/showregister").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/register.html")
 	})
 
 	return router

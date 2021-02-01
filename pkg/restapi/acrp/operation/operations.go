@@ -20,9 +20,8 @@ import (
 
 const (
 	// api paths
-	register      = "/register"
-	createAccount = "/createAccount"
-	login         = "/login"
+	register = "/register"
+	login    = "/login"
 
 	// store
 	txnStoreName = "issuer_txn"
@@ -42,13 +41,11 @@ type Operation struct {
 	store         storage.Store
 	handlers      []Handler
 	dashboardHTML string
-	registerHTML  string
 }
 
 // Config config.
 type Config struct {
 	StoreProvider storage.Provider
-	RegisterHTML  string
 	DashboardHTML string
 }
 
@@ -62,7 +59,6 @@ func New(config *Config) (*Operation, error) {
 	op := &Operation{
 		store:         store,
 		dashboardHTML: config.DashboardHTML,
-		registerHTML:  config.RegisterHTML,
 	}
 
 	op.registerHandler()
@@ -73,8 +69,7 @@ func New(config *Config) (*Operation, error) {
 // registerHandler register handlers to be exposed from this service as REST API endpoints
 func (o *Operation) registerHandler() {
 	o.handlers = []Handler{
-		support.NewHTTPHandler(register, http.MethodGet, o.register),
-		support.NewHTTPHandler(createAccount, http.MethodPost, o.createAccount),
+		support.NewHTTPHandler(register, http.MethodPost, o.register),
 		support.NewHTTPHandler(login, http.MethodPost, o.login),
 	}
 }
@@ -85,10 +80,6 @@ func (o *Operation) GetRESTHandlers() []Handler {
 }
 
 func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
-	o.loadHTML(w, o.registerHTML, map[string]interface{}{})
-}
-
-func (o *Operation) createAccount(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,

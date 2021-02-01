@@ -8,7 +8,6 @@ package operation
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -29,7 +28,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 3, len(svc.GetRESTHandlers()))
+		require.Equal(t, 2, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -50,40 +49,6 @@ func TestRegister(t *testing.T) {
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{},
-			RegisterHTML:  file.Name(),
-		})
-		require.NoError(t, err)
-		require.NotNil(t, svc)
-
-		rr := httptest.NewRecorder()
-
-		svc.register(rr, &http.Request{})
-		fmt.Print(rr.Body.String())
-		require.Equal(t, http.StatusOK, rr.Code)
-	})
-
-	t.Run("html error", func(t *testing.T) {
-		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
-		require.NoError(t, err)
-		require.NotNil(t, svc)
-
-		rr := httptest.NewRecorder()
-
-		svc.register(rr, &http.Request{})
-		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "unable to load html")
-	})
-}
-
-func TestCreateAccount(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
-		require.NoError(t, err)
-
-		defer func() { require.NoError(t, os.Remove(file.Name())) }()
-
-		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
 			DashboardHTML: file.Name(),
 		})
@@ -93,10 +58,9 @@ func TestCreateAccount(t *testing.T) {
 		rr := httptest.NewRecorder()
 
 		req := &http.Request{Form: make(map[string][]string)}
-		req.Form.Add("username", "john.smith@example.com")
+		req.Form.Add("username", sampleUserName)
 
-		svc.createAccount(rr, req)
-		fmt.Println(rr.Body.String())
+		svc.register(rr, req)
 		require.Equal(t, http.StatusOK, rr.Code)
 	})
 
@@ -117,7 +81,7 @@ func TestCreateAccount(t *testing.T) {
 		req := &http.Request{Form: make(map[string][]string)}
 		req.Form.Add("username", sampleUserName)
 
-		svc.createAccount(rr, req)
+		svc.register(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "username already exists")
 	})
@@ -136,7 +100,7 @@ func TestCreateAccount(t *testing.T) {
 		req := &http.Request{Form: make(map[string][]string)}
 		req.Form.Add("username", sampleUserName)
 
-		svc.createAccount(rr, req)
+		svc.register(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "unable to save user data")
 	})
@@ -156,9 +120,28 @@ func TestCreateAccount(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		svc.createAccount(rr, &http.Request{Method: http.MethodPost})
+		svc.register(rr, &http.Request{Method: http.MethodPost})
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "unable to parse form data")
+	})
+
+	t.Run("html error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: make(map[string][]byte)},
+			},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Form.Add("username", sampleUserName)
+
+		svc.register(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to load html")
 	})
 }
 
