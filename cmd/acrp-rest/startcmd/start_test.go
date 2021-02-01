@@ -7,6 +7,7 @@ package startcmd
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -142,6 +143,27 @@ func TestTLSSystemCertPoolInvalidArgsEnvVar(t *testing.T) {
 	err := startCmd.Execute()
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid syntax")
+}
+
+func TestTStaticPaths(t *testing.T) {
+	router := pathPrefix()
+
+	tests := []struct {
+		url string
+	}{
+		{"/showlogin"},
+		{"/showregister"},
+	}
+
+	for _, tt := range tests {
+		rr, err := http.NewRequest("GET", tt.url, nil)
+		require.NoError(t, err)
+
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, rr)
+		require.Equal(t, http.StatusNotFound, w.Code, "failed for url=%s", tt.url)
+	}
 }
 
 func setEnvVars(t *testing.T) {
