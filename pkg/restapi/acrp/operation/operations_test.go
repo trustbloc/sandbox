@@ -28,7 +28,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 2, len(svc.GetRESTHandlers()))
+		require.Equal(t, 4, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -172,6 +172,20 @@ func TestLogin(t *testing.T) {
 		require.Equal(t, http.StatusOK, rr.Code)
 	})
 
+	t.Run("parse form error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		svc.login(rr, &http.Request{Method: http.MethodPost})
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to parse form data")
+	})
+
 	t.Run("invalid username", func(t *testing.T) {
 		file, err := ioutil.TempFile("", "*.html")
 		require.NoError(t, err)
@@ -223,5 +237,87 @@ func TestLogin(t *testing.T) {
 		svc.login(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "invalid password")
+	})
+}
+
+func TestConnect(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+			DashboardHTML: file.Name(),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", "/connect?userName="+sampleUserName, nil)
+		require.NoError(t, err)
+
+		svc.connect(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("no username", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", "/connect", nil)
+		require.NoError(t, err)
+
+		svc.connect(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "missing username")
+	})
+}
+
+func TestDisconnect(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+			DashboardHTML: file.Name(),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", "/disconnect?userName="+sampleUserName, nil)
+		require.NoError(t, err)
+
+		svc.disconnect(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("no username", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", "/disconnect", nil)
+		require.NoError(t, err)
+
+		svc.disconnect(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "missing username")
 	})
 }

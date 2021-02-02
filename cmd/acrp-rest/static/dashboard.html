@@ -72,10 +72,19 @@ SPDX-License-Identifier: Apache-2.0
 
     <section class="bg-white border-b py-48" id="account-register" style="display:block">
         <div class="container mx-auto flex  flex-wrap pt-1 pb-4">
-            <h1 class="w-full my-2 text-3xl text-center text-green-600"> Welcome {{.UserName}} </h1>
-                <div class="container justify-center mx-auto flex flex-wrap">
-                </div>
+            <h1 class="w-full my-2 text-3xl text-center text-green-600">
+                Welcome {{.UserName}}
+            </h1>
+            <div class="container justify-center mx-auto flex flex-wrap">
             </div>
+            <h2 class="w-full my-2 text-3xl text-center text-green-300">
+                {{if .ServiceLinked}}
+                    <a href="{{.URL}}">Click here</a> to disconnect from "Service 2".
+                {{else}}
+                    <a href="{{.URL}}">Click here</a> to connect to "Service 2".
+                {{end}}
+            </h2>
+        </div>
     </section>
     <footer>
         <section class="container mx-auto text-center py-2 mb-12">
