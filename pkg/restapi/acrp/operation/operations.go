@@ -20,8 +20,10 @@ import (
 
 const (
 	// api paths
-	register = "/register"
-	login    = "/login"
+	register   = "/register"
+	login      = "/login"
+	connect    = "/connect"
+	disconnect = "/disconnect"
 
 	// store
 	txnStoreName = "issuer_txn"
@@ -71,6 +73,8 @@ func (o *Operation) registerHandler() {
 	o.handlers = []Handler{
 		support.NewHTTPHandler(register, http.MethodPost, o.register),
 		support.NewHTTPHandler(login, http.MethodPost, o.login),
+		support.NewHTTPHandler(connect, http.MethodGet, o.connect),
+		support.NewHTTPHandler(disconnect, http.MethodGet, o.disconnect),
 	}
 }
 
@@ -112,9 +116,7 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	o.loadHTML(w, o.dashboardHTML, map[string]interface{}{
-		"UserName": r.FormValue("username"),
-	})
+	o.showDashboard(w, r.FormValue("username"), false)
 }
 
 func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
@@ -139,8 +141,45 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	o.showDashboard(w, r.FormValue("username"), true)
+}
+
+func (o *Operation) connect(w http.ResponseWriter, r *http.Request) {
+	userName := r.URL.Query()["userName"]
+	if len(userName) == 0 {
+		o.writeErrorResponse(w, http.StatusBadRequest, "missing username")
+
+		return
+	}
+
+	// TODO connect with other service / integrate trustbloc features
+
+	o.showDashboard(w, userName[0], true)
+}
+
+func (o *Operation) disconnect(w http.ResponseWriter, r *http.Request) {
+	userName := r.URL.Query()["userName"]
+	if len(userName) == 0 {
+		o.writeErrorResponse(w, http.StatusBadRequest, "missing username")
+
+		return
+	}
+
+	// TODO disconnect with other service / integrate trustbloc features
+
+	o.showDashboard(w, userName[0], false)
+}
+
+func (o *Operation) showDashboard(w http.ResponseWriter, userName string, serviceLinked bool) {
+	url := fmt.Sprintf("/connect?userName=%s", userName)
+	if serviceLinked {
+		url = fmt.Sprintf("/disconnect?userName=%s", userName)
+	}
+
 	o.loadHTML(w, o.dashboardHTML, map[string]interface{}{
-		"UserName": r.FormValue("username"),
+		"UserName":      userName,
+		"ServiceLinked": false,
+		"URL":           url,
 	})
 }
 
