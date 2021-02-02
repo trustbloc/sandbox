@@ -739,8 +739,20 @@ func (c *Operation) didcommTokenHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	userInfo := userDataMap{}
+
+	err = json.Unmarshal(cred, &userInfo)
+	if err != nil {
+		logger.Errorf("failed to unmarshal user state info : %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to read user state info : %s", err.Error()))
+
+		return
+	}
+
 	resp := adapterTokenResp{
-		Token: tkn,
+		Token:  tkn,
+		UserID: userInfo.ID,
 	}
 
 	respBytes, err := json.Marshal(resp)
@@ -1305,7 +1317,8 @@ type adapterTokenReq struct {
 
 // IssuerTokenResp issuer user data token response.
 type adapterTokenResp struct {
-	Token string `json:"token,omitempty"`
+	Token  string `json:"token,omitempty"`
+	UserID string `json:"userid"`
 }
 
 type userDataMap struct {
