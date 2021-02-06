@@ -10,8 +10,8 @@ SPDX-License-Identifier: Apache-2.0
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta charset="utf-8">
-    <link rel="icon" type="images/x-icon" href="img/logo.png" >
-    <title>Login</title>
+    <link rel="icon" type="images/x-icon" href="../img/logo.png" >
+    <title>Register</title>
     <meta name="description" content="">
     <meta name="keywords" content="">
     <meta name="author" content="">
@@ -32,7 +32,7 @@ SPDX-License-Identifier: Apache-2.0
 
     <style>
         .gradient {
-            background: linear-gradient(90deg, #2980B9 60%, #2980B9 100%);
+            background: linear-gradient(90deg, saddlebrown 60%, saddlebrown 100%);
         }
     </style>
 
@@ -49,7 +49,7 @@ SPDX-License-Identifier: Apache-2.0
             <div class="pl-6 flex items-center">
                 <a class="toggleColour text-white no-underline hover:no-underline font-bold text-xl lg:text-2xl"  href="/">
                     <i class="fa fa-cubes" style="font-size:24px;color:white"></i>
-                    TrustBloc Anonymous Comparator RP
+                    Employment Department
                 </a>
             </div>
 
@@ -72,9 +72,9 @@ SPDX-License-Identifier: Apache-2.0
 
     <section class="bg-white border-b py-48" id="account-register" style="display:block">
         <div class="container mx-auto flex  flex-wrap pt-1 pb-4">
-            <h1 class="w-full my-2 text-3xl text-center text-green-600"> Login to your account </h1>
+            <h1 class="w-full my-2 text-3xl text-center text-green-600"> Register for a new account </h1>
                 <div class="container justify-center mx-auto flex flex-wrap">
-                    <form method="post" id="vpForm" action="/login">
+                    <form method="post" id="vpForm" action="/register">
                     <table style="width:80%; color:#000; font-size: x-large;" class="border my-5">
                         <tr>
                             <td><label for="username">EmailID</label></td>
@@ -85,6 +85,10 @@ SPDX-License-Identifier: Apache-2.0
                         <tr>
                             <td><label for="password">Password</label></td>
                             <td><input type="password" id="password" name="password" class="border" value="f00B@r!23"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="nationalID">National ID</label></td>
+                            <td><input type="text" id="nationalID" name="nationalID" pattern="\d{3}-?\d{2}-?\d{4}" class="border" value="555-55-5555" oninvalid="setCustomValidity('Valid format is 123-45-6789')"></td>
                         </tr>
                         <tr>
                             <td></td>

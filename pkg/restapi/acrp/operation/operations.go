@@ -178,7 +178,7 @@ func (o *Operation) showDashboard(w http.ResponseWriter, userName string, servic
 
 	o.loadHTML(w, o.dashboardHTML, map[string]interface{}{
 		"UserName":      userName,
-		"ServiceLinked": false,
+		"ServiceLinked": serviceLinked,
 		"URL":           url,
 	})
 }
