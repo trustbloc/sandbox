@@ -52,6 +52,40 @@ func TestStartCmdWithMissingHostArg(t *testing.T) {
 		err.Error())
 }
 
+func TestDemoModeArg(t *testing.T) {
+	t.Run("missing arg", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, databaseURLArg()...)
+		args = append(args, databasePrefixArg()...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Contains(t, err.Error(),
+			"Neither demo-mode (command line flag) nor ACRP_DEMO_MODE (environment variable) have been set.")
+	})
+
+	t.Run("invalid value", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, databaseURLArg()...)
+		args = append(args, databasePrefixArg()...)
+		args = append(args, demoModeArg("test")...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Contains(t, err.Error(), "invalid demo mode : test")
+	})
+}
+
 func TestStartCmdValidArgs(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
@@ -93,6 +127,7 @@ func getValidArgs(logLevel string) []string {
 	args = append(args, tlsKeyFileArg()...)
 	args = append(args, databaseURLArg()...)
 	args = append(args, databasePrefixArg()...)
+	args = append(args, demoModeArg("rev")...)
 
 	if logLevel != "" {
 		args = append(args, logLevelArg(logLevel)...)
@@ -146,7 +181,7 @@ func TestTLSSystemCertPoolInvalidArgsEnvVar(t *testing.T) {
 }
 
 func TestTStaticPaths(t *testing.T) {
-	router := pathPrefix()
+	router := pathPrefix("static")
 
 	tests := []struct {
 		url string
@@ -168,6 +203,9 @@ func TestTStaticPaths(t *testing.T) {
 
 func setEnvVars(t *testing.T) {
 	err := os.Setenv(hostURLEnvKey, "localhost:8080")
+	require.Nil(t, err)
+
+	err = os.Setenv(demoModeEnvKey, "rev")
 	require.Nil(t, err)
 
 	err = os.Setenv(tlsCertFileEnvKey, "cert")
@@ -214,6 +252,10 @@ func tlsKeyFileArg() []string {
 
 func logLevelArg(logLevel string) []string {
 	return []string{flag + common.LogLevelFlagName, logLevel}
+}
+
+func demoModeArg(mode string) []string {
+	return []string{flag + demoModeFlagName, mode}
 }
 
 func databaseURLArg() []string {

@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package startcmd
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -48,7 +49,15 @@ const (
 	tlsCACertsFlagUsage = "Comma-Separated list of ca certs path." +
 		" Alternatively, this can be set with the following environment variable: " + tlsCACertsEnvKey
 	tlsCACertsEnvKey = "ACRP_TLS_CACERTS"
+
+	demoModeFlagName  = "demo-mode"
+	demoModeFlagUsage = "Demo mode." +
+		" Mandatory - Possible values [rev] [emp]."
+	demoModeEnvKey = "ACRP_DEMO_MODE"
 )
+
+// nolint:gochecknoglobals
+var supportedModes = map[string]string{"rev": "rev_agency", "emp": "emp_dept"}
 
 var logger = log.New("acrp-rest")
 
@@ -77,6 +86,7 @@ type rpParameters struct {
 	tlsCACerts        []string
 	logLevel          string
 	dbParams          *common.DBParameters
+	mode              string
 }
 
 type tlsConfig struct {
@@ -121,6 +131,16 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			demoModeFlag, err := cmdutils.GetUserSetVarFromString(cmd, demoModeFlagName, demoModeEnvKey, false)
+			if err != nil {
+				return err
+			}
+
+			demoMode, ok := supportedModes[demoModeFlag]
+			if !ok {
+				return fmt.Errorf("invalid demo mode : %s", demoModeFlag)
+			}
+
 			parameters := &rpParameters{
 				srv:               srv,
 				hostURL:           strings.TrimSpace(hostURL),
@@ -130,6 +150,7 @@ func createStartCmd(srv server) *cobra.Command {
 				tlsCACerts:        tlsConfg.caCerts,
 				logLevel:          loggingLevel,
 				dbParams:          dbParams,
+				mode:              demoMode,
 			}
 
 			return startRP(parameters)
@@ -182,6 +203,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(tlsSystemCertPoolFlagName, "", "",
 		tlsSystemCertPoolFlagUsage)
 	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
+	startCmd.Flags().StringP(demoModeFlagName, "", "", demoModeFlagUsage)
 	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
 }
 
@@ -190,7 +212,8 @@ func startRP(parameters *rpParameters) error {
 		common.SetDefaultLogLevel(logger, parameters.logLevel)
 	}
 
-	router := pathPrefix()
+	basePath := "static/" + parameters.mode
+	router := pathPrefix(basePath)
 
 	storeProvider, err := common.InitEdgeStore(parameters.dbParams, logger)
 	if err != nil {
@@ -199,7 +222,7 @@ func startRP(parameters *rpParameters) error {
 
 	cfg := &operation.Config{
 		StoreProvider: storeProvider,
-		DashboardHTML: "static/dashboard.html",
+		DashboardHTML: basePath + "/dashboard.html",
 	}
 
 	acrpService, err := acrp.New(cfg)
@@ -220,17 +243,17 @@ func startRP(parameters *rpParameters) error {
 	return parameters.srv.ListenAndServe(parameters.hostURL, parameters.tlsCertFile, parameters.tlsKeyFile, router)
 }
 
-func pathPrefix() *mux.Router {
+func pathPrefix(path string) *mux.Router {
 	router := mux.NewRouter()
 
-	fs := http.FileServer(http.Dir("static"))
+	fs := http.FileServer(http.Dir(path))
 	router.Handle("/", fs)
 	router.PathPrefix("/img/").Handler(fs)
 	router.PathPrefix("/showlogin").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/login.html")
+		http.ServeFile(w, r, path+"/login.html")
 	})
 	router.PathPrefix("/showregister").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/register.html")
+		http.ServeFile(w, r, path+"/register.html")
 	})
 
 	return router

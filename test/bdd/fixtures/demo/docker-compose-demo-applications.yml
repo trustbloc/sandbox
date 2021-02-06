@@ -66,18 +66,38 @@ services:
     networks:
       - demo_demo-net
 
-  acrp.example.com:
-    container_name: acrp.example.com
+  rev-agency-rp.example.com:
+    container_name: rev-agency-rp.example.com
     image: ${ACRP_IMAGE}:latest
     environment:
       - ACRP_HOST_URL=0.0.0.0:5558
+      - ACRP_DEMO_MODE=rev
       - ACRP_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - ACRP_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
       - DATABASE_URL=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
-      - DATABASE_PREFIX=acrprest
-      - VIRTUAL_HOST=acrp.trustbloc.local
+      - DATABASE_PREFIX=revagency
+      - VIRTUAL_HOST=rev-agency-rp.trustbloc.local
     ports:
       - 5558:5558
+    command: start
+    volumes:
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo_demo-net
+
+  emp-dept-rp.example.com:
+    container_name: emp-dept-rp.example.com
+    image: ${ACRP_IMAGE}:latest
+    environment:
+      - ACRP_HOST_URL=0.0.0.0:5559
+      - ACRP_DEMO_MODE=emp
+      - ACRP_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - ACRP_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
+      - DATABASE_URL=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - DATABASE_PREFIX=empdept
+      - VIRTUAL_HOST=emp-dept-rp.trustbloc.local
+    ports:
+      - 5559:5559
     command: start
     volumes:
       - ../keys/tls:/etc/tls

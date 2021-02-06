@@ -33,7 +33,8 @@ services:
           - uni-registrar-web.trustbloc.local
           - did-resolver.trustbloc.local
           - consent-login.trustbloc.local
-          - acrp.trustbloc.local
+          - rev-agency-rp.trustbloc.local
+          - emp-dept-rp.trustbloc.local
           - router.trustbloc.local
           - issuer.trustbloc.local
           - issuer-adapter.trustbloc.local
