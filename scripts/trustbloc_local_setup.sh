@@ -53,4 +53,5 @@ cat > ${SANDBOX_HOME}/hosts <<EOF
 127.0.0.1 governance-vcs.trustbloc.local
 127.0.0.1 did-method.trustbloc.local
 127.0.0.1 comparator.trustbloc.local
+127.0.0.1 vault.trustbloc.local
 EOF

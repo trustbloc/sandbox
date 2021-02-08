@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package startcmd
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -17,6 +18,7 @@ import (
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/restapi/logspec"
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
+	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 
 	"github.com/trustbloc/edge-sandbox/cmd/common"
 	"github.com/trustbloc/edge-sandbox/pkg/restapi/acrp"
@@ -54,6 +56,11 @@ const (
 	demoModeFlagUsage = "Demo mode." +
 		" Mandatory - Possible values [rev] [emp]."
 	demoModeEnvKey = "ACRP_DEMO_MODE"
+
+	// vault server url
+	vaultServerURLFlagName  = "vault-server-url"
+	vaultServerURLFlagUsage = "Valut Server URL."
+	vaultServerURLEnvKey    = "ACRP_VAULT_SERVER_URL"
 )
 
 // nolint:gochecknoglobals
@@ -87,6 +94,7 @@ type rpParameters struct {
 	logLevel          string
 	dbParams          *common.DBParameters
 	mode              string
+	vaultServerURL    string
 }
 
 type tlsConfig struct {
@@ -141,6 +149,12 @@ func createStartCmd(srv server) *cobra.Command {
 				return fmt.Errorf("invalid demo mode : %s", demoModeFlag)
 			}
 
+			vaultServerURL, err := cmdutils.GetUserSetVarFromString(cmd, vaultServerURLFlagName,
+				vaultServerURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
 			parameters := &rpParameters{
 				srv:               srv,
 				hostURL:           strings.TrimSpace(hostURL),
@@ -151,6 +165,7 @@ func createStartCmd(srv server) *cobra.Command {
 				logLevel:          loggingLevel,
 				dbParams:          dbParams,
 				mode:              demoMode,
+				vaultServerURL:    vaultServerURL,
 			}
 
 			return startRP(parameters)
@@ -204,6 +219,7 @@ func createFlags(startCmd *cobra.Command) {
 		tlsSystemCertPoolFlagUsage)
 	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
 	startCmd.Flags().StringP(demoModeFlagName, "", "", demoModeFlagUsage)
+	startCmd.Flags().StringP(vaultServerURLFlagName, "", "", vaultServerURLFlagUsage)
 	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
 }
 
@@ -211,6 +227,13 @@ func startRP(parameters *rpParameters) error {
 	if parameters.logLevel != "" {
 		common.SetDefaultLogLevel(logger, parameters.logLevel)
 	}
+
+	rootCAs, err := tlsutils.GetCertPool(parameters.tlsSystemCertPool, parameters.tlsCACerts)
+	if err != nil {
+		return err
+	}
+
+	tlsConfig := &tls.Config{RootCAs: rootCAs, MinVersion: tls.VersionTLS12}
 
 	basePath := "static/" + parameters.mode
 	router := pathPrefix(basePath)
@@ -221,8 +244,10 @@ func startRP(parameters *rpParameters) error {
 	}
 
 	cfg := &operation.Config{
-		StoreProvider: storeProvider,
-		DashboardHTML: basePath + "/dashboard.html",
+		StoreProvider:  storeProvider,
+		DashboardHTML:  basePath + "/dashboard.html",
+		VaultServerURL: parameters.vaultServerURL,
+		TLSConfig:      tlsConfig,
 	}
 
 	acrpService, err := acrp.New(cfg)

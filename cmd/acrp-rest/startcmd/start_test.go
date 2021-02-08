@@ -128,6 +128,7 @@ func getValidArgs(logLevel string) []string {
 	args = append(args, databaseURLArg()...)
 	args = append(args, databasePrefixArg()...)
 	args = append(args, demoModeArg("rev")...)
+	args = append(args, vaultServerURLArg()...)
 
 	if logLevel != "" {
 		args = append(args, logLevelArg(logLevel)...)
@@ -158,12 +159,33 @@ func TestDatabaseTypeArg(t *testing.T) {
 		args = append(args, hostURLArg()...)
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, tlsKeyFileArg()...)
+		args = append(args, demoModeArg("rev")...)
+		args = append(args, vaultServerURLArg()...)
 		args = append(args, []string{flag + common.DatabasePrefixFlagName, "test"}...)
 		args = append(args, []string{flag + common.DatabaseURLFlagName, "invalid-driver://test"}...)
 		startCmd.SetArgs(args)
 
 		err := startCmd.Execute()
 		require.Contains(t, err.Error(), "unsupported storage driver: invalid-driver")
+	})
+}
+
+func TestVaultServerArg(t *testing.T) {
+	t.Run("missing arg", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, databaseURLArg()...)
+		args = append(args, databasePrefixArg()...)
+		args = append(args, demoModeArg("rev")...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Contains(t, err.Error(),
+			"Neither vault-server-url (command line flag) nor ACRP_VAULT_SERVER_URL (environment variable) have been set.")
 	})
 }
 
@@ -219,6 +241,9 @@ func setEnvVars(t *testing.T) {
 
 	err = os.Setenv(common.DatabasePrefixEnvKey, "test")
 	require.NoError(t, err)
+
+	err = os.Setenv(vaultServerURLEnvKey, "https://vault-server")
+	require.Nil(t, err)
 }
 
 func unsetEnvVars(t *testing.T) {
@@ -235,6 +260,12 @@ func unsetEnvVars(t *testing.T) {
 	require.NoError(t, err)
 
 	err = os.Unsetenv(common.DatabasePrefixEnvKey)
+	require.NoError(t, err)
+
+	err = os.Unsetenv(demoModeEnvKey)
+	require.NoError(t, err)
+
+	err = os.Unsetenv(vaultServerURLEnvKey)
 	require.NoError(t, err)
 }
 
@@ -256,6 +287,10 @@ func logLevelArg(logLevel string) []string {
 
 func demoModeArg(mode string) []string {
 	return []string{flag + demoModeFlagName, mode}
+}
+
+func vaultServerURLArg() []string {
+	return []string{flag + vaultServerURLFlagName, "https://vault-server"}
 }
 
 func databaseURLArg() []string {

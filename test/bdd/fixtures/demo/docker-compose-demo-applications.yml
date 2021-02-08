@@ -76,6 +76,7 @@ services:
       - ACRP_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
       - DATABASE_URL=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - DATABASE_PREFIX=revagency
+      - ACRP_VAULT_SERVER_URL=https://vault.trustbloc.local
       - VIRTUAL_HOST=rev-agency-rp.trustbloc.local
     ports:
       - 5558:5558
@@ -95,6 +96,7 @@ services:
       - ACRP_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
       - DATABASE_URL=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - DATABASE_PREFIX=empdept
+      - ACRP_VAULT_SERVER_URL=https://vault.trustbloc.local
       - VIRTUAL_HOST=emp-dept-rp.trustbloc.local
     ports:
       - 5559:5559
