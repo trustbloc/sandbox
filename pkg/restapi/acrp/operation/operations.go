@@ -7,9 +7,11 @@ SPDX-License-Identifier: Apache-2.0
 package operation
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/trustbloc/edge-core/pkg/log"
@@ -31,6 +33,10 @@ const (
 
 var logger = log.New("acrp-restapi")
 
+type httpClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 // Handler http handler for each controller API endpoint.
 type Handler interface {
 	Path() string
@@ -40,15 +46,19 @@ type Handler interface {
 
 // Operation defines handlers.
 type Operation struct {
-	store         storage.Store
-	handlers      []Handler
-	dashboardHTML string
+	store          storage.Store
+	handlers       []Handler
+	dashboardHTML  string
+	httpClient     httpClient
+	vaultServerURL string
 }
 
 // Config config.
 type Config struct {
-	StoreProvider storage.Provider
-	DashboardHTML string
+	StoreProvider  storage.Provider
+	DashboardHTML  string
+	TLSConfig      *tls.Config
+	VaultServerURL string
 }
 
 // New returns acrp operation instance.
@@ -59,8 +69,10 @@ func New(config *Config) (*Operation, error) {
 	}
 
 	op := &Operation{
-		store:         store,
-		dashboardHTML: config.DashboardHTML,
+		store:          store,
+		dashboardHTML:  config.DashboardHTML,
+		httpClient:     &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
+		vaultServerURL: config.VaultServerURL,
 	}
 
 	op.registerHandler()
@@ -105,8 +117,32 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO call TrustBloc services and save nationalID in EDV
+	// create vault for the user
+	url := o.vaultServerURL + "/vaults"
+
+	req, err := http.NewRequest(http.MethodPost, url, nil)
+	if err != nil {
+		logger.Errorf("failed to create create vault http request: %s", err.Error())
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create create vault http request: %s", err.Error()))
+
+		return
+	}
+
+	// TODO save vault related details
+	_, err = sendHTTPRequest(req, o.httpClient, http.StatusCreated)
+	if err != nil {
+		logger.Errorf("failed to create vault - url:%s err:%s", url, err.Error())
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create vault - url:%s err:%s", url, err.Error()))
+
+		return
+	}
+
+	// TODO create VC for nationalID
 	logger.Infof("nationalID=%s", r.FormValue("nationalID"))
+
+	// TODO call comparator service and save the VC
 
 	err = o.store.Put(r.FormValue("username"), []byte(r.FormValue("password")))
 	if err != nil {
@@ -220,4 +256,29 @@ func getTxnStore(prov storage.Provider) (storage.Store, error) {
 	}
 
 	return txnStore, nil
+}
+
+func sendHTTPRequest(req *http.Request, client httpClient, status int) ([]byte, error) {
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = resp.Body.Close()
+		if err != nil {
+			logger.Warnf("failed to close response body")
+		}
+	}()
+
+	if resp.StatusCode != status {
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			logger.Warnf("failed to read response body for status: %d", resp.StatusCode)
+		}
+
+		return nil, fmt.Errorf("%s: %s", resp.Status, string(body))
+	}
+
+	return ioutil.ReadAll(resp.Body)
 }

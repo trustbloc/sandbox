@@ -7,11 +7,13 @@ SPDX-License-Identifier: Apache-2.0
 package operation
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -55,6 +57,12 @@ func TestRegister(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
+		svc.httpClient = &mockHTTPClient{
+			respValue: &http.Response{
+				StatusCode: http.StatusCreated, Body: ioutil.NopCloser(bytes.NewReader([]byte(""))),
+			},
+		}
+
 		rr := httptest.NewRecorder()
 
 		req := &http.Request{Form: make(map[string][]string)}
@@ -95,6 +103,12 @@ func TestRegister(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
+		svc.httpClient = &mockHTTPClient{
+			respValue: &http.Response{
+				StatusCode: http.StatusCreated, Body: ioutil.NopCloser(strings.NewReader("")),
+			},
+		}
+
 		rr := httptest.NewRecorder()
 
 		req := &http.Request{Form: make(map[string][]string)}
@@ -134,6 +148,12 @@ func TestRegister(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
+		svc.httpClient = &mockHTTPClient{
+			respValue: &http.Response{
+				StatusCode: http.StatusCreated, Body: ioutil.NopCloser(strings.NewReader("")),
+			},
+		}
+
 		rr := httptest.NewRecorder()
 
 		req := &http.Request{Form: make(map[string][]string)}
@@ -142,6 +162,31 @@ func TestRegister(t *testing.T) {
 		svc.register(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "unable to load html")
+	})
+
+	t.Run("create vault error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: make(map[string][]byte)},
+			},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.httpClient = &mockHTTPClient{
+			respValue: &http.Response{
+				StatusCode: http.StatusInternalServerError, Body: ioutil.NopCloser(strings.NewReader("vault error")),
+			},
+		}
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Form.Add("username", sampleUserName)
+
+		svc.register(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to create vault")
 	})
 }
 
@@ -320,4 +365,17 @@ func TestDisconnect(t *testing.T) {
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "missing username")
 	})
+}
+
+type mockHTTPClient struct {
+	respValue *http.Response
+	respErr   error
+}
+
+func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
+	if m.respErr != nil {
+		return nil, m.respErr
+	}
+
+	return m.respValue, nil
 }

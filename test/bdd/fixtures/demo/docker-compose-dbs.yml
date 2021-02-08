@@ -59,6 +59,7 @@ services:
           - oathkeeper-auth-keyserver.trustbloc.local
           - oathkeeper-ops-keyserver.trustbloc.local
           - did-method.trustbloc.local
+          - vault.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb
