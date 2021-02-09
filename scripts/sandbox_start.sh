@@ -26,6 +26,7 @@ holderVCSHealthCheckURL=https://holder-vcs.trustbloc.local/healthcheck
 governanceVCSHealthCheckURL=https://governance-vcs.trustbloc.local/healthcheck
 comparatorHealthCheckURL=https://comparator.trustbloc.local/healthcheck
 vaultServerHealthCheckURL=https://vault.trustbloc.local/healthcheck
+cshHealthCheckURL=https://csh.trustbloc.local/healthcheck
 authzKMSHealthCheckURL=https://oathkeeper-auth-keyserver.trustbloc.local/healthcheck
 opsKMSHealthCheckURL=https://oathkeeper-ops-keyserver.trustbloc.local/healthcheck
 authHealthCheckURL=https://auth-rest.trustbloc.local/healthcheck
@@ -225,16 +226,13 @@ echo "#### Step 6 is complete"
 ###
 ### Step 7
 echo "#### Step 7 start demo vcs, comparator, vault"
+(cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-csh.yml down && docker-compose -f docker-compose-csh.yml up --force-recreate) > docker.log 2>&1 & )
+healthCheck csh $cshHealthCheckURL 200
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-vcs.yml down && docker-compose -f docker-compose-vcs.yml up --force-recreate) > docker.log 2>&1 & )
-(cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-comparator.yml down && docker-compose -f docker-compose-comparator.yml up --force-recreate) > docker.log 2>&1 & )
-(cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-vault.yml down && docker-compose -f docker-compose-vault.yml up --force-recreate) > docker.log 2>&1 & )
 healthCheck issuerVCS $issuerVCSHealthCheckURL 200
 healthCheck rpVCS $rpVCSHealthCheckURL 200
 healthCheck holderVCS $holderVCSHealthCheckURL 200
 healthCheck governanceVCS $governanceVCSHealthCheckURL 200
-healthCheck comparator $comparatorHealthCheckURL 200
-# TODO https://github.com/trustbloc/edge-service/issues/590 enable once implemented
-# healthCheck vault $vaultServerHealthCheckURL 200
 if ! test/bdd/fixtures/scripts/vcs_issuer_configure.sh; then
   exit -1
 fi
@@ -247,6 +245,11 @@ fi
 if ! test/bdd/fixtures/scripts/vcs_governance_configure.sh; then
    exit -1
 fi
+(cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-vault.yml down && docker-compose -f docker-compose-vault.yml up --force-recreate) > docker.log 2>&1 & )
+# TODO https://github.com/trustbloc/edge-service/issues/590 enable once implemented
+# healthCheck vault $vaultServerHealthCheckURL 200
+(cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-comparator.yml down && docker-compose -f docker-compose-comparator.yml up --force-recreate) > docker.log 2>&1 & )
+healthCheck comparator $comparatorHealthCheckURL 200
 echo "#### Step 7 is complete"
 ###
 ### Step 8

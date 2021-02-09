@@ -60,6 +60,7 @@ services:
           - oathkeeper-ops-keyserver.trustbloc.local
           - did-method.trustbloc.local
           - vault.trustbloc.local
+          - csh.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb
