@@ -129,6 +129,8 @@ func getValidArgs(logLevel string) []string {
 	args = append(args, databasePrefixArg()...)
 	args = append(args, demoModeArg("rev")...)
 	args = append(args, vaultServerURLArg()...)
+	args = append(args, vcIssuerURLArg()...)
+	args = append(args, requestTokensArg()...)
 
 	if logLevel != "" {
 		args = append(args, logLevelArg(logLevel)...)
@@ -161,6 +163,7 @@ func TestDatabaseTypeArg(t *testing.T) {
 		args = append(args, tlsKeyFileArg()...)
 		args = append(args, demoModeArg("rev")...)
 		args = append(args, vaultServerURLArg()...)
+		args = append(args, vcIssuerURLArg()...)
 		args = append(args, []string{flag + common.DatabasePrefixFlagName, "test"}...)
 		args = append(args, []string{flag + common.DatabaseURLFlagName, "invalid-driver://test"}...)
 		startCmd.SetArgs(args)
@@ -186,6 +189,26 @@ func TestVaultServerArg(t *testing.T) {
 		err := startCmd.Execute()
 		require.Contains(t, err.Error(),
 			"Neither vault-server-url (command line flag) nor ACRP_VAULT_SERVER_URL (environment variable) have been set.")
+	})
+}
+
+func TestVCIssuerArg(t *testing.T) {
+	t.Run("missing arg", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, databaseURLArg()...)
+		args = append(args, databasePrefixArg()...)
+		args = append(args, demoModeArg("rev")...)
+		args = append(args, vaultServerURLArg()...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Contains(t, err.Error(),
+			"Neither vc-issuer-url (command line flag) nor ACRP_VC_ISSUER_URL (environment variable) have been set.")
 	})
 }
 
@@ -244,6 +267,9 @@ func setEnvVars(t *testing.T) {
 
 	err = os.Setenv(vaultServerURLEnvKey, "https://vault-server")
 	require.Nil(t, err)
+
+	err = os.Setenv(vcIssuerURLEnvKey, "https://vc-issuer-server")
+	require.Nil(t, err)
 }
 
 func unsetEnvVars(t *testing.T) {
@@ -266,6 +292,9 @@ func unsetEnvVars(t *testing.T) {
 	require.NoError(t, err)
 
 	err = os.Unsetenv(vaultServerURLEnvKey)
+	require.NoError(t, err)
+
+	err = os.Unsetenv(vcIssuerURLEnvKey)
 	require.NoError(t, err)
 }
 
@@ -293,10 +322,18 @@ func vaultServerURLArg() []string {
 	return []string{flag + vaultServerURLFlagName, "https://vault-server"}
 }
 
+func vcIssuerURLArg() []string {
+	return []string{flag + vcIssuerURLFlagName, "https://vc-issuer-server"}
+}
+
 func databaseURLArg() []string {
 	return []string{flag + common.DatabaseURLFlagName, "mem://test"}
 }
 
 func databasePrefixArg() []string {
 	return []string{flag + common.DatabasePrefixFlagName, "database-prefix"}
+}
+
+func requestTokensArg() []string {
+	return []string{flag + requestTokensFlagName, "token1=tk1", flag + requestTokensFlagName, "token2=tk2=tk2"}
 }

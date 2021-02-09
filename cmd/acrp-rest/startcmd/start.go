@@ -59,8 +59,20 @@ const (
 
 	// vault server url
 	vaultServerURLFlagName  = "vault-server-url"
-	vaultServerURLFlagUsage = "Valut Server URL."
+	vaultServerURLFlagUsage = "Vault Server URL."
 	vaultServerURLEnvKey    = "ACRP_VAULT_SERVER_URL"
+
+	// vc issuer server url
+	vcIssuerURLFlagName  = "vc-issuer-url"
+	vcIssuerURLFlagUsage = "VC Issuer URL."
+	vcIssuerURLEnvKey    = "ACRP_VC_ISSUER_URL"
+
+	requestTokensFlagName  = "request-tokens"
+	requestTokensEnvKey    = "ACRP_REQUEST_TOKENS" //nolint:gosec
+	requestTokensFlagUsage = "Tokens used for http request " +
+		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
+
+	tokenLength2 = 2
 )
 
 // nolint:gochecknoglobals
@@ -95,6 +107,8 @@ type rpParameters struct {
 	dbParams          *common.DBParameters
 	mode              string
 	vaultServerURL    string
+	vcIssuerURL       string
+	requestTokens     map[string]string
 }
 
 type tlsConfig struct {
@@ -113,7 +127,7 @@ func GetStartCmd(srv server) *cobra.Command {
 	return startCmd
 }
 
-func createStartCmd(srv server) *cobra.Command {
+func createStartCmd(srv server) *cobra.Command { //nolint: funlen
 	return &cobra.Command{
 		Use:   "start",
 		Short: "Start AC RP",
@@ -155,6 +169,16 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			vcIssuerURL, err := cmdutils.GetUserSetVarFromString(cmd, vcIssuerURLFlagName, vcIssuerURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
+			requestTokens, err := getRequestTokens(cmd)
+			if err != nil {
+				return err
+			}
+
 			parameters := &rpParameters{
 				srv:               srv,
 				hostURL:           strings.TrimSpace(hostURL),
@@ -166,6 +190,8 @@ func createStartCmd(srv server) *cobra.Command {
 				dbParams:          dbParams,
 				mode:              demoMode,
 				vaultServerURL:    vaultServerURL,
+				vcIssuerURL:       vcIssuerURL,
+				requestTokens:     requestTokens,
 			}
 
 			return startRP(parameters)
@@ -220,6 +246,8 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
 	startCmd.Flags().StringP(demoModeFlagName, "", "", demoModeFlagUsage)
 	startCmd.Flags().StringP(vaultServerURLFlagName, "", "", vaultServerURLFlagUsage)
+	startCmd.Flags().StringP(vcIssuerURLFlagName, "", "", vcIssuerURLFlagUsage)
+	startCmd.Flags().StringArrayP(requestTokensFlagName, "", []string{}, requestTokensFlagUsage)
 	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
 }
 
@@ -246,8 +274,10 @@ func startRP(parameters *rpParameters) error {
 	cfg := &operation.Config{
 		StoreProvider:  storeProvider,
 		DashboardHTML:  basePath + "/dashboard.html",
-		VaultServerURL: parameters.vaultServerURL,
 		TLSConfig:      tlsConfig,
+		VaultServerURL: parameters.vaultServerURL,
+		VCIssuerURL:    parameters.vcIssuerURL,
+		RequestTokens:  parameters.requestTokens,
 	}
 
 	acrpService, err := acrp.New(cfg)
@@ -282,4 +312,26 @@ func pathPrefix(path string) *mux.Router {
 	})
 
 	return router
+}
+
+func getRequestTokens(cmd *cobra.Command) (map[string]string, error) {
+	requestTokens, err := cmdutils.GetUserSetVarFromArrayString(cmd, requestTokensFlagName,
+		requestTokensEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	tokens := make(map[string]string)
+
+	for _, token := range requestTokens {
+		split := strings.Split(token, "=")
+		switch len(split) {
+		case tokenLength2:
+			tokens[split[0]] = split[1]
+		default:
+			logger.Warnf("invalid token '%s'", token)
+		}
+	}
+
+	return tokens, nil
 }
