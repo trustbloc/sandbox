@@ -29,9 +29,9 @@ import (
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
 	"golang.org/x/oauth2"
 
-	"github.com/trustbloc/edge-sandbox/pkg/internal/common/support"
-	oidcclient "github.com/trustbloc/edge-sandbox/pkg/restapi/internal/common/oidc"
-	"github.com/trustbloc/edge-sandbox/pkg/token"
+	"github.com/trustbloc/sandbox/pkg/internal/common/support"
+	oidcclient "github.com/trustbloc/sandbox/pkg/restapi/internal/common/oidc"
+	"github.com/trustbloc/sandbox/pkg/token"
 )
 
 const (
@@ -75,7 +75,7 @@ const (
 	scopeQueryParam = "scope"
 )
 
-var logger = log.New("edge-sandbox-issuer-restapi")
+var logger = log.New("sandbox-issuer-restapi")
 
 // Handler http handler for each controller API endpoint
 type Handler interface {
@@ -912,7 +912,7 @@ func (c *Operation) validateAdapterCallback(redirectURL string) error {
 		return fmt.Errorf("invalid state : %s", err)
 	}
 
-	// TODO https://github.com/trustbloc/edge-sandbox/issues/493 validate token existence for the state
+	// TODO https://github.com/trustbloc/sandbox/issues/493 validate token existence for the state
 
 	return nil
 }

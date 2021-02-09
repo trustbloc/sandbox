@@ -15,19 +15,19 @@ RUN apk add --no-cache \
 	libtool \
 	bash \
 	make;
-ADD . /opt/workspace/edge-sandbox
-WORKDIR /opt/workspace/edge-sandbox
+ADD . /opt/workspace/sandbox
+WORKDIR /opt/workspace/sandbox
 ENV EXECUTABLES go git
 
-FROM golang as edge-sandbox
+FROM golang as sandbox
 RUN make login-consent-server
 
 
 FROM alpine:${ALPINE_VER}
-LABEL org.opencontainers.image.source https://github.com/trustbloc/edge-sandbox
+LABEL org.opencontainers.image.source https://github.com/trustbloc/sandbox
 
 # copy build artifacts from build container
-COPY --from=edge-sandbox /opt/workspace/edge-sandbox/.build/bin/login-consent /usr/local/bin
+COPY --from=sandbox /opt/workspace/sandbox/.build/bin/login-consent /usr/local/bin
 
 # set up nsswitch.conf for Go's "netgo" implementation
 # - https://github.com/golang/go/blob/go1.9.1/src/net/conf.go#L194-L275

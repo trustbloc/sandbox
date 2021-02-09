@@ -26,7 +26,7 @@ import (
 	mockstorage "github.com/trustbloc/edge-core/pkg/storage/mockstore"
 	"golang.org/x/oauth2"
 
-	"github.com/trustbloc/edge-sandbox/pkg/token"
+	"github.com/trustbloc/sandbox/pkg/token"
 )
 
 const authHeader = "Bearer ABC"

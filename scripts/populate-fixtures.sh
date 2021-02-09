@@ -19,7 +19,7 @@ CACHE_PATH=""
 function setCachePath {
     declare envOS
     envOS=$(uname -s)
-    declare pkgDir="edge-sandbox"
+    declare pkgDir="sandbox"
 
     if [ "${envOS}" = 'Darwin' ]; then
         CACHE_PATH="${HOME}/Library/Caches/${pkgDir}"

@@ -1,4 +1,4 @@
-# TrustBloc Edge Sandbox - Adapter/DIDComm Demo Playground
+# TrustBloc Sandbox - Adapter/DIDComm Demo Playground
 
 ## Components
 | Component   | Cloud URL (Sandbox)                                         | Cloud URL (Dev)                                         | Local URL*                                              |

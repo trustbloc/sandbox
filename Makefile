@@ -139,25 +139,25 @@ generate-test-keys: clean
 	@mkdir -p test/bdd/fixtures/keys/tls
 	@cp ~/.trustbloc-local/sandbox/certs/trustbloc-dev-ca.* test/bdd/fixtures/keys/tls 2>/dev/null || :
 	@docker run -i --rm \
-		-v $(abspath .):/opt/workspace/edge-sandbox \
-		--entrypoint "/opt/workspace/edge-sandbox/scripts/generate_test_keys.sh" \
+		-v $(abspath .):/opt/workspace/sandbox \
+		--entrypoint "/opt/workspace/sandbox/scripts/generate_test_keys.sh" \
 		frapsoft/openssl
 
 .PHONY: crypto-gen
 crypto-gen:
 	@echo "Generating crypto directory ..."
 	@docker run -i \
-		-v /$(abspath .):/opt/workspace/edge-sandbox -u $(shell id -u):$(shell id -g) \
+		-v /$(abspath .):/opt/workspace/sandbox -u $(shell id -u):$(shell id -g) \
 		$(FABRIC_TOOLS_IMAGE):$(FABRIC_TOOLS_TAG) \
-		//bin/bash -c "FABRIC_VERSION_DIR=fabric /opt/workspace/edge-sandbox/scripts/generate_crypto.sh"
+		//bin/bash -c "FABRIC_VERSION_DIR=fabric /opt/workspace/sandbox/scripts/generate_crypto.sh"
 
 .PHONY: channel-config-gen
 channel-config-gen:
 	@echo "Generating test channel configuration transactions and blocks ..."
 	@docker run -i \
-		-v /$(abspath .):/opt/workspace/edge-sandbox -u $(shell id -u):$(shell id -g) \
+		-v /$(abspath .):/opt/workspace/sandbox -u $(shell id -u):$(shell id -g) \
 		$(FABRIC_TOOLS_IMAGE):$(FABRIC_TOOLS_TAG) \
-		//bin/bash -c "FABRIC_VERSION_DIR=fabric/ /opt/workspace/edge-sandbox/scripts/generate_channeltx.sh"
+		//bin/bash -c "FABRIC_VERSION_DIR=fabric/ /opt/workspace/sandbox/scripts/generate_channeltx.sh"
 
 .PHONY: populate-fixtures
 populate-fixtures: clean

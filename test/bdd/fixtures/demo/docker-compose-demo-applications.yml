@@ -24,7 +24,7 @@ services:
       - OAUTH2_ENDPOINT_TOKEN_INTROSPECTION_URL=${HYDRA_ADMIN_URL}/oauth2/introspect
       - ISSUER_CMS_URL=https://oathkeeper-proxy.trustbloc.local
       - ISSUER_VCS_URL=https://issuer-vcs.trustbloc.local
-      # TODO https://github.com/trustbloc/edge-sandbox/issues/392 Expose multiple ports per virtual host
+      # TODO https://github.com/trustbloc/sandbox/issues/392 Expose multiple ports per virtual host
       - ISSUER_ADAPTER_URL=https://issuer-adapter.trustbloc.local:${ISSUER_ADAPTER_PORT}
       - ISSUER_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - ISSUER_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key

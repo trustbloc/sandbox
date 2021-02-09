@@ -1,4 +1,4 @@
-# Edge sandbox - Build
+# Sandbox - Build
 
 ## Prerequisites (General)
 - Go 1.15

@@ -20,9 +20,9 @@ import (
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 
-	"github.com/trustbloc/edge-sandbox/cmd/common"
-	"github.com/trustbloc/edge-sandbox/pkg/restapi/acrp"
-	"github.com/trustbloc/edge-sandbox/pkg/restapi/acrp/operation"
+	"github.com/trustbloc/sandbox/cmd/common"
+	"github.com/trustbloc/sandbox/pkg/restapi/acrp"
+	"github.com/trustbloc/sandbox/pkg/restapi/acrp/operation"
 )
 
 const (

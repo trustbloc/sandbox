@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-module github.com/trustbloc/edge-sandbox/test/bdd
+module github.com/trustbloc/sandbox/test/bdd
 
 go 1.15
 

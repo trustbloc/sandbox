@@ -8,9 +8,9 @@
 set -e
 
 
-echo "Generating edge-sandbox Test PKI"
+echo "Generating sandbox Test PKI"
 
-cd /opt/workspace/edge-sandbox
+cd /opt/workspace/sandbox
 mkdir -p test/bdd/fixtures/keys/tls
 mkdir -p test/bdd/fixtures/keys/recover
 mkdir -p test/bdd/fixtures/keys/update
@@ -58,11 +58,11 @@ fi
 
 #create TLS creds
 openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/tls/localhost.key
-openssl req -new -key test/bdd/fixtures/keys/tls/localhost.key -subj "/C=CA/ST=ON/O=TrustBloc/OU=trustbloc-edge-sandbox/CN=localhost" -out test/bdd/fixtures/keys/tls/localhost.csr
+openssl req -new -key test/bdd/fixtures/keys/tls/localhost.key -subj "/C=CA/ST=ON/O=TrustBloc/OU=trustbloc-sandbox/CN=localhost" -out test/bdd/fixtures/keys/tls/localhost.csr
 openssl x509 -req -in test/bdd/fixtures/keys/tls/localhost.csr -CA test/bdd/fixtures/keys/tls/trustbloc-dev-ca.crt -CAkey test/bdd/fixtures/keys/tls/trustbloc-dev-ca.key -CAcreateserial -extfile "$localhostSSLConf" -out test/bdd/fixtures/keys/tls/localhost.crt -days 365
 
 openssl ecparam -name prime256v1 -genkey -noout -out test/bdd/fixtures/keys/tls/trustbloc.local.key
-openssl req -new -key test/bdd/fixtures/keys/tls/trustbloc.local.key -subj "/C=CA/ST=ON/O=TrustBloc/OU=trustbloc-edge-sandbox/CN=trustbloc.local" -out test/bdd/fixtures/keys/tls/trustbloc.local.csr
+openssl req -new -key test/bdd/fixtures/keys/tls/trustbloc.local.key -subj "/C=CA/ST=ON/O=TrustBloc/OU=trustbloc-sandbox/CN=trustbloc.local" -out test/bdd/fixtures/keys/tls/trustbloc.local.csr
 openssl x509 -req -in test/bdd/fixtures/keys/tls/trustbloc.local.csr -CA test/bdd/fixtures/keys/tls/trustbloc-dev-ca.crt -CAkey test/bdd/fixtures/keys/tls/trustbloc-dev-ca.key -CAcreateserial -extfile "$trustblocSSLConf" -out test/bdd/fixtures/keys/tls/trustbloc.local.crt -days 365
 
 # generate key pair for recover/updates
@@ -104,4 +104,4 @@ openssl rand -out test/bdd/fixtures/keys/session_cookies/enc.key 32
 # create secrete lock key
 openssl rand 32 | base64 | sed 's/+/-/g; s/\//_/g' > test/bdd/fixtures/keys/tls/service-lock.key
 
-echo "done generating edge-sandbox PKI"
+echo "done generating sandbox PKI"

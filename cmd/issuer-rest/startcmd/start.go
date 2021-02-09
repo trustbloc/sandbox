@@ -20,11 +20,11 @@ import (
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 	"golang.org/x/oauth2"
 
-	"github.com/trustbloc/edge-sandbox/cmd/common"
-	"github.com/trustbloc/edge-sandbox/pkg/restapi/issuer"
-	"github.com/trustbloc/edge-sandbox/pkg/restapi/issuer/operation"
-	tokenIssuer "github.com/trustbloc/edge-sandbox/pkg/token/issuer"
-	tokenResolver "github.com/trustbloc/edge-sandbox/pkg/token/resolver"
+	"github.com/trustbloc/sandbox/cmd/common"
+	"github.com/trustbloc/sandbox/pkg/restapi/issuer"
+	"github.com/trustbloc/sandbox/pkg/restapi/issuer/operation"
+	tokenIssuer "github.com/trustbloc/sandbox/pkg/token/issuer"
+	tokenResolver "github.com/trustbloc/sandbox/pkg/token/resolver"
 )
 
 const (

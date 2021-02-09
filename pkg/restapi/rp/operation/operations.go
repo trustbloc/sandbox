@@ -25,8 +25,8 @@ import (
 	"github.com/trustbloc/edge-core/pkg/storage"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/verifier/operation"
 
-	"github.com/trustbloc/edge-sandbox/pkg/internal/common/support"
-	oidcclient "github.com/trustbloc/edge-sandbox/pkg/restapi/internal/common/oidc"
+	"github.com/trustbloc/sandbox/pkg/internal/common/support"
+	oidcclient "github.com/trustbloc/sandbox/pkg/restapi/internal/common/oidc"
 )
 
 const (
@@ -43,7 +43,7 @@ const (
 	// edge-service verifier endpoints
 	verifyPresentationURLFormat = "/%s" + "/verifier/presentations"
 
-	// TODO https://github.com/trustbloc/edge-sandbox/issues/352 Configure verifier profiles in Verifier page
+	// TODO https://github.com/trustbloc/sandbox/issues/352 Configure verifier profiles in Verifier page
 	verifierProfileID = "verifier1"
 
 	vcsVerifierRequestTokenName = "vcs_verifier" //nolint: gosec
@@ -52,7 +52,7 @@ const (
 	flowTypeCookie     = "flowType"
 )
 
-var logger = log.New("edge-sandbox-rp-restapi")
+var logger = log.New("sandbox-rp-restapi")
 
 // Handler http handler for each controller API endpoint
 type Handler interface {

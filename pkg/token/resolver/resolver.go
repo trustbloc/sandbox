@@ -16,12 +16,12 @@ import (
 
 	"github.com/trustbloc/edge-core/pkg/log"
 
-	"github.com/trustbloc/edge-sandbox/pkg/token"
+	"github.com/trustbloc/sandbox/pkg/token"
 )
 
 const tokenFormKey = "token"
 
-var logger = log.New("edge-sandbox-token-resolver")
+var logger = log.New("sandbox-token-resolver")
 
 // Option configures the resolver
 type Option func(opts *Resolver)

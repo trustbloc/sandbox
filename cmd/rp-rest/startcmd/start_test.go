@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/trustbloc/edge-core/pkg/log"
 
-	"github.com/trustbloc/edge-sandbox/cmd/common"
+	"github.com/trustbloc/sandbox/cmd/common"
 )
 
 const flag = "--"

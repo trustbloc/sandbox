@@ -17,7 +17,7 @@ import (
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/storage"
 
-	"github.com/trustbloc/edge-sandbox/pkg/internal/common/support"
+	"github.com/trustbloc/sandbox/pkg/internal/common/support"
 )
 
 const (

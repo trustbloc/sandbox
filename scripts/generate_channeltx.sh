@@ -6,7 +6,7 @@
 #
 
 CONFIGTXGEN_CMD="${CONFIGTXGEN_CMD:-configtxgen}"
-FIXTURES_PATH="${FIXTURES_PATH:-/opt/workspace/edge-sandbox/test/bdd/fixtures/}"
+FIXTURES_PATH="${FIXTURES_PATH:-/opt/workspace/sandbox/test/bdd/fixtures/}"
 CHANNEL_DIR="${CHANNEL_DIR:-channel}"
 CONFIG_DIR="${CONFIG_DIR:-config}"
 
