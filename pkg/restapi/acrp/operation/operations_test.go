@@ -9,6 +9,7 @@ package operation
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -21,8 +22,9 @@ import (
 )
 
 const (
-	sampleUserName = "john.smith@example.com"
-	samplePassword = "pa$$word"
+	sampleUserName   = "john.smith@example.com"
+	samplePassword   = "pa$$word"
+	sampleNationalID = "555341212"
 )
 
 func TestNew(t *testing.T) {
@@ -53,6 +55,7 @@ func TestRegister(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
 			DashboardHTML: file.Name(),
+			RequestTokens: map[string]string{vcsIssuerRequestTokenName: "test"},
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -66,7 +69,8 @@ func TestRegister(t *testing.T) {
 		rr := httptest.NewRecorder()
 
 		req := &http.Request{Form: make(map[string][]string)}
-		req.Form.Add("username", sampleUserName)
+		req.Form.Add(username, sampleUserName)
+		req.Form.Add(nationalID, sampleNationalID)
 
 		svc.register(rr, req)
 		require.Equal(t, http.StatusOK, rr.Code)
@@ -74,7 +78,7 @@ func TestRegister(t *testing.T) {
 
 	t.Run("user exists", func(t *testing.T) {
 		s := make(map[string][]byte)
-		s[sampleUserName] = []byte("password")
+		s[sampleUserName] = []byte(password)
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{
@@ -87,7 +91,7 @@ func TestRegister(t *testing.T) {
 		rr := httptest.NewRecorder()
 
 		req := &http.Request{Form: make(map[string][]string)}
-		req.Form.Add("username", sampleUserName)
+		req.Form.Add(username, sampleUserName)
 
 		svc.register(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
@@ -112,7 +116,7 @@ func TestRegister(t *testing.T) {
 		rr := httptest.NewRecorder()
 
 		req := &http.Request{Form: make(map[string][]string)}
-		req.Form.Add("username", sampleUserName)
+		req.Form.Add(username, sampleUserName)
 
 		svc.register(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
@@ -157,7 +161,7 @@ func TestRegister(t *testing.T) {
 		rr := httptest.NewRecorder()
 
 		req := &http.Request{Form: make(map[string][]string)}
-		req.Form.Add("username", sampleUserName)
+		req.Form.Add(username, sampleUserName)
 
 		svc.register(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
@@ -182,11 +186,80 @@ func TestRegister(t *testing.T) {
 		rr := httptest.NewRecorder()
 
 		req := &http.Request{Form: make(map[string][]string)}
-		req.Form.Add("username", sampleUserName)
+		req.Form.Add(username, sampleUserName)
 
 		svc.register(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to create vault")
+	})
+
+	t.Run("missing national id", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			DashboardHTML: file.Name(),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.httpClient = &mockHTTPClient{
+			respValue: &http.Response{
+				StatusCode: http.StatusCreated, Body: ioutil.NopCloser(bytes.NewReader([]byte(""))),
+			},
+		}
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Form.Add(username, sampleUserName)
+
+		svc.register(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "nationalID is mandatory")
+	})
+
+	t.Run("failed to create vc", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			DashboardHTML: file.Name(),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.httpClient = &mockHTTPClient{
+			doFunc: func(req *http.Request) (*http.Response, error) {
+				fmt.Println(req.URL.Path)
+				if req.URL.Path == "/credentials/issueCredential" {
+					return &http.Response{
+						StatusCode: http.StatusOK, Body: ioutil.NopCloser(strings.NewReader("vcs error")),
+					}, nil
+				}
+
+				return &http.Response{
+					StatusCode: http.StatusCreated,
+					Body:       ioutil.NopCloser(strings.NewReader("")),
+				}, nil
+			},
+		}
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Form.Add(username, sampleUserName)
+		req.Form.Add(nationalID, sampleNationalID)
+
+		svc.register(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to create vc")
 	})
 }
 
@@ -210,8 +283,8 @@ func TestLogin(t *testing.T) {
 		rr := httptest.NewRecorder()
 
 		req := &http.Request{Form: make(map[string][]string)}
-		req.Form.Add("username", sampleUserName)
-		req.Form.Add("password", samplePassword)
+		req.Form.Add(username, sampleUserName)
+		req.Form.Add(password, samplePassword)
 
 		svc.login(rr, req)
 		require.Equal(t, http.StatusOK, rr.Code)
@@ -249,8 +322,8 @@ func TestLogin(t *testing.T) {
 		rr := httptest.NewRecorder()
 
 		req := &http.Request{Form: make(map[string][]string)}
-		req.Form.Add("username", sampleUserName)
-		req.Form.Add("password", samplePassword)
+		req.Form.Add(username, sampleUserName)
+		req.Form.Add(password, samplePassword)
 
 		svc.login(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
@@ -276,8 +349,8 @@ func TestLogin(t *testing.T) {
 		rr := httptest.NewRecorder()
 
 		req := &http.Request{Form: make(map[string][]string)}
-		req.Form.Add("username", sampleUserName)
-		req.Form.Add("password", sampleUserName)
+		req.Form.Add(username, sampleUserName)
+		req.Form.Add(password, sampleUserName)
 
 		svc.login(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
@@ -370,11 +443,16 @@ func TestDisconnect(t *testing.T) {
 type mockHTTPClient struct {
 	respValue *http.Response
 	respErr   error
+	doFunc    func(req *http.Request) (*http.Response, error)
 }
 
 func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	if m.respErr != nil {
 		return nil, m.respErr
+	}
+
+	if m.doFunc != nil {
+		return m.doFunc(req)
 	}
 
 	return m.respValue, nil

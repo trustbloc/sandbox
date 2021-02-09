@@ -7,15 +7,22 @@ SPDX-License-Identifier: Apache-2.0
 package operation
 
 import (
+	"bytes"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/google/uuid"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/storage"
+	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
 
 	"github.com/trustbloc/sandbox/pkg/internal/common/support"
 )
@@ -29,6 +36,19 @@ const (
 
 	// store
 	txnStoreName = "issuer_txn"
+
+	// form param
+	username   = "username"
+	password   = "password"
+	nationalID = "nationalID"
+
+	vcsIssuerRequestTokenName = "vcs_issuer"
+
+	// external paths
+	issueCredentialURLFormat = "%s" + "/credentials/issueCredential"
+
+	// json-ld
+	credentialContext = "https://www.w3.org/2018/credentials/v1"
 )
 
 var logger = log.New("acrp-restapi")
@@ -51,6 +71,8 @@ type Operation struct {
 	dashboardHTML  string
 	httpClient     httpClient
 	vaultServerURL string
+	vcIssuerURL    string
+	requestTokens  map[string]string
 }
 
 // Config config.
@@ -59,6 +81,8 @@ type Config struct {
 	DashboardHTML  string
 	TLSConfig      *tls.Config
 	VaultServerURL string
+	VCIssuerURL    string
+	RequestTokens  map[string]string
 }
 
 // New returns acrp operation instance.
@@ -73,6 +97,8 @@ func New(config *Config) (*Operation, error) {
 		dashboardHTML:  config.DashboardHTML,
 		httpClient:     &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
 		vaultServerURL: config.VaultServerURL,
+		vcIssuerURL:    config.VCIssuerURL,
+		requestTokens:  config.RequestTokens,
 	}
 
 	op.registerHandler()
@@ -98,20 +124,19 @@ func (o *Operation) GetRESTHandlers() []Handler {
 func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("unable to parse form data: %s", err.Error()))
+		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to parse form data: %s", err.Error()))
 
 		return
 	}
 
-	password, err := o.store.Get(r.FormValue("username"))
+	pwd, err := o.store.Get(r.FormValue(username))
 	if err != nil && !errors.Is(err, storage.ErrValueNotFound) {
 		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to get user data: %s", err.Error()))
 
 		return
 	}
 
-	if password != nil {
+	if pwd != nil {
 		o.writeErrorResponse(w, http.StatusBadRequest, "username already exists")
 
 		return
@@ -120,31 +145,34 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
 	// create vault for the user
 	url := o.vaultServerURL + "/vaults"
 
-	req, err := http.NewRequest(http.MethodPost, url, nil)
+	_, err = o.sendHTTPRequest(http.MethodPost, url, nil, http.StatusCreated, o.requestTokens[vcsIssuerRequestTokenName])
 	if err != nil {
-		logger.Errorf("failed to create create vault http request: %s", err.Error())
-		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to create create vault http request: %s", err.Error()))
-
-		return
-	}
-
-	// TODO save vault related details
-	_, err = sendHTTPRequest(req, o.httpClient, http.StatusCreated)
-	if err != nil {
-		logger.Errorf("failed to create vault - url:%s err:%s", url, err.Error())
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to create vault - url:%s err:%s", url, err.Error()))
 
 		return
 	}
 
-	// TODO create VC for nationalID
-	logger.Infof("nationalID=%s", r.FormValue("nationalID"))
+	url = fmt.Sprintf(issueCredentialURLFormat, o.vcIssuerURL)
 
-	// TODO call comparator service and save the VC
+	// TODO - replace sub with vault DID
+	vcReq, err := createNationalIDCred("sub", r.FormValue(nationalID))
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create vc request: %s", err.Error()))
+	}
 
-	err = o.store.Put(r.FormValue("username"), []byte(r.FormValue("password")))
+	_, err = o.sendHTTPRequest(http.MethodPost, url, vcReq, http.StatusCreated, o.requestTokens[vcsIssuerRequestTokenName])
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create vc - url:%s err:%s", url, err.Error()))
+
+		return
+	}
+
+	// TODO save the VC in vault server
+
+	err = o.store.Put(r.FormValue(username), []byte(r.FormValue(password)))
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("unable to save user data: %s", err.Error()))
@@ -152,7 +180,7 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	o.showDashboard(w, r.FormValue("username"), false)
+	o.showDashboard(w, r.FormValue(username), false)
 }
 
 func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
@@ -164,20 +192,20 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	password, err := o.store.Get(r.FormValue("username"))
+	pwd, err := o.store.Get(r.FormValue(username))
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to get user data: %s", err.Error()))
 
 		return
 	}
 
-	if r.FormValue("password") != string(password) {
+	if r.FormValue(password) != string(pwd) {
 		o.writeErrorResponse(w, http.StatusBadRequest, "invalid password")
 
 		return
 	}
 
-	o.showDashboard(w, r.FormValue("username"), true)
+	o.showDashboard(w, r.FormValue(username), true)
 }
 
 func (o *Operation) connect(w http.ResponseWriter, r *http.Request) {
@@ -258,8 +286,20 @@ func getTxnStore(prov storage.Provider) (storage.Store, error) {
 	return txnStore, nil
 }
 
-func sendHTTPRequest(req *http.Request, client httpClient, status int) ([]byte, error) {
-	resp, err := client.Do(req)
+// nolint: unparam
+func (o *Operation) sendHTTPRequest(method, url string, reqBody []byte, status int, httpToken string) ([]byte, error) {
+	logger.Errorf("sendHTTPRequest: method=%s url=%s reqBody=%s", method, url, string(reqBody))
+
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(reqBody))
+	if err != nil {
+		return nil, err
+	}
+
+	if httpToken != "" {
+		req.Header.Add("Authorization", "Bearer "+httpToken)
+	}
+
+	resp, err := o.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -271,14 +311,44 @@ func sendHTTPRequest(req *http.Request, client httpClient, status int) ([]byte, 
 		}
 	}()
 
-	if resp.StatusCode != status {
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			logger.Warnf("failed to read response body for status: %d", resp.StatusCode)
-		}
-
-		return nil, fmt.Errorf("%s: %s", resp.Status, string(body))
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		logger.Warnf("failed to read response body for status: %d", resp.StatusCode)
 	}
 
-	return ioutil.ReadAll(resp.Body)
+	logger.Errorf("httpResponse: status=%d respBody=%s", resp.StatusCode, string(respBody))
+
+	if resp.StatusCode != status {
+		return nil, fmt.Errorf("%s: %s", resp.Status, string(respBody))
+	}
+
+	return respBody, nil
+}
+
+func createNationalIDCred(sub, nationalID string) ([]byte, error) {
+	if nationalID == "" {
+		return nil, errors.New("nationalID is mandatory")
+	}
+
+	cred := verifiable.Credential{}
+	cred.Context = []string{credentialContext}
+	cred.Types = []string{"VerifiableCredential"}
+	// issuerID will be overwritten in the issuer
+	cred.Issuer = verifiable.Issuer{ID: uuid.New().URN()}
+	cred.Issued = util.NewTime(time.Now().UTC())
+
+	credentialSubject := make(map[string]interface{})
+	credentialSubject["id"] = sub
+	credentialSubject[nationalID] = nationalID
+
+	cred.Subject = credentialSubject
+
+	credBytes, err := cred.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal credential: %w", err)
+	}
+
+	return json.Marshal(edgesvcops.IssueCredentialRequest{
+		Credential: credBytes,
+	})
 }
