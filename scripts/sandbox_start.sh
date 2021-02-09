@@ -235,8 +235,7 @@ healthCheck rpVCS $rpVCSHealthCheckURL 200
 healthCheck holderVCS $holderVCSHealthCheckURL 200
 healthCheck governanceVCS $governanceVCSHealthCheckURL 200
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-vault.yml down && docker-compose -f docker-compose-vault.yml up --force-recreate) > docker.log 2>&1 & )
-# TODO https://github.com/trustbloc/edge-service/issues/590 enable once implemented
-# healthCheck vault $vaultServerHealthCheckURL 200
+healthCheck vault $vaultServerHealthCheckURL 200
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-comparator.yml down && docker-compose -f docker-compose-comparator.yml up --force-recreate) > docker.log 2>&1 & )
 healthCheck rev-agencycomparator $revAgencyComparatorHealthCheckURL 200
 healthCheck emp-dept-comparator $empDeptComparatorHealthCheckURL 200
