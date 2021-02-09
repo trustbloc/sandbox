@@ -18,6 +18,7 @@ services:
         - COMPARATOR_DSN=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
         - COMPARATOR_DID_DOMAIN=${BLOC_DOMAIN}
         - VIRTUAL_HOST=comparator.trustbloc.local
+        - COMPARATOR_CSH_URL=https://csh.trustbloc.local
     ports:
       - 8064:8064
     entrypoint: ""
