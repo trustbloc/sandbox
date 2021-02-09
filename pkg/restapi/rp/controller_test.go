@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/trustbloc/edge-core/pkg/storage/memstore"
 
-	"github.com/trustbloc/edge-sandbox/pkg/restapi/rp/operation"
+	"github.com/trustbloc/sandbox/pkg/restapi/rp/operation"
 )
 
 func TestController_New(t *testing.T) {

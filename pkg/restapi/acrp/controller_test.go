@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	mockstorage "github.com/trustbloc/edge-core/pkg/storage/mockstore"
 
-	"github.com/trustbloc/edge-sandbox/pkg/restapi/acrp/operation"
+	"github.com/trustbloc/sandbox/pkg/restapi/acrp/operation"
 )
 
 func TestController_New(t *testing.T) {

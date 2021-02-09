@@ -1,14 +1,14 @@
-[![Release](https://img.shields.io/github/release/trustbloc/edge-sandbox.svg?style=flat-square)](https://github.com/trustbloc/edge-sandbox/releases/latest)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://raw.githubusercontent.com/trustbloc/edge-sandbox/main/LICENSE)
-[![Godocs](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/trustbloc/edge-sandbox)
+[![Release](https://img.shields.io/github/release/trustbloc/sandbox.svg?style=flat-square)](https://github.com/trustbloc/sandbox/releases/latest)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://raw.githubusercontent.com/trustbloc/sandbox/main/LICENSE)
+[![Godocs](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/trustbloc/sandbox)
 
-[![Build Status](https://dev.azure.com/trustbloc/edge/_apis/build/status/trustbloc.edge-sandbox?branchName=main)](https://dev.azure.com/trustbloc/edge/_build/latest?definitionId=27&branchName=main)
-[![codecov](https://codecov.io/gh/trustbloc/edge-sandbox/branch/main/graph/badge.svg)](https://codecov.io/gh/trustbloc/edge-sandbox)
-[![Go Report Card](https://goreportcard.com/badge/github.com/trustbloc/edge-sandbox)](https://goreportcard.com/report/github.com/trustbloc/edge-sandbox)
+[![Build Status](https://dev.azure.com/trustbloc/edge/_apis/build/status/trustbloc.sandbox?branchName=main)](https://dev.azure.com/trustbloc/edge/_build/latest?definitionId=27&branchName=main)
+[![codecov](https://codecov.io/gh/trustbloc/sandbox/branch/main/graph/badge.svg)](https://codecov.io/gh/trustbloc/sandbox)
+[![Go Report Card](https://goreportcard.com/badge/github.com/trustbloc/sandbox)](https://goreportcard.com/report/github.com/trustbloc/sandbox)
 
-# edge-sandbox
+# sandbox
 
-Edge Sandbox contains the sample implementations of Issuer and Verifier/RP to demonstrate the following main features provided 
+Sandbox contains the sample implementations of Issuer and Verifier/RP to demonstrate the following main features provided 
 by the [TrustBloc](https://github.com/trustbloc) projects.
 - [W3C Verifiable Credential(VC)](https://w3c.github.io/vc-data-model/)
 - [W3C Decentralized Identifier(DID)](https://w3c.github.io/did-core/)

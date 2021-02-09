@@ -9,7 +9,7 @@ package acrp
 import (
 	"fmt"
 
-	"github.com/trustbloc/edge-sandbox/pkg/restapi/acrp/operation"
+	"github.com/trustbloc/sandbox/pkg/restapi/acrp/operation"
 )
 
 // New returns new controller instance.

@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
 
-	"github.com/trustbloc/edge-sandbox/cmd/acrp-rest/startcmd"
+	"github.com/trustbloc/sandbox/cmd/acrp-rest/startcmd"
 )
 
 var logger = log.New("acrp-rest")

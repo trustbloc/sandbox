@@ -6,7 +6,7 @@
 #
 
 CRYPTOGEN_CMD="${CRYPTOGEN_CMD:-cryptogen}"
-FIXTURES_PATH="${FIXTURES_PATH:-/opt/workspace/edge-sandbox/test/bdd/fixtures}"
+FIXTURES_PATH="${FIXTURES_PATH:-/opt/workspace/sandbox/test/bdd/fixtures}"
 CONFIG_DIR="${CONFIG_DIR:-config}"
 
 if [ -z "$FABRIC_VERSION_DIR" ]; then

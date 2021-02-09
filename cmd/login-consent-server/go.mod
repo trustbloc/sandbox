@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-module github.com/trustbloc/edge-sandbox/cmd/login-consent-server
+module github.com/trustbloc/sandbox/cmd/login-consent-server
 
 go 1.15
 

@@ -28,7 +28,7 @@ const (
 	stateValueLength    = 16 // minutes
 )
 
-var logger = log.New("edge-sandbox-token-issuer")
+var logger = log.New("sandbox-token-issuer")
 
 // Option configures the issuer
 type Option func(opts *Issuer)

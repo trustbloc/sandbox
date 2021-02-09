@@ -9,7 +9,7 @@ package rp
 import (
 	"fmt"
 
-	"github.com/trustbloc/edge-sandbox/pkg/restapi/rp/operation"
+	"github.com/trustbloc/sandbox/pkg/restapi/rp/operation"
 )
 
 // New returns new controller instance.
