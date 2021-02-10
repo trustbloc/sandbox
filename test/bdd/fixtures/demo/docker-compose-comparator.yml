@@ -17,6 +17,7 @@ services:
         - COMPARATOR_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
         - COMPARATOR_DSN=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
         - COMPARATOR_DID_DOMAIN=${BLOC_DOMAIN}
+        - COMPARATOR_DATABASE_PREFIX=revagenycomparator
         - VIRTUAL_HOST=rev-agency-comparator.trustbloc.local
         - COMPARATOR_CSH_URL=https://csh.trustbloc.local
     ports:
@@ -37,6 +38,7 @@ services:
       - COMPARATOR_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - COMPARATOR_DSN=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - COMPARATOR_DID_DOMAIN=${BLOC_DOMAIN}
+      - COMPARATOR_DATABASE_PREFIX=empdeptcomparator
       - VIRTUAL_HOST=emp-dept-comparator.trustbloc.local
       - COMPARATOR_CSH_URL=https://csh.trustbloc.local
     ports:
