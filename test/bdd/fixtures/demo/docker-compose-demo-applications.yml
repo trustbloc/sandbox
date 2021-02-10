@@ -78,7 +78,7 @@ services:
       - DATABASE_PREFIX=revagency
       - ACRP_VAULT_SERVER_URL=https://vault.trustbloc.local
       - VIRTUAL_HOST=rev-agency-rp.trustbloc.local
-      - ACRP_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-interop
+      - ACRP_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-rev-agency
       - ACRP_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
     ports:
       - 5558:5558
@@ -100,7 +100,7 @@ services:
       - DATABASE_PREFIX=empdept
       - ACRP_VAULT_SERVER_URL=https://vault.trustbloc.local
       - VIRTUAL_HOST=emp-dept-rp.trustbloc.local
-      - ACRP_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-interop
+      - ACRP_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-emp-dept
       - ACRP_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
     ports:
       - 5559:5559
