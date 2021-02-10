@@ -8,8 +8,8 @@ package operation
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -17,6 +17,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/stretchr/testify/require"
 	mockstorage "github.com/trustbloc/edge-core/pkg/storage/mockstore"
 )
@@ -45,6 +47,7 @@ func TestNew(t *testing.T) {
 	})
 }
 
+// nolint: bodyclose
 func TestRegister(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		file, err := ioutil.TempFile("", "*.html")
@@ -61,9 +64,7 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			respValue: &http.Response{
-				StatusCode: http.StatusCreated, Body: ioutil.NopCloser(bytes.NewReader([]byte(""))),
-			},
+			doFunc: mockHTTPResponse(t, nil, nil, nil),
 		}
 
 		rr := httptest.NewRecorder()
@@ -108,9 +109,7 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			respValue: &http.Response{
-				StatusCode: http.StatusCreated, Body: ioutil.NopCloser(strings.NewReader("")),
-			},
+			doFunc: mockHTTPResponse(t, nil, nil, nil),
 		}
 
 		rr := httptest.NewRecorder()
@@ -153,9 +152,7 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			respValue: &http.Response{
-				StatusCode: http.StatusCreated, Body: ioutil.NopCloser(strings.NewReader("")),
-			},
+			doFunc: mockHTTPResponse(t, nil, nil, nil),
 		}
 
 		rr := httptest.NewRecorder()
@@ -193,6 +190,31 @@ func TestRegister(t *testing.T) {
 		require.Contains(t, rr.Body.String(), "failed to create vault")
 	})
 
+	t.Run("create vault invalid response", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: make(map[string][]byte)},
+			},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.httpClient = &mockHTTPClient{
+			respValue: &http.Response{
+				StatusCode: http.StatusCreated, Body: ioutil.NopCloser(strings.NewReader("invalid resp")),
+			},
+		}
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Form.Add(username, sampleUserName)
+
+		svc.register(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to create vault")
+	})
+
 	t.Run("missing national id", func(t *testing.T) {
 		file, err := ioutil.TempFile("", "*.html")
 		require.NoError(t, err)
@@ -207,9 +229,7 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			respValue: &http.Response{
-				StatusCode: http.StatusCreated, Body: ioutil.NopCloser(bytes.NewReader([]byte(""))),
-			},
+			doFunc: mockHTTPResponse(t, nil, nil, nil),
 		}
 
 		rr := httptest.NewRecorder()
@@ -236,19 +256,7 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			doFunc: func(req *http.Request) (*http.Response, error) {
-				fmt.Println(req.URL.Path)
-				if req.URL.Path == "/credentials/issueCredential" {
-					return &http.Response{
-						StatusCode: http.StatusOK, Body: ioutil.NopCloser(strings.NewReader("vcs error")),
-					}, nil
-				}
-
-				return &http.Response{
-					StatusCode: http.StatusCreated,
-					Body:       ioutil.NopCloser(strings.NewReader("")),
-				}, nil
-			},
+			doFunc: mockHTTPResponse(t, nil, &mockHTTPResponseData{status: http.StatusInternalServerError}, nil),
 		}
 
 		rr := httptest.NewRecorder()
@@ -260,6 +268,29 @@ func TestRegister(t *testing.T) {
 		svc.register(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to create vc")
+	})
+
+	t.Run("failed to save doc", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			RequestTokens: map[string]string{vcsIssuerRequestTokenName: "test"},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.httpClient = &mockHTTPClient{
+			doFunc: mockHTTPResponse(t, nil, nil, &mockHTTPResponseData{status: http.StatusInternalServerError}),
+		}
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Form.Add(username, sampleUserName)
+		req.Form.Add(nationalID, sampleNationalID)
+
+		svc.register(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to save doc")
 	})
 }
 
@@ -456,4 +487,60 @@ func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	return m.respValue, nil
+}
+
+// nolint: unparam
+func mockHTTPResponse(t *testing.T, vaultResp, vcResp,
+	saveDocResp *mockHTTPResponseData) func(req *http.Request) (*http.Response, error) {
+	return func(req *http.Request) (*http.Response, error) {
+		status := http.StatusCreated
+		respByes := []byte("")
+
+		var err error
+
+		switch req.URL.Path {
+		case "/vaults":
+			if vaultResp != nil {
+				status = vaultResp.status
+				respByes = vaultResp.resp
+			} else {
+				respByes, err = json.Marshal(createVaultResp{
+					ID: uuid.New().URN(),
+				})
+				require.NoError(t, err)
+			}
+		case "/credentials/issueCredential":
+			resp := verifiable.Credential{}
+
+			respByes, err = resp.MarshalJSON()
+			require.NoError(t, err)
+
+			if vcResp != nil {
+				status = vcResp.status
+			}
+		default:
+			if saveDocResp != nil {
+				status = saveDocResp.status
+			}
+		}
+
+		resp := &http.Response{
+			StatusCode: status,
+			Body:       ioutil.NopCloser(bytes.NewReader(respByes)),
+		}
+
+		defer func() {
+			err := resp.Body.Close()
+			if err != nil {
+				logger.Warnf("failed to close response body")
+			}
+		}()
+
+		return resp, nil
+	}
+}
+
+type mockHTTPResponseData struct {
+	status int
+	resp   []byte
 }

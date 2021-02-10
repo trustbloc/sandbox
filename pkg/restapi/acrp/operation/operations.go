@@ -15,6 +15,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,6 +24,7 @@ import (
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/storage"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
+	"github.com/trustbloc/edv/pkg/edvutils"
 
 	"github.com/trustbloc/sandbox/pkg/internal/common/support"
 )
@@ -143,34 +145,30 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create vault for the user
-	url := o.vaultServerURL + "/vaults"
-
-	_, err = o.sendHTTPRequest(http.MethodPost, url, nil, http.StatusCreated, o.requestTokens[vcsIssuerRequestTokenName])
+	vaultID, err := o.createVault()
 	if err != nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to create vault - url:%s err:%s", url, err.Error()))
+		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create vault - err:%s", err.Error()))
 
 		return
 	}
 
-	url = fmt.Sprintf(issueCredentialURLFormat, o.vcIssuerURL)
-
-	// TODO - replace sub with vault DID
-	vcReq, err := createNationalIDCred("sub", r.FormValue(nationalID))
+	// wrap nationalID in a vc
+	vcResp, err := o.createNationalIDCred(vaultID, r.FormValue(nationalID))
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to create vc request: %s", err.Error()))
+			fmt.Sprintf("failed to create vc: %s", err.Error()))
 	}
 
-	_, err = o.sendHTTPRequest(http.MethodPost, url, vcReq, http.StatusCreated, o.requestTokens[vcsIssuerRequestTokenName])
+	// save nationalID vc
+	docID, err := o.saveNationalIDDoc(vaultID, vcResp)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to create vc - url:%s err:%s", url, err.Error()))
+			fmt.Sprintf("failed to save doc - err:%s", err.Error()))
 
 		return
 	}
 
-	// TODO save the VC in vault server
+	logger.Infof("docID=%s", docID)
 
 	err = o.store.Put(r.FormValue(username), []byte(r.FormValue(password)))
 	if err != nil {
@@ -235,15 +233,15 @@ func (o *Operation) disconnect(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Operation) showDashboard(w http.ResponseWriter, userName string, serviceLinked bool) {
-	url := fmt.Sprintf("/connect?userName=%s", userName)
+	endpoint := fmt.Sprintf("/connect?userName=%s", userName)
 	if serviceLinked {
-		url = fmt.Sprintf("/disconnect?userName=%s", userName)
+		endpoint = fmt.Sprintf("/disconnect?userName=%s", userName)
 	}
 
 	o.loadHTML(w, o.dashboardHTML, map[string]interface{}{
 		"UserName":      userName,
 		"ServiceLinked": serviceLinked,
-		"URL":           url,
+		"URL":           endpoint,
 	})
 }
 
@@ -286,11 +284,98 @@ func getTxnStore(prov storage.Provider) (storage.Store, error) {
 	return txnStore, nil
 }
 
-// nolint: unparam
-func (o *Operation) sendHTTPRequest(method, url string, reqBody []byte, status int, httpToken string) ([]byte, error) {
-	logger.Errorf("sendHTTPRequest: method=%s url=%s reqBody=%s", method, url, string(reqBody))
+func (o *Operation) createVault() (string, error) {
+	endpoint := o.vaultServerURL + "/vaults"
 
-	req, err := http.NewRequest(method, url, bytes.NewBuffer(reqBody))
+	vaultRespBytes, err := o.sendHTTPRequest(http.MethodPost, endpoint, nil, http.StatusCreated,
+		o.requestTokens[vcsIssuerRequestTokenName])
+	if err != nil {
+		return "", fmt.Errorf("create vault url=%s err : %w", endpoint, err)
+	}
+
+	var vaultResp createVaultResp
+
+	err = json.Unmarshal(vaultRespBytes, &vaultResp)
+	if err != nil {
+		return "", fmt.Errorf("umarshal vault resp : %w", err)
+	}
+
+	return vaultResp.ID, nil
+}
+
+func (o *Operation) createNationalIDCred(sub, nationalID string) ([]byte, error) {
+	if nationalID == "" {
+		return nil, errors.New("nationalID is mandatory")
+	}
+
+	cred := verifiable.Credential{}
+	cred.ID = uuid.New().URN()
+	cred.Context = []string{credentialContext}
+	cred.Types = []string{"VerifiableCredential"}
+	// issuerID will be overwritten in the issuer
+	cred.Issuer = verifiable.Issuer{ID: uuid.New().URN()}
+	cred.Issued = util.NewTime(time.Now().UTC())
+
+	credentialSubject := make(map[string]interface{})
+	credentialSubject["id"] = sub
+	credentialSubject[nationalID] = nationalID
+
+	cred.Subject = credentialSubject
+
+	credBytes, err := cred.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("marshal credential: %w", err)
+	}
+
+	vcReq, err := json.Marshal(edgesvcops.IssueCredentialRequest{
+		Credential: credBytes,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("marshal vc request credential: %w", err)
+	}
+
+	endpoint := fmt.Sprintf(issueCredentialURLFormat, o.vcIssuerURL)
+
+	vcResp, err := o.sendHTTPRequest(http.MethodPost, endpoint, vcReq, http.StatusCreated,
+		o.requestTokens[vcsIssuerRequestTokenName])
+	if err != nil {
+		return nil, fmt.Errorf("failed to create vc - url:%s err: %w", endpoint, err)
+	}
+
+	return vcResp, nil
+}
+
+func (o *Operation) saveNationalIDDoc(vaultID string, vcResp []byte) (string, error) {
+	docID, err := edvutils.GenerateEDVCompatibleID()
+	if err != nil {
+		return "", fmt.Errorf("create edv doc id : %w", err)
+	}
+
+	docReq := saveDocReq{
+		ID:      docID,
+		Content: vcResp,
+	}
+
+	docReqBytes, err := json.Marshal(docReq)
+	if err != nil {
+		return "", fmt.Errorf("marshal save doc req : %w", err)
+	}
+
+	endpoint := o.vaultServerURL + fmt.Sprintf("/vaults/%s/docs", url.QueryEscape(vaultID))
+
+	_, err = o.sendHTTPRequest(http.MethodPost, endpoint, docReqBytes, http.StatusCreated, "")
+	if err != nil {
+		return "", fmt.Errorf("save doc to vault - url:%s err : %w", endpoint, err)
+	}
+
+	return docID, nil
+}
+
+func (o *Operation) sendHTTPRequest(method, endpoint string, reqBody []byte, status int,
+	httpToken string) ([]byte, error) {
+	logger.Errorf("sendHTTPRequest: method=%s url=%s reqBody=%s", method, endpoint, string(reqBody))
+
+	req, err := http.NewRequest(method, endpoint, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, err
 	}
@@ -323,32 +408,4 @@ func (o *Operation) sendHTTPRequest(method, url string, reqBody []byte, status i
 	}
 
 	return respBody, nil
-}
-
-func createNationalIDCred(sub, nationalID string) ([]byte, error) {
-	if nationalID == "" {
-		return nil, errors.New("nationalID is mandatory")
-	}
-
-	cred := verifiable.Credential{}
-	cred.Context = []string{credentialContext}
-	cred.Types = []string{"VerifiableCredential"}
-	// issuerID will be overwritten in the issuer
-	cred.Issuer = verifiable.Issuer{ID: uuid.New().URN()}
-	cred.Issued = util.NewTime(time.Now().UTC())
-
-	credentialSubject := make(map[string]interface{})
-	credentialSubject["id"] = sub
-	credentialSubject[nationalID] = nationalID
-
-	cred.Subject = credentialSubject
-
-	credBytes, err := cred.MarshalJSON()
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal credential: %w", err)
-	}
-
-	return json.Marshal(edgesvcops.IssueCredentialRequest{
-		Credential: credBytes,
-	})
 }

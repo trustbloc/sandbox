@@ -61,6 +61,7 @@ services:
           - did-method.trustbloc.local
           - vault.trustbloc.local
           - csh.trustbloc.local
+          - vault-kms.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb

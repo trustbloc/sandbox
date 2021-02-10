@@ -56,4 +56,5 @@ cat > ${SANDBOX_HOME}/hosts <<EOF
 127.0.0.1 emp-dept-comparator.trustbloc.local
 127.0.0.1 vault.trustbloc.local
 127.0.0.1 csh.trustbloc.local
+127.0.0.1 vault-kms.trustbloc.local
 EOF
