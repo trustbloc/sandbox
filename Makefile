@@ -9,6 +9,7 @@ RP_REST_PATH     = cmd/rp-rest
 ACRP_REST_PATH   = cmd/acrp-rest
 STRAPI_DEMO_PATH = cmd/strapi-demo
 LOGIN_CONSENT_PATH = cmd/login-consent-server
+DEMO_CLI_PATH       = test/bdd/cmd/demo
 
 DOCKER_OUTPUT_NS         ?= ghcr.io
 # Namespace for the issuer image
@@ -54,12 +55,18 @@ unit-test:
 	@scripts/check_unit.sh
 
 .PHONY: demo-start
-demo-start: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker sandbox-acrp-docker trustbloc-local-setup
+demo-start: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker sandbox-acrp-docker trustbloc-local-setup demo-cli
 	@scripts/sandbox_start.sh
+
+.PHONY: demo-cli
+demo-cli:
+	@echo "Building demo-cli"
+	@mkdir -p ./.build/bin
+	@cd ${DEMO_CLI_PATH} && go build -o ../../../../.build/bin/demo main.go
 
 .PHONY: demo-start-with-sidetree-fabric
 demo-start-with-sidetree-fabric: export START_SIDETREE_FABRIC=true
-demo-start-with-sidetree-fabric: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker sandbox-acrp-docker trustbloc-local-setup populate-fixtures fabric-cli
+demo-start-with-sidetree-fabric: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker sandbox-acrp-docker trustbloc-local-setup populate-fixtures fabric-cli demo-cli
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-stop
