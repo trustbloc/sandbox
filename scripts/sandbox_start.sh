@@ -30,6 +30,7 @@ vaultServerHealthCheckURL=https://vault.trustbloc.local/healthcheck
 cshHealthCheckURL=https://csh.trustbloc.local/healthcheck
 authzKMSHealthCheckURL=https://oathkeeper-auth-keyserver.trustbloc.local/healthcheck
 opsKMSHealthCheckURL=https://oathkeeper-ops-keyserver.trustbloc.local/healthcheck
+vaultKMSHealthCheckURL=https://vault-kms.trustbloc.local/healthcheck
 authHealthCheckURL=https://auth-rest.trustbloc.local/healthcheck
 routerHealthCheckURL=https://router.trustbloc.local:9084/healthcheck
 walletHealthCheckURL=https://myagent.trustbloc.local/login
@@ -258,6 +259,7 @@ echo "#### Step 8 start demo kms"
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-kms.yml down && docker-compose -f docker-compose-kms.yml up --force-recreate) > docker.log 2>&1 & )
 healthCheck authz-kms $authzKMSHealthCheckURL 200
 healthCheck ops-kms $opsKMSHealthCheckURL 200
+healthCheck vault-kms $vaultKMSHealthCheckURL 200
 echo "#### Step 8 is complete"
 ###
 ### Step 9
