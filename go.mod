@@ -11,7 +11,7 @@ require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.8.0
-	github.com/hyperledger/aries-framework-go v0.1.6-0.20210203215323-783f4d353384
+	github.com/hyperledger/aries-framework-go v0.1.6-0.20210210013602-d14c77b2e8a9
 	github.com/spf13/cobra v1.1.1
 	github.com/stretchr/testify v1.6.1
 	github.com/trustbloc/edge-core v0.1.6-0.20210127161542-9e174750f523

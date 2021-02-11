@@ -1221,7 +1221,7 @@ func (c *Operation) getUserData(tk *oauth2.Token, searchQuery, scope string) (st
 	return user.UserID, respBytes, nil
 }
 
-// nolint: interfacer
+// nolint:interfacer
 func sendHTTPRequest(req *http.Request, client *http.Client, status int, httpToken string) ([]byte, error) {
 	if httpToken != "" {
 		req.Header.Add("Authorization", "Bearer "+httpToken)
