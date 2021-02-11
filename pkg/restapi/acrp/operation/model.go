@@ -17,3 +17,9 @@ type saveDocReq struct {
 	Content json.RawMessage `json:"content"`
 	Tags    []string        `json:"tags"`
 }
+
+type userData struct {
+	Password        string `json:"password"`
+	VaultID         string `json:"vaultID"`
+	NationalIDDocID string `json:"nationalIDDocID"`
+}

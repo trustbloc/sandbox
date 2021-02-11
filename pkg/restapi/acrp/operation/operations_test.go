@@ -301,8 +301,13 @@ func TestLogin(t *testing.T) {
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
+		uDataBytes, err := json.Marshal(&userData{
+			Password: samplePassword,
+		})
+		require.NoError(t, err)
+
 		s := make(map[string][]byte)
-		s[sampleUserName] = []byte(samplePassword)
+		s[sampleUserName] = uDataBytes
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
@@ -336,16 +341,10 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("invalid username", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
-		require.NoError(t, err)
-
-		defer func() { require.NoError(t, os.Remove(file.Name())) }()
-
 		s := make(map[string][]byte)
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
-			DashboardHTML: file.Name(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -361,18 +360,38 @@ func TestLogin(t *testing.T) {
 		require.Contains(t, rr.Body.String(), "unable to get user data")
 	})
 
-	t.Run("invalid password", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
-		require.NoError(t, err)
-
-		defer func() { require.NoError(t, os.Remove(file.Name())) }()
-
+	t.Run("invalid data in db", func(t *testing.T) {
 		s := make(map[string][]byte)
-		s[sampleUserName] = []byte(samplePassword)
+		s[sampleUserName] = []byte("invalid-json-data")
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
-			DashboardHTML: file.Name(),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Form.Add(username, sampleUserName)
+		req.Form.Add(password, sampleUserName)
+
+		svc.login(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unmarshal user data")
+	})
+
+	t.Run("invalid password", func(t *testing.T) {
+		uDataBytes, err := json.Marshal(&userData{
+			Password: samplePassword,
+		})
+		require.NoError(t, err)
+
+		s := make(map[string][]byte)
+		s[sampleUserName] = uDataBytes
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
