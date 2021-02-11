@@ -123,7 +123,7 @@ func (o *Operation) GetRESTHandlers() []Handler {
 	return o.handlers
 }
 
-func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
+func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint: funlen
 	err := r.ParseForm()
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to parse form data: %s", err.Error()))
@@ -168,9 +168,21 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Infof("docID=%s", docID)
+	uData := userData{
+		Password:        r.FormValue(password),
+		VaultID:         vaultID,
+		NationalIDDocID: docID,
+	}
 
-	err = o.store.Put(r.FormValue(username), []byte(r.FormValue(password)))
+	uDataBytes, err := json.Marshal(uData)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to unmarshal user data - err:%s", err.Error()))
+
+		return
+	}
+
+	err = o.store.Put(r.FormValue(username), uDataBytes)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("unable to save user data: %s", err.Error()))
@@ -190,14 +202,14 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pwd, err := o.store.Get(r.FormValue(username))
+	uData, err := o.getUserData(r.FormValue(username))
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to get user data: %s", err.Error()))
 
 		return
 	}
 
-	if r.FormValue(password) != string(pwd) {
+	if r.FormValue(password) != uData.Password {
 		o.writeErrorResponse(w, http.StatusBadRequest, "invalid password")
 
 		return
@@ -282,6 +294,22 @@ func getTxnStore(prov storage.Provider) (storage.Store, error) {
 	}
 
 	return txnStore, nil
+}
+
+func (o *Operation) getUserData(username string) (*userData, error) {
+	uDataBytes, err := o.store.Get(username)
+	if err != nil {
+		return nil, fmt.Errorf("get user data: %w", err)
+	}
+
+	var uData *userData
+
+	err = json.Unmarshal(uDataBytes, &uData)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal user data: %w", err)
+	}
+
+	return uData, nil
 }
 
 func (o *Operation) createVault() (string, error) {
