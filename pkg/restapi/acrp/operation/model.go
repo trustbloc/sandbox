@@ -23,3 +23,8 @@ type userData struct {
 	VaultID         string `json:"vaultID"`
 	NationalIDDocID string `json:"nationalIDDocID"`
 }
+
+type sessionData struct {
+	State       string `json:"state"`
+	CallbackURL string `json:"callbackURL"`
+}

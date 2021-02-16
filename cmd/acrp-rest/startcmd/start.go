@@ -300,6 +300,7 @@ func startRP(parameters *rpParameters) error {
 	cfg := &operation.Config{
 		StoreProvider:   storeProvider,
 		DashboardHTML:   basePath + "/dashboard.html",
+		ConsentHTML:     basePath + "/consent.html",
 		TLSConfig:       tlsConfig,
 		VaultServerURL:  parameters.vaultServerURL,
 		VCIssuerURL:     parameters.vcIssuerURL,

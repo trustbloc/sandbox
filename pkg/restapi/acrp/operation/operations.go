@@ -37,6 +37,7 @@ const (
 	disconnect          = "/disconnect"
 	link                = "/link"
 	accountLinkCallback = "/callback"
+	consent             = "/consent"
 
 	// store
 	txnStoreName = "issuer_txn"
@@ -45,6 +46,12 @@ const (
 	username   = "username"
 	password   = "password"
 	nationalID = "nationalID"
+
+	// cookies
+	actionCookie     = "action"
+	idCookie         = "id"
+	linkAction       = "link"
+	cookieExpiryTime = 5
 
 	vcsIssuerRequestTokenName = "vcs_issuer"
 
@@ -74,6 +81,7 @@ type Operation struct {
 	store           storage.Store
 	handlers        []Handler
 	dashboardHTML   string
+	consentHTML     string
 	httpClient      httpClient
 	vaultServerURL  string
 	vcIssuerURL     string
@@ -86,6 +94,7 @@ type Operation struct {
 type Config struct {
 	StoreProvider   storage.Provider
 	DashboardHTML   string
+	ConsentHTML     string
 	TLSConfig       *tls.Config
 	VaultServerURL  string
 	VCIssuerURL     string
@@ -104,6 +113,7 @@ func New(config *Config) (*Operation, error) {
 	op := &Operation{
 		store:           store,
 		dashboardHTML:   config.DashboardHTML,
+		consentHTML:     config.ConsentHTML,
 		httpClient:      &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
 		vaultServerURL:  config.VaultServerURL,
 		vcIssuerURL:     config.VCIssuerURL,
@@ -126,6 +136,7 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(disconnect, http.MethodGet, o.disconnect),
 		support.NewHTTPHandler(link, http.MethodGet, o.link),
 		support.NewHTTPHandler(accountLinkCallback, http.MethodGet, o.accountLinkCallback),
+		support.NewHTTPHandler(consent, http.MethodGet, o.consent),
 	}
 }
 
@@ -226,6 +237,19 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	actionCookie, err := r.Cookie(actionCookie)
+	if err != nil && !errors.Is(err, http.ErrNoCookie) {
+		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get action cookie: %s", err.Error()))
+
+		return
+	}
+
+	if actionCookie != nil && actionCookie.Value == linkAction {
+		o.loadHTML(w, o.consentHTML, map[string]interface{}{})
+
+		return
+	}
+
 	o.showDashboard(w, r.FormValue(username), true)
 }
 
@@ -290,7 +314,74 @@ func (o *Operation) link(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Infof("callback url= %s state=%s", callback, state)
+	logger.Infof("link : callback url= %s state=%s", callback, state)
+
+	sessionid := uuid.New().String()
+
+	data := sessionData{State: state[0], CallbackURL: callback[0]}
+
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to marshal session data: %s", err.Error()))
+
+		return
+	}
+
+	err = o.store.Put(sessionid, dataBytes)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to save session data: %s", err.Error()))
+
+		return
+	}
+
+	// set cookies
+	expire := time.Now().Add(cookieExpiryTime * time.Minute)
+	cookie := http.Cookie{Name: actionCookie, Value: linkAction, Expires: expire}
+	http.SetCookie(w, &cookie)
+
+	cookie = http.Cookie{Name: idCookie, Value: sessionid, Expires: expire}
+	http.SetCookie(w, &cookie)
+
+	http.Redirect(w, r, "/showlogin", http.StatusFound)
+}
+
+func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
+	// get the session id
+	idCookieData, err := r.Cookie(idCookie)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get id cookie: %s", err.Error()))
+
+		return
+	}
+
+	// get the session data from db
+	dataBytes, err := o.store.Get(idCookieData.Value)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get session data: %s", err.Error()))
+
+		return
+	}
+
+	var data *sessionData
+
+	err = json.Unmarshal(dataBytes, &data)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to unmarshal session data: %s", err.Error()))
+
+		return
+	}
+
+	logger.Infof("consent : callback url= %s state=%s", data.CallbackURL, data.State)
+
+	// invalid the cookies
+	cookie := http.Cookie{Name: actionCookie, Value: "", MaxAge: -1}
+	http.SetCookie(w, &cookie)
+
+	cookie = http.Cookie{Name: idCookie, Value: "", MaxAge: -1}
+	http.SetCookie(w, &cookie)
 
 	// TODO call vault-server /vaults/{vaultID}/authorizations  api
 
@@ -299,7 +390,7 @@ func (o *Operation) link(w http.ResponseWriter, r *http.Request) {
 	// TODO pass the zccap to the caller.
 	auth := uuid.New().String()
 
-	http.Redirect(w, r, fmt.Sprintf("%s?state=%s&auth=%s", callback[0], state[0], auth), http.StatusFound)
+	http.Redirect(w, r, fmt.Sprintf("%s?state=%s&auth=%s", data.CallbackURL, data.State, auth), http.StatusFound)
 }
 
 func (o *Operation) showDashboard(w http.ResponseWriter, userName string, serviceLinked bool) {
