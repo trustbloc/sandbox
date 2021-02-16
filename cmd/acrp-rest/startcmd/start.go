@@ -72,6 +72,16 @@ const (
 	requestTokensFlagUsage = "Tokens used for http request " +
 		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
 
+	// host external url
+	hostExternalURLFlagName  = "host-external-url"
+	hostExternalURLFlagUsage = "Host External URL."
+	hostExternalURLEnvKey    = "ACRP_HOST_EXTERNAL_URL"
+
+	// account link url
+	accountLinkURLFlagName  = "account-link-url"
+	accountLinkURLFlagUsage = "Account Link URL."
+	accountLinkURLEnvKey    = "ACRP_ACCOUNT_LINK_URL"
+
 	tokenLength2 = 2
 )
 
@@ -99,6 +109,7 @@ func (s *HTTPServer) ListenAndServe(host, certFile, keyFile string, router http.
 type rpParameters struct {
 	srv               server
 	hostURL           string
+	hostExternalURL   string
 	tlsCertFile       string
 	tlsKeyFile        string
 	tlsSystemCertPool bool
@@ -108,6 +119,7 @@ type rpParameters struct {
 	mode              string
 	vaultServerURL    string
 	vcIssuerURL       string
+	accountLinkURL    string
 	requestTokens     map[string]string
 }
 
@@ -127,7 +139,7 @@ func GetStartCmd(srv server) *cobra.Command {
 	return startCmd
 }
 
-func createStartCmd(srv server) *cobra.Command { //nolint: funlen
+func createStartCmd(srv server) *cobra.Command { //nolint: funlen, gocyclo
 	return &cobra.Command{
 		Use:   "start",
 		Short: "Start AC RP",
@@ -174,6 +186,16 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen
 				return err
 			}
 
+			hostExternalURL, err := cmdutils.GetUserSetVarFromString(cmd, hostExternalURLFlagName, hostExternalURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
+			accountLinkURL, err := cmdutils.GetUserSetVarFromString(cmd, accountLinkURLFlagName, accountLinkURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
 			requestTokens, err := getRequestTokens(cmd)
 			if err != nil {
 				return err
@@ -182,6 +204,7 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen
 			parameters := &rpParameters{
 				srv:               srv,
 				hostURL:           strings.TrimSpace(hostURL),
+				hostExternalURL:   hostExternalURL,
 				tlsCertFile:       tlsConfg.certFile,
 				tlsKeyFile:        tlsConfg.keyFile,
 				tlsSystemCertPool: tlsConfg.systemCertPool,
@@ -191,6 +214,7 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen
 				mode:              demoMode,
 				vaultServerURL:    vaultServerURL,
 				vcIssuerURL:       vcIssuerURL,
+				accountLinkURL:    accountLinkURL,
 				requestTokens:     requestTokens,
 			}
 
@@ -247,6 +271,8 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(demoModeFlagName, "", "", demoModeFlagUsage)
 	startCmd.Flags().StringP(vaultServerURLFlagName, "", "", vaultServerURLFlagUsage)
 	startCmd.Flags().StringP(vcIssuerURLFlagName, "", "", vcIssuerURLFlagUsage)
+	startCmd.Flags().StringP(hostExternalURLFlagName, "", "", hostExternalURLFlagUsage)
+	startCmd.Flags().StringP(accountLinkURLFlagName, "", "", accountLinkURLFlagUsage)
 	startCmd.Flags().StringArrayP(requestTokensFlagName, "", []string{}, requestTokensFlagUsage)
 	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
 }
@@ -272,12 +298,14 @@ func startRP(parameters *rpParameters) error {
 	}
 
 	cfg := &operation.Config{
-		StoreProvider:  storeProvider,
-		DashboardHTML:  basePath + "/dashboard.html",
-		TLSConfig:      tlsConfig,
-		VaultServerURL: parameters.vaultServerURL,
-		VCIssuerURL:    parameters.vcIssuerURL,
-		RequestTokens:  parameters.requestTokens,
+		StoreProvider:   storeProvider,
+		DashboardHTML:   basePath + "/dashboard.html",
+		TLSConfig:       tlsConfig,
+		VaultServerURL:  parameters.vaultServerURL,
+		VCIssuerURL:     parameters.vcIssuerURL,
+		AccountLinkURL:  parameters.accountLinkURL,
+		HostExternalURL: parameters.hostExternalURL,
+		RequestTokens:   parameters.requestTokens,
 	}
 
 	acrpService, err := acrp.New(cfg)

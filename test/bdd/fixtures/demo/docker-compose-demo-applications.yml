@@ -71,6 +71,7 @@ services:
     image: ${ACRP_IMAGE}:latest
     environment:
       - ACRP_HOST_URL=0.0.0.0:5558
+      - ACRP_HOST_EXTERNAL_URL=https://rev-agency-rp.trustbloc.local
       - ACRP_DEMO_MODE=rev
       - ACRP_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - ACRP_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
@@ -79,6 +80,7 @@ services:
       - ACRP_VAULT_SERVER_URL=https://vault.trustbloc.local
       - VIRTUAL_HOST=rev-agency-rp.trustbloc.local
       - ACRP_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-rev-agency
+      - ACRP_ACCOUNT_LINK_URL=https://emp-dept-rp.trustbloc.local
       - ACRP_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
     ports:
       - 5558:5558
@@ -93,6 +95,7 @@ services:
     image: ${ACRP_IMAGE}:latest
     environment:
       - ACRP_HOST_URL=0.0.0.0:5559
+      - ACRP_HOST_EXTERNAL_URL=https://emp-dept-rp.trustbloc.local
       - ACRP_DEMO_MODE=emp
       - ACRP_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - ACRP_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
@@ -101,6 +104,7 @@ services:
       - ACRP_VAULT_SERVER_URL=https://vault.trustbloc.local
       - VIRTUAL_HOST=emp-dept-rp.trustbloc.local
       - ACRP_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-emp-dept
+      - ACRP_ACCOUNT_LINK_URL=https://rev-agency-rp.trustbloc.local
       - ACRP_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
     ports:
       - 5559:5559
