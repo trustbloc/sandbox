@@ -36,7 +36,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 6, len(svc.GetRESTHandlers()))
+		require.Equal(t, 7, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -328,6 +328,40 @@ func TestLogin(t *testing.T) {
 		require.Equal(t, http.StatusOK, rr.Code)
 	})
 
+	t.Run("success for linking mode", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		uDataBytes, err := json.Marshal(&userData{
+			Password: samplePassword,
+		})
+		require.NoError(t, err)
+
+		s := make(map[string][]byte)
+		s[sampleUserName] = uDataBytes
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ConsentHTML:   file.Name(),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string), Header: make(map[string][]string)}
+		req.Form.Add(username, sampleUserName)
+		req.Form.Add(password, samplePassword)
+
+		cookie := http.Cookie{Name: actionCookie, Value: linkAction}
+		req.AddCookie(&cookie)
+
+		svc.login(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
 	t.Run("parse form error", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{},
@@ -498,7 +532,7 @@ func TestDisconnect(t *testing.T) {
 func TestAccountLink(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider:   &mockstorage.Provider{},
+			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
 			HostExternalURL: "http://my-external",
 			AccountLinkURL:  "http://third-party-svc",
 		})
@@ -519,9 +553,7 @@ func TestAccountLink(t *testing.T) {
 		ep, err := url.Parse(rr.Header().Get("Location"))
 		require.NoError(t, err)
 
-		require.Equal(t, ep.Path, "/callback")
-		require.Equal(t, ep.Query().Get("state"), state)
-		require.NotEmpty(t, ep.Query().Get("auth"))
+		require.Equal(t, ep.Path, "/showlogin")
 	})
 
 	t.Run("no callback url", func(t *testing.T) {
@@ -559,6 +591,138 @@ func TestAccountLink(t *testing.T) {
 		svc.link(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "missing state")
+	})
+
+	t.Run("store error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPut: errors.New("store error")},
+			},
+			HostExternalURL: "http://my-external",
+			AccountLinkURL:  "http://third-party-svc",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		state := uuid.New().String()
+		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkURL, svc.hostExternalURL, state)
+
+		req, err := http.NewRequest("GET", endpoint, nil)
+		require.NoError(t, err)
+
+		svc.link(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to save session data")
+	})
+}
+
+func TestConsent(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL: "http://my-external",
+			AccountLinkURL:  "http://third-party-svc",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		data := &sessionData{
+			State:       uuid.New().String(),
+			CallbackURL: "https://url/callback",
+		}
+
+		b, err := json.Marshal(data)
+		require.NoError(t, err)
+
+		sessionid := uuid.New().String()
+		s[sessionid] = b
+
+		req, err := http.NewRequest("GET", "", nil)
+		require.NoError(t, err)
+
+		cookie := http.Cookie{Name: idCookie, Value: sessionid}
+		req.AddCookie(&cookie)
+
+		svc.consent(rr, req)
+		require.Equal(t, http.StatusFound, rr.Code)
+
+		ep, err := url.Parse(rr.Header().Get("Location"))
+		require.NoError(t, err)
+
+		require.Equal(t, "/callback", ep.Path)
+		require.Equal(t, data.State, ep.Query().Get("state"))
+		require.NotEmpty(t, ep.Query().Get("auth"))
+	})
+
+	t.Run("missing cookie", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider:  &mockstorage.Provider{},
+			AccountLinkURL: "http://third-party-svc",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", "", nil)
+		require.NoError(t, err)
+
+		svc.consent(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get id cookie")
+	})
+
+	t.Run("sessionid not found", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			AccountLinkURL:  "http://third-party-svc",
+			HostExternalURL: "http://my-external",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", "", nil)
+		require.NoError(t, err)
+
+		cookie := http.Cookie{Name: idCookie, Value: uuid.New().String()}
+		req.AddCookie(&cookie)
+
+		svc.consent(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get session data")
+	})
+
+	t.Run("invalid session data", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL: "http://my-external",
+			AccountLinkURL:  "http://third-party-svc",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		sessionid := uuid.New().String()
+		s[sessionid] = []byte("invalid data")
+
+		req, err := http.NewRequest("GET", "", nil)
+		require.NoError(t, err)
+
+		cookie := http.Cookie{Name: idCookie, Value: sessionid}
+		req.AddCookie(&cookie)
+
+		svc.consent(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to unmarshal session data")
 	})
 }
 
