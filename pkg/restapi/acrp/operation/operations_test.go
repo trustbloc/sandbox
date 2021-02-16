@@ -10,9 +10,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -34,7 +36,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 4, len(svc.GetRESTHandlers()))
+		require.Equal(t, 6, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -410,14 +412,10 @@ func TestLogin(t *testing.T) {
 
 func TestConnect(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
-		require.NoError(t, err)
-
-		defer func() { require.NoError(t, os.Remove(file.Name())) }()
-
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{},
-			DashboardHTML: file.Name(),
+			StoreProvider:   &mockstorage.Provider{},
+			HostExternalURL: "http://my-external",
+			AccountLinkURL:  "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -428,7 +426,14 @@ func TestConnect(t *testing.T) {
 		require.NoError(t, err)
 
 		svc.connect(rr, req)
-		require.Equal(t, http.StatusOK, rr.Code)
+		require.Equal(t, http.StatusFound, rr.Code)
+
+		ep, err := url.Parse(rr.Header().Get("Location"))
+		require.NoError(t, err)
+
+		require.Equal(t, ep.Path, "/link")
+		require.Equal(t, ep.Query().Get("callback"), svc.hostExternalURL+"/callback")
+		require.NotEmpty(t, ep.Query().Get("state"))
 	})
 
 	t.Run("no username", func(t *testing.T) {
@@ -487,6 +492,120 @@ func TestDisconnect(t *testing.T) {
 		svc.disconnect(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "missing username")
+	})
+}
+
+func TestAccountLink(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider:   &mockstorage.Provider{},
+			HostExternalURL: "http://my-external",
+			AccountLinkURL:  "http://third-party-svc",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		state := uuid.New().String()
+		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkURL, svc.hostExternalURL, state)
+
+		req, err := http.NewRequest("GET", endpoint, nil)
+		require.NoError(t, err)
+
+		svc.link(rr, req)
+		require.Equal(t, http.StatusFound, rr.Code)
+
+		ep, err := url.Parse(rr.Header().Get("Location"))
+		require.NoError(t, err)
+
+		require.Equal(t, ep.Path, "/callback")
+		require.Equal(t, ep.Query().Get("state"), state)
+		require.NotEmpty(t, ep.Query().Get("auth"))
+	})
+
+	t.Run("no callback url", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider:  &mockstorage.Provider{},
+			AccountLinkURL: "http://third-party-svc",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", "", nil)
+		require.NoError(t, err)
+
+		svc.link(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "missing callback url")
+	})
+
+	t.Run("no state", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider:   &mockstorage.Provider{},
+			AccountLinkURL:  "http://third-party-svc",
+			HostExternalURL: "http://my-external",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", svc.accountLinkURL+"/link?callback="+svc.hostExternalURL, nil)
+		require.NoError(t, err)
+
+		svc.link(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "missing state")
+	})
+}
+
+func TestAccountLinkCallback(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+			DashboardHTML: file.Name(),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", "/callback?auth="+uuid.New().String(), nil)
+		require.NoError(t, err)
+
+		svc.accountLinkCallback(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("missing auth", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+			DashboardHTML: file.Name(),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", "/callback", nil)
+		require.NoError(t, err)
+
+		svc.accountLinkCallback(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "missing authorization")
 	})
 }
 

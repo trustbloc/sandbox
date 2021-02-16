@@ -130,6 +130,8 @@ func getValidArgs(logLevel string) []string {
 	args = append(args, demoModeArg("rev")...)
 	args = append(args, vaultServerURLArg()...)
 	args = append(args, vcIssuerURLArg()...)
+	args = append(args, hostExternalURLArg()...)
+	args = append(args, accountLinkURLArg()...)
 	args = append(args, requestTokensArg()...)
 
 	if logLevel != "" {
@@ -164,6 +166,8 @@ func TestDatabaseTypeArg(t *testing.T) {
 		args = append(args, demoModeArg("rev")...)
 		args = append(args, vaultServerURLArg()...)
 		args = append(args, vcIssuerURLArg()...)
+		args = append(args, hostExternalURLArg()...)
+		args = append(args, accountLinkURLArg()...)
 		args = append(args, []string{flag + common.DatabasePrefixFlagName, "test"}...)
 		args = append(args, []string{flag + common.DatabaseURLFlagName, "invalid-driver://test"}...)
 		startCmd.SetArgs(args)
@@ -209,6 +213,49 @@ func TestVCIssuerArg(t *testing.T) {
 		err := startCmd.Execute()
 		require.Contains(t, err.Error(),
 			"Neither vc-issuer-url (command line flag) nor ACRP_VC_ISSUER_URL (environment variable) have been set.")
+	})
+}
+
+func TestHostExternalURLArg(t *testing.T) {
+	t.Run("missing arg", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, databaseURLArg()...)
+		args = append(args, databasePrefixArg()...)
+		args = append(args, demoModeArg("rev")...)
+		args = append(args, vaultServerURLArg()...)
+		args = append(args, vcIssuerURLArg()...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Contains(t, err.Error(),
+			"Neither host-external-url (command line flag) nor ACRP_HOST_EXTERNAL_URL (environment variable) have been set.")
+	})
+}
+
+func TestAccountLinkURLArg(t *testing.T) {
+	t.Run("missing arg", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, databaseURLArg()...)
+		args = append(args, databasePrefixArg()...)
+		args = append(args, demoModeArg("rev")...)
+		args = append(args, vaultServerURLArg()...)
+		args = append(args, vcIssuerURLArg()...)
+		args = append(args, hostExternalURLArg()...)
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Contains(t, err.Error(),
+			"Neither account-link-url (command line flag) nor ACRP_ACCOUNT_LINK_URL (environment variable) have been set.")
 	})
 }
 
@@ -270,6 +317,12 @@ func setEnvVars(t *testing.T) {
 
 	err = os.Setenv(vcIssuerURLEnvKey, "https://vc-issuer-server")
 	require.Nil(t, err)
+
+	err = os.Setenv(hostExternalURLEnvKey, "https://my-external-url")
+	require.Nil(t, err)
+
+	err = os.Setenv(accountLinkURLEnvKey, "https://link-account")
+	require.Nil(t, err)
 }
 
 func unsetEnvVars(t *testing.T) {
@@ -296,6 +349,12 @@ func unsetEnvVars(t *testing.T) {
 
 	err = os.Unsetenv(vcIssuerURLEnvKey)
 	require.NoError(t, err)
+
+	err = os.Unsetenv(hostExternalURLEnvKey)
+	require.Nil(t, err)
+
+	err = os.Unsetenv(accountLinkURLEnvKey)
+	require.Nil(t, err)
 }
 
 func hostURLArg() []string {
@@ -324,6 +383,14 @@ func vaultServerURLArg() []string {
 
 func vcIssuerURLArg() []string {
 	return []string{flag + vcIssuerURLFlagName, "https://vc-issuer-server"}
+}
+
+func hostExternalURLArg() []string {
+	return []string{flag + hostExternalURLFlagName, "https://my-external-url"}
+}
+
+func accountLinkURLArg() []string {
+	return []string{flag + accountLinkURLFlagName, "https://link-account"}
 }
 
 func databaseURLArg() []string {

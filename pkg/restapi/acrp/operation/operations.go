@@ -31,10 +31,12 @@ import (
 
 const (
 	// api paths
-	register   = "/register"
-	login      = "/login"
-	connect    = "/connect"
-	disconnect = "/disconnect"
+	register            = "/register"
+	login               = "/login"
+	connect             = "/connect"
+	disconnect          = "/disconnect"
+	link                = "/link"
+	accountLinkCallback = "/callback"
 
 	// store
 	txnStoreName = "issuer_txn"
@@ -48,6 +50,7 @@ const (
 
 	// external paths
 	issueCredentialURLFormat = "%s" + "/credentials/issueCredential"
+	accountLinkURLFormat     = "%s/link?callback=%s/callback&state=%s"
 
 	// json-ld
 	credentialContext = "https://www.w3.org/2018/credentials/v1"
@@ -68,23 +71,27 @@ type Handler interface {
 
 // Operation defines handlers.
 type Operation struct {
-	store          storage.Store
-	handlers       []Handler
-	dashboardHTML  string
-	httpClient     httpClient
-	vaultServerURL string
-	vcIssuerURL    string
-	requestTokens  map[string]string
+	store           storage.Store
+	handlers        []Handler
+	dashboardHTML   string
+	httpClient      httpClient
+	vaultServerURL  string
+	vcIssuerURL     string
+	requestTokens   map[string]string
+	accountLinkURL  string
+	hostExternalURL string
 }
 
 // Config config.
 type Config struct {
-	StoreProvider  storage.Provider
-	DashboardHTML  string
-	TLSConfig      *tls.Config
-	VaultServerURL string
-	VCIssuerURL    string
-	RequestTokens  map[string]string
+	StoreProvider   storage.Provider
+	DashboardHTML   string
+	TLSConfig       *tls.Config
+	VaultServerURL  string
+	VCIssuerURL     string
+	AccountLinkURL  string
+	HostExternalURL string
+	RequestTokens   map[string]string
 }
 
 // New returns acrp operation instance.
@@ -95,12 +102,14 @@ func New(config *Config) (*Operation, error) {
 	}
 
 	op := &Operation{
-		store:          store,
-		dashboardHTML:  config.DashboardHTML,
-		httpClient:     &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
-		vaultServerURL: config.VaultServerURL,
-		vcIssuerURL:    config.VCIssuerURL,
-		requestTokens:  config.RequestTokens,
+		store:           store,
+		dashboardHTML:   config.DashboardHTML,
+		httpClient:      &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
+		vaultServerURL:  config.VaultServerURL,
+		vcIssuerURL:     config.VCIssuerURL,
+		accountLinkURL:  config.AccountLinkURL,
+		hostExternalURL: config.HostExternalURL,
+		requestTokens:   config.RequestTokens,
 	}
 
 	op.registerHandler()
@@ -115,6 +124,8 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(login, http.MethodPost, o.login),
 		support.NewHTTPHandler(connect, http.MethodGet, o.connect),
 		support.NewHTTPHandler(disconnect, http.MethodGet, o.disconnect),
+		support.NewHTTPHandler(link, http.MethodGet, o.link),
+		support.NewHTTPHandler(accountLinkCallback, http.MethodGet, o.accountLinkCallback),
 	}
 }
 
@@ -226,9 +237,13 @@ func (o *Operation) connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO connect with other service / integrate trustbloc features
+	state := uuid.New().String()
 
-	o.showDashboard(w, userName[0], true)
+	// TODO store state data
+
+	endpoint := fmt.Sprintf(accountLinkURLFormat, o.accountLinkURL, o.hostExternalURL, state)
+
+	http.Redirect(w, r, endpoint, http.StatusFound)
 }
 
 func (o *Operation) disconnect(w http.ResponseWriter, r *http.Request) {
@@ -242,6 +257,49 @@ func (o *Operation) disconnect(w http.ResponseWriter, r *http.Request) {
 	// TODO disconnect with other service / integrate trustbloc features
 
 	o.showDashboard(w, userName[0], false)
+}
+
+func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) {
+	auth := r.URL.Query()["auth"]
+	if len(auth) == 0 {
+		o.writeErrorResponse(w, http.StatusBadRequest, "missing authorization")
+
+		return
+	}
+
+	// TODO call vault-server /vaults/{vaultID}/authorizations  api
+
+	// TODO call comparator-service /compare  api
+
+	o.showDashboard(w, "username", true)
+}
+
+func (o *Operation) link(w http.ResponseWriter, r *http.Request) {
+	// TODO use OIDC to link accounts
+	callback := r.URL.Query()["callback"]
+	if len(callback) == 0 {
+		o.writeErrorResponse(w, http.StatusBadRequest, "missing callback url")
+
+		return
+	}
+
+	state := r.URL.Query()["state"]
+	if len(state) == 0 {
+		o.writeErrorResponse(w, http.StatusBadRequest, "missing state")
+
+		return
+	}
+
+	logger.Infof("callback url= %s state=%s", callback, state)
+
+	// TODO call vault-server /vaults/{vaultID}/authorizations  api
+
+	// TODO call comparator-service /authorization  api
+
+	// TODO pass the zccap to the caller.
+	auth := uuid.New().String()
+
+	http.Redirect(w, r, fmt.Sprintf("%s?state=%s&auth=%s", callback[0], state[0], auth), http.StatusFound)
 }
 
 func (o *Operation) showDashboard(w http.ResponseWriter, userName string, serviceLinked bool) {
