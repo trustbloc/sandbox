@@ -36,7 +36,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 9, len(svc.GetRESTHandlers()))
+		require.Equal(t, 12, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -927,6 +927,215 @@ func TestGetCreate(t *testing.T) {
 		svc.getClient(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to unmarshal data")
+	})
+}
+
+func TestCreateProfile(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		cReq := profileData{
+			ID:       uuid.New().String(),
+			DID:      "did:example:123",
+			Callback: "http://test/callback",
+		}
+
+		reqBytes, err := json.Marshal(cReq)
+		require.NoError(t, err)
+
+		req, err := http.NewRequest("POST", client, bytes.NewBuffer(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.createProfile(rr, req)
+		require.Equal(t, http.StatusCreated, rr.Code)
+
+		var resp *profileData
+
+		err = json.Unmarshal(rr.Body.Bytes(), &resp)
+		require.NoError(t, err)
+
+		require.Equal(t, cReq.ID, resp.ID)
+		require.Equal(t, cReq.ClientID, resp.ClientID)
+		require.Equal(t, cReq.ClientSecret, resp.ClientSecret)
+		require.Equal(t, cReq.DID, resp.DID)
+		require.Equal(t, cReq.Callback, resp.Callback)
+	})
+
+	t.Run("invalid request", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		req, err := http.NewRequest("POST", client, strings.NewReader("invalid-json"))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.createProfile(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to decode request")
+	})
+
+	t.Run("db error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPut: errors.New("save error")},
+			},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		reqBytes, err := json.Marshal(profileData{})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest("POST", client, bytes.NewBuffer(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.createProfile(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to save client data")
+	})
+}
+
+func TestGetProfile(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		s := make(map[string][]byte)
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		id := uuid.New().String()
+
+		cReq := profileData{
+			ClientID: id,
+			DID:      "did:example:123",
+			Callback: "http://test/callback",
+		}
+
+		reqBytes, err := json.Marshal(cReq)
+		require.NoError(t, err)
+
+		s[id] = reqBytes
+
+		req, err := http.NewRequest("GET", profile+"/"+id, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.getProfile(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+
+		var resp *clientData
+
+		err = json.Unmarshal(rr.Body.Bytes(), &resp)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, resp.ClientID)
+		require.Equal(t, cReq.DID, resp.DID)
+		require.Equal(t, cReq.Callback, resp.Callback)
+	})
+
+	t.Run("no data for the id", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		req, err := http.NewRequest("GET", client+"/"+uuid.New().String(), nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.getProfile(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get data")
+	})
+
+	t.Run("invalid data for the id", func(t *testing.T) {
+		s := make(map[string][]byte)
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		id := uuid.New().String()
+
+		s[id] = []byte("invalid-json")
+
+		req, err := http.NewRequest("GET", client+"/"+id, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.getProfile(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to unmarshal data")
+	})
+}
+
+func TestDeleteProfile(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		s := make(map[string][]byte)
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		id := uuid.New().String()
+
+		cReq := profileData{
+			ClientID: id,
+		}
+
+		reqBytes, err := json.Marshal(cReq)
+		require.NoError(t, err)
+
+		s[id] = reqBytes
+
+		req, err := http.NewRequest("DELETE", profile+"/"+id, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.deleteProfile(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("db error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrDelete: errors.New("delete error")},
+			},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		req, err := http.NewRequest("DELETE", client+"/"+uuid.New().String(), nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.deleteProfile(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to delete data")
 	})
 }
 
