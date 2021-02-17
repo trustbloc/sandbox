@@ -46,3 +46,12 @@ type clientData struct {
 	DID      string `json:"did"`
 	Callback string `json:"callback"`
 }
+
+type profileData struct {
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	ClientID     string `json:"clientID"`
+	ClientSecret string `json:"clientSecret"`
+	DID          string `json:"did"`
+	Callback     string `json:"callback"`
+}

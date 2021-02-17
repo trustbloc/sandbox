@@ -41,6 +41,8 @@ const (
 	consent             = "/consent"
 	client              = "/client"
 	getClient           = client + "/{id}"
+	profile             = "/profile"
+	getProfile          = profile + "/{id}"
 
 	// store
 	txnStoreName = "issuer_txn"
@@ -142,6 +144,9 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(consent, http.MethodGet, o.consent),
 		support.NewHTTPHandler(client, http.MethodPost, o.createClient),
 		support.NewHTTPHandler(getClient, http.MethodGet, o.getClient),
+		support.NewHTTPHandler(profile, http.MethodPost, o.createProfile),
+		support.NewHTTPHandler(getProfile, http.MethodGet, o.getProfile),
+		support.NewHTTPHandler(getProfile, http.MethodDelete, o.deleteProfile),
 	}
 }
 
@@ -440,27 +445,77 @@ func (o *Operation) createClient(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Operation) getClient(w http.ResponseWriter, r *http.Request) {
-	clientID := strings.Split(r.URL.Path, "/")[2]
+	var data *clientData
 
-	dataBytes, err := o.store.Get(clientID)
+	o.getData(w, strings.Split(r.URL.Path, "/")[2], data)
+}
+
+func (o *Operation) createProfile(w http.ResponseWriter, r *http.Request) {
+	data := &profileData{}
+
+	err := json.NewDecoder(r.Body).Decode(data)
 	if err != nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to get data : id=%s - %s", clientID, err.Error()))
+		o.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to decode request: %s", err.Error()))
 
 		return
 	}
 
-	var data *clientData
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to marshal client data: %s", err.Error()))
+
+		return
+	}
+
+	err = o.store.Put(data.ID, dataBytes)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to save client data: %s", err.Error()))
+
+		return
+	}
+
+	o.writeResponse(w, http.StatusCreated, data)
+}
+
+func (o *Operation) getProfile(w http.ResponseWriter, r *http.Request) {
+	var data *profileData
+
+	o.getData(w, strings.Split(r.URL.Path, "/")[2], data)
+}
+
+func (o *Operation) getData(w http.ResponseWriter, id string, data interface{}) {
+	dataBytes, err := o.store.Get(id)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get data : id=%s - %s", id, err.Error()))
+
+		return
+	}
 
 	err = json.Unmarshal(dataBytes, &data)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to unmarshal data : id=%s - %s", clientID, err.Error()))
+			fmt.Sprintf("failed to unmarshal data : id=%s - %s", id, err.Error()))
 
 		return
 	}
 
 	o.writeResponse(w, http.StatusOK, data)
+}
+
+func (o *Operation) deleteProfile(w http.ResponseWriter, r *http.Request) {
+	profileID := strings.Split(r.URL.Path, "/")[2]
+
+	err := o.store.Delete(profileID)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to delete data : id=%s - %s", profileID, err.Error()))
+
+		return
+	}
+
+	o.writeResponse(w, http.StatusOK, nil)
 }
 
 func (o *Operation) showDashboard(w http.ResponseWriter, userName string, serviceLinked bool) {
