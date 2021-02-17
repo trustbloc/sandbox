@@ -10,19 +10,12 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/square/go-jose/v3"
+	"github.com/trustbloc/edge-service/pkg/client/comparator"
 )
-
-// comparatorConfig
-type comparatorConfig struct {
-	DID  string            `json:"did"`
-	Keys []json.RawMessage `json:"keys"`
-}
 
 type configOutput struct {
 	DID        string `json:"did"`
@@ -31,33 +24,33 @@ type configOutput struct {
 }
 
 func main() {
-	//nolint: gosec
-	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}}
-
 	switch os.Args[1] { //nolint: gocritic
 	case "comparator":
 		switch os.Args[2] { //nolint: gocritic
 		case "getConfig":
-			req, err := http.NewRequest(http.MethodPost, os.Args[3], nil)
+			//nolint: gosec
+			c := comparator.New(os.Args[3], comparator.WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+
+			config, err := c.GetConfig()
 			if err != nil {
 				fmt.Printf("failed to create new request: %s\n", err)
 				return
 			}
 
-			resp, err := sendHTTPRequest(httpClient, req, http.StatusOK)
-			if err != nil {
-				fmt.Printf("failed to send http request: %s\n", err)
+			keys, ok := config.Key.([]interface{})
+			if !ok {
+				fmt.Printf("key is not array\n")
 				return
 			}
 
-			var config comparatorConfig
-			if errUnmarshal := json.Unmarshal(resp, &config); errUnmarshal != nil {
-				fmt.Printf("failed to unmarshal resp to config: %s\n", errUnmarshal)
+			keyBytes, err := json.Marshal(keys[0])
+			if err != nil {
+				fmt.Printf("failed to marshal key: %s\n", err)
 				return
 			}
 
 			jwk := jose.JSONWebKey{}
-			if errUnmarshalJSON := jwk.UnmarshalJSON(config.Keys[0]); errUnmarshalJSON != nil {
+			if errUnmarshalJSON := jwk.UnmarshalJSON(keyBytes); errUnmarshalJSON != nil {
 				fmt.Printf("failed to unmarshal resp to jwk: %s\n", errUnmarshalJSON)
 				return
 			}
@@ -68,8 +61,8 @@ func main() {
 				return
 			}
 
-			bytes, err := json.Marshal(configOutput{DID: config.DID, PrivateKey: base58.Encode(k),
-				KeyID: fmt.Sprintf("%s#%s", config.DID, jwk.KeyID)})
+			bytes, err := json.Marshal(configOutput{DID: *config.Did, PrivateKey: base58.Encode(k),
+				KeyID: fmt.Sprintf("%s#%s", *config.Did, jwk.KeyID)})
 			if err != nil {
 				fmt.Printf("failed to marshal: %s\n", err)
 				return
@@ -78,29 +71,4 @@ func main() {
 			fmt.Println(string(bytes))
 		}
 	}
-}
-
-func sendHTTPRequest(httpClient *http.Client, req *http.Request, status int) ([]byte, error) {
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		err = resp.Body.Close()
-		if err != nil {
-			fmt.Println("failed to close response body")
-		}
-	}()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body for status %d: %s", resp.StatusCode, err)
-	}
-
-	if resp.StatusCode != status {
-		return nil, fmt.Errorf("failed to read response body for status %d: %s", resp.StatusCode, string(body))
-	}
-
-	return body, nil
 }
