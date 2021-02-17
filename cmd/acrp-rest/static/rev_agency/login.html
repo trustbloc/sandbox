@@ -10,7 +10,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta charset="utf-8">
-    <link rel="icon" type="images/x-icon" href="../img/logo.png" >
+    <link rel="icon" type="images/x-icon" href="img/logo.jpg" >
     <title>Login</title>
     <meta name="description" content="">
     <meta name="keywords" content="">
@@ -30,112 +30,68 @@ SPDX-License-Identifier: Apache-2.0
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 
-    <style>
-        .gradient {
-            background: linear-gradient(90deg, #2980B9 60%, #2980B9 100%);
-        }
-    </style>
-
 </head>
-
-<body class="leading-normal tracking-normal text-white gradient" style="font-family: 'Source Sans Pro', sans-serif;">
-
-<!--Nav-->
-<div class="pt-12">
-    <nav id="header" class="fixed w-full z-30 top-0 text-white ">
-
-        <div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0">
-
-            <div class="pl-6 flex items-center">
-                <a class="toggleColour text-white no-underline hover:no-underline font-bold text-xl lg:text-2xl"  href="/">
-                    <i class="fa fa-cubes" style="font-size:24px;color:white"></i>
-                    Revenue Agency
-                </a>
-            </div>
-
-            <div class="block lg:hidden pr-4">
-                <button id="nav-toggle" class="flex items-center p-1 text-gray-300 hover:text-gray-900">
-                    <svg class="fill-current h-6 w-6" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/></svg>
-                </button>
-            </div>
-
-            <div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden lg:block mt-2 lg:mt-0 bg-white lg:bg-transparent text-black p-4 lg:p-0 z-20" id="nav-content">
-                <ul class="list-reset lg:flex justify-end flex-1 items-center">
-                    <li class="mr-3">
-                        <a class="inline-block text-gray-400 no-underline hover:text-green hover:text-underline py-2 px-4" href="https://github.com/trustbloc/sandbox">
-                            <i class="fa fa-github"></i></a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <section class="bg-white border-b py-48" id="account-register" style="display:block">
-        <div class="container mx-auto flex  flex-wrap pt-1 pb-4">
-            <h1 class="w-full my-2 text-3xl text-center text-green-600"> Login to your account </h1>
-                <div class="container justify-center mx-auto flex flex-wrap">
-                    <form method="post" id="vpForm" action="/login">
-                    <table style="width:80%; color:#000; font-size: x-large;" class="border my-5">
-                        <tr>
-                            <td><label for="username">EmailID</label></td>
-                            <td><input type="email" id="username" name="username" inputmode="email"
-                                       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" maxlength="30" class="border" value="john.smith@example.com" oninvalid="setCustomValidity('Invalid email')">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><label for="password">Password</label></td>
-                            <td><input type="password" id="password" name="password" class="border" value="f00B@r!23"></td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td><input type="submit" value="Submit"></td>
-                        </tr>
-                    </table>
-                    </form>
+<div class="bg-red-100 border border-red-400 text-red-700 text-center rounded flex items-center justify-center" role="alert">
+    <strong class="font-bold">THIS IS NOT A GOVERNMENT SITE.</strong>
+    <span class="block sm:inline">It is demo site and all data is fake. Do not enter real account information or SSNs.</span>
+    <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+     </span>
+</div>
+<nav class="bg-blue-900">
+    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+        <div class="relative flex items-center justify-between h-16">
+            <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
+                <div class="flex-shrink-0 flex items-center">
+                    <img class="block lg:block h-16 w-auto" src="img/citizenship_logo.png" alt="navbar">
+                </div>
+                <div class="hidden sm:block sm:ml-6">
+                    <div class="flex space-x-4">
+                        <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
+                        <a href="/" class="text-white hover:bg-gray-700 hover:text-white px-3 py-6 rounded-md text-sm font-medium">Home</a>
+                    </div>
                 </div>
             </div>
-    </section>
-    <footer>
-        <section class="container mx-auto text-center py-2 mb-12">
-            <div class="text-lg text-white font py-1">
-                Copyright &copy; <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+        </div>
+    </div>
+</nav>
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-r from-gray-100 py-2 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 bg-white  border shadow">
+        <div>
+            <div class="px-2 text-sm font-medium text-white bg-blue-900">
+                <img class="object-contain object-left-top h-32 w-full" src="img/citizenship_logo.png">
             </div>
-        </section>
-    </footer>
+            <p class="mt-2 px-8 text-center text-3xl font-extrabold text-gray-600">
+                Sign In  </p>
+            <p class="mt-2 px-8 text-center text-sm text-gray-600">
+                Sign In to your My USCIS account to proceed
+            </p>
+        </div>
+        <div class="space-y-4 flex justify-center">
+            <form method="post" id="vpForm" action="/login" class="shadow-lg w-80 p-4 flex flex-col">
+                <div class="my-5 text-sm">
+                    <label for="username" class="block text-black">Email</label>
+                    <input type="email" autofocus id="username" name="username" class="rounded-sm px-2 py-3 mt-4 focus:outline-none bg-gray-100 w-full text-left" placeholder="Username"
+                           inputmode="email"
+                           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" maxlength="30" class="border" value="john.smith@example.com" oninvalid="setCustomValidity('Invalid email')"/>
+                </div>
+                <div class="my-5 text-sm">
+                    <label for="password" class="block text-black">Password</label>
+                    <input type="password" class="rounded-sm  px-2 py-3 mt-4 focus:outline-none bg-gray-100 w-full" id="password" name="password" value="f00B@r!23" />
+                </div>
+                <input class="block text-center text-white bg-gray-800 p-3 duration-300 rounded-sm hover:bg-black w-full" type="submit" value="Submit">
+            </form>
+        </div>
+        <div class="space-y-32 flex justify-center">
+        </div>
+    </div>
+</div>
+<footer class="text-center bg-white shadow border border-black-300">
+    <section class="container mx-auto text-center">
+        <div class="text-sm text-gray-500 font py-1">
+            <img class="object-contain object-top-center h-32 w-full" src="img/footer.png">
+            Copyright &copy; <a href="https://securekey.com/"  class="text-blue-900 hover:text-green-700" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+        </div>
+    </section>
+</footer>
 
-    <script>
-        var navMenuDiv = document.getElementById("nav-content");
-        var navMenu = document.getElementById("nav-toggle");
-
-        document.onclick = check;
-
-        function check(e){
-            var target = (e && e.target) || (event && event.srcElement);
-
-            //Nav Menu
-            if (!checkParent(target, navMenuDiv)) {
-                // click NOT on the menu
-                if (checkParent(target, navMenu)) {
-                    // click on the link
-                    if (navMenuDiv.classList.contains("hidden")) {
-                        navMenuDiv.classList.remove("hidden");
-                    } else {navMenuDiv.classList.add("hidden");}
-                } else {
-                    // click both outside link and outside menu, hide menu
-                    navMenuDiv.classList.add("hidden");
-                }
-            }
-        }
-
-        function checkParent(t, elm) {
-            while(t.parentNode) {
-                if( t == elm ) {return true;}
-                t = t.parentNode;
-            }
-            return false;
-        }
-    </script>
-</body>
 </html>
-
-
