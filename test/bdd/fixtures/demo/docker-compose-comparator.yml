@@ -20,6 +20,7 @@ services:
         - COMPARATOR_DATABASE_PREFIX=revagenycomparator
         - VIRTUAL_HOST=rev-agency-comparator.trustbloc.local
         - COMPARATOR_CSH_URL=https://csh.trustbloc.local
+        - COMPARATOR_VAULT_URL=https://vault.trustbloc.local
     ports:
       - 8064:8064
     entrypoint: ""
@@ -41,6 +42,7 @@ services:
       - COMPARATOR_DATABASE_PREFIX=empdeptcomparator
       - VIRTUAL_HOST=emp-dept-comparator.trustbloc.local
       - COMPARATOR_CSH_URL=https://csh.trustbloc.local
+      - COMPARATOR_VAULT_URL=https://vault.trustbloc.local
     ports:
       - 8062:8062
     entrypoint: ""

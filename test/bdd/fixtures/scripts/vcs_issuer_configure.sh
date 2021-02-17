@@ -90,7 +90,7 @@ didkey_ed25519signature2018_ed25519=$(curl -o /dev/null -s -w "%{http_code}" --h
    --insecure https://issuer-vcs.trustbloc.local/profile)
 
 
-revAgencyComparatorConfig=$(.build/bin/demo comparator getConfig https://rev-agency-comparator.trustbloc.local/config)
+revAgencyComparatorConfig=$(.build/bin/demo comparator getConfig https://rev-agency-comparator.trustbloc.local)
 revAgencyComparatorConfigDID=$(echo "${revAgencyComparatorConfig}" | jq -r '.did')
 revAgencyComparatorConfigPrivateKey=$(echo "${revAgencyComparatorConfig}" | jq -r '.privateKey')
 revAgencyComparatorConfigKeyID=$(echo "${revAgencyComparatorConfig}" | jq -r '.keyID')
@@ -100,7 +100,7 @@ vc_issuer_rev_agency=$(curl -o /dev/null -s -w "%{http_code}" --header "Content-
    --data '{"name":"vc-issuer-rev-agency", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "did":"'"${revAgencyComparatorConfigDID}"'","didPrivateKey":"'"${revAgencyComparatorConfigPrivateKey}"'","didKeyID":"'"${revAgencyComparatorConfigKeyID}"'","signatureRepresentation":1,"didKeyType":"Ed25519"}' \
    --insecure https://issuer-vcs.trustbloc.local/profile)
 
-empDeptComparatorConfig=$(.build/bin/demo comparator getConfig https://emp-dept-comparator.trustbloc.local/config)
+empDeptComparatorConfig=$(.build/bin/demo comparator getConfig https://emp-dept-comparator.trustbloc.local)
 empDeptComparatorConfigDID=$(echo "${empDeptComparatorConfig}" | jq -r '.did')
 empDeptComparatorConfigPrivateKey=$(echo "${empDeptComparatorConfig}" | jq -r '.privateKey')
 empDeptComparatorConfigKeyID=$(echo "${empDeptComparatorConfig}" | jq -r '.keyID')

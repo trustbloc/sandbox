@@ -11,9 +11,10 @@ require (
 	github.com/cucumber/godog v0.8.1
 	github.com/hyperledger/fabric-protos-go v0.0.0-20200707132912-fee30f3ccd23
 	github.com/pkg/errors v0.9.1
-	github.com/spf13/viper v1.4.0
+	github.com/spf13/viper v1.7.0
 	github.com/square/go-jose/v3 v3.0.0-20200630053402-0a67ce9b0693
-	github.com/trustbloc/edge-core v0.1.6-0.20210127161542-9e174750f523
+	github.com/trustbloc/edge-core v0.1.6-0.20210212172534-81ab3a5abf5b
+	github.com/trustbloc/edge-service v0.1.6-0.20210217133645-f80eae5ea80a
 	github.com/trustbloc/fabric-peer-test-common v0.1.6-0.20210201222114-5da8a5c9d197
 )
 
