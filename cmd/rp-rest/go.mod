@@ -10,8 +10,8 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.8.0
 	github.com/spf13/cobra v1.1.1
-	github.com/stretchr/testify v1.6.1
-	github.com/trustbloc/edge-core v0.1.6-0.20210127161542-9e174750f523
+	github.com/stretchr/testify v1.7.0
+	github.com/trustbloc/edge-core v0.1.6-0.20210212172534-81ab3a5abf5b
 	github.com/trustbloc/sandbox v0.0.0
 )
 

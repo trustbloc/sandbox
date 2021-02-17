@@ -14,7 +14,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/square/go-jose/v3 v3.0.0-20200630053402-0a67ce9b0693
 	github.com/trustbloc/edge-core v0.1.6-0.20210212172534-81ab3a5abf5b
-	github.com/trustbloc/edge-service v0.1.6-0.20210217133645-f80eae5ea80a
+	github.com/trustbloc/edge-service v0.1.6-0.20210217144806-4777cf97b897
 	github.com/trustbloc/fabric-peer-test-common v0.1.6-0.20210201222114-5da8a5c9d197
 )
 
