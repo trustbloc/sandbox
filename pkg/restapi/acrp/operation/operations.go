@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,6 +39,8 @@ const (
 	link                = "/link"
 	accountLinkCallback = "/callback"
 	consent             = "/consent"
+	client              = "/client"
+	getClient           = client + "/{id}"
 
 	// store
 	txnStoreName = "issuer_txn"
@@ -137,6 +140,8 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(link, http.MethodGet, o.link),
 		support.NewHTTPHandler(accountLinkCallback, http.MethodGet, o.accountLinkCallback),
 		support.NewHTTPHandler(consent, http.MethodGet, o.consent),
+		support.NewHTTPHandler(client, http.MethodPost, o.createClient),
+		support.NewHTTPHandler(getClient, http.MethodGet, o.getClient),
 	}
 }
 
@@ -393,6 +398,71 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("%s?state=%s&auth=%s", data.CallbackURL, data.State, auth), http.StatusFound)
 }
 
+func (o *Operation) createClient(w http.ResponseWriter, r *http.Request) {
+	req := &clientReq{}
+
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to decode request: %s", err.Error()))
+
+		return
+	}
+
+	// TODO integrate with OIDC provider
+
+	data := clientData{
+		ClientID: uuid.New().String(),
+		DID:      req.DID,
+		Callback: req.Callback,
+	}
+
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to marshal client data: %s", err.Error()))
+
+		return
+	}
+
+	err = o.store.Put(data.ClientID, dataBytes)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to save client data: %s", err.Error()))
+
+		return
+	}
+
+	o.writeResponse(w, http.StatusCreated, clientResp{
+		ClientID:     uuid.New().String(),
+		ClientSecret: uuid.New().String(),
+		DID:          req.DID,
+		Callback:     req.Callback,
+	})
+}
+
+func (o *Operation) getClient(w http.ResponseWriter, r *http.Request) {
+	clientID := strings.Split(r.URL.Path, "/")[2]
+
+	dataBytes, err := o.store.Get(clientID)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get data : id=%s - %s", clientID, err.Error()))
+
+		return
+	}
+
+	var data *clientData
+
+	err = json.Unmarshal(dataBytes, &data)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to unmarshal data : id=%s - %s", clientID, err.Error()))
+
+		return
+	}
+
+	o.writeResponse(w, http.StatusOK, data)
+}
+
 func (o *Operation) showDashboard(w http.ResponseWriter, userName string, serviceLinked bool) {
 	endpoint := fmt.Sprintf("/connect?userName=%s", userName)
 	if serviceLinked {
@@ -428,6 +498,15 @@ func (o *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg s
 	write := rw.Write
 	if _, err := write([]byte(msg)); err != nil {
 		logger.Errorf("Unable to send error message, %s", err)
+	}
+}
+
+func (o *Operation) writeResponse(rw http.ResponseWriter, status int, v interface{}) {
+	rw.WriteHeader(status)
+
+	err := json.NewEncoder(rw).Encode(v)
+	if err != nil {
+		logger.Errorf("Unable to send response, %s", err)
 	}
 }
 

@@ -28,3 +28,21 @@ type sessionData struct {
 	State       string `json:"state"`
 	CallbackURL string `json:"callbackURL"`
 }
+
+type clientReq struct {
+	DID      string `json:"did"`
+	Callback string `json:"callback"`
+}
+
+type clientResp struct {
+	ClientID     string `json:"clientID"`
+	ClientSecret string `json:"clientSecret"`
+	DID          string `json:"did"`
+	Callback     string `json:"callback"`
+}
+
+type clientData struct {
+	ClientID string `json:"clientID"`
+	DID      string `json:"did"`
+	Callback string `json:"callback"`
+}
