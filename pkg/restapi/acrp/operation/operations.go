@@ -15,7 +15,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -24,7 +23,9 @@ import (
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/storage"
+	vaultclient "github.com/trustbloc/edge-service/pkg/client/vault"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
+	"github.com/trustbloc/edge-service/pkg/restapi/vault"
 	"github.com/trustbloc/edv/pkg/edvutils"
 
 	"github.com/trustbloc/sandbox/pkg/internal/common/support"
@@ -74,6 +75,11 @@ type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
+type vaultClient interface {
+	CreateVault() (*vault.CreatedVault, error)
+	SaveDoc(vaultID, id string, content interface{}) (*vault.DocumentMetadata, error)
+}
+
 // Handler http handler for each controller API endpoint.
 type Handler interface {
 	Path() string
@@ -88,11 +94,11 @@ type Operation struct {
 	dashboardHTML   string
 	consentHTML     string
 	httpClient      httpClient
-	vaultServerURL  string
 	vcIssuerURL     string
 	requestTokens   map[string]string
 	accountLinkURL  string
 	hostExternalURL string
+	vClient         vaultClient
 }
 
 // Config config.
@@ -115,16 +121,18 @@ func New(config *Config) (*Operation, error) {
 		return nil, fmt.Errorf("acrp store provider : %w", err)
 	}
 
+	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}}
+
 	op := &Operation{
 		store:           store,
 		dashboardHTML:   config.DashboardHTML,
 		consentHTML:     config.ConsentHTML,
-		httpClient:      &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
-		vaultServerURL:  config.VaultServerURL,
+		httpClient:      httpClient,
 		vcIssuerURL:     config.VCIssuerURL,
 		accountLinkURL:  config.AccountLinkURL,
 		hostExternalURL: config.HostExternalURL,
 		requestTokens:   config.RequestTokens,
+		vClient:         vaultclient.New(config.VaultServerURL, vaultclient.WithHTTPClient(httpClient)),
 	}
 
 	op.registerHandler()
@@ -177,12 +185,14 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint
 	}
 
 	// create vault for the user
-	vaultID, err := o.createVault()
+	vaultData, err := o.vClient.CreateVault()
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create vault - err:%s", err.Error()))
 
 		return
 	}
+
+	vaultID := vaultData.ID
 
 	// wrap nationalID in a vc
 	vcResp, err := o.createNationalIDCred(vaultID, r.FormValue(nationalID))
@@ -595,25 +605,6 @@ func (o *Operation) getUserData(username string) (*userData, error) {
 	return uData, nil
 }
 
-func (o *Operation) createVault() (string, error) {
-	endpoint := o.vaultServerURL + "/vaults"
-
-	vaultRespBytes, err := o.sendHTTPRequest(http.MethodPost, endpoint, nil, http.StatusCreated,
-		o.requestTokens[vcsIssuerRequestTokenName])
-	if err != nil {
-		return "", fmt.Errorf("create vault url=%s err : %w", endpoint, err)
-	}
-
-	var vaultResp createVaultResp
-
-	err = json.Unmarshal(vaultRespBytes, &vaultResp)
-	if err != nil {
-		return "", fmt.Errorf("umarshal vault resp : %w", err)
-	}
-
-	return vaultResp.ID, nil
-}
-
 func (o *Operation) createNationalIDCred(sub, nationalID string) ([]byte, error) {
 	if nationalID == "" {
 		return nil, errors.New("nationalID is mandatory")
@@ -662,21 +653,9 @@ func (o *Operation) saveNationalIDDoc(vaultID string, vcResp []byte) (string, er
 		return "", fmt.Errorf("create edv doc id : %w", err)
 	}
 
-	docReq := saveDocReq{
-		ID:      docID,
-		Content: vcResp,
-	}
-
-	docReqBytes, err := json.Marshal(docReq)
+	_, err = o.vClient.SaveDoc(vaultID, docID, vcResp)
 	if err != nil {
-		return "", fmt.Errorf("marshal save doc req : %w", err)
-	}
-
-	endpoint := o.vaultServerURL + fmt.Sprintf("/vaults/%s/docs", url.QueryEscape(vaultID))
-
-	_, err = o.sendHTTPRequest(http.MethodPost, endpoint, docReqBytes, http.StatusCreated, "")
-	if err != nil {
-		return "", fmt.Errorf("save doc to vault - url:%s err : %w", endpoint, err)
+		return "", fmt.Errorf("failed to save doc : %w", err)
 	}
 
 	return docID, nil

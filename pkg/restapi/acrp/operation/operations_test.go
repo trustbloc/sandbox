@@ -23,6 +23,7 @@ import (
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/stretchr/testify/require"
 	mockstorage "github.com/trustbloc/edge-core/pkg/storage/mockstore"
+	"github.com/trustbloc/edge-service/pkg/restapi/vault"
 )
 
 const (
@@ -66,8 +67,9 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil, nil, nil),
+			doFunc: mockHTTPResponse(t, nil),
 		}
+		svc.vClient = &mockVaultClient{}
 
 		rr := httptest.NewRecorder()
 
@@ -111,8 +113,9 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil, nil, nil),
+			doFunc: mockHTTPResponse(t, nil),
 		}
+		svc.vClient = &mockVaultClient{}
 
 		rr := httptest.NewRecorder()
 
@@ -154,8 +157,9 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil, nil, nil),
+			doFunc: mockHTTPResponse(t, nil),
 		}
+		svc.vClient = &mockVaultClient{}
 
 		rr := httptest.NewRecorder()
 
@@ -181,6 +185,7 @@ func TestRegister(t *testing.T) {
 				StatusCode: http.StatusInternalServerError, Body: ioutil.NopCloser(strings.NewReader("vault error")),
 			},
 		}
+		svc.vClient = &mockVaultClient{CreateVaultErr: errors.New("vault error")}
 
 		rr := httptest.NewRecorder()
 
@@ -231,8 +236,9 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil, nil, nil),
+			doFunc: mockHTTPResponse(t, nil),
 		}
+		svc.vClient = &mockVaultClient{}
 
 		rr := httptest.NewRecorder()
 
@@ -258,8 +264,9 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil, &mockHTTPResponseData{status: http.StatusInternalServerError}, nil),
+			doFunc: mockHTTPResponse(t, &mockHTTPResponseData{status: http.StatusInternalServerError}),
 		}
+		svc.vClient = &mockVaultClient{}
 
 		rr := httptest.NewRecorder()
 
@@ -281,8 +288,9 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil, nil, &mockHTTPResponseData{status: http.StatusInternalServerError}),
+			doFunc: mockHTTPResponse(t, nil),
 		}
+		svc.vClient = &mockVaultClient{SaveDocErr: errors.New("save error")}
 
 		rr := httptest.NewRecorder()
 
@@ -1157,27 +1165,14 @@ func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	return m.respValue, nil
 }
 
-// nolint: unparam
-func mockHTTPResponse(t *testing.T, vaultResp, vcResp,
-	saveDocResp *mockHTTPResponseData) func(req *http.Request) (*http.Response, error) {
+func mockHTTPResponse(t *testing.T, vcResp *mockHTTPResponseData) func(req *http.Request) (*http.Response, error) {
 	return func(req *http.Request) (*http.Response, error) {
 		status := http.StatusCreated
 		respByes := []byte("")
 
 		var err error
 
-		switch req.URL.Path {
-		case "/vaults":
-			if vaultResp != nil {
-				status = vaultResp.status
-				respByes = vaultResp.resp
-			} else {
-				respByes, err = json.Marshal(createVaultResp{
-					ID: uuid.New().URN(),
-				})
-				require.NoError(t, err)
-			}
-		case "/credentials/issueCredential":
+		if req.URL.Path == "/credentials/issueCredential" {
 			resp := verifiable.Credential{}
 
 			respByes, err = resp.MarshalJSON()
@@ -1185,10 +1180,6 @@ func mockHTTPResponse(t *testing.T, vaultResp, vcResp,
 
 			if vcResp != nil {
 				status = vcResp.status
-			}
-		default:
-			if saveDocResp != nil {
-				status = saveDocResp.status
 			}
 		}
 
@@ -1210,5 +1201,27 @@ func mockHTTPResponse(t *testing.T, vaultResp, vcResp,
 
 type mockHTTPResponseData struct {
 	status int
-	resp   []byte
+}
+
+type mockVaultClient struct {
+	CreateVaultErr error
+	SaveDocErr     error
+}
+
+func (m *mockVaultClient) CreateVault() (*vault.CreatedVault, error) {
+	if m.CreateVaultErr != nil {
+		return nil, m.CreateVaultErr
+	}
+
+	return &vault.CreatedVault{
+		ID: "did:key:123",
+	}, nil
+}
+
+func (m *mockVaultClient) SaveDoc(vaultID, id string, content interface{}) (*vault.DocumentMetadata, error) {
+	if m.SaveDocErr != nil {
+		return nil, m.SaveDocErr
+	}
+
+	return nil, nil
 }
