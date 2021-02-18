@@ -37,7 +37,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 12, len(svc.GetRESTHandlers()))
+		require.Equal(t, 13, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -450,6 +450,55 @@ func TestLogin(t *testing.T) {
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "invalid password")
 	})
+
+	t.Run("db error", func(t *testing.T) {
+		uDataBytes, err := json.Marshal(&userData{
+			Password: samplePassword,
+		})
+		require.NoError(t, err)
+
+		s := make(map[string][]byte)
+		s[sampleUserName] = uDataBytes
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s, ErrPut: errors.New("db error")}},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{Form: make(map[string][]string)}
+		req.Form.Add(username, sampleUserName)
+		req.Form.Add(password, samplePassword)
+
+		svc.login(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to save session")
+	})
+}
+
+func TestLogout(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+			HomePageHTML:  file.Name(),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req := &http.Request{}
+
+		svc.logout(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
 }
 
 func TestConnect(t *testing.T) {
@@ -637,24 +686,35 @@ func TestConsent(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
-		rr := httptest.NewRecorder()
+		svc.vClient = &mockVaultClient{}
+
+		sessionid := uuid.New().String()
+		s[sessionid] = []byte(sampleUserName)
+
+		b, err := json.Marshal(&userData{})
+		require.NoError(t, err)
+		s[sampleUserName] = b
 
 		data := &sessionData{
 			State:       uuid.New().String(),
 			CallbackURL: "https://url/callback",
 		}
-
-		b, err := json.Marshal(data)
+		b, err = json.Marshal(data)
 		require.NoError(t, err)
 
-		sessionid := uuid.New().String()
-		s[sessionid] = b
+		stateID := uuid.New().String()
+		s[stateID] = b
 
 		req, err := http.NewRequest("GET", "", nil)
 		require.NoError(t, err)
 
-		cookie := http.Cookie{Name: idCookie, Value: sessionid}
+		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
 		req.AddCookie(&cookie)
+
+		cookie = http.Cookie{Name: idCookie, Value: stateID}
+		req.AddCookie(&cookie)
+
+		rr := httptest.NewRecorder()
 
 		svc.consent(rr, req)
 		require.Equal(t, http.StatusFound, rr.Code)
@@ -667,7 +727,7 @@ func TestConsent(t *testing.T) {
 		require.NotEmpty(t, ep.Query().Get("auth"))
 	})
 
-	t.Run("missing cookie", func(t *testing.T) {
+	t.Run("missing session cookie", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider:  &mockstorage.Provider{},
 			AccountLinkURL: "http://third-party-svc",
@@ -679,6 +739,27 @@ func TestConsent(t *testing.T) {
 
 		req, err := http.NewRequest("GET", "", nil)
 		require.NoError(t, err)
+
+		svc.consent(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get session cookie")
+	})
+
+	t.Run("missing id cookie", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider:  &mockstorage.Provider{},
+			AccountLinkURL: "http://third-party-svc",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", "", nil)
+		require.NoError(t, err)
+
+		cookie := http.Cookie{Name: sessionidCookie, Value: uuid.New().String()}
+		req.AddCookie(&cookie)
 
 		svc.consent(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
@@ -699,7 +780,10 @@ func TestConsent(t *testing.T) {
 		req, err := http.NewRequest("GET", "", nil)
 		require.NoError(t, err)
 
-		cookie := http.Cookie{Name: idCookie, Value: uuid.New().String()}
+		cookie := http.Cookie{Name: sessionidCookie, Value: uuid.New().String()}
+		req.AddCookie(&cookie)
+
+		cookie = http.Cookie{Name: idCookie, Value: uuid.New().String()}
 		req.AddCookie(&cookie)
 
 		svc.consent(rr, req)
@@ -707,7 +791,40 @@ func TestConsent(t *testing.T) {
 		require.Contains(t, rr.Body.String(), "failed to get session data")
 	})
 
-	t.Run("invalid session data", func(t *testing.T) {
+	t.Run("stateID not found", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			AccountLinkURL:  "http://third-party-svc",
+			HostExternalURL: "http://my-external",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		sessionid := uuid.New().String()
+		s[sessionid] = []byte(sampleUserName)
+
+		b, err := json.Marshal(&userData{})
+		require.NoError(t, err)
+		s[sampleUserName] = b
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", "", nil)
+		require.NoError(t, err)
+
+		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
+		req.AddCookie(&cookie)
+
+		cookie = http.Cookie{Name: idCookie, Value: uuid.New().String()}
+		req.AddCookie(&cookie)
+
+		svc.consent(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get state data")
+	})
+
+	t.Run("no data for the user", func(t *testing.T) {
 		s := make(map[string][]byte)
 		svc, err := New(&Config{
 			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
@@ -717,20 +834,59 @@ func TestConsent(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
-		rr := httptest.NewRecorder()
-
 		sessionid := uuid.New().String()
-		s[sessionid] = []byte("invalid data")
+		s[sessionid] = []byte(sampleUserName)
 
 		req, err := http.NewRequest("GET", "", nil)
 		require.NoError(t, err)
 
-		cookie := http.Cookie{Name: idCookie, Value: sessionid}
+		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
 		req.AddCookie(&cookie)
+
+		cookie = http.Cookie{Name: idCookie, Value: uuid.New().String()}
+		req.AddCookie(&cookie)
+
+		rr := httptest.NewRecorder()
+
+		svc.consent(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get user data")
+	})
+
+	t.Run("invalid state data", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL: "http://my-external",
+			AccountLinkURL:  "http://third-party-svc",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		sessionid := uuid.New().String()
+		s[sessionid] = []byte(sampleUserName)
+
+		b, err := json.Marshal(&userData{})
+		require.NoError(t, err)
+		s[sampleUserName] = b
+
+		stateID := uuid.New().String()
+		s[stateID] = []byte("invalid data")
+
+		req, err := http.NewRequest("GET", "", nil)
+		require.NoError(t, err)
+
+		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
+		req.AddCookie(&cookie)
+
+		cookie = http.Cookie{Name: idCookie, Value: stateID}
+		req.AddCookie(&cookie)
+
+		rr := httptest.NewRecorder()
 
 		svc.consent(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to unmarshal session data")
+		require.Contains(t, rr.Body.String(), "failed to unmarshal state data")
 	})
 }
 
@@ -1204,8 +1360,9 @@ type mockHTTPResponseData struct {
 }
 
 type mockVaultClient struct {
-	CreateVaultErr error
-	SaveDocErr     error
+	CreateVaultErr         error
+	SaveDocErr             error
+	CreateAuthorizationErr error
 }
 
 func (m *mockVaultClient) CreateVault() (*vault.CreatedVault, error) {
@@ -1221,6 +1378,15 @@ func (m *mockVaultClient) CreateVault() (*vault.CreatedVault, error) {
 func (m *mockVaultClient) SaveDoc(vaultID, id string, content interface{}) (*vault.DocumentMetadata, error) {
 	if m.SaveDocErr != nil {
 		return nil, m.SaveDocErr
+	}
+
+	return nil, nil
+}
+
+func (m *mockVaultClient) CreateAuthorization(vaultID, requestingParty string,
+	scope *vault.AuthorizationsScope) (*vault.CreatedAuthorization, error) {
+	if m.CreateAuthorizationErr != nil {
+		return nil, m.CreateAuthorizationErr
 	}
 
 	return nil, nil

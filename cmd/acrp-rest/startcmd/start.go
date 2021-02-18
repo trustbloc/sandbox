@@ -299,6 +299,7 @@ func startRP(parameters *rpParameters) error {
 
 	cfg := &operation.Config{
 		StoreProvider:   storeProvider,
+		HomePageHTML:    basePath + "/index.html",
 		DashboardHTML:   basePath + "/dashboard.html",
 		ConsentHTML:     basePath + "/consent.html",
 		TLSConfig:       tlsConfig,
