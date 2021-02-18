@@ -35,6 +35,7 @@ const (
 	// api paths
 	register            = "/register"
 	login               = "/login"
+	logout              = "/logout"
 	connect             = "/connect"
 	disconnect          = "/disconnect"
 	link                = "/link"
@@ -57,6 +58,7 @@ const (
 	actionCookie     = "action"
 	idCookie         = "id"
 	linkAction       = "link"
+	sessionidCookie  = "sessionid"
 	cookieExpiryTime = 5
 
 	vcsIssuerRequestTokenName = "vcs_issuer"
@@ -71,6 +73,9 @@ const (
 
 var logger = log.New("acrp-restapi")
 
+// nolint: gochecknoglobals
+var cookieExpTime = time.Now().Add(cookieExpiryTime * time.Minute)
+
 type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
@@ -78,6 +83,8 @@ type httpClient interface {
 type vaultClient interface {
 	CreateVault() (*vault.CreatedVault, error)
 	SaveDoc(vaultID, id string, content interface{}) (*vault.DocumentMetadata, error)
+	CreateAuthorization(vaultID, requestingParty string,
+		scope *vault.AuthorizationsScope) (*vault.CreatedAuthorization, error)
 }
 
 // Handler http handler for each controller API endpoint.
@@ -91,6 +98,7 @@ type Handler interface {
 type Operation struct {
 	store           storage.Store
 	handlers        []Handler
+	homePageHTML    string
 	dashboardHTML   string
 	consentHTML     string
 	httpClient      httpClient
@@ -104,6 +112,7 @@ type Operation struct {
 // Config config.
 type Config struct {
 	StoreProvider   storage.Provider
+	HomePageHTML    string
 	DashboardHTML   string
 	ConsentHTML     string
 	TLSConfig       *tls.Config
@@ -125,6 +134,7 @@ func New(config *Config) (*Operation, error) {
 
 	op := &Operation{
 		store:           store,
+		homePageHTML:    config.HomePageHTML,
 		dashboardHTML:   config.DashboardHTML,
 		consentHTML:     config.ConsentHTML,
 		httpClient:      httpClient,
@@ -145,6 +155,7 @@ func (o *Operation) registerHandler() {
 	o.handlers = []Handler{
 		support.NewHTTPHandler(register, http.MethodPost, o.register),
 		support.NewHTTPHandler(login, http.MethodPost, o.login),
+		support.NewHTTPHandler(logout, http.MethodGet, o.logout),
 		support.NewHTTPHandler(connect, http.MethodGet, o.connect),
 		support.NewHTTPHandler(disconnect, http.MethodGet, o.disconnect),
 		support.NewHTTPHandler(link, http.MethodGet, o.link),
@@ -264,6 +275,18 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sessionID := uuid.New().String()
+
+	err = o.store.Put(sessionID, []byte(r.FormValue(username)))
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to save session : %s", err.Error()))
+
+		return
+	}
+
+	cookie := http.Cookie{Name: sessionidCookie, Value: sessionID, Expires: cookieExpTime}
+	http.SetCookie(w, &cookie)
+
 	if actionCookie != nil && actionCookie.Value == linkAction {
 		o.loadHTML(w, o.consentHTML, map[string]interface{}{})
 
@@ -271,6 +294,12 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	o.showDashboard(w, r.FormValue(username), true)
+}
+
+func (o *Operation) logout(w http.ResponseWriter, r *http.Request) {
+	clearCookies(w)
+
+	o.loadHTML(w, o.homePageHTML, map[string]interface{}{})
 }
 
 func (o *Operation) connect(w http.ResponseWriter, r *http.Request) {
@@ -357,17 +386,25 @@ func (o *Operation) link(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// set cookies
-	expire := time.Now().Add(cookieExpiryTime * time.Minute)
-	cookie := http.Cookie{Name: actionCookie, Value: linkAction, Expires: expire}
+	cookie := http.Cookie{Name: actionCookie, Value: linkAction, Expires: cookieExpTime}
 	http.SetCookie(w, &cookie)
 
-	cookie = http.Cookie{Name: idCookie, Value: sessionid, Expires: expire}
+	cookie = http.Cookie{Name: idCookie, Value: sessionid, Expires: cookieExpTime}
 	http.SetCookie(w, &cookie)
 
 	http.Redirect(w, r, "/showlogin", http.StatusFound)
 }
 
+// nolint: funlen
 func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
+	// get the session id
+	sessionidCookieData, err := r.Cookie(sessionidCookie)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get session cookie: %s", err.Error()))
+
+		return
+	}
+
 	// get the session id
 	idCookieData, err := r.Cookie(idCookie)
 	if err != nil {
@@ -376,10 +413,24 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	username, err := o.store.Get(sessionidCookieData.Value)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get session data: %s", err.Error()))
+
+		return
+	}
+
+	userData, err := o.getUserData(string(username))
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get user data: %s", err.Error()))
+
+		return
+	}
+
 	// get the session data from db
 	dataBytes, err := o.store.Get(idCookieData.Value)
 	if err != nil {
-		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get session data: %s", err.Error()))
+		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get state data: %s", err.Error()))
 
 		return
 	}
@@ -389,19 +440,14 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(dataBytes, &data)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to unmarshal session data: %s", err.Error()))
+			fmt.Sprintf("failed to unmarshal state data: %s", err.Error()))
 
 		return
 	}
 
 	logger.Infof("consent : callback url= %s state=%s", data.CallbackURL, data.State)
 
-	// invalid the cookies
-	cookie := http.Cookie{Name: actionCookie, Value: "", MaxAge: -1}
-	http.SetCookie(w, &cookie)
-
-	cookie = http.Cookie{Name: idCookie, Value: "", MaxAge: -1}
-	http.SetCookie(w, &cookie)
+	logger.Infof("consent : vaultID= %s", userData.VaultID)
 
 	// TODO call vault-server /vaults/{vaultID}/authorizations  api
 
@@ -409,6 +455,9 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 
 	// TODO pass the zccap to the caller.
 	auth := uuid.New().String()
+
+	// invalid the cookies
+	clearCookies(w)
 
 	http.Redirect(w, r, fmt.Sprintf("%s?state=%s&auth=%s", data.CallbackURL, data.State, auth), http.StatusFound)
 }
@@ -698,4 +747,15 @@ func (o *Operation) sendHTTPRequest(method, endpoint string, reqBody []byte, sta
 	}
 
 	return respBody, nil
+}
+
+func clearCookies(w http.ResponseWriter) {
+	cookie := http.Cookie{Name: actionCookie, Value: "", MaxAge: -1}
+	http.SetCookie(w, &cookie)
+
+	cookie = http.Cookie{Name: sessionidCookie, Value: "", MaxAge: -1}
+	http.SetCookie(w, &cookie)
+
+	cookie = http.Cookie{Name: idCookie, Value: "", MaxAge: -1}
+	http.SetCookie(w, &cookie)
 }
