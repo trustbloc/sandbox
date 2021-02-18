@@ -10,8 +10,8 @@ SPDX-License-Identifier: Apache-2.0
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta charset="utf-8">
-    <link rel="icon" type="images/x-icon" href="../img/logo.png" >
-    <title>Dashboard</title>
+    <link rel="icon" type="images/x-icon" href="img/custom_logo.png" >
+    <title>Utopia Customs and Border Protection</title>
     <meta name="description" content="">
     <meta name="keywords" content="">
     <meta name="author" content="">
@@ -29,104 +29,128 @@ SPDX-License-Identifier: Apache-2.0
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-
     <style>
         .gradient {
-            background: linear-gradient(90deg, saddlebrown 60%, saddlebrown 100%);
+            background: linear-gradient(to right, #04244b, #004e92, #04244b);
         }
     </style>
-
 </head>
+<body class="leading-normal tracking-normal text-white" style="font-family: 'Source Sans Pro', sans-serif;" onload="showRandomNumber();">
+<div class="bg-red-100 border border-red-400 text-red-700 text-center rounded flex items-center justify-center" role="alert">
+    <strong class="font-bold">THIS IS NOT A GOVERNMENT SITE.</strong>
+    <span class="block sm:inline">&nbsp;It is demo site and all data is fake. Do not enter real account information or SSNs.</span>
+    <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+     </span>
+</div>
 
-<body class="leading-normal tracking-normal text-white gradient" style="font-family: 'Source Sans Pro', sans-serif;">
 
-<!--Nav-->
-<div class="pt-12">
-    <nav id="header" class="fixed w-full z-30 top-0 text-white ">
 
-        <div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0">
-
-            <div class="pl-6 flex items-center">
-                <a class="toggleColour text-white no-underline hover:no-underline font-bold text-xl lg:text-2xl"  href="/">
-                    <i class="fa fa-cubes" style="font-size:24px;color:white"></i>
-                    Employment Department
-                </a>
-            </div>
-
-            <div class="block lg:hidden pr-4">
-                <button id="nav-toggle" class="flex items-center p-1 text-gray-300 hover:text-gray-900">
-                    <svg class="fill-current h-6 w-6" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/></svg>
-                </button>
-            </div>
-
-            <div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden lg:block mt-2 lg:mt-0 bg-white lg:bg-transparent text-black p-4 lg:p-0 z-20" id="nav-content">
-                <ul class="list-reset lg:flex justify-end flex-1 items-center">
-                    <li class="mr-3">
-                        <a class="inline-block text-gray-400 no-underline hover:text-green hover:text-underline py-2 px-4" href="https://github.com/trustbloc/sandbox">
-                            <i class="fa fa-github"></i></a>
-                    </li>
-                </ul>
+<div class="max-w mx-auto sm:px-6 lg:px-32" style="background-color: #04244b">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="flex items-center"> <img class="block lg:block h-64 w-auto" src="img/custom_border_logo.png"></div>
+        <div class="flex items-center justify-end"><a class="bg-white text-gray-900 shadow-lg h-10 w-10 rounded-full focus:outline mr-4 p-3" href="https://github.com/trustbloc/sandbox">
+                <i class="fa fa-github"></i></a></div>
+    </div>
+</div>
+<nav class = "opacity-95 gradient">
+    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+        <div class="relative flex items-center justify-between h-16">
+            <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
+                <div class="hidden sm:block sm:ml-6">
+                    <div class="flex space-x-4">
+                        <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
+                        <a href="/" class="text-white bold hover:bg-gray-700 hover:text-white px-3 py-6 rounded-md text-lg">Home</a>
+                    </div>
+                </div>
+                <div class="hidden sm:block sm:ml-6">
+                    <div class="flex space-x-4">
+                        <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
+                        <a href="/" class="text-white bold hover:bg-gray-700 hover:text-white px-3 py-6 rounded-md text-lg">Travel</a>
+                    </div>
+                </div>
             </div>
         </div>
-    </nav>
+    </div>
+</nav>
+<div class="grid grid-rows-3 grid-flow-col gap-4">
+    <!--Sidebar-->
+    <div class="row-span-3 text-blue-900  px-2">
+        <h1 class="text-gray-900 leading-tight px-4 py-4"> Travel</h1>
+        <ul class="list-reset flex flex-row md:flex-col text-center md:text-left">
+            <li class="mr-3 flex-1">
+                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800 no-underline hover:text-green-400 border-b-2 border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <i class="fa fa-plus pr-0 md:pr-3"></i><span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Advisories</span>
+                </a>
+            </li>
+            <li class="mr-3 flex-1">
+                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800 no-underline hover:text-green-400 border-b-2 border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <i class="fa fa-minus pr-0 md:pr-3"></i><span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Speed Pass Application </span>
+                </a>
+            </li>
+            <li class="mr-3 flex-1">
+                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800 no-underline hover:text-green-400 border-b-2 border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <i class="fa fa-plus  pr-0 md:pr-3"></i><span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">FAQs</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="row-span-3 col-span-3 px-2 py-8">
+        <h2 class="text-green-600 bold text-5xl">Application Complete! </h2>
+        <p class="text-lg  font-light leading-relaxed text-gray-800 py-8 px-2">
+            Thank you {{.UserName}}, your application for SpeedPass is now being processed.
+        </p>
+        <p class="text-lg font-light leading-relaxed text-gray-800 px-2">
+          Your application number is:   </p>
+        <p class="text-3xl font-light leading-relaxed text-black px-48" id="myNumber"></p>
 
-    <section class="bg-white border-b py-48" id="account-register" style="display:block">
-        <div class="container mx-auto flex  flex-wrap pt-1 pb-4">
-            <h1 class="w-full my-2 text-3xl text-center text-green-600">
-                Welcome {{.UserName}}
-            </h1>
-            <div class="container justify-center mx-auto flex flex-wrap">
-            </div>
-            <h2 class="w-full my-2 text-3xl text-center text-green-300">
-                {{if .ServiceLinked}}
-                    <a href="{{.URL}}">Click here</a> to disconnect from "Revenue Agency".
-                {{else}}
-                    <a href="{{.URL}}">Click here</a> to connect to "Revenue Agency".
-                {{end}}
-            </h2>
+        <p class="text-lg font-light leading-relaxed text-gray-800 px-2">
+            Keep this number handy, it will be required if you want to track your application progress.  </p>
+
+        <p class="text-3xl font-light leading-relaxed text-black px-2 py-4"> Link to My USCIS</p>
+
+        <p class="text-lg font-light leading-relaxed text-gray-800 px-2">
+           For  <a class="text-lg font-light leading-relaxed text-gray-800 italic bold">
+            faster and safer </a> access to your Application progress report, you can now link your Application
+          to your My USCIS account if you have one.</p>
+
+        <p class="text-lg font-light leading-relaxed text-gray-800 px-2 py-4">
+            You may then use your MYUSCIS account to log in and access all your Application resources, no need to
+            remember the application number or prove your identity each time.
+        </p>
+
+        <p class="text-lg font-light leading-relaxed text-gray-800 px-2 py-4">
+         To proceed you will: <br>
+         1. Be redirected to the My USCIS Account login page to log in.<br>
+         2. Be asked to share  your SSN on the file at USCIS with CBP for identity proofing. <br>
+         3. Be redirected back here for complete the linking.
+        </p>
+
+        <p class="text-lg font-light leading-relaxed text-gray-800 px-2 py-8">
+            We will not use your SSN for anything other than matching your My USCIS account with your application.
+        </p>
+
+        <a class=" w-64 bg-white hover:bg-blue-900 hover:shadow hover:text-white text-center text-gray-800 font-semibold py-4 px-4 border border-blue-900 rounded shadow"  href="{{.URL}}">
+            Redirect me to My USCIS to Link Accounts
+        </a>
+
+    </div>
+</div>
+
+<footer class="text-center gradient">
+    <section class="container mx-auto text-center">
+        <div class="text-sm text-white font py-6">
+            <img class="object-contain object-top-center h-32 w-full" src="img/custom_logo.png">
+            Copyright &copy; <a href="https://securekey.com/"  class="text-white hover:text-green-700" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
         </div>
     </section>
-    <footer>
-        <section class="container mx-auto text-center py-2 mb-12">
-            <div class="text-lg text-white font py-1">
-                Copyright &copy; <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
-            </div>
-        </section>
-    </footer>
-
-    <script>
-        var navMenuDiv = document.getElementById("nav-content");
-        var navMenu = document.getElementById("nav-toggle");
-
-        document.onclick = check;
-
-        function check(e){
-            var target = (e && e.target) || (event && event.srcElement);
-
-            //Nav Menu
-            if (!checkParent(target, navMenuDiv)) {
-                // click NOT on the menu
-                if (checkParent(target, navMenu)) {
-                    // click on the link
-                    if (navMenuDiv.classList.contains("hidden")) {
-                        navMenuDiv.classList.remove("hidden");
-                    } else {navMenuDiv.classList.add("hidden");}
-                } else {
-                    // click both outside link and outside menu, hide menu
-                    navMenuDiv.classList.add("hidden");
-                }
-            }
-        }
-
-        function checkParent(t, elm) {
-            while(t.parentNode) {
-                if( t == elm ) {return true;}
-                t = t.parentNode;
-            }
-            return false;
-        }
-    </script>
+</footer>
 </body>
+<script src="https://randojs.com/1.0.0.js"></script>
+<script>
+    function showRandomNumber(){
+        document.getElementById("myNumber").innerHTML = rando(1000000000, 1000000000000);
+    }
+</script>
 </html>
 
 
