@@ -67,10 +67,14 @@ const (
 
 	// external paths
 	issueCredentialURLFormat = "%s" + "/credentials/issueCredential"
-	accountLinkURLFormat     = "%s/link?callback=%s/callback&state=%s"
+	accountLinkURLFormat     = "%s/link?client_id=%s&callback=%s/callback&state=%s"
 
 	// json-ld
 	credentialContext = "https://www.w3.org/2018/credentials/v1"
+
+	// TODO - remove this hard-coded val
+	// clientID
+	clientID = "rev-agency-profile"
 )
 
 var logger = log.New("acrp-restapi")
@@ -316,7 +320,7 @@ func (o *Operation) connect(w http.ResponseWriter, r *http.Request) {
 
 	// TODO store state data
 
-	endpoint := fmt.Sprintf(accountLinkURLFormat, o.accountLinkURL, o.hostExternalURL, state)
+	endpoint := fmt.Sprintf(accountLinkURLFormat, o.accountLinkURL, clientID, o.hostExternalURL, state)
 
 	http.Redirect(w, r, endpoint, http.StatusFound)
 }
@@ -349,8 +353,15 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 	o.showDashboard(w, "username", true)
 }
 
-func (o *Operation) link(w http.ResponseWriter, r *http.Request) {
+func (o *Operation) link(w http.ResponseWriter, r *http.Request) { // nolint: funlen
 	// TODO use OIDC to link accounts
+	clientID := r.URL.Query()["client_id"]
+	if len(clientID) == 0 {
+		o.writeErrorResponse(w, http.StatusBadRequest, "missing client_id")
+
+		return
+	}
+
 	callback := r.URL.Query()["callback"]
 	if len(callback) == 0 {
 		o.writeErrorResponse(w, http.StatusBadRequest, "missing callback url")
@@ -365,11 +376,31 @@ func (o *Operation) link(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Infof("link : callback url= %s state=%s", callback, state)
+	logger.Infof("link : clientID=%s callback url= %s state=%s", clientID, callback, state)
 
-	sessionid := uuid.New().String()
+	cDataBytes, err := o.store.Get(clientID[0])
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to client data: %s", err.Error()))
 
-	data := sessionData{State: state[0], CallbackURL: callback[0]}
+		return
+	}
+
+	var cData *clientData
+
+	err = json.Unmarshal(cDataBytes, &cData)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to unmarshal client data: %s", err.Error()))
+
+		return
+	}
+
+	data := sessionData{
+		State:       state[0],
+		CallbackURL: callback[0],
+		DID:         cData.DID,
+	}
 
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
@@ -378,6 +409,8 @@ func (o *Operation) link(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	sessionid := uuid.New().String()
 
 	err = o.store.Put(sessionid, dataBytes)
 	if err != nil {
@@ -447,13 +480,12 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Infof("consent : callback url= %s state=%s", data.CallbackURL, data.State)
+	logger.Infof("consent - createAuthorization : vaultID=%s rpDID=%s docID=%s",
+		userData.VaultID, data.DID, userData.NationalIDDocID)
 
-	logger.Infof("consent : vaultID= %s", userData.VaultID)
-
-	// TODO update rp did doc, now using vaultID
-	_, err = o.vClient.CreateAuthorization(userData.VaultID, userData.VaultID, &vault.AuthorizationsScope{
-		Target:  userData.VaultID,
+	// TODO https://github.com/trustbloc/sandbox/issues/799 update rp did ID, now using vaultID
+	docAuth, err := o.vClient.CreateAuthorization(userData.VaultID, userData.VaultID, &vault.AuthorizationsScope{
+		Target:  userData.NationalIDDocID,
 		Actions: []string{"read"},
 		Caveats: []vault.Caveat{{Type: zcapld.CaveatTypeExpiry, Duration: uint64(authExpiryTime * time.Second)}},
 	})
@@ -464,6 +496,14 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if docAuth == nil || docAuth.Tokens == nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError, "missing auth token from vault-server")
+
+		return
+	}
+
+	logger.Infof("docAuthToken : edv=%s kms=%s", docAuth.Tokens.EDV, docAuth.Tokens.KMS)
+
 	// TODO call comparator-service /authorization  api
 
 	// TODO pass the zccap to the caller.
@@ -471,6 +511,8 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 
 	// invalid the cookies
 	clearCookies(w)
+
+	logger.Infof("consent : callback url= %s state=%s", data.CallbackURL, data.State)
 
 	http.Redirect(w, r, fmt.Sprintf("%s?state=%s&auth=%s", data.CallbackURL, data.State, auth), http.StatusFound)
 }

@@ -588,21 +588,29 @@ func TestDisconnect(t *testing.T) {
 
 func TestAccountLink(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
+		s := make(map[string][]byte)
+
 		svc, err := New(&Config{
-			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			HostExternalURL: "http://my-external",
 			AccountLinkURL:  "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
-		rr := httptest.NewRecorder()
+		cID := uuid.New().String()
+		cIDBytes, err := json.Marshal(&clientData{})
+		require.NoError(t, err)
+
+		s[cID] = cIDBytes
 
 		state := uuid.New().String()
-		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkURL, svc.hostExternalURL, state)
+		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkURL, cID, svc.hostExternalURL, state)
 
 		req, err := http.NewRequest("GET", endpoint, nil)
 		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
 
 		svc.link(rr, req)
 		require.Equal(t, http.StatusFound, rr.Code)
@@ -611,6 +619,24 @@ func TestAccountLink(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, ep.Path, "/showlogin")
+	})
+
+	t.Run("no clientID", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider:  &mockstorage.Provider{},
+			AccountLinkURL: "http://third-party-svc",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", "", nil)
+		require.NoError(t, err)
+
+		svc.link(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "missing client_id")
 	})
 
 	t.Run("no callback url", func(t *testing.T) {
@@ -623,7 +649,7 @@ func TestAccountLink(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		req, err := http.NewRequest("GET", "", nil)
+		req, err := http.NewRequest("GET", svc.accountLinkURL+"/link?client_id="+uuid.New().String(), nil)
 		require.NoError(t, err)
 
 		svc.link(rr, req)
@@ -642,7 +668,8 @@ func TestAccountLink(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		req, err := http.NewRequest("GET", svc.accountLinkURL+"/link?callback="+svc.hostExternalURL, nil)
+		req, err := http.NewRequest("GET",
+			svc.accountLinkURL+"/link?callback="+svc.hostExternalURL+"&client_id="+uuid.New().String(), nil)
 		require.NoError(t, err)
 
 		svc.link(rr, req)
@@ -650,10 +677,10 @@ func TestAccountLink(t *testing.T) {
 		require.Contains(t, rr.Body.String(), "missing state")
 	})
 
-	t.Run("store error", func(t *testing.T) {
+	t.Run("client not found", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPut: errors.New("store error")},
+				Store: &mockstorage.MockStore{Store: make(map[string][]byte)},
 			},
 			HostExternalURL: "http://my-external",
 			AccountLinkURL:  "http://third-party-svc",
@@ -661,13 +688,72 @@ func TestAccountLink(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
-		rr := httptest.NewRecorder()
-
 		state := uuid.New().String()
-		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkURL, svc.hostExternalURL, state)
+		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkURL, uuid.New().String(), svc.hostExternalURL, state)
 
 		req, err := http.NewRequest("GET", endpoint, nil)
 		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.link(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to client data")
+	})
+
+	t.Run("invalid client data", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: s, ErrPut: errors.New("store error")},
+			},
+			HostExternalURL: "http://my-external",
+			AccountLinkURL:  "http://third-party-svc",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		cID := uuid.New().String()
+		s[cID] = []byte("invalid json")
+
+		state := uuid.New().String()
+		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkURL, cID, svc.hostExternalURL, state)
+
+		req, err := http.NewRequest("GET", endpoint, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.link(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to unmarshal client data")
+	})
+
+	t.Run("store error", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: s, ErrPut: errors.New("store error")},
+			},
+			HostExternalURL: "http://my-external",
+			AccountLinkURL:  "http://third-party-svc",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		cID := uuid.New().String()
+		cIDBytes, err := json.Marshal(&clientData{})
+		require.NoError(t, err)
+
+		s[cID] = cIDBytes
+
+		state := uuid.New().String()
+		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkURL, cID, svc.hostExternalURL, state)
+
+		req, err := http.NewRequest("GET", endpoint, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
 
 		svc.link(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
@@ -932,6 +1018,51 @@ func TestConsent(t *testing.T) {
 		svc.consent(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to create vault authorization")
+	})
+
+	t.Run("no auth token", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL: "http://my-external",
+			AccountLinkURL:  "http://third-party-svc",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.vClient = &mockVaultClient{CreateAuthorizationResp: &vault.CreatedAuthorization{}}
+
+		sessionid := uuid.New().String()
+		s[sessionid] = []byte(sampleUserName)
+
+		b, err := json.Marshal(&userData{})
+		require.NoError(t, err)
+		s[sampleUserName] = b
+
+		data := &sessionData{
+			State:       uuid.New().String(),
+			CallbackURL: "https://url/callback",
+		}
+		b, err = json.Marshal(data)
+		require.NoError(t, err)
+
+		stateID := uuid.New().String()
+		s[stateID] = b
+
+		req, err := http.NewRequest("GET", "", nil)
+		require.NoError(t, err)
+
+		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
+		req.AddCookie(&cookie)
+
+		cookie = http.Cookie{Name: idCookie, Value: stateID}
+		req.AddCookie(&cookie)
+
+		rr := httptest.NewRecorder()
+
+		svc.consent(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "missing auth token from vault-server")
 	})
 }
 
@@ -1405,9 +1536,10 @@ type mockHTTPResponseData struct {
 }
 
 type mockVaultClient struct {
-	CreateVaultErr         error
-	SaveDocErr             error
-	CreateAuthorizationErr error
+	CreateVaultErr          error
+	SaveDocErr              error
+	CreateAuthorizationErr  error
+	CreateAuthorizationResp *vault.CreatedAuthorization
 }
 
 func (m *mockVaultClient) CreateVault() (*vault.CreatedVault, error) {
@@ -1434,5 +1566,9 @@ func (m *mockVaultClient) CreateAuthorization(vaultID, requestingParty string,
 		return nil, m.CreateAuthorizationErr
 	}
 
-	return nil, nil
+	if m.CreateAuthorizationResp != nil {
+		return m.CreateAuthorizationResp, nil
+	}
+
+	return &vault.CreatedAuthorization{Tokens: &vault.Tokens{EDV: uuid.New().String(), KMS: uuid.New().String()}}, nil
 }
