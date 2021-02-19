@@ -128,6 +128,7 @@ services:
     image: ${KMS_IMAGE}:${KMS_IMAGE_TAG}
     environment:
       - KMS_HOST_URL=0.0.0.0:8071
+      - KMS_BASE_URL=https://vault-kms.trustbloc.local
       - KMS_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - KMS_TLS_SYSTEMCERTPOOL=true
       - KMS_TLS_SERVE_CERT=/etc/tls/trustbloc.local.crt

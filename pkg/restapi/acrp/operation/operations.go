@@ -23,6 +23,7 @@ import (
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/storage"
+	"github.com/trustbloc/edge-core/pkg/zcapld"
 	vaultclient "github.com/trustbloc/edge-service/pkg/client/vault"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
 	"github.com/trustbloc/edge-service/pkg/restapi/vault"
@@ -60,6 +61,7 @@ const (
 	linkAction       = "link"
 	sessionidCookie  = "sessionid"
 	cookieExpiryTime = 5
+	authExpiryTime   = 5
 
 	vcsIssuerRequestTokenName = "vcs_issuer"
 
@@ -449,7 +451,18 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 
 	logger.Infof("consent : vaultID= %s", userData.VaultID)
 
-	// TODO call vault-server /vaults/{vaultID}/authorizations  api
+	// TODO update rp did doc, now using vaultID
+	_, err = o.vClient.CreateAuthorization(userData.VaultID, userData.VaultID, &vault.AuthorizationsScope{
+		Target:  userData.VaultID,
+		Actions: []string{"read"},
+		Caveats: []vault.Caveat{{Type: zcapld.CaveatTypeExpiry, Duration: uint64(authExpiryTime * time.Second)}},
+	})
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create vault authorization: %s", err.Error()))
+
+		return
+	}
 
 	// TODO call comparator-service /authorization  api
 
