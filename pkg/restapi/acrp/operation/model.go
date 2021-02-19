@@ -13,6 +13,7 @@ type userData struct {
 }
 
 type sessionData struct {
+	DID         string `json:"did"`
 	State       string `json:"state"`
 	CallbackURL string `json:"callbackURL"`
 }
