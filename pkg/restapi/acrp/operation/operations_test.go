@@ -888,6 +888,51 @@ func TestConsent(t *testing.T) {
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to unmarshal state data")
 	})
+
+	t.Run("vault create auth error", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL: "http://my-external",
+			AccountLinkURL:  "http://third-party-svc",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.vClient = &mockVaultClient{CreateAuthorizationErr: errors.New("vault auth error")}
+
+		sessionid := uuid.New().String()
+		s[sessionid] = []byte(sampleUserName)
+
+		b, err := json.Marshal(&userData{})
+		require.NoError(t, err)
+		s[sampleUserName] = b
+
+		data := &sessionData{
+			State:       uuid.New().String(),
+			CallbackURL: "https://url/callback",
+		}
+		b, err = json.Marshal(data)
+		require.NoError(t, err)
+
+		stateID := uuid.New().String()
+		s[stateID] = b
+
+		req, err := http.NewRequest("GET", "", nil)
+		require.NoError(t, err)
+
+		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
+		req.AddCookie(&cookie)
+
+		cookie = http.Cookie{Name: idCookie, Value: stateID}
+		req.AddCookie(&cookie)
+
+		rr := httptest.NewRecorder()
+
+		svc.consent(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to create vault authorization")
+	})
 }
 
 func TestAccountLinkCallback(t *testing.T) {
