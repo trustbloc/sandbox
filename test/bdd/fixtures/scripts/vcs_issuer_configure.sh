@@ -90,27 +90,6 @@ didkey_ed25519signature2018_ed25519=$(curl -o /dev/null -s -w "%{http_code}" --h
    --insecure https://issuer-vcs.trustbloc.local/profile)
 
 
-revAgencyComparatorConfig=$(.build/bin/demo comparator getConfig https://rev-agency-comparator.trustbloc.local)
-revAgencyComparatorConfigDID=$(echo "${revAgencyComparatorConfig}" | jq -r '.did')
-revAgencyComparatorConfigPrivateKey=$(echo "${revAgencyComparatorConfig}" | jq -r '.privateKey')
-revAgencyComparatorConfigKeyID=$(echo "${revAgencyComparatorConfig}" | jq -r '.keyID')
-
-vc_issuer_rev_agency=$(curl -o /dev/null -s -w "%{http_code}" --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
-   --request POST \
-   --data '{"name":"vc-issuer-rev-agency", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "did":"'"${revAgencyComparatorConfigDID}"'","didPrivateKey":"'"${revAgencyComparatorConfigPrivateKey}"'","didKeyID":"'"${revAgencyComparatorConfigKeyID}"'","signatureRepresentation":1,"didKeyType":"Ed25519"}' \
-   --insecure https://issuer-vcs.trustbloc.local/profile)
-
-empDeptComparatorConfig=$(.build/bin/demo comparator getConfig https://emp-dept-comparator.trustbloc.local)
-empDeptComparatorConfigDID=$(echo "${empDeptComparatorConfig}" | jq -r '.did')
-empDeptComparatorConfigPrivateKey=$(echo "${empDeptComparatorConfig}" | jq -r '.privateKey')
-empDeptComparatorConfigKeyID=$(echo "${empDeptComparatorConfig}" | jq -r '.keyID')
-
-vc_issuer_emp_dept=$(curl -o /dev/null -s -w "%{http_code}" --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
-   --request POST \
-   --data '{"name":"vc-issuer-emp-dept", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "did":"'"${empDeptComparatorConfigDID}"'","didPrivateKey":"'"${empDeptComparatorConfigPrivateKey}"'","didKeyID":"'"${empDeptComparatorConfigKeyID}"'","signatureRepresentation":1,"didKeyType":"Ed25519"}' \
-   --insecure https://issuer-vcs.trustbloc.local/profile)
-
-
 checkProfileIsCreated $trustbloc_ed25519signature2018_ed25519 trustbloc-ed5519signature2018-ed25519
 checkProfileIsCreated $trustbloc_jsonwebsignature2020_ed25519 trustbloc-jsonwebsignature2020-ed25519
 checkProfileIsCreated $trustbloc_jsonwebsignature2020_p256 trustbloc-jsonwebsignature2020-p256
@@ -123,5 +102,4 @@ checkProfileIsCreated $vc_issuer_interop vc-issuer-interop
 checkProfileIsCreated $elem_ed25519signature2018_ed25519 elem-ed25519signature2018-ed25519p
 #checkProfileIsCreated $sov_ed25519signature2018_ed25519 sov-ed25519signature2018-ed25519
 checkProfileIsCreated $didkey_ed25519signature2018_ed25519 didkey-ed25519signature2018-ed25519
-checkProfileIsCreated $vc_issuer_rev_agency vc_issuer_rev_agency
-checkProfileIsCreated $vc_issuer_emp_dept vc_issuer_emp_dept
+
