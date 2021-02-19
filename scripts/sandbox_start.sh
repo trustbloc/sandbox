@@ -289,6 +289,9 @@ healthCheck issuer $issuerHealthCheckURL 200
 healthCheck rp $rpHealthCheckURL 200
 healthCheck rev-agency-rp $revAgencyDemoRPHealthCheckURL 200
 healthCheck emp-dept-rp $empDeptDemoRPHealthCheckURL 200
+if ! test/bdd/fixtures/scripts/acrp_configure.sh; then
+   exit -1
+fi
 echo "#### Step 12 is complete"
 ###
 ### Step 13
