@@ -503,18 +503,25 @@ func TestLogout(t *testing.T) {
 
 func TestConnect(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
+		s := make(map[string][]byte)
+		profileID := uuid.New().String()
 		svc, err := New(&Config{
-			StoreProvider:   &mockstorage.Provider{},
-			HostExternalURL: "http://my-external",
-			AccountLinkURL:  "http://third-party-svc",
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL:    "http://my-external",
+			AccountLinkProfile: profileID,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
-		rr := httptest.NewRecorder()
+		dBytes, err := json.Marshal(&profileData{})
+		require.NoError(t, err)
+
+		s[profileID] = dBytes
 
 		req, err := http.NewRequest("GET", "/connect?userName="+sampleUserName, nil)
 		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
 
 		svc.connect(rr, req)
 		require.Equal(t, http.StatusFound, rr.Code)
@@ -542,6 +549,33 @@ func TestConnect(t *testing.T) {
 		svc.connect(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "missing username")
+	})
+
+	t.Run("data error", func(t *testing.T) {
+		s := make(map[string][]byte)
+		profileID := uuid.New().String()
+		svc, err := New(&Config{
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL:    "http://my-external",
+			AccountLinkProfile: profileID,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		req, err := http.NewRequest("GET", "/connect?userName="+sampleUserName, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.connect(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get profile data")
+
+		s[profileID] = nil
+
+		svc.connect(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to unmarshal profile")
 	})
 }
 
@@ -591,9 +625,9 @@ func TestAccountLink(t *testing.T) {
 		s := make(map[string][]byte)
 
 		svc, err := New(&Config{
-			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
-			HostExternalURL: "http://my-external",
-			AccountLinkURL:  "http://third-party-svc",
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL:    "http://my-external",
+			AccountLinkProfile: "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -605,7 +639,7 @@ func TestAccountLink(t *testing.T) {
 		s[cID] = cIDBytes
 
 		state := uuid.New().String()
-		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkURL, cID, svc.hostExternalURL, state)
+		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkProfile, cID, svc.hostExternalURL, state)
 
 		req, err := http.NewRequest("GET", endpoint, nil)
 		require.NoError(t, err)
@@ -623,8 +657,8 @@ func TestAccountLink(t *testing.T) {
 
 	t.Run("no clientID", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider:  &mockstorage.Provider{},
-			AccountLinkURL: "http://third-party-svc",
+			StoreProvider:      &mockstorage.Provider{},
+			AccountLinkProfile: "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -641,15 +675,15 @@ func TestAccountLink(t *testing.T) {
 
 	t.Run("no callback url", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider:  &mockstorage.Provider{},
-			AccountLinkURL: "http://third-party-svc",
+			StoreProvider:      &mockstorage.Provider{},
+			AccountLinkProfile: "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
 		rr := httptest.NewRecorder()
 
-		req, err := http.NewRequest("GET", svc.accountLinkURL+"/link?client_id="+uuid.New().String(), nil)
+		req, err := http.NewRequest("GET", svc.accountLinkProfile+"/link?client_id="+uuid.New().String(), nil)
 		require.NoError(t, err)
 
 		svc.link(rr, req)
@@ -659,9 +693,9 @@ func TestAccountLink(t *testing.T) {
 
 	t.Run("no state", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider:   &mockstorage.Provider{},
-			AccountLinkURL:  "http://third-party-svc",
-			HostExternalURL: "http://my-external",
+			StoreProvider:      &mockstorage.Provider{},
+			AccountLinkProfile: "http://third-party-svc",
+			HostExternalURL:    "http://my-external",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -669,7 +703,7 @@ func TestAccountLink(t *testing.T) {
 		rr := httptest.NewRecorder()
 
 		req, err := http.NewRequest("GET",
-			svc.accountLinkURL+"/link?callback="+svc.hostExternalURL+"&client_id="+uuid.New().String(), nil)
+			svc.accountLinkProfile+"/link?callback="+svc.hostExternalURL+"&client_id="+uuid.New().String(), nil)
 		require.NoError(t, err)
 
 		svc.link(rr, req)
@@ -682,14 +716,14 @@ func TestAccountLink(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{
 				Store: &mockstorage.MockStore{Store: make(map[string][]byte)},
 			},
-			HostExternalURL: "http://my-external",
-			AccountLinkURL:  "http://third-party-svc",
+			HostExternalURL:    "http://my-external",
+			AccountLinkProfile: "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
 		state := uuid.New().String()
-		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkURL, uuid.New().String(), svc.hostExternalURL, state)
+		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkProfile, uuid.New().String(), svc.hostExternalURL, state)
 
 		req, err := http.NewRequest("GET", endpoint, nil)
 		require.NoError(t, err)
@@ -707,8 +741,8 @@ func TestAccountLink(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{
 				Store: &mockstorage.MockStore{Store: s, ErrPut: errors.New("store error")},
 			},
-			HostExternalURL: "http://my-external",
-			AccountLinkURL:  "http://third-party-svc",
+			HostExternalURL:    "http://my-external",
+			AccountLinkProfile: "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -717,7 +751,7 @@ func TestAccountLink(t *testing.T) {
 		s[cID] = []byte("invalid json")
 
 		state := uuid.New().String()
-		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkURL, cID, svc.hostExternalURL, state)
+		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkProfile, cID, svc.hostExternalURL, state)
 
 		req, err := http.NewRequest("GET", endpoint, nil)
 		require.NoError(t, err)
@@ -735,8 +769,8 @@ func TestAccountLink(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{
 				Store: &mockstorage.MockStore{Store: s, ErrPut: errors.New("store error")},
 			},
-			HostExternalURL: "http://my-external",
-			AccountLinkURL:  "http://third-party-svc",
+			HostExternalURL:    "http://my-external",
+			AccountLinkProfile: "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -748,7 +782,7 @@ func TestAccountLink(t *testing.T) {
 		s[cID] = cIDBytes
 
 		state := uuid.New().String()
-		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkURL, cID, svc.hostExternalURL, state)
+		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkProfile, cID, svc.hostExternalURL, state)
 
 		req, err := http.NewRequest("GET", endpoint, nil)
 		require.NoError(t, err)
@@ -765,9 +799,9 @@ func TestConsent(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		s := make(map[string][]byte)
 		svc, err := New(&Config{
-			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
-			HostExternalURL: "http://my-external",
-			AccountLinkURL:  "http://third-party-svc",
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL:    "http://my-external",
+			AccountLinkProfile: "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -815,8 +849,8 @@ func TestConsent(t *testing.T) {
 
 	t.Run("missing session cookie", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider:  &mockstorage.Provider{},
-			AccountLinkURL: "http://third-party-svc",
+			StoreProvider:      &mockstorage.Provider{},
+			AccountLinkProfile: "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -833,8 +867,8 @@ func TestConsent(t *testing.T) {
 
 	t.Run("missing id cookie", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider:  &mockstorage.Provider{},
-			AccountLinkURL: "http://third-party-svc",
+			StoreProvider:      &mockstorage.Provider{},
+			AccountLinkProfile: "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -854,9 +888,9 @@ func TestConsent(t *testing.T) {
 
 	t.Run("sessionid not found", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
-			AccountLinkURL:  "http://third-party-svc",
-			HostExternalURL: "http://my-external",
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			AccountLinkProfile: "http://third-party-svc",
+			HostExternalURL:    "http://my-external",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -880,9 +914,9 @@ func TestConsent(t *testing.T) {
 	t.Run("stateID not found", func(t *testing.T) {
 		s := make(map[string][]byte)
 		svc, err := New(&Config{
-			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
-			AccountLinkURL:  "http://third-party-svc",
-			HostExternalURL: "http://my-external",
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			AccountLinkProfile: "http://third-party-svc",
+			HostExternalURL:    "http://my-external",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -913,9 +947,9 @@ func TestConsent(t *testing.T) {
 	t.Run("no data for the user", func(t *testing.T) {
 		s := make(map[string][]byte)
 		svc, err := New(&Config{
-			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
-			HostExternalURL: "http://my-external",
-			AccountLinkURL:  "http://third-party-svc",
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL:    "http://my-external",
+			AccountLinkProfile: "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -942,9 +976,9 @@ func TestConsent(t *testing.T) {
 	t.Run("invalid state data", func(t *testing.T) {
 		s := make(map[string][]byte)
 		svc, err := New(&Config{
-			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
-			HostExternalURL: "http://my-external",
-			AccountLinkURL:  "http://third-party-svc",
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL:    "http://my-external",
+			AccountLinkProfile: "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -978,9 +1012,9 @@ func TestConsent(t *testing.T) {
 	t.Run("vault create auth error", func(t *testing.T) {
 		s := make(map[string][]byte)
 		svc, err := New(&Config{
-			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
-			HostExternalURL: "http://my-external",
-			AccountLinkURL:  "http://third-party-svc",
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL:    "http://my-external",
+			AccountLinkProfile: "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1023,9 +1057,9 @@ func TestConsent(t *testing.T) {
 	t.Run("no auth token", func(t *testing.T) {
 		s := make(map[string][]byte)
 		svc, err := New(&Config{
-			StoreProvider:   &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
-			HostExternalURL: "http://my-external",
-			AccountLinkURL:  "http://third-party-svc",
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL:    "http://my-external",
+			AccountLinkProfile: "http://third-party-svc",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)

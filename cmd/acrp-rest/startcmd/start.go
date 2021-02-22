@@ -77,10 +77,10 @@ const (
 	hostExternalURLFlagUsage = "Host External URL."
 	hostExternalURLEnvKey    = "ACRP_HOST_EXTERNAL_URL"
 
-	// account link url
-	accountLinkURLFlagName  = "account-link-url"
-	accountLinkURLFlagUsage = "Account Link URL."
-	accountLinkURLEnvKey    = "ACRP_ACCOUNT_LINK_URL"
+	// account link profile id
+	accountLinkProfileFlagName  = "account-link-profile"
+	accountLinkProfileFlagUsage = "Account Link Profile."
+	accountLinkProfileEnvKey    = "ACRP_ACCOUNT_LINK_PROFILE"
 
 	tokenLength2 = 2
 )
@@ -107,20 +107,20 @@ func (s *HTTPServer) ListenAndServe(host, certFile, keyFile string, router http.
 }
 
 type rpParameters struct {
-	srv               server
-	hostURL           string
-	hostExternalURL   string
-	tlsCertFile       string
-	tlsKeyFile        string
-	tlsSystemCertPool bool
-	tlsCACerts        []string
-	logLevel          string
-	dbParams          *common.DBParameters
-	mode              string
-	vaultServerURL    string
-	vcIssuerURL       string
-	accountLinkURL    string
-	requestTokens     map[string]string
+	srv                server
+	hostURL            string
+	hostExternalURL    string
+	tlsCertFile        string
+	tlsKeyFile         string
+	tlsSystemCertPool  bool
+	tlsCACerts         []string
+	logLevel           string
+	dbParams           *common.DBParameters
+	mode               string
+	vaultServerURL     string
+	vcIssuerURL        string
+	accountLinkProfile string
+	requestTokens      map[string]string
 }
 
 type tlsConfig struct {
@@ -191,7 +191,8 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen, gocyclo
 				return err
 			}
 
-			accountLinkURL, err := cmdutils.GetUserSetVarFromString(cmd, accountLinkURLFlagName, accountLinkURLEnvKey, false)
+			accountLinkProfile, err := cmdutils.GetUserSetVarFromString(cmd,
+				accountLinkProfileFlagName, accountLinkProfileEnvKey, true)
 			if err != nil {
 				return err
 			}
@@ -202,20 +203,20 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen, gocyclo
 			}
 
 			parameters := &rpParameters{
-				srv:               srv,
-				hostURL:           strings.TrimSpace(hostURL),
-				hostExternalURL:   hostExternalURL,
-				tlsCertFile:       tlsConfg.certFile,
-				tlsKeyFile:        tlsConfg.keyFile,
-				tlsSystemCertPool: tlsConfg.systemCertPool,
-				tlsCACerts:        tlsConfg.caCerts,
-				logLevel:          loggingLevel,
-				dbParams:          dbParams,
-				mode:              demoMode,
-				vaultServerURL:    vaultServerURL,
-				vcIssuerURL:       vcIssuerURL,
-				accountLinkURL:    accountLinkURL,
-				requestTokens:     requestTokens,
+				srv:                srv,
+				hostURL:            strings.TrimSpace(hostURL),
+				hostExternalURL:    hostExternalURL,
+				tlsCertFile:        tlsConfg.certFile,
+				tlsKeyFile:         tlsConfg.keyFile,
+				tlsSystemCertPool:  tlsConfg.systemCertPool,
+				tlsCACerts:         tlsConfg.caCerts,
+				logLevel:           loggingLevel,
+				dbParams:           dbParams,
+				mode:               demoMode,
+				vaultServerURL:     vaultServerURL,
+				vcIssuerURL:        vcIssuerURL,
+				accountLinkProfile: accountLinkProfile,
+				requestTokens:      requestTokens,
 			}
 
 			return startRP(parameters)
@@ -272,7 +273,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(vaultServerURLFlagName, "", "", vaultServerURLFlagUsage)
 	startCmd.Flags().StringP(vcIssuerURLFlagName, "", "", vcIssuerURLFlagUsage)
 	startCmd.Flags().StringP(hostExternalURLFlagName, "", "", hostExternalURLFlagUsage)
-	startCmd.Flags().StringP(accountLinkURLFlagName, "", "", accountLinkURLFlagUsage)
+	startCmd.Flags().StringP(accountLinkProfileFlagName, "", "", accountLinkProfileFlagUsage)
 	startCmd.Flags().StringArrayP(requestTokensFlagName, "", []string{}, requestTokensFlagUsage)
 	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
 }
@@ -307,7 +308,7 @@ func startRP(parameters *rpParameters) error {
 		TLSConfig:            tlsConfig,
 		VaultServerURL:       parameters.vaultServerURL,
 		VCIssuerURL:          parameters.vcIssuerURL,
-		AccountLinkURL:       parameters.accountLinkURL,
+		AccountLinkProfile:   parameters.accountLinkProfile,
 		HostExternalURL:      parameters.hostExternalURL,
 		RequestTokens:        parameters.requestTokens,
 	}

@@ -80,7 +80,6 @@ services:
       - ACRP_VAULT_SERVER_URL=https://vault.trustbloc.local
       - VIRTUAL_HOST=rev-agency-rp.trustbloc.local
       - ACRP_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-rev-agency
-      - ACRP_ACCOUNT_LINK_URL=https://emp-dept-rp.trustbloc.local
       - ACRP_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
     ports:
       - 5558:5558
@@ -104,7 +103,7 @@ services:
       - ACRP_VAULT_SERVER_URL=https://vault.trustbloc.local
       - VIRTUAL_HOST=emp-dept-rp.trustbloc.local
       - ACRP_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-emp-dept
-      - ACRP_ACCOUNT_LINK_URL=https://rev-agency-rp.trustbloc.local
+      - ACRP_ACCOUNT_LINK_PROFILE=rev-agency-profile
       - ACRP_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
     ports:
       - 5559:5559

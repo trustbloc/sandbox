@@ -71,8 +71,8 @@ validateProfileCreation $code $response acrp_client emp_dep_act_linking_client
 # create profile for rev_agency in emp_dept
 rev_agency_profile_at_emp_dept=$(curl -o /dev/null -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" \
    --request POST \
-   --data '{"id":"rev-agency-profile", "name":"Revenue Agency", "clientID":"'"${clientID}"'", "clientSecret":"'"${clientSecret}"'", "did":"'"${empDeptComparatorConfigDID}"'", "callback":"vc-issuer-emp-dept"}' \
-   --insecure https://rev-agency-rp.trustbloc.local/profile)
+   --data '{"id":"rev-agency-profile", "name":"Revenue Agency", "url":"https://rev-agency-rp.trustbloc.local", "clientID":"'"${clientID}"'", "clientSecret":"'"${clientSecret}"'", "did":"'"${empDeptComparatorConfigDID}"'", "callback":"vc-issuer-emp-dept"}' \
+   --insecure https://emp-dept-rp.trustbloc.local/profile)
 
 response=${rev_agency_profile_at_emp_dept//RESPONSE_CODE*/}
 code=${rev_agency_profile_at_emp_dept//*RESPONSE_CODE=/}

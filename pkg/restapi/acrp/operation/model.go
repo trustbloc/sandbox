@@ -41,6 +41,7 @@ type profileData struct {
 	Name         string `json:"name"`
 	ClientID     string `json:"clientID"`
 	ClientSecret string `json:"clientSecret"`
+	URL          string `json:"url"`
 	DID          string `json:"did"`
 	Callback     string `json:"callback"`
 }
