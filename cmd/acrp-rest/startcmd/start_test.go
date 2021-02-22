@@ -131,7 +131,7 @@ func getValidArgs(logLevel string) []string {
 	args = append(args, vaultServerURLArg()...)
 	args = append(args, vcIssuerURLArg()...)
 	args = append(args, hostExternalURLArg()...)
-	args = append(args, accountLinkURLArg()...)
+	args = append(args, accountLinkProfileArg()...)
 	args = append(args, requestTokensArg()...)
 
 	if logLevel != "" {
@@ -167,7 +167,7 @@ func TestDatabaseTypeArg(t *testing.T) {
 		args = append(args, vaultServerURLArg()...)
 		args = append(args, vcIssuerURLArg()...)
 		args = append(args, hostExternalURLArg()...)
-		args = append(args, accountLinkURLArg()...)
+		args = append(args, accountLinkProfileArg()...)
 		args = append(args, []string{flag + common.DatabasePrefixFlagName, "test"}...)
 		args = append(args, []string{flag + common.DatabaseURLFlagName, "invalid-driver://test"}...)
 		startCmd.SetArgs(args)
@@ -237,28 +237,6 @@ func TestHostExternalURLArg(t *testing.T) {
 	})
 }
 
-func TestAccountLinkURLArg(t *testing.T) {
-	t.Run("missing arg", func(t *testing.T) {
-		startCmd := GetStartCmd(&mockServer{})
-
-		var args []string
-		args = append(args, hostURLArg()...)
-		args = append(args, tlsCertFileArg()...)
-		args = append(args, tlsKeyFileArg()...)
-		args = append(args, databaseURLArg()...)
-		args = append(args, databasePrefixArg()...)
-		args = append(args, demoModeArg("rev")...)
-		args = append(args, vaultServerURLArg()...)
-		args = append(args, vcIssuerURLArg()...)
-		args = append(args, hostExternalURLArg()...)
-		startCmd.SetArgs(args)
-
-		err := startCmd.Execute()
-		require.Contains(t, err.Error(),
-			"Neither account-link-url (command line flag) nor ACRP_ACCOUNT_LINK_URL (environment variable) have been set.")
-	})
-}
-
 func TestTLSSystemCertPoolInvalidArgsEnvVar(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
@@ -321,7 +299,7 @@ func setEnvVars(t *testing.T) {
 	err = os.Setenv(hostExternalURLEnvKey, "https://my-external-url")
 	require.Nil(t, err)
 
-	err = os.Setenv(accountLinkURLEnvKey, "https://link-account")
+	err = os.Setenv(accountLinkProfileEnvKey, "https://link-account")
 	require.Nil(t, err)
 }
 
@@ -353,7 +331,7 @@ func unsetEnvVars(t *testing.T) {
 	err = os.Unsetenv(hostExternalURLEnvKey)
 	require.Nil(t, err)
 
-	err = os.Unsetenv(accountLinkURLEnvKey)
+	err = os.Unsetenv(accountLinkProfileEnvKey)
 	require.Nil(t, err)
 }
 
@@ -389,8 +367,8 @@ func hostExternalURLArg() []string {
 	return []string{flag + hostExternalURLFlagName, "https://my-external-url"}
 }
 
-func accountLinkURLArg() []string {
-	return []string{flag + accountLinkURLFlagName, "https://link-account"}
+func accountLinkProfileArg() []string {
+	return []string{flag + accountLinkProfileFlagName, "profile-abc"}
 }
 
 func databaseURLArg() []string {

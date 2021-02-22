@@ -71,10 +71,6 @@ const (
 
 	// json-ld
 	credentialContext = "https://www.w3.org/2018/credentials/v1"
-
-	// TODO - remove this hard-coded val
-	// clientID
-	clientID = "rev-agency-profile"
 )
 
 var logger = log.New("acrp-restapi")
@@ -112,7 +108,7 @@ type Operation struct {
 	httpClient           httpClient
 	vcIssuerURL          string
 	requestTokens        map[string]string
-	accountLinkURL       string
+	accountLinkProfile   string
 	hostExternalURL      string
 	vClient              vaultClient
 }
@@ -128,7 +124,7 @@ type Config struct {
 	TLSConfig            *tls.Config
 	VaultServerURL       string
 	VCIssuerURL          string
-	AccountLinkURL       string
+	AccountLinkProfile   string
 	HostExternalURL      string
 	RequestTokens        map[string]string
 }
@@ -151,7 +147,7 @@ func New(config *Config) (*Operation, error) {
 		accountLinkedHTML:    config.AccountLinkedHTML,
 		accountNotLinkedHTML: config.AccountNotLinkedHTML,
 		vcIssuerURL:          config.VCIssuerURL,
-		accountLinkURL:       config.AccountLinkURL,
+		accountLinkProfile:   config.AccountLinkProfile,
 		hostExternalURL:      config.HostExternalURL,
 		requestTokens:        config.RequestTokens,
 		vClient:              vaultclient.New(config.VaultServerURL, vaultclient.WithHTTPClient(httpClient)),
@@ -326,7 +322,24 @@ func (o *Operation) connect(w http.ResponseWriter, r *http.Request) {
 
 	// TODO store state data
 
-	endpoint := fmt.Sprintf(accountLinkURLFormat, o.accountLinkURL, clientID, o.hostExternalURL, state)
+	dataBytes, err := o.store.Get(o.accountLinkProfile)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get profile data : %s", err.Error()))
+
+		return
+	}
+
+	var data *profileData
+
+	err = json.Unmarshal(dataBytes, &data)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to unmarshal profile data : %s", err.Error()))
+		return
+	}
+
+	endpoint := fmt.Sprintf(accountLinkURLFormat, data.URL, data.ClientID, o.hostExternalURL, state)
 
 	http.Redirect(w, r, endpoint, http.StatusFound)
 }
@@ -558,7 +571,7 @@ func (o *Operation) createClient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	o.writeResponse(w, http.StatusCreated, clientResp{
-		ClientID:     uuid.New().String(),
+		ClientID:     data.ClientID,
 		ClientSecret: uuid.New().String(),
 		DID:          req.DID,
 		Callback:     req.Callback,
