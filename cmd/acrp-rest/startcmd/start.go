@@ -62,6 +62,11 @@ const (
 	vaultServerURLFlagUsage = "Vault Server URL."
 	vaultServerURLEnvKey    = "ACRP_VAULT_SERVER_URL"
 
+	// comparator url
+	comparatorURLFlagName  = "comparator-url"
+	comparatorURLFlagUsage = "Comparator URL."
+	comparatorURLEnvKey    = "ACRP_COMPARATOR_URL"
+
 	// vc issuer server url
 	vcIssuerURLFlagName  = "vc-issuer-url"
 	vcIssuerURLFlagUsage = "VC Issuer URL."
@@ -118,6 +123,7 @@ type rpParameters struct {
 	dbParams           *common.DBParameters
 	mode               string
 	vaultServerURL     string
+	comparatorURL      string
 	vcIssuerURL        string
 	accountLinkProfile string
 	requestTokens      map[string]string
@@ -202,6 +208,12 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen, gocyclo
 				return err
 			}
 
+			comparatorURL, err := cmdutils.GetUserSetVarFromString(cmd, comparatorURLFlagName,
+				comparatorURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
 			parameters := &rpParameters{
 				srv:                srv,
 				hostURL:            strings.TrimSpace(hostURL),
@@ -214,6 +226,7 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen, gocyclo
 				dbParams:           dbParams,
 				mode:               demoMode,
 				vaultServerURL:     vaultServerURL,
+				comparatorURL:      comparatorURL,
 				vcIssuerURL:        vcIssuerURL,
 				accountLinkProfile: accountLinkProfile,
 				requestTokens:      requestTokens,
@@ -271,6 +284,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
 	startCmd.Flags().StringP(demoModeFlagName, "", "", demoModeFlagUsage)
 	startCmd.Flags().StringP(vaultServerURLFlagName, "", "", vaultServerURLFlagUsage)
+	startCmd.Flags().StringP(comparatorURLFlagName, "", "", comparatorURLFlagUsage)
 	startCmd.Flags().StringP(vcIssuerURLFlagName, "", "", vcIssuerURLFlagUsage)
 	startCmd.Flags().StringP(hostExternalURLFlagName, "", "", hostExternalURLFlagUsage)
 	startCmd.Flags().StringP(accountLinkProfileFlagName, "", "", accountLinkProfileFlagUsage)
@@ -307,6 +321,7 @@ func startRP(parameters *rpParameters) error {
 		AccountNotLinkedHTML: basePath + "/accountnotlinked.html",
 		TLSConfig:            tlsConfig,
 		VaultServerURL:       parameters.vaultServerURL,
+		ComparatorURL:        parameters.comparatorURL,
 		VCIssuerURL:          parameters.vcIssuerURL,
 		AccountLinkProfile:   parameters.accountLinkProfile,
 		HostExternalURL:      parameters.hostExternalURL,

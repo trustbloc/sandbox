@@ -23,6 +23,8 @@ import (
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/stretchr/testify/require"
 	mockstorage "github.com/trustbloc/edge-core/pkg/storage/mockstore"
+	compclientops "github.com/trustbloc/edge-service/pkg/client/comparator/client/operations"
+	compmodel "github.com/trustbloc/edge-service/pkg/client/comparator/models"
 	"github.com/trustbloc/edge-service/pkg/restapi/vault"
 )
 
@@ -34,7 +36,7 @@ const (
 
 func TestNew(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
+		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}, ComparatorURL: "http://comp.example.com"})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 		require.Equal(t, 13, len(svc.GetRESTHandlers()))
@@ -46,6 +48,15 @@ func TestNew(t *testing.T) {
 		})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "acrp store provider : store open error")
+		require.Nil(t, svc)
+	})
+
+	t.Run("empty comparator url", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+		})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "comparator url mandatory")
 		require.Nil(t, svc)
 	})
 }
@@ -62,6 +73,7 @@ func TestRegister(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
 			DashboardHTML: file.Name(),
 			RequestTokens: map[string]string{vcsIssuerRequestTokenName: "test"},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -89,6 +101,7 @@ func TestRegister(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{
 				Store: &mockstorage.MockStore{Store: s},
 			},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -108,6 +121,7 @@ func TestRegister(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{
 				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPut: errors.New("save error")},
 			},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -136,6 +150,7 @@ func TestRegister(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{},
 			DashboardHTML: file.Name(),
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -152,6 +167,7 @@ func TestRegister(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{
 				Store: &mockstorage.MockStore{Store: make(map[string][]byte)},
 			},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -176,6 +192,7 @@ func TestRegister(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{
 				Store: &mockstorage.MockStore{Store: make(map[string][]byte)},
 			},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -202,6 +219,7 @@ func TestRegister(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{
 				Store: &mockstorage.MockStore{Store: make(map[string][]byte)},
 			},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -231,6 +249,7 @@ func TestRegister(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
 			DashboardHTML: file.Name(),
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -259,6 +278,7 @@ func TestRegister(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
 			DashboardHTML: file.Name(),
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -283,6 +303,7 @@ func TestRegister(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
 			RequestTokens: map[string]string{vcsIssuerRequestTokenName: "test"},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -322,6 +343,7 @@ func TestLogin(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			DashboardHTML: file.Name(),
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -353,6 +375,7 @@ func TestLogin(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			ConsentHTML:   file.Name(),
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -373,6 +396,7 @@ func TestLogin(t *testing.T) {
 	t.Run("parse form error", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -389,6 +413,7 @@ func TestLogin(t *testing.T) {
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -410,6 +435,7 @@ func TestLogin(t *testing.T) {
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -436,6 +462,7 @@ func TestLogin(t *testing.T) {
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -462,6 +489,7 @@ func TestLogin(t *testing.T) {
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s, ErrPut: errors.New("db error")}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -488,6 +516,7 @@ func TestLogout(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{},
 			HomePageHTML:  file.Name(),
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -509,6 +538,7 @@ func TestConnect(t *testing.T) {
 			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: profileID,
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -537,6 +567,7 @@ func TestConnect(t *testing.T) {
 	t.Run("no username", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -558,6 +589,7 @@ func TestConnect(t *testing.T) {
 			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: profileID,
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -589,6 +621,7 @@ func TestDisconnect(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{},
 			DashboardHTML: file.Name(),
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -605,6 +638,7 @@ func TestDisconnect(t *testing.T) {
 	t.Run("no username", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -628,6 +662,7 @@ func TestAccountLink(t *testing.T) {
 			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -659,6 +694,7 @@ func TestAccountLink(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider:      &mockstorage.Provider{},
 			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -677,6 +713,7 @@ func TestAccountLink(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider:      &mockstorage.Provider{},
 			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -696,6 +733,7 @@ func TestAccountLink(t *testing.T) {
 			StoreProvider:      &mockstorage.Provider{},
 			AccountLinkProfile: "http://third-party-svc",
 			HostExternalURL:    "http://my-external",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -718,6 +756,7 @@ func TestAccountLink(t *testing.T) {
 			},
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -743,6 +782,7 @@ func TestAccountLink(t *testing.T) {
 			},
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -771,6 +811,7 @@ func TestAccountLink(t *testing.T) {
 			},
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -802,11 +843,13 @@ func TestConsent(t *testing.T) {
 			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
 		svc.vClient = &mockVaultClient{}
+		svc.compClient = &mockComparatorClient{}
 
 		sessionid := uuid.New().String()
 		s[sessionid] = []byte(sampleUserName)
@@ -851,6 +894,7 @@ func TestConsent(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider:      &mockstorage.Provider{},
 			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -869,6 +913,7 @@ func TestConsent(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider:      &mockstorage.Provider{},
 			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -891,6 +936,7 @@ func TestConsent(t *testing.T) {
 			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
 			AccountLinkProfile: "http://third-party-svc",
 			HostExternalURL:    "http://my-external",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -917,6 +963,7 @@ func TestConsent(t *testing.T) {
 			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			AccountLinkProfile: "http://third-party-svc",
 			HostExternalURL:    "http://my-external",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -950,6 +997,7 @@ func TestConsent(t *testing.T) {
 			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -979,6 +1027,7 @@ func TestConsent(t *testing.T) {
 			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1015,6 +1064,7 @@ func TestConsent(t *testing.T) {
 			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1060,6 +1110,7 @@ func TestConsent(t *testing.T) {
 			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1098,6 +1149,59 @@ func TestConsent(t *testing.T) {
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "missing auth token from vault-server")
 	})
+
+	t.Run("comparator auth failures", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL:    "http://my-external",
+			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.vClient = &mockVaultClient{}
+		svc.compClient = &mockComparatorClient{PostAuthorizationsErr: errors.New("http error")}
+
+		sessionid := uuid.New().String()
+		s[sessionid] = []byte(sampleUserName)
+
+		b, err := json.Marshal(&userData{})
+		require.NoError(t, err)
+		s[sampleUserName] = b
+
+		data := &sessionData{
+			State:       uuid.New().String(),
+			CallbackURL: "https://url/callback",
+		}
+		b, err = json.Marshal(data)
+		require.NoError(t, err)
+
+		stateID := uuid.New().String()
+		s[stateID] = b
+
+		req, err := http.NewRequest("GET", "", nil)
+		require.NoError(t, err)
+
+		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
+		req.AddCookie(&cookie)
+
+		cookie = http.Cookie{Name: idCookie, Value: stateID}
+		req.AddCookie(&cookie)
+
+		rr := httptest.NewRecorder()
+
+		svc.consent(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to create comparator authorization")
+
+		svc.compClient = &mockComparatorClient{PostAuthorizationsResp: &compclientops.PostAuthorizationsOK{}}
+
+		svc.consent(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "missing auth token from comparator")
+	})
 }
 
 func TestAccountLinkCallback(t *testing.T) {
@@ -1107,31 +1211,36 @@ func TestAccountLinkCallback(t *testing.T) {
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
+		s := make(map[string][]byte)
 		svc, err := New(&Config{
-			StoreProvider:     &mockstorage.Provider{},
+			StoreProvider:     &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			AccountLinkedHTML: file.Name(),
+			ComparatorURL:     "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
-		rr := httptest.NewRecorder()
+		state := uuid.New().String()
+		s[state] = []byte(sampleUserName)
 
-		req, err := http.NewRequest("GET", "/callback?auth="+uuid.New().String(), nil)
+		uDataBytes, err := json.Marshal(&userData{})
 		require.NoError(t, err)
+
+		s[sampleUserName] = uDataBytes
+
+		req, err := http.NewRequest("GET", "/callback?auth="+uuid.New().String()+"&state="+state, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
 
 		svc.accountLinkCallback(rr, req)
 		require.Equal(t, http.StatusOK, rr.Code)
 	})
 
 	t.Run("missing auth", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
-		require.NoError(t, err)
-
-		defer func() { require.NoError(t, os.Remove(file.Name())) }()
-
 		svc, err := New(&Config{
-			StoreProvider:        &mockstorage.Provider{},
-			AccountNotLinkedHTML: file.Name(),
+			StoreProvider: &mockstorage.Provider{},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1145,12 +1254,60 @@ func TestAccountLinkCallback(t *testing.T) {
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "missing authorization")
 	})
+
+	t.Run("missing state", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rr := httptest.NewRecorder()
+
+		req, err := http.NewRequest("GET", "/callback?auth="+uuid.New().String(), nil)
+		require.NoError(t, err)
+
+		svc.accountLinkCallback(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "missing state")
+	})
+
+	t.Run("db error", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		state := uuid.New().String()
+
+		req, err := http.NewRequest("GET", "/callback?auth="+uuid.New().String()+"&state="+state, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.accountLinkCallback(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get state")
+
+		s[state] = []byte(sampleUserName)
+
+		rr = httptest.NewRecorder()
+
+		svc.accountLinkCallback(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to get user data")
+	})
 }
 
 func TestCreateClient(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1185,6 +1342,7 @@ func TestCreateClient(t *testing.T) {
 	t.Run("invalid request", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1204,6 +1362,7 @@ func TestCreateClient(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{
 				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPut: errors.New("save error")},
 			},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1228,6 +1387,7 @@ func TestGetCreate(t *testing.T) {
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1266,6 +1426,7 @@ func TestGetCreate(t *testing.T) {
 	t.Run("no data for the id", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1285,6 +1446,7 @@ func TestGetCreate(t *testing.T) {
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1308,6 +1470,7 @@ func TestCreateProfile(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1344,6 +1507,7 @@ func TestCreateProfile(t *testing.T) {
 	t.Run("invalid request", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1363,6 +1527,7 @@ func TestCreateProfile(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{
 				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPut: errors.New("save error")},
 			},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1387,6 +1552,7 @@ func TestGetProfile(t *testing.T) {
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1425,6 +1591,7 @@ func TestGetProfile(t *testing.T) {
 	t.Run("no data for the id", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1444,6 +1611,7 @@ func TestGetProfile(t *testing.T) {
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1469,6 +1637,7 @@ func TestDeleteProfile(t *testing.T) {
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1498,6 +1667,7 @@ func TestDeleteProfile(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{
 				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrDelete: errors.New("delete error")},
 			},
+			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1605,4 +1775,29 @@ func (m *mockVaultClient) CreateAuthorization(vaultID, requestingParty string,
 	}
 
 	return &vault.CreatedAuthorization{Tokens: &vault.Tokens{EDV: uuid.New().String(), KMS: uuid.New().String()}}, nil
+}
+
+type mockComparatorClient struct {
+	PostAuthorizationsErr  error
+	PostAuthorizationsResp *compclientops.PostAuthorizationsOK
+}
+
+func (m *mockComparatorClient) PostAuthorizations(
+	params *compclientops.PostAuthorizationsParams) (*compclientops.PostAuthorizationsOK, error) {
+	if m.PostAuthorizationsErr != nil {
+		return nil, m.PostAuthorizationsErr
+	}
+
+	if m.PostAuthorizationsResp != nil {
+		return m.PostAuthorizationsResp, nil
+	}
+
+	authToken := uuid.New().String()
+
+	return &compclientops.PostAuthorizationsOK{Payload: &compmodel.Authorization{AuthToken: &authToken}}, nil
+}
+
+func (m *mockComparatorClient) PostCompare(
+	params *compclientops.PostCompareParams) (*compclientops.PostCompareOK, error) {
+	return nil, nil
 }

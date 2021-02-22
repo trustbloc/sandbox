@@ -62,6 +62,8 @@ services:
           - vault.trustbloc.local
           - csh.trustbloc.local
           - vault-kms.trustbloc.local
+          - rev-agency-comparator.trustbloc.local
+          - emp-dept-comparator.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb
