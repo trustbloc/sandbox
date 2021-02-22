@@ -133,6 +133,7 @@ func getValidArgs(logLevel string) []string {
 	args = append(args, hostExternalURLArg()...)
 	args = append(args, accountLinkProfileArg()...)
 	args = append(args, requestTokensArg()...)
+	args = append(args, comparatorURLArg()...)
 
 	if logLevel != "" {
 		args = append(args, logLevelArg(logLevel)...)
@@ -166,6 +167,7 @@ func TestDatabaseTypeArg(t *testing.T) {
 		args = append(args, demoModeArg("rev")...)
 		args = append(args, vaultServerURLArg()...)
 		args = append(args, vcIssuerURLArg()...)
+		args = append(args, comparatorURLArg()...)
 		args = append(args, hostExternalURLArg()...)
 		args = append(args, accountLinkProfileArg()...)
 		args = append(args, []string{flag + common.DatabasePrefixFlagName, "test"}...)
@@ -193,6 +195,30 @@ func TestVaultServerArg(t *testing.T) {
 		err := startCmd.Execute()
 		require.Contains(t, err.Error(),
 			"Neither vault-server-url (command line flag) nor ACRP_VAULT_SERVER_URL (environment variable) have been set.")
+	})
+}
+
+func TestComparatorURLArg(t *testing.T) {
+	t.Run("missing arg", func(t *testing.T) {
+		startCmd := GetStartCmd(&mockServer{})
+
+		var args []string
+		args = append(args, hostURLArg()...)
+		args = append(args, tlsCertFileArg()...)
+		args = append(args, tlsKeyFileArg()...)
+		args = append(args, databaseURLArg()...)
+		args = append(args, databasePrefixArg()...)
+		args = append(args, demoModeArg("rev")...)
+		args = append(args, vaultServerURLArg()...)
+		args = append(args, vcIssuerURLArg()...)
+		args = append(args, hostExternalURLArg()...)
+		args = append(args, accountLinkProfileArg()...)
+
+		startCmd.SetArgs(args)
+
+		err := startCmd.Execute()
+		require.Contains(t, err.Error(),
+			"Neither comparator-url (command line flag) nor ACRP_COMPARATOR_URL (environment variable) have been set.")
 	})
 }
 
@@ -299,7 +325,10 @@ func setEnvVars(t *testing.T) {
 	err = os.Setenv(hostExternalURLEnvKey, "https://my-external-url")
 	require.Nil(t, err)
 
-	err = os.Setenv(accountLinkProfileEnvKey, "https://link-account")
+	err = os.Setenv(accountLinkProfileEnvKey, "profile-test")
+	require.Nil(t, err)
+
+	err = os.Setenv(comparatorURLEnvKey, "https://comparator")
 	require.Nil(t, err)
 }
 
@@ -333,6 +362,9 @@ func unsetEnvVars(t *testing.T) {
 
 	err = os.Unsetenv(accountLinkProfileEnvKey)
 	require.Nil(t, err)
+
+	err = os.Unsetenv(comparatorURLEnvKey)
+	require.Nil(t, err)
 }
 
 func hostURLArg() []string {
@@ -357,6 +389,10 @@ func demoModeArg(mode string) []string {
 
 func vaultServerURLArg() []string {
 	return []string{flag + vaultServerURLFlagName, "https://vault-server"}
+}
+
+func comparatorURLArg() []string {
+	return []string{flag + comparatorURLFlagName, "https://comparator"}
 }
 
 func vcIssuerURLArg() []string {

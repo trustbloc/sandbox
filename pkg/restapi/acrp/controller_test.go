@@ -18,7 +18,10 @@ import (
 
 func TestController_New(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		controller, err := New(&operation.Config{StoreProvider: &mockstorage.Provider{}})
+		controller, err := New(&operation.Config{
+			StoreProvider: &mockstorage.Provider{},
+			ComparatorURL: "http://comp.example.com",
+		})
 		require.NoError(t, err)
 		require.NotNil(t, controller)
 	})
@@ -34,7 +37,10 @@ func TestController_New(t *testing.T) {
 }
 
 func TestController_GetOperations(t *testing.T) {
-	controller, err := New(&operation.Config{StoreProvider: &mockstorage.Provider{}})
+	controller, err := New(&operation.Config{
+		StoreProvider: &mockstorage.Provider{},
+		ComparatorURL: "http://comp.example.com",
+	})
 	require.NoError(t, err)
 	require.NotNil(t, controller)
 

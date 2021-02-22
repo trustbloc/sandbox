@@ -18,12 +18,17 @@ import (
 	"strings"
 	"time"
 
+	httptransport "github.com/go-openapi/runtime/client"
+	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/storage"
 	"github.com/trustbloc/edge-core/pkg/zcapld"
+	compclient "github.com/trustbloc/edge-service/pkg/client/comparator/client"
+	compclientops "github.com/trustbloc/edge-service/pkg/client/comparator/client/operations"
+	compmodel "github.com/trustbloc/edge-service/pkg/client/comparator/models"
 	vaultclient "github.com/trustbloc/edge-service/pkg/client/vault"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
 	"github.com/trustbloc/edge-service/pkg/restapi/vault"
@@ -64,6 +69,7 @@ const (
 	authExpiryTime   = 5
 
 	vcsIssuerRequestTokenName = "vcs_issuer"
+	requestTimeout            = 30 * time.Second
 
 	// external paths
 	issueCredentialURLFormat = "%s" + "/credentials/issueCredential"
@@ -89,6 +95,11 @@ type vaultClient interface {
 		scope *vault.AuthorizationsScope) (*vault.CreatedAuthorization, error)
 }
 
+type comparatorClient interface {
+	PostAuthorizations(params *compclientops.PostAuthorizationsParams) (*compclientops.PostAuthorizationsOK, error)
+	PostCompare(params *compclientops.PostCompareParams) (*compclientops.PostCompareOK, error)
+}
+
 // Handler http handler for each controller API endpoint.
 type Handler interface {
 	Path() string
@@ -111,6 +122,7 @@ type Operation struct {
 	accountLinkProfile   string
 	hostExternalURL      string
 	vClient              vaultClient
+	compClient           comparatorClient
 }
 
 // Config config.
@@ -123,6 +135,7 @@ type Config struct {
 	AccountNotLinkedHTML string
 	TLSConfig            *tls.Config
 	VaultServerURL       string
+	ComparatorURL        string
 	VCIssuerURL          string
 	AccountLinkProfile   string
 	HostExternalURL      string
@@ -138,6 +151,19 @@ func New(config *Config) (*Operation, error) {
 
 	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}}
 
+	if config.ComparatorURL == "" {
+		return nil, errors.New("comparator url mandatory")
+	}
+
+	comparatorURL := strings.Split(config.ComparatorURL, "://")
+
+	transport := httptransport.NewWithClient(
+		comparatorURL[1],
+		compclient.DefaultBasePath,
+		[]string{comparatorURL[0]},
+		httpClient,
+	)
+
 	op := &Operation{
 		store:                store,
 		homePageHTML:         config.HomePageHTML,
@@ -151,6 +177,7 @@ func New(config *Config) (*Operation, error) {
 		hostExternalURL:      config.HostExternalURL,
 		requestTokens:        config.RequestTokens,
 		vClient:              vaultclient.New(config.VaultServerURL, vaultclient.WithHTTPClient(httpClient)),
+		compClient:           compclient.New(transport, strfmt.Default).Operations,
 	}
 
 	op.registerHandler()
@@ -283,6 +310,10 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if errors.Is(err, http.ErrNoCookie) {
+		logger.Warnf("action cookie not found")
+	}
+
 	sessionID := uuid.New().String()
 
 	err = o.store.Put(sessionID, []byte(r.FormValue(username)))
@@ -318,10 +349,6 @@ func (o *Operation) connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	state := uuid.New().String()
-
-	// TODO store state data
-
 	dataBytes, err := o.store.Get(o.accountLinkProfile)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
@@ -336,6 +363,15 @@ func (o *Operation) connect(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to unmarshal profile data : %s", err.Error()))
+		return
+	}
+
+	state := uuid.New().String()
+
+	err = o.store.Put(state, []byte(userName[0]))
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to save state data : %s", err.Error()))
 		return
 	}
 
@@ -362,6 +398,29 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 	if len(auth) == 0 {
 		o.writeErrorResponse(w, http.StatusBadRequest, "missing authorization")
 		o.loadHTML(w, o.accountNotLinkedHTML, nil)
+
+		return
+	}
+
+	state := r.URL.Query()["state"]
+	if len(state) == 0 {
+		o.writeErrorResponse(w, http.StatusBadRequest, "missing state")
+
+		return
+	}
+
+	logger.Infof("accountLinkCallback : authToken=%s state=%s", auth[0], state[0])
+
+	uNameBytes, err := o.store.Get(state[0])
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get state %s : %s", state, err.Error()))
+
+		return
+	}
+
+	_, err = o.getUserData(string(uNameBytes))
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to get user data: %s", err.Error()))
 
 		return
 	}
@@ -451,7 +510,7 @@ func (o *Operation) link(w http.ResponseWriter, r *http.Request) { // nolint: fu
 }
 
 // nolint: funlen
-func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
+func (o *Operation) consent(w http.ResponseWriter, r *http.Request) { // nolint: gocyclo
 	// get the session id
 	sessionidCookieData, err := r.Cookie(sessionidCookie)
 	if err != nil {
@@ -524,17 +583,36 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 
 	logger.Infof("docAuthToken : edv=%s kms=%s", docAuth.Tokens.EDV, docAuth.Tokens.KMS)
 
-	// TODO call comparator-service /authorization  api
+	// TODO update request params
+	authResp, err := o.compClient.PostAuthorizations(
+		compclientops.NewPostAuthorizationsParams().
+			WithTimeout(requestTimeout).
+			WithAuthorization(&compmodel.Authorization{}),
+	)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create comparator authorization: %s", err.Error()))
 
-	// TODO pass the zccap to the caller.
-	auth := uuid.New().String()
+		return
+	}
+
+	if authResp == nil || authResp.Payload == nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError, "missing auth token from comparator")
+
+		return
+	}
+
+	logger.Infof("authResp : token=%s", authResp.Payload.AuthToken)
+
+	// pass the zcap to the caller
+	auth := authResp.Payload.AuthToken
 
 	// invalid the cookies
 	clearCookies(w)
 
 	logger.Infof("consent : callback url= %s state=%s", data.CallbackURL, data.State)
 
-	http.Redirect(w, r, fmt.Sprintf("%s?state=%s&auth=%s", data.CallbackURL, data.State, auth), http.StatusFound)
+	http.Redirect(w, r, fmt.Sprintf("%s?state=%s&auth=%s", data.CallbackURL, data.State, *auth), http.StatusFound)
 }
 
 func (o *Operation) createClient(w http.ResponseWriter, r *http.Request) {
@@ -825,12 +903,12 @@ func (o *Operation) sendHTTPRequest(method, endpoint string, reqBody []byte, sta
 }
 
 func clearCookies(w http.ResponseWriter) {
-	cookie := http.Cookie{Name: actionCookie, Value: "", MaxAge: -1}
+	cookie := http.Cookie{Name: actionCookie, Value: "", MaxAge: 0}
 	http.SetCookie(w, &cookie)
 
-	cookie = http.Cookie{Name: sessionidCookie, Value: "", MaxAge: -1}
+	cookie = http.Cookie{Name: sessionidCookie, Value: "", MaxAge: 0}
 	http.SetCookie(w, &cookie)
 
-	cookie = http.Cookie{Name: idCookie, Value: "", MaxAge: -1}
+	cookie = http.Cookie{Name: idCookie, Value: "", MaxAge: 0}
 	http.SetCookie(w, &cookie)
 }
