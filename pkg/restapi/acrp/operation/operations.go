@@ -102,31 +102,35 @@ type Handler interface {
 
 // Operation defines handlers.
 type Operation struct {
-	store           storage.Store
-	handlers        []Handler
-	homePageHTML    string
-	dashboardHTML   string
-	consentHTML     string
-	httpClient      httpClient
-	vcIssuerURL     string
-	requestTokens   map[string]string
-	accountLinkURL  string
-	hostExternalURL string
-	vClient         vaultClient
+	store                storage.Store
+	handlers             []Handler
+	homePageHTML         string
+	dashboardHTML        string
+	consentHTML          string
+	accountLinkedHTML    string
+	accountNotLinkedHTML string
+	httpClient           httpClient
+	vcIssuerURL          string
+	requestTokens        map[string]string
+	accountLinkURL       string
+	hostExternalURL      string
+	vClient              vaultClient
 }
 
 // Config config.
 type Config struct {
-	StoreProvider   storage.Provider
-	HomePageHTML    string
-	DashboardHTML   string
-	ConsentHTML     string
-	TLSConfig       *tls.Config
-	VaultServerURL  string
-	VCIssuerURL     string
-	AccountLinkURL  string
-	HostExternalURL string
-	RequestTokens   map[string]string
+	StoreProvider        storage.Provider
+	HomePageHTML         string
+	DashboardHTML        string
+	ConsentHTML          string
+	AccountLinkedHTML    string
+	AccountNotLinkedHTML string
+	TLSConfig            *tls.Config
+	VaultServerURL       string
+	VCIssuerURL          string
+	AccountLinkURL       string
+	HostExternalURL      string
+	RequestTokens        map[string]string
 }
 
 // New returns acrp operation instance.
@@ -139,16 +143,18 @@ func New(config *Config) (*Operation, error) {
 	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}}
 
 	op := &Operation{
-		store:           store,
-		homePageHTML:    config.HomePageHTML,
-		dashboardHTML:   config.DashboardHTML,
-		consentHTML:     config.ConsentHTML,
-		httpClient:      httpClient,
-		vcIssuerURL:     config.VCIssuerURL,
-		accountLinkURL:  config.AccountLinkURL,
-		hostExternalURL: config.HostExternalURL,
-		requestTokens:   config.RequestTokens,
-		vClient:         vaultclient.New(config.VaultServerURL, vaultclient.WithHTTPClient(httpClient)),
+		store:                store,
+		homePageHTML:         config.HomePageHTML,
+		dashboardHTML:        config.DashboardHTML,
+		consentHTML:          config.ConsentHTML,
+		httpClient:           httpClient,
+		accountLinkedHTML:    config.AccountLinkedHTML,
+		accountNotLinkedHTML: config.AccountNotLinkedHTML,
+		vcIssuerURL:          config.VCIssuerURL,
+		accountLinkURL:       config.AccountLinkURL,
+		hostExternalURL:      config.HostExternalURL,
+		requestTokens:        config.RequestTokens,
+		vClient:              vaultclient.New(config.VaultServerURL, vaultclient.WithHTTPClient(httpClient)),
 	}
 
 	op.registerHandler()
@@ -342,6 +348,7 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 	auth := r.URL.Query()["auth"]
 	if len(auth) == 0 {
 		o.writeErrorResponse(w, http.StatusBadRequest, "missing authorization")
+		o.loadHTML(w, o.accountNotLinkedHTML, nil)
 
 		return
 	}
@@ -350,7 +357,7 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 
 	// TODO call comparator-service /compare  api
 
-	o.showDashboard(w, "username", true)
+	o.loadHTML(w, o.accountLinkedHTML, nil)
 }
 
 func (o *Operation) link(w http.ResponseWriter, r *http.Request) { // nolint: funlen

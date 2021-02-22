@@ -1074,8 +1074,8 @@ func TestAccountLinkCallback(t *testing.T) {
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{},
-			DashboardHTML: file.Name(),
+			StoreProvider:     &mockstorage.Provider{},
+			AccountLinkedHTML: file.Name(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1096,8 +1096,8 @@ func TestAccountLinkCallback(t *testing.T) {
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{},
-			DashboardHTML: file.Name(),
+			StoreProvider:        &mockstorage.Provider{},
+			AccountNotLinkedHTML: file.Name(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
