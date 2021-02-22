@@ -298,16 +298,18 @@ func startRP(parameters *rpParameters) error {
 	}
 
 	cfg := &operation.Config{
-		StoreProvider:   storeProvider,
-		HomePageHTML:    basePath + "/index.html",
-		DashboardHTML:   basePath + "/dashboard.html",
-		ConsentHTML:     basePath + "/consent.html",
-		TLSConfig:       tlsConfig,
-		VaultServerURL:  parameters.vaultServerURL,
-		VCIssuerURL:     parameters.vcIssuerURL,
-		AccountLinkURL:  parameters.accountLinkURL,
-		HostExternalURL: parameters.hostExternalURL,
-		RequestTokens:   parameters.requestTokens,
+		StoreProvider:        storeProvider,
+		HomePageHTML:         basePath + "/index.html",
+		DashboardHTML:        basePath + "/dashboard.html",
+		ConsentHTML:          basePath + "/consent.html",
+		AccountLinkedHTML:    basePath + "/accountlinked.html",
+		AccountNotLinkedHTML: basePath + "/accountnotlinked.html",
+		TLSConfig:            tlsConfig,
+		VaultServerURL:       parameters.vaultServerURL,
+		VCIssuerURL:          parameters.vcIssuerURL,
+		AccountLinkURL:       parameters.accountLinkURL,
+		HostExternalURL:      parameters.hostExternalURL,
+		RequestTokens:        parameters.requestTokens,
 	}
 
 	acrpService, err := acrp.New(cfg)
