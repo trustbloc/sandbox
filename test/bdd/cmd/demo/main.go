@@ -10,11 +10,21 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/btcsuite/btcutil/base58"
+	httptransport "github.com/go-openapi/runtime/client"
+	"github.com/go-openapi/strfmt"
 	"github.com/square/go-jose/v3"
-	"github.com/trustbloc/edge-service/pkg/client/comparator"
+	"github.com/trustbloc/edge-service/pkg/client/comparator/client"
+	"github.com/trustbloc/edge-service/pkg/client/comparator/client/operations"
+)
+
+const (
+	requestTimeout = 20 * time.Second
 )
 
 type configOutput struct {
@@ -23,21 +33,37 @@ type configOutput struct {
 	KeyID      string `json:"keyID"`
 }
 
-func main() {
+func main() { //nolint: funlen
 	switch os.Args[1] { //nolint: gocritic
 	case "comparator":
 		switch os.Args[2] { //nolint: gocritic
 		case "getConfig":
 			//nolint: gosec
-			c := comparator.New(os.Args[3], comparator.WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+			httpClient := &http.Client{
+				Transport: &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				},
+			}
 
-			config, err := c.GetConfig()
+			comparatorURL := strings.Split(os.Args[3], "://")
+
+			transport := httptransport.NewWithClient(
+				comparatorURL[1],
+				client.DefaultBasePath,
+				[]string{comparatorURL[0]},
+				httpClient,
+			)
+
+			c := client.New(transport, strfmt.Default)
+
+			config, err := c.Operations.GetConfig(operations.NewGetConfigParams().
+				WithTimeout(requestTimeout))
 			if err != nil {
 				fmt.Printf("failed to create new request: %s\n", err)
 				return
 			}
 
-			keys, ok := config.Key.([]interface{})
+			keys, ok := config.Payload.Key.([]interface{})
 			if !ok {
 				fmt.Printf("key is not array\n")
 				return
@@ -61,8 +87,8 @@ func main() {
 				return
 			}
 
-			bytes, err := json.Marshal(configOutput{DID: *config.Did, PrivateKey: base58.Encode(k),
-				KeyID: fmt.Sprintf("%s#%s", *config.Did, jwk.KeyID)})
+			bytes, err := json.Marshal(configOutput{DID: *config.Payload.Did, PrivateKey: base58.Encode(k),
+				KeyID: fmt.Sprintf("%s#%s", *config.Payload.Did, jwk.KeyID)})
 			if err != nil {
 				fmt.Printf("failed to marshal: %s\n", err)
 				return
