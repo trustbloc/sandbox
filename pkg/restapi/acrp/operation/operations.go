@@ -30,6 +30,7 @@ import (
 	compclientops "github.com/trustbloc/edge-service/pkg/client/comparator/client/operations"
 	compmodel "github.com/trustbloc/edge-service/pkg/client/comparator/models"
 	vaultclient "github.com/trustbloc/edge-service/pkg/client/vault"
+	"github.com/trustbloc/edge-service/pkg/restapi/comparator/operation/models"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
 	"github.com/trustbloc/edge-service/pkg/restapi/vault"
 	"github.com/trustbloc/edv/pkg/edvutils"
@@ -96,6 +97,7 @@ type vaultClient interface {
 }
 
 type comparatorClient interface {
+	GetConfig(params *compclientops.GetConfigParams) (*compclientops.GetConfigOK, error)
 	PostAuthorizations(params *compclientops.PostAuthorizationsParams) (*compclientops.PostAuthorizationsOK, error)
 	PostCompare(params *compclientops.PostCompareParams) (*compclientops.PostCompareOK, error)
 }
@@ -245,6 +247,8 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to create vc: %s", err.Error()))
+
+		return
 	}
 
 	// save nationalID vc
@@ -393,7 +397,7 @@ func (o *Operation) disconnect(w http.ResponseWriter, r *http.Request) {
 	o.showDashboard(w, userName[0], false)
 }
 
-func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) {
+func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) { // nolint: funlen,  gocyclo
 	auth := r.URL.Query()["auth"]
 	if len(auth) == 0 {
 		o.writeErrorResponse(w, http.StatusBadRequest, "missing authorization")
@@ -418,16 +422,97 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	_, err = o.getUserData(string(uNameBytes))
+	userData, err := o.getUserData(string(uNameBytes))
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to get user data: %s", err.Error()))
 
 		return
 	}
 
-	// TODO call vault-server /vaults/{vaultID}/authorizations  api
+	confResp, err := o.compClient.GetConfig(compclientops.NewGetConfigParams().
+		WithTimeout(requestTimeout))
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed get config from comparator: %s", err.Error()))
 
-	// TODO call comparator-service /compare  api
+		return
+	}
+
+	if confResp.Payload == nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError, "empty config from comparator")
+
+		return
+	}
+
+	docAuth, err := o.vClient.CreateAuthorization(
+		userData.VaultID,
+		strings.Split(confResp.Payload.AuthKeyURL, "#")[0],
+		&vault.AuthorizationsScope{
+			Target:  userData.NationalIDDocID,
+			Actions: []string{"read"},
+			Caveats: []vault.Caveat{{Type: zcapld.CaveatTypeExpiry, Duration: uint64(authExpiryTime * time.Second)}},
+		},
+	)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create vault authorization: %s", err.Error()))
+
+		return
+	}
+
+	if docAuth == nil || docAuth.Tokens == nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError, "missing auth token from vault-server")
+
+		return
+	}
+
+	// TODO update request data
+	query := make([]models.Query, 0)
+	query = append(query,
+		&models.DocQuery{
+			DocID:      &userData.NationalIDDocID,
+			VaultID:    &userData.VaultID,
+			AuthTokens: &models.DocQueryAO1AuthTokens{Kms: docAuth.Tokens.KMS, Edv: docAuth.Tokens.EDV},
+		},
+		// TODO should be auth token from another service
+		&models.DocQuery{
+			DocID:      &userData.NationalIDDocID,
+			VaultID:    &userData.VaultID,
+			AuthTokens: &models.DocQueryAO1AuthTokens{Kms: docAuth.Tokens.KMS, Edv: docAuth.Tokens.EDV},
+		},
+	)
+
+	eq := &models.EqOp{}
+	eq.SetArgs(query)
+
+	cr := &compmodel.Comparison{}
+	cr.SetOp(eq)
+
+	compareResp, err := o.compClient.PostCompare(
+		compclientops.NewPostCompareParams().
+			WithTimeout(requestTimeout).
+			WithComparison(cr),
+	)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to compare docs: %s", err.Error()))
+
+		return
+	}
+
+	if compareResp.Payload == nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError, "missing compare result from comparator")
+
+		return
+	}
+
+	if !compareResp.Payload.Result {
+		logger.Errorf("comparison failed")
+
+		o.loadHTML(w, o.accountNotLinkedHTML, nil)
+
+		return
+	}
 
 	o.loadHTML(w, o.accountLinkedHTML, nil)
 }
@@ -500,10 +585,10 @@ func (o *Operation) link(w http.ResponseWriter, r *http.Request) { // nolint: fu
 	}
 
 	// set cookies
-	cookie := http.Cookie{Name: actionCookie, Value: linkAction, Expires: cookieExpTime}
+	cookie := http.Cookie{Name: actionCookie, Value: linkAction, Expires: cookieExpTime, Path: "/"}
 	http.SetCookie(w, &cookie)
 
-	cookie = http.Cookie{Name: idCookie, Value: sessionid, Expires: cookieExpTime}
+	cookie = http.Cookie{Name: idCookie, Value: sessionid, Expires: cookieExpTime, Path: "/"}
 	http.SetCookie(w, &cookie)
 
 	http.Redirect(w, r, "/showlogin", http.StatusFound)
@@ -855,7 +940,12 @@ func (o *Operation) saveNationalIDDoc(vaultID string, vcResp []byte) (string, er
 		return "", fmt.Errorf("create edv doc id : %w", err)
 	}
 
-	_, err = o.vClient.SaveDoc(vaultID, docID, vcResp)
+	vc, err := verifiable.ParseCredential(vcResp, verifiable.WithDisabledProofCheck())
+	if err != nil {
+		return "", fmt.Errorf("parse vc : %w", err)
+	}
+
+	_, err = o.vClient.SaveDoc(vaultID, docID, vc)
 	if err != nil {
 		return "", fmt.Errorf("failed to save doc : %w", err)
 	}
@@ -903,12 +993,12 @@ func (o *Operation) sendHTTPRequest(method, endpoint string, reqBody []byte, sta
 }
 
 func clearCookies(w http.ResponseWriter) {
-	cookie := http.Cookie{Name: actionCookie, Value: "", MaxAge: 0}
+	cookie := http.Cookie{Name: actionCookie, Value: "", MaxAge: cookieExpiryTime, Path: "/"}
 	http.SetCookie(w, &cookie)
 
-	cookie = http.Cookie{Name: sessionidCookie, Value: "", MaxAge: 0}
+	cookie = http.Cookie{Name: sessionidCookie, Value: "", MaxAge: cookieExpiryTime, Path: "/"}
 	http.SetCookie(w, &cookie)
 
-	cookie = http.Cookie{Name: idCookie, Value: "", MaxAge: 0}
+	cookie = http.Cookie{Name: idCookie, Value: "", MaxAge: cookieExpiryTime, Path: "/"}
 	http.SetCookie(w, &cookie)
 }
