@@ -38,8 +38,8 @@ rpAdapterHealthCheckURL=https://rp-adapter.trustbloc.local:10161/healthcheck
 issuerAdapterHealthCheckURL=https://issuer-adapter.trustbloc.local:10061/healthcheck
 rpHealthCheckURL=https://rp.trustbloc.local/bankaccount
 issuerHealthCheckURL=https://issuer.trustbloc.local/drivinglicense
-revAgencyDemoRPHealthCheckURL=https://rev-agency-rp.trustbloc.local
-empDeptDemoRPHealthCheckURL=https://emp-dept-rp.trustbloc.local
+uscisDemoRPHealthCheckURL=https://uscis-rp.trustbloc.local
+cbpDemoRPHealthCheckURL=https://cbp-rp.trustbloc.local
 cmsHealthCheckURL=https://cms.trustbloc.local/
 sidetreePeer=https://sidetree-mock.trustbloc.local
 
@@ -287,8 +287,8 @@ echo "#### Step 12 start demo application"
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-demo-applications.yml down && docker-compose -f docker-compose-demo-applications.yml up --force-recreate) > docker.log 2>&1 & )
 healthCheck issuer $issuerHealthCheckURL 200
 healthCheck rp $rpHealthCheckURL 200
-healthCheck rev-agency-rp $revAgencyDemoRPHealthCheckURL 200
-healthCheck emp-dept-rp $empDeptDemoRPHealthCheckURL 200
+healthCheck uscis-rp $uscisDemoRPHealthCheckURL 200
+healthCheck cbp-rp $cbpDemoRPHealthCheckURL 200
 if ! test/bdd/fixtures/scripts/acrp_configure.sh; then
    exit -1
 fi

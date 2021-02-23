@@ -55,26 +55,26 @@ code=${vc_issuer_emp_dept//*RESPONSE_CODE=/}
 
 validateProfileCreation $code $response vc_issuer vc_issuer_emp_dept
 
-# create client with rev agent
-emp_dep_act_linking_client=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" \
+# create client with uscis (Utopia Citizenship and Immigration) agent
+cbp_dept_act_linking_client=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" \
    --request POST \
-   --data '{"did":"'"${empDeptComparatorConfigDID}"'", "callback":"https://emp-dept-rp.trustbloc.local"}' \
-   --insecure https://rev-agency-rp.trustbloc.local/client)
+   --data '{"did":"'"${empDeptComparatorConfigDID}"'", "callback":"https://cbp-rp.trustbloc.local"}' \
+   --insecure https://uscis-rp.trustbloc.local/client)
 
-response=${emp_dep_act_linking_client//RESPONSE_CODE*/}
-code=${emp_dep_act_linking_client//*RESPONSE_CODE=/}
+response=${cbp_dept_act_linking_client//RESPONSE_CODE*/}
+code=${cbp_dept_act_linking_client//*RESPONSE_CODE=/}
 clientID=$(echo $response | jq -r .clientID)
 clientSecret=$(echo $response | jq -r .clientSecret)
 
-validateProfileCreation $code $response acrp_client emp_dep_act_linking_client
+validateProfileCreation $code $response acrp_client cbp_dept_act_linking_client
 
-# create profile for rev_agency in emp_dept
-rev_agency_profile_at_emp_dept=$(curl -o /dev/null -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" \
+# create profile for uscis_profile_at_cbp
+uscis_profile_at_cbp=$(curl -o /dev/null -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" \
    --request POST \
-   --data '{"id":"rev-agency-profile", "name":"Revenue Agency", "url":"https://rev-agency-rp.trustbloc.local", "clientID":"'"${clientID}"'", "clientSecret":"'"${clientSecret}"'", "did":"'"${empDeptComparatorConfigDID}"'", "callback":"vc-issuer-emp-dept"}' \
-   --insecure https://emp-dept-rp.trustbloc.local/profile)
+   --data '{"id":"uscis-profile", "name":"Utopia Citizen and Immigration", "url":"https://uscis-rp.trustbloc.local", "clientID":"'"${clientID}"'", "clientSecret":"'"${clientSecret}"'", "did":"'"${empDeptComparatorConfigDID}"'", "callback":"vc-issuer-emp-dept"}' \
+   --insecure https://cbp-rp.trustbloc.local/profile)
 
-response=${rev_agency_profile_at_emp_dept//RESPONSE_CODE*/}
-code=${rev_agency_profile_at_emp_dept//*RESPONSE_CODE=/}
+response=${uscis_profile_at_cbp//RESPONSE_CODE*/}
+code=${uscis_profile_at_cbp//*RESPONSE_CODE=/}
 
-validateProfileCreation $code $response acrp_profile rev_agency_profile_at_emp_dept
+validateProfileCreation $code $response acrp_profile uscis_profile_at_cbp

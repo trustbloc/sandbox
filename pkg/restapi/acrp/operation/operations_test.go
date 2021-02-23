@@ -96,6 +96,11 @@ func TestRegister(t *testing.T) {
 	})
 
 	t.Run("user exists", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
 		s := make(map[string][]byte)
 		s[sampleUserName] = []byte(password)
 
@@ -103,6 +108,7 @@ func TestRegister(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{
 				Store: &mockstorage.MockStore{Store: s},
 			},
+			HomePageHTML:  file.Name(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -115,7 +121,6 @@ func TestRegister(t *testing.T) {
 
 		svc.register(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "username already exists")
 	})
 
 	t.Run("save user data error", func(t *testing.T) {
@@ -387,11 +392,17 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("invalid username", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
 		s := make(map[string][]byte)
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			ComparatorURL: "http://comp.example.com",
+			HomePageHTML:  file.Name(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -404,7 +415,6 @@ func TestLogin(t *testing.T) {
 
 		svc.login(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "unable to get user data")
 	})
 
 	t.Run("invalid data in db", func(t *testing.T) {

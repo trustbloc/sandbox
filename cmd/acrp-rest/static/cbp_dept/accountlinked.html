@@ -11,7 +11,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta charset="utf-8">
     <link rel="icon" type="images/x-icon" href="img/custom_logo.png" >
-    <title>Utopia Customs and Border Protection</title>
+    <title>Account Linked</title>
     <meta name="description" content="">
     <meta name="keywords" content="">
     <meta name="author" content="">
@@ -35,15 +35,13 @@ SPDX-License-Identifier: Apache-2.0
         }
     </style>
 </head>
-<body class="leading-normal tracking-normal text-white" style="font-family: 'Source Sans Pro', sans-serif;" onload="showRandomNumber();">
+<body class="leading-normal tracking-normal text-white" style="font-family: 'Source Sans Pro', sans-serif">
 <div class="bg-red-100 border border-red-400 text-red-700 text-center rounded flex items-center justify-center" role="alert">
     <strong class="font-bold">THIS IS NOT A GOVERNMENT SITE.</strong>
     <span class="block sm:inline">&nbsp;It is demo site and all data is fake. Do not enter real account information or SSNs.</span>
     <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
      </span>
 </div>
-
-
 
 <div class="max-w mx-auto sm:px-6 lg:px-32" style="background-color: #04244b">
     <div class="grid grid-cols-2 gap-4">
@@ -68,13 +66,18 @@ SPDX-License-Identifier: Apache-2.0
                         <a href="/" class="text-white bold hover:bg-gray-700 hover:text-white px-3 py-6 rounded-md text-lg">Travel</a>
                     </div>
                 </div>
+                <div class="flex-1 flex items-right justify-end sm:items-stretch sm:justify-end">
+                    <div class="flex items-right">
+                        <a href="/logout" class="text-blue-800 bg-white px-4 m-5 py-1  rounded-md text-center font-bold">Logout</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </nav>
 <div class="grid grid-rows-3 grid-flow-col gap-4">
     <!--Sidebar-->
-    <div class="row-span-3 text-blue-900  px-2">
+    <div class="row-span-3 text-blue-900 px-4">
         <h1 class="text-gray-900 leading-tight px-4 py-4"> Travel</h1>
         <ul class="list-reset flex flex-row md:flex-col text-center md:text-left">
             <li class="mr-3 flex-1">
@@ -94,45 +97,20 @@ SPDX-License-Identifier: Apache-2.0
             </li>
         </ul>
     </div>
-    <div class="row-span-3 col-span-3 px-2 py-8">
-        <h2 class="text-green-600 bold text-5xl">Application Complete! </h2>
-        <p class="text-lg  font-light leading-relaxed text-gray-800 py-8 px-2">
-            Thank you {{.UserName}}, your application for SpeedPass is now being processed.
+    <div class="row-span-3 col-span-3 px-2 py-12">
+        <h2 class="text-green-600 bold text-5xl py-4">Account Linked</h2>
+        <p class="text-lg  font-light leading-relaxed text-gray-800 py-4">
+            Congratulations! Your My USCIS account has been successfully been linked to your application.
         </p>
-        <p class="text-lg font-light leading-relaxed text-gray-800 px-2">
-          Your application number is:   </p>
-        <p class="text-3xl font-light leading-relaxed text-black px-48" id="myNumber"></p>
-
-        <p class="text-lg font-light leading-relaxed text-gray-800 px-2">
-            Keep this number handy, it will be required if you want to track your application progress.  </p>
-
-        <p class="text-3xl font-light leading-relaxed text-black px-2 py-4"> Link to My USCIS</p>
-
-        <p class="text-lg font-light leading-relaxed text-gray-800 px-2">
-           For  <a class="text-lg font-light leading-relaxed text-gray-800 italic bold">
-            faster and safer </a> access to your Application progress report, you can now link your Application
-          to your My USCIS account if you have one.</p>
-
-        <p class="text-lg font-light leading-relaxed text-gray-800 px-2 py-4">
-            You may then use your MYUSCIS account to log in and access all your Application resources, no need to
-            remember the application number or prove your identity each time.
+        <p class="text-lg  font-light leading-relaxed text-gray-800 py-4">
+            To check the progress of your SpeedPass application, return to  <a class="text-center text-blue-700 underline" href="/">
+                Application </a> page and click the option to sign in with My USCIS Account.
         </p>
-
-        <p class="text-lg font-light leading-relaxed text-gray-800 px-2 py-4">
-         To proceed you will: <br>
-         1. Be redirected to the My USCIS Account login page to log in.<br>
-         2. Be asked to share  your SSN on the file at USCIS with CBP for identity proofing. <br>
-         3. Be redirected back here for complete the linking.
+        <p class="text-lg  font-light leading-relaxed text-gray-800 py-4">
+           This completes your application activities at this time.
         </p>
-
-        <p class="text-lg font-light leading-relaxed text-gray-800 px-2 py-8">
-            We will not use your SSN for anything other than matching your My USCIS account with your application.
-        </p>
-
-        <a class=" w-64 bg-white hover:bg-blue-900 hover:shadow hover:text-white text-center text-gray-800 font-semibold py-4 px-4 border border-blue-900 rounded shadow"  href="{{.URL}}">
-            Redirect me to My USCIS to Link Accounts
-        </a>
-
+        <div class="py-24 flex justify-center">
+        </div>
     </div>
 </div>
 
@@ -145,12 +123,6 @@ SPDX-License-Identifier: Apache-2.0
     </section>
 </footer>
 </body>
-<script src="https://randojs.com/1.0.0.js"></script>
-<script>
-    function showRandomNumber(){
-        document.getElementById("myNumber").innerHTML = rando(1000000000, 1000000000000);
-    }
-</script>
 </html>
 
 
