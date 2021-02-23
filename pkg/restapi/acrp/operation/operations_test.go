@@ -18,8 +18,10 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/stretchr/testify/require"
 	mockstorage "github.com/trustbloc/edge-core/pkg/storage/mockstore"
@@ -135,6 +137,7 @@ func TestRegister(t *testing.T) {
 
 		req := &http.Request{Form: make(map[string][]string)}
 		req.Form.Add(username, sampleUserName)
+		req.Form.Add(nationalID, sampleNationalID)
 
 		svc.register(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
@@ -181,6 +184,7 @@ func TestRegister(t *testing.T) {
 
 		req := &http.Request{Form: make(map[string][]string)}
 		req.Form.Add(username, sampleUserName)
+		req.Form.Add(nationalID, sampleNationalID)
 
 		svc.register(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
@@ -1220,6 +1224,9 @@ func TestAccountLinkCallback(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
+		svc.vClient = &mockVaultClient{}
+		svc.compClient = &mockComparatorClient{}
+
 		state := uuid.New().String()
 		s[state] = []byte(sampleUserName)
 
@@ -1300,6 +1307,119 @@ func TestAccountLinkCallback(t *testing.T) {
 		svc.accountLinkCallback(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "unable to get user data")
+	})
+
+	t.Run("vault server error", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.vClient = &mockVaultClient{CreateAuthorizationErr: errors.New("create auth error")}
+		svc.compClient = &mockComparatorClient{}
+
+		state := uuid.New().String()
+		s[state] = []byte(sampleUserName)
+
+		uDataBytes, err := json.Marshal(&userData{})
+		require.NoError(t, err)
+
+		s[sampleUserName] = uDataBytes
+
+		req, err := http.NewRequest("GET", "/callback?auth="+uuid.New().String()+"&state="+state, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.accountLinkCallback(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to create vault authorization")
+
+		svc.vClient = &mockVaultClient{CreateAuthorizationResp: &vault.CreatedAuthorization{}}
+
+		rr = httptest.NewRecorder()
+
+		svc.accountLinkCallback(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "missing auth token from vault-server")
+	})
+
+	t.Run("comparator - get error", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.compClient = &mockComparatorClient{GetConfigErr: errors.New("config error")}
+
+		state := uuid.New().String()
+		s[state] = []byte(sampleUserName)
+
+		uDataBytes, err := json.Marshal(&userData{})
+		require.NoError(t, err)
+
+		s[sampleUserName] = uDataBytes
+
+		req, err := http.NewRequest("GET", "/callback?auth="+uuid.New().String()+"&state="+state, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.accountLinkCallback(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed get config from comparator")
+
+		svc.compClient = &mockComparatorClient{GetConfigResp: &compclientops.GetConfigOK{}}
+
+		rr = httptest.NewRecorder()
+
+		svc.accountLinkCallback(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "empty config from comparator")
+	})
+
+	t.Run("comparator - compare error", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.vClient = &mockVaultClient{}
+		svc.compClient = &mockComparatorClient{PostCompareErr: errors.New("compare error")}
+
+		state := uuid.New().String()
+		s[state] = []byte(sampleUserName)
+
+		uDataBytes, err := json.Marshal(&userData{})
+		require.NoError(t, err)
+
+		s[sampleUserName] = uDataBytes
+
+		req, err := http.NewRequest("GET", "/callback?auth="+uuid.New().String()+"&state="+state, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.accountLinkCallback(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to compare docs")
+
+		svc.compClient = &mockComparatorClient{PostCompareResp: &compclientops.PostCompareOK{}}
+
+		rr = httptest.NewRecorder()
+
+		svc.accountLinkCallback(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "missing compare result from comparator")
 	})
 }
 
@@ -1709,9 +1829,19 @@ func mockHTTPResponse(t *testing.T, vcResp *mockHTTPResponseData) func(req *http
 		var err error
 
 		if req.URL.Path == "/credentials/issueCredential" {
-			resp := verifiable.Credential{}
+			cred := verifiable.Credential{}
+			cred.ID = uuid.New().URN()
+			cred.Context = []string{credentialContext}
+			cred.Types = []string{"VerifiableCredential"}
+			// issuerID will be overwritten in the issuer
+			cred.Issuer = verifiable.Issuer{ID: uuid.New().URN()}
+			cred.Issued = util.NewTime(time.Now().UTC())
 
-			respByes, err = resp.MarshalJSON()
+			credentialSubject := make(map[string]interface{})
+			credentialSubject["id"] = uuid.New().URN()
+			cred.Subject = credentialSubject
+
+			respByes, err = cred.MarshalJSON()
 			require.NoError(t, err)
 
 			if vcResp != nil {
@@ -1778,8 +1908,28 @@ func (m *mockVaultClient) CreateAuthorization(vaultID, requestingParty string,
 }
 
 type mockComparatorClient struct {
+	GetConfigErr           error
+	GetConfigResp          *compclientops.GetConfigOK
 	PostAuthorizationsErr  error
 	PostAuthorizationsResp *compclientops.PostAuthorizationsOK
+	PostCompareErr         error
+	PostCompareResp        *compclientops.PostCompareOK
+}
+
+func (m *mockComparatorClient) GetConfig(params *compclientops.GetConfigParams) (*compclientops.GetConfigOK, error) {
+	if m.GetConfigErr != nil {
+		return nil, m.GetConfigErr
+	}
+
+	if m.GetConfigResp != nil {
+		return m.GetConfigResp, nil
+	}
+
+	did := "did:example:789"
+
+	return &compclientops.GetConfigOK{
+		Payload: &compmodel.Config{AuthKeyURL: "did:example:123#xyz", Did: &did},
+	}, nil
 }
 
 func (m *mockComparatorClient) PostAuthorizations(
@@ -1799,5 +1949,13 @@ func (m *mockComparatorClient) PostAuthorizations(
 
 func (m *mockComparatorClient) PostCompare(
 	params *compclientops.PostCompareParams) (*compclientops.PostCompareOK, error) {
-	return nil, nil
+	if m.PostCompareErr != nil {
+		return nil, m.PostCompareErr
+	}
+
+	if m.PostCompareResp != nil {
+		return m.PostCompareResp, nil
+	}
+
+	return &compclientops.PostCompareOK{Payload: &compmodel.ComparisonResult{Result: true}}, nil
 }
