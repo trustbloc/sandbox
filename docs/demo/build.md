@@ -9,6 +9,7 @@
 - Docker
 - Docker-Compose
 - Make
+- [jq](https://stedolan.github.io/jq/)
 
 # Setup CA and hostnames
 Run trustbloc-local-setup(`make trustbloc-local-setup`) this target will generate:

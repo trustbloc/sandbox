@@ -243,7 +243,7 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint
 	vaultID := vaultData.ID
 
 	// wrap nationalID in a vc
-	vcResp, err := o.createNationalIDCred(vaultID, r.FormValue(nationalID))
+	_, err = o.createNationalIDCred(vaultID, r.FormValue(nationalID))
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to create vc: %s", err.Error()))
@@ -251,8 +251,15 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint
 		return
 	}
 
+	// TODO https://github.com/trustbloc/sandbox/issues/811 - Save nationalID in a VC
+
 	// save nationalID vc
-	docID, err := o.saveNationalIDDoc(vaultID, vcResp)
+	docID, err := o.saveNationalIDDoc(
+		vaultID,
+		map[string]interface{}{
+			nationalID: r.FormValue(nationalID),
+		},
+	)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to save doc - err:%s", err.Error()))
@@ -908,7 +915,7 @@ func (o *Operation) getUserData(username string) (*userData, error) {
 	return uData, nil
 }
 
-func (o *Operation) createNationalIDCred(sub, nationalID string) ([]byte, error) {
+func (o *Operation) createNationalIDCred(sub, nationalID string) (*verifiable.Credential, error) {
 	if nationalID == "" {
 		return nil, errors.New("nationalID is mandatory")
 	}
@@ -947,21 +954,21 @@ func (o *Operation) createNationalIDCred(sub, nationalID string) ([]byte, error)
 		return nil, fmt.Errorf("failed to create vc - url:%s err: %w", endpoint, err)
 	}
 
-	return vcResp, nil
+	vc, err := verifiable.ParseCredential(vcResp, verifiable.WithDisabledProofCheck())
+	if err != nil {
+		return nil, fmt.Errorf("parse vc : %w", err)
+	}
+
+	return vc, nil
 }
 
-func (o *Operation) saveNationalIDDoc(vaultID string, vcResp []byte) (string, error) {
+func (o *Operation) saveNationalIDDoc(vaultID string, content map[string]interface{}) (string, error) {
 	docID, err := edvutils.GenerateEDVCompatibleID()
 	if err != nil {
 		return "", fmt.Errorf("create edv doc id : %w", err)
 	}
 
-	vc, err := verifiable.ParseCredential(vcResp, verifiable.WithDisabledProofCheck())
-	if err != nil {
-		return "", fmt.Errorf("parse vc : %w", err)
-	}
-
-	_, err = o.vClient.SaveDoc(vaultID, docID, vc)
+	_, err = o.vClient.SaveDoc(vaultID, docID, content)
 	if err != nil {
 		return "", fmt.Errorf("failed to save doc : %w", err)
 	}
