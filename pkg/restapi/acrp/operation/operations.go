@@ -381,6 +381,8 @@ func (o *Operation) connect(w http.ResponseWriter, r *http.Request) {
 
 	endpoint := fmt.Sprintf(accountLinkURLFormat, data.URL, data.ClientID, o.hostExternalURL, state)
 
+	// TODO https://github.com/trustbloc/sandbox/issues/808 use OIDC to get auth token for account comparison
+
 	http.Redirect(w, r, endpoint, http.StatusFound)
 }
 
@@ -466,7 +468,6 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// TODO update request data
 	query := make([]models.Query, 0)
 	query = append(query,
 		&models.DocQuery{
@@ -474,7 +475,7 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 			VaultID:    &userData.VaultID,
 			AuthTokens: &models.DocQueryAO1AuthTokens{Kms: docAuth.Tokens.KMS, Edv: docAuth.Tokens.EDV},
 		},
-		// TODO should be auth token from another service
+		// TODO https://github.com/trustbloc/sandbox/issues/807 should be auth token from another service
 		&models.DocQuery{
 			DocID:      &userData.NationalIDDocID,
 			VaultID:    &userData.VaultID,
@@ -518,7 +519,6 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 }
 
 func (o *Operation) link(w http.ResponseWriter, r *http.Request) { // nolint: funlen
-	// TODO use OIDC to link accounts
 	clientID := r.URL.Query()["client_id"]
 	if len(clientID) == 0 {
 		o.writeErrorResponse(w, http.StatusBadRequest, "missing client_id")
@@ -647,12 +647,30 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) { // nolint:
 	logger.Infof("consent - createAuthorization : vaultID=%s rpDID=%s docID=%s",
 		userData.VaultID, data.DID, userData.NationalIDDocID)
 
-	// TODO https://github.com/trustbloc/sandbox/issues/799 update rp did ID, now using vaultID
-	docAuth, err := o.vClient.CreateAuthorization(userData.VaultID, userData.VaultID, &vault.AuthorizationsScope{
-		Target:  userData.NationalIDDocID,
-		Actions: []string{"read"},
-		Caveats: []vault.Caveat{{Type: zcapld.CaveatTypeExpiry, Duration: uint64(authExpiryTime * time.Second)}},
-	})
+	confResp, err := o.compClient.GetConfig(compclientops.NewGetConfigParams().
+		WithTimeout(requestTimeout))
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed get config from comparator: %s", err.Error()))
+
+		return
+	}
+
+	if confResp.Payload == nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError, "empty config from comparator")
+
+		return
+	}
+
+	docAuth, err := o.vClient.CreateAuthorization(
+		userData.VaultID,
+		strings.Split(confResp.Payload.AuthKeyURL, "#")[0],
+		&vault.AuthorizationsScope{
+			Target:  userData.NationalIDDocID,
+			Actions: []string{"read"},
+			Caveats: []vault.Caveat{{Type: zcapld.CaveatTypeExpiry, Duration: uint64(authExpiryTime * time.Second)}},
+		},
+	)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to create vault authorization: %s", err.Error()))
@@ -668,7 +686,7 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) { // nolint:
 
 	logger.Infof("docAuthToken : edv=%s kms=%s", docAuth.Tokens.EDV, docAuth.Tokens.KMS)
 
-	// TODO update request params
+	// TODO https://github.com/trustbloc/sandbox/issues/809 update request params
 	authResp, err := o.compClient.PostAuthorizations(
 		compclientops.NewPostAuthorizationsParams().
 			WithTimeout(requestTimeout).
@@ -710,8 +728,6 @@ func (o *Operation) createClient(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-
-	// TODO integrate with OIDC provider
 
 	data := clientData{
 		ClientID: uuid.New().String(),
