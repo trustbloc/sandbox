@@ -1062,6 +1062,60 @@ func TestConsent(t *testing.T) {
 		require.Contains(t, rr.Body.String(), "failed to unmarshal state data")
 	})
 
+	t.Run("comparator config error", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			HostExternalURL:    "http://my-external",
+			AccountLinkProfile: "http://third-party-svc",
+			ComparatorURL:      "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.compClient = &mockComparatorClient{GetConfigErr: errors.New("config error")}
+
+		sessionid := uuid.New().String()
+		s[sessionid] = []byte(sampleUserName)
+
+		b, err := json.Marshal(&userData{})
+		require.NoError(t, err)
+		s[sampleUserName] = b
+
+		data := &sessionData{
+			State:       uuid.New().String(),
+			CallbackURL: "https://url/callback",
+		}
+		b, err = json.Marshal(data)
+		require.NoError(t, err)
+
+		stateID := uuid.New().String()
+		s[stateID] = b
+
+		req, err := http.NewRequest("GET", "", nil)
+		require.NoError(t, err)
+
+		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
+		req.AddCookie(&cookie)
+
+		cookie = http.Cookie{Name: idCookie, Value: stateID}
+		req.AddCookie(&cookie)
+
+		rr := httptest.NewRecorder()
+
+		svc.consent(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed get config from comparator")
+
+		svc.compClient = &mockComparatorClient{GetConfigResp: &compclientops.GetConfigOK{}}
+
+		rr = httptest.NewRecorder()
+
+		svc.consent(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "empty config from comparator")
+	})
+
 	t.Run("vault create auth error", func(t *testing.T) {
 		s := make(map[string][]byte)
 		svc, err := New(&Config{
@@ -1074,6 +1128,7 @@ func TestConsent(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.vClient = &mockVaultClient{CreateAuthorizationErr: errors.New("vault auth error")}
+		svc.compClient = &mockComparatorClient{}
 
 		sessionid := uuid.New().String()
 		s[sessionid] = []byte(sampleUserName)
@@ -1120,6 +1175,7 @@ func TestConsent(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.vClient = &mockVaultClient{CreateAuthorizationResp: &vault.CreatedAuthorization{}}
+		svc.compClient = &mockComparatorClient{}
 
 		sessionid := uuid.New().String()
 		s[sessionid] = []byte(sampleUserName)
