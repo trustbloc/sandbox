@@ -46,8 +46,12 @@ SPDX-License-Identifier: Apache-2.0
                 </div>
                 <div class="hidden sm:block sm:ml-6">
                     <div class="flex space-x-4">
-                        <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-                        <a href="/" class="text-white hover:bg-gray-700 hover:text-white px-3 py-6 rounded-md text-sm font-medium">Home</a>
+                        <a href="/" class="text-white hover:bg-gray-500 hover:text-white px-3 py-6 rounded-md leading-text font-medium">Home</a>
+                    </div>
+                </div>
+                <div class="flex-1 flex items-right justify-end sm:items-stretch sm:justify-end">
+                    <div class="flex items-right">
+                        <a href="/logout" class="text-blue bg-white px-4 m-5 py-1  rounded-md text-center font-bold">Logout</a>
                     </div>
                 </div>
             </div>
@@ -81,7 +85,7 @@ SPDX-License-Identifier: Apache-2.0
                         </tr>
                         <tr class="hover:bg-grey-lighter">
                             <td class="py-4 px-6">  SSN Ref No:</td>
-                            <td class="py-4 px-6">  did:dhs:C74BFA345</td>
+                            <td class="py-4 px-6">  {{.VaultID}}</td>
                         </tr>
                         <tr class="hover:bg-grey-lighter">
                             <td class="py-4 px-6">  Mobile Phone No:</td>

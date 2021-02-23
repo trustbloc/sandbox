@@ -31,6 +31,7 @@ SPDX-License-Identifier: Apache-2.0
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 
 </head>
+<body onload="setRandomEmail();">
 <div class="bg-red-100 border border-red-400 text-red-700 text-center rounded flex items-center justify-center" role="alert">
     <strong class="font-bold">THIS IS NOT A GOVERNMENT SITE.</strong>
     <span class="block sm:inline">&nbsp;It is demo site and all data is fake. Do not enter real account information or SSNs.</span>
@@ -109,5 +110,18 @@ SPDX-License-Identifier: Apache-2.0
         </div>
     </section>
 </footer>
+<script src="https://randojs.com/1.0.0.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.1.11.1.js"></script>
+<script type="text/javascript" src="js/action.js"></script>
+<script>
+    var randomemailprefix = "john.smith";
+    var randomemailsuffix = "@example.com";
+    var randomnumber = rando(100, 10000);
 
+    function setRandomEmail() {
+        document.getElementById("username").value = randomemailprefix + randomnumber + randomemailsuffix;
+    }
+</script>
+</body>
 </html>

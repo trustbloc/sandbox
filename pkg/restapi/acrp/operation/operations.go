@@ -74,7 +74,7 @@ const (
 
 	// TODO - remove this hard-coded val
 	// clientID
-	clientID = "rev-agency-profile"
+	clientID = "uscis-profile"
 )
 
 var logger = log.New("acrp-restapi")
@@ -197,12 +197,14 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint
 	pwd, err := o.store.Get(r.FormValue(username))
 	if err != nil && !errors.Is(err, storage.ErrValueNotFound) {
 		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to get user data: %s", err.Error()))
+		o.showDashboard(w, r.FormValue(username), "Oops User Data Not Found", "", false)
 
 		return
 	}
 
 	if pwd != nil {
 		o.writeErrorResponse(w, http.StatusBadRequest, "username already exists")
+		o.showDashboard(w, r.FormValue(username), "Username already exists", "", false)
 
 		return
 	}
@@ -255,7 +257,7 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint
 		return
 	}
 
-	o.showDashboard(w, r.FormValue(username), false)
+	o.showDashboard(w, r.FormValue(username), "", vaultID, false)
 }
 
 func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
@@ -270,12 +272,14 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 	uData, err := o.getUserData(r.FormValue(username))
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to get user data: %s", err.Error()))
+		o.showDashboard(w, r.FormValue(username), "Oops User Data Not Found", "", false)
 
 		return
 	}
 
 	if r.FormValue(password) != uData.Password {
 		o.writeErrorResponse(w, http.StatusBadRequest, "invalid password")
+		o.showDashboard(w, r.FormValue(username), "Invalid Password", "", false)
 
 		return
 	}
@@ -305,7 +309,7 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	o.showDashboard(w, r.FormValue(username), true)
+	o.showDashboard(w, r.FormValue(username), "", uData.VaultID, true)
 }
 
 func (o *Operation) logout(w http.ResponseWriter, r *http.Request) {
@@ -341,7 +345,7 @@ func (o *Operation) disconnect(w http.ResponseWriter, r *http.Request) {
 
 	// TODO disconnect with other service / integrate trustbloc features
 
-	o.showDashboard(w, userName[0], false)
+	o.showDashboard(w, userName[0], "", "", false)
 }
 
 func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) {
@@ -639,17 +643,29 @@ func (o *Operation) deleteProfile(w http.ResponseWriter, r *http.Request) {
 	o.writeResponse(w, http.StatusOK, nil)
 }
 
-func (o *Operation) showDashboard(w http.ResponseWriter, userName string, serviceLinked bool) {
+func (o *Operation) showDashboard(w http.ResponseWriter, userName, msg string, vaultID string, serviceLinked bool) {
 	endpoint := fmt.Sprintf("/connect?userName=%s", userName)
 	if serviceLinked {
 		endpoint = fmt.Sprintf("/disconnect?userName=%s", userName)
 	}
 
-	o.loadHTML(w, o.dashboardHTML, map[string]interface{}{
-		"UserName":      userName,
-		"ServiceLinked": serviceLinked,
-		"URL":           endpoint,
-	})
+	if msg == "" {
+		o.loadHTML(w, o.dashboardHTML, map[string]interface{}{
+			"UserName":      userName,
+			"ServiceLinked": serviceLinked,
+			"URL":           endpoint,
+			"VaultID":       vaultID,
+			"ErrMsg":        "",
+		})
+	} else {
+		o.loadHTML(w, o.homePageHTML, map[string]interface{}{
+			"UserName":      userName,
+			"ServiceLinked": serviceLinked,
+			"URL":           endpoint,
+			"ErrMsg":        msg,
+		})
+	}
+
 }
 
 func (o *Operation) loadHTML(w http.ResponseWriter, htmlFileName string, data map[string]interface{}) {
