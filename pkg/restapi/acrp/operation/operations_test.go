@@ -41,7 +41,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}, ComparatorURL: "http://comp.example.com"})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 13, len(svc.GetRESTHandlers()))
+		require.Equal(t, 15, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -215,33 +215,7 @@ func TestRegister(t *testing.T) {
 
 		svc.register(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to create vault")
-	})
-
-	t.Run("create vault invalid response", func(t *testing.T) {
-		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte)},
-			},
-			ComparatorURL: "http://comp.example.com",
-		})
-		require.NoError(t, err)
-		require.NotNil(t, svc)
-
-		svc.httpClient = &mockHTTPClient{
-			respValue: &http.Response{
-				StatusCode: http.StatusCreated, Body: ioutil.NopCloser(strings.NewReader("invalid resp")),
-			},
-		}
-
-		rr := httptest.NewRecorder()
-
-		req := &http.Request{Form: make(map[string][]string)}
-		req.Form.Add(username, sampleUserName)
-
-		svc.register(rr, req)
-		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to create vault")
+		require.Contains(t, rr.Body.String(), "failed to store national id in vault - err:create vault")
 	})
 
 	t.Run("missing national id", func(t *testing.T) {
@@ -775,7 +749,7 @@ func TestAccountLink(t *testing.T) {
 
 		svc.link(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to client data")
+		require.Contains(t, rr.Body.String(), "get client data")
 	})
 
 	t.Run("invalid client data", func(t *testing.T) {
@@ -803,8 +777,8 @@ func TestAccountLink(t *testing.T) {
 		rr := httptest.NewRecorder()
 
 		svc.link(rr, req)
-		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to unmarshal client data")
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "unamrshal client data")
 	})
 
 	t.Run("store error", func(t *testing.T) {
@@ -1160,7 +1134,7 @@ func TestConsent(t *testing.T) {
 
 		svc.consent(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to create vault authorization")
+		require.Contains(t, rr.Body.String(), "create vault authorization ")
 	})
 
 	t.Run("no auth token", func(t *testing.T) {
@@ -1254,7 +1228,7 @@ func TestConsent(t *testing.T) {
 
 		svc.consent(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to create comparator authorization")
+		require.Contains(t, rr.Body.String(), "create comparator authorization")
 
 		svc.compClient = &mockComparatorClient{PostAuthorizationsResp: &compclientops.PostAuthorizationsOK{}}
 
@@ -1875,6 +1849,276 @@ func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	return m.respValue, nil
+}
+
+// nolint: bodyclose
+func TestSaveUsers(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.vClient = &mockVaultClient{}
+		svc.httpClient = &mockHTTPClient{
+			doFunc: mockHTTPResponse(t, nil),
+		}
+
+		users := []user{
+			{ID: uuid.New().String(), Name: "Test1", NationalID: "123"},
+			{ID: uuid.New().String(), Name: "Test2", NationalID: "789"},
+		}
+
+		reqBytes, err := json.Marshal(&saveUserDataReq{Users: users})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest("POST", client, bytes.NewBuffer(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.saveUsers(rr, req)
+		require.Equal(t, http.StatusCreated, rr.Code)
+	})
+
+	t.Run("invalid request", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		req, err := http.NewRequest("POST", client, strings.NewReader("invalid-json"))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.saveUsers(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to decode request")
+
+		reqBytes, err := json.Marshal(&saveUserDataReq{})
+		require.NoError(t, err)
+
+		req, err = http.NewRequest("POST", client, bytes.NewBuffer(reqBytes))
+		require.NoError(t, err)
+
+		rr = httptest.NewRecorder()
+
+		svc.saveUsers(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "no user data in the request")
+	})
+
+	t.Run("db error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPutBulk: errors.New("save error")},
+			},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.vClient = &mockVaultClient{}
+		svc.httpClient = &mockHTTPClient{
+			doFunc: mockHTTPResponse(t, nil),
+		}
+
+		users := []user{
+			{ID: uuid.New().String(), Name: "Test1", NationalID: "123"},
+			{ID: uuid.New().String(), Name: "Test2", NationalID: "789"},
+		}
+
+		reqBytes, err := json.Marshal(&saveUserDataReq{Users: users})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest("POST", client, bytes.NewBuffer(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.saveUsers(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to save user data")
+	})
+
+	t.Run("vault error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPutBulk: errors.New("save error")},
+			},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.vClient = &mockVaultClient{CreateVaultErr: errors.New("create vault error")}
+
+		users := []user{
+			{ID: uuid.New().String(), Name: "Test1", NationalID: "123"},
+			{ID: uuid.New().String(), Name: "Test2", NationalID: "789"},
+		}
+
+		reqBytes, err := json.Marshal(&saveUserDataReq{Users: users})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest("POST", client, bytes.NewBuffer(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.saveUsers(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to store nationalID")
+	})
+}
+
+func TestGetAuthorizations(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.vClient = &mockVaultClient{}
+		svc.compClient = &mockComparatorClient{}
+
+		userStore := make(map[string][]byte)
+		svc.userStore = &mockstorage.MockStore{Store: userStore}
+
+		uBytes, err := json.Marshal(userData{VaultID: uuid.New().String(), NationalIDDocID: uuid.New().String()})
+		require.NoError(t, err)
+
+		userStore[uuid.New().String()] = uBytes
+
+		cID := uuid.New().String()
+		cIDBytes, err := json.Marshal(&clientData{})
+		require.NoError(t, err)
+
+		s[cID] = cIDBytes
+
+		req, err := http.NewRequest("GET", userAuth+"?client_id="+cID, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.getUserAuths(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+
+		var resp *getUserAuthResp
+
+		err = json.Unmarshal(rr.Body.Bytes(), &resp)
+		require.NoError(t, err)
+		require.Equal(t, 1, len(resp.UserAuths))
+	})
+
+	t.Run("invalid client id", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		req, err := http.NewRequest("GET", userAuth, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.getUserAuths(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "missing client_id")
+
+		req, err = http.NewRequest("GET", userAuth+"?client_id="+uuid.New().String(), nil)
+		require.NoError(t, err)
+
+		rr = httptest.NewRecorder()
+
+		svc.getUserAuths(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "get client data")
+	})
+
+	t.Run("db error", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: s, ErrGetAll: errors.New("get all error")},
+			},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.vClient = &mockVaultClient{}
+		svc.httpClient = &mockHTTPClient{}
+
+		cID := uuid.New().String()
+		cIDBytes, err := json.Marshal(&clientData{})
+		require.NoError(t, err)
+
+		s[cID] = cIDBytes
+
+		req, err := http.NewRequest("GET", userAuth+"?client_id="+cID, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.getUserAuths(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "get all user data")
+	})
+
+	t.Run("comparator and vault error", func(t *testing.T) {
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.vClient = &mockVaultClient{CreateAuthorizationErr: errors.New("vault error")}
+		svc.compClient = &mockComparatorClient{}
+
+		userStore := make(map[string][]byte)
+		svc.userStore = &mockstorage.MockStore{Store: userStore}
+
+		uBytes, err := json.Marshal(userData{VaultID: uuid.New().String(), NationalIDDocID: uuid.New().String()})
+		require.NoError(t, err)
+
+		userStore[uuid.New().String()] = uBytes
+
+		cID := uuid.New().String()
+		cIDBytes, err := json.Marshal(&clientData{})
+		require.NoError(t, err)
+
+		s[cID] = cIDBytes
+
+		req, err := http.NewRequest("GET", userAuth+"?client_id="+cID, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.getUserAuths(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed create authorization")
+
+		svc.compClient = &mockComparatorClient{GetConfigErr: errors.New("config error")}
+
+		rr = httptest.NewRecorder()
+
+		svc.getUserAuths(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed get config from comparator")
+	})
 }
 
 func mockHTTPResponse(t *testing.T, vcResp *mockHTTPResponseData) func(req *http.Request) (*http.Response, error) {

@@ -52,9 +52,12 @@ const (
 	getClient           = client + "/{id}"
 	profile             = "/profile"
 	getProfile          = profile + "/{id}"
+	users               = "/users"
+	userAuth            = users + "/auth"
 
 	// store
-	txnStoreName = "issuer_txn"
+	txnStoreName  = "issuer_txn"
+	userStoreName = "user_txn"
 
 	// form param
 	username   = "username"
@@ -112,6 +115,7 @@ type Handler interface {
 // Operation defines handlers.
 type Operation struct {
 	store                storage.Store
+	userStore            storage.Store
 	handlers             []Handler
 	homePageHTML         string
 	dashboardHTML        string
@@ -151,6 +155,11 @@ func New(config *Config) (*Operation, error) {
 		return nil, fmt.Errorf("acrp store provider : %w", err)
 	}
 
+	userStore, err := getUserStore(config.StoreProvider)
+	if err != nil {
+		return nil, fmt.Errorf("acrp store provider : %w", err)
+	}
+
 	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}}
 
 	if config.ComparatorURL == "" {
@@ -168,6 +177,7 @@ func New(config *Config) (*Operation, error) {
 
 	op := &Operation{
 		store:                store,
+		userStore:            userStore,
 		homePageHTML:         config.HomePageHTML,
 		dashboardHTML:        config.DashboardHTML,
 		consentHTML:          config.ConsentHTML,
@@ -203,6 +213,8 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(profile, http.MethodPost, o.createProfile),
 		support.NewHTTPHandler(getProfile, http.MethodGet, o.getProfile),
 		support.NewHTTPHandler(getProfile, http.MethodDelete, o.deleteProfile),
+		support.NewHTTPHandler(users, http.MethodPost, o.saveUsers),
+		support.NewHTTPHandler(userAuth, http.MethodPost, o.getUserAuths),
 	}
 }
 
@@ -211,7 +223,7 @@ func (o *Operation) GetRESTHandlers() []Handler {
 	return o.handlers
 }
 
-func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint: funlen
+func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to parse form data: %s", err.Error()))
@@ -233,36 +245,10 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint
 	}
 
 	// create vault for the user
-	vaultData, err := o.vClient.CreateVault()
-	if err != nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to create vault - err:%s", err.Error()))
-
-		return
-	}
-
-	vaultID := vaultData.ID
-
-	// wrap nationalID in a vc
-	_, err = o.createNationalIDCred(vaultID, r.FormValue(nationalID))
+	vaultID, docID, err := o.storeNationalID(r.FormValue(nationalID))
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to create vc: %s", err.Error()))
-
-		return
-	}
-
-	// TODO https://github.com/trustbloc/sandbox/issues/811 - Save nationalID in a VC
-
-	// save nationalID vc
-	docID, err := o.saveNationalIDDoc(
-		vaultID,
-		map[string]interface{}{
-			nationalID: r.FormValue(nationalID),
-		},
-	)
-	if err != nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to save doc - err:%s", err.Error()))
+			fmt.Sprintf("failed to store national id in vault - err:%s", err.Error()))
 
 		return
 	}
@@ -549,20 +535,9 @@ func (o *Operation) link(w http.ResponseWriter, r *http.Request) { // nolint: fu
 
 	logger.Infof("link : clientID=%s callback url= %s state=%s", clientID, callback, state)
 
-	cDataBytes, err := o.store.Get(clientID[0])
+	cData, err := o.getClientData(clientID[0])
 	if err != nil {
-		o.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to client data: %s", err.Error()))
-
-		return
-	}
-
-	var cData *clientData
-
-	err = json.Unmarshal(cDataBytes, &cData)
-	if err != nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to unmarshal client data: %s", err.Error()))
+		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get client data: %s", err.Error()))
 
 		return
 	}
@@ -602,7 +577,7 @@ func (o *Operation) link(w http.ResponseWriter, r *http.Request) { // nolint: fu
 }
 
 // nolint: funlen
-func (o *Operation) consent(w http.ResponseWriter, r *http.Request) { // nolint: gocyclo
+func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 	// get the session id
 	sessionidCookieData, err := r.Cookie(sessionidCookie)
 	if err != nil {
@@ -654,8 +629,7 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) { // nolint:
 	logger.Infof("consent - createAuthorization : vaultID=%s rpDID=%s docID=%s",
 		userData.VaultID, data.DID, userData.NationalIDDocID)
 
-	confResp, err := o.compClient.GetConfig(compclientops.NewGetConfigParams().
-		WithTimeout(requestTimeout))
+	compConfig, err := o.getComparatorConfig()
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed get config from comparator: %s", err.Error()))
@@ -663,66 +637,25 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) { // nolint:
 		return
 	}
 
-	if confResp.Payload == nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError, "empty config from comparator")
-
-		return
-	}
-
-	docAuth, err := o.vClient.CreateAuthorization(
-		userData.VaultID,
-		strings.Split(confResp.Payload.AuthKeyURL, "#")[0],
-		&vault.AuthorizationsScope{
-			Target:  userData.NationalIDDocID,
-			Actions: []string{"read"},
-			Caveats: []vault.Caveat{{Type: zcapld.CaveatTypeExpiry, Duration: uint64(authExpiryTime * time.Second)}},
-		},
-	)
-	if err != nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to create vault authorization: %s", err.Error()))
-
-		return
-	}
-
-	if docAuth == nil || docAuth.Tokens == nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError, "missing auth token from vault-server")
-
-		return
-	}
-
-	logger.Infof("docAuthToken : edv=%s kms=%s", docAuth.Tokens.EDV, docAuth.Tokens.KMS)
-
-	// TODO https://github.com/trustbloc/sandbox/issues/809 update request params
-	authResp, err := o.compClient.PostAuthorizations(
-		compclientops.NewPostAuthorizationsParams().
-			WithTimeout(requestTimeout).
-			WithAuthorization(&compmodel.Authorization{}),
-	)
-	if err != nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to create comparator authorization: %s", err.Error()))
-
-		return
-	}
-
-	if authResp == nil || authResp.Payload == nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError, "missing auth token from comparator")
-
-		return
-	}
-
-	logger.Infof("authResp : token=%s", authResp.Payload.AuthToken)
-
 	// pass the zcap to the caller
-	auth := authResp.Payload.AuthToken
+	auth, err := o.getAuthorization(
+		userData.VaultID,
+		strings.Split(compConfig.AuthKeyURL, "#")[0],
+		userData.NationalIDDocID,
+	)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed create authorization : %s", err.Error()))
+
+		return
+	}
 
 	// invalid the cookies
 	clearCookies(w)
 
 	logger.Infof("consent : callback url= %s state=%s", data.CallbackURL, data.State)
 
-	http.Redirect(w, r, fmt.Sprintf("%s?state=%s&auth=%s", data.CallbackURL, data.State, *auth), http.StatusFound)
+	http.Redirect(w, r, fmt.Sprintf("%s?state=%s&auth=%s", data.CallbackURL, data.State, auth), http.StatusFound)
 }
 
 func (o *Operation) createClient(w http.ResponseWriter, r *http.Request) {
@@ -838,6 +771,120 @@ func (o *Operation) deleteProfile(w http.ResponseWriter, r *http.Request) {
 	o.writeResponse(w, http.StatusOK, nil)
 }
 
+func (o *Operation) saveUsers(w http.ResponseWriter, r *http.Request) {
+	data := &saveUserDataReq{}
+
+	err := json.NewDecoder(r.Body).Decode(data)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to decode request: %s", err.Error()))
+
+		return
+	}
+
+	if len(data.Users) == 0 {
+		o.writeErrorResponse(w, http.StatusBadRequest, "no user data in the request")
+
+		return
+	}
+
+	keys := make([]string, 0)
+	vals := make([][]byte, 0)
+
+	for _, v := range data.Users {
+		logger.Infof("saveUser : data=%s", v)
+
+		keys = append(keys, v.ID)
+
+		vaultID, docID, vErr := o.storeNationalID(v.NationalID)
+		if vErr != nil {
+			o.writeErrorResponse(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed to store nationalID: %s", vErr.Error()))
+
+			return
+		}
+
+		valBytes, mErr := json.Marshal(&userData{VaultID: vaultID, NationalIDDocID: docID})
+		if mErr != nil {
+			o.writeErrorResponse(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed to marshal user data: %s", mErr.Error()))
+
+			return
+		}
+
+		vals = append(vals, valBytes)
+	}
+
+	err = o.userStore.PutBulk(keys, vals)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to save user data - %s", err.Error()))
+
+		return
+	}
+
+	o.writeResponse(w, http.StatusCreated, data)
+}
+
+func (o *Operation) getUserAuths(w http.ResponseWriter, r *http.Request) {
+	clientID := r.URL.Query()["client_id"]
+	if len(clientID) == 0 {
+		o.writeErrorResponse(w, http.StatusBadRequest, "missing client_id")
+
+		return
+	}
+
+	// validate client
+	_, err := o.getClientData(clientID[0])
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to client data: %s", err.Error()))
+
+		return
+	}
+
+	// get all the users
+	u, err := o.getUsers()
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed get user data: %s", err.Error()))
+
+		return
+	}
+
+	// get the comparator config
+	compConfig, err := o.getComparatorConfig()
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed get config from comparator: %s", err.Error()))
+
+		return
+	}
+
+	userAuths := make([]string, 0)
+
+	// get the authorization for all
+	for _, v := range u {
+		// pass the zcap to the caller
+		auth, err := o.getAuthorization(
+			v.VaultID,
+			strings.Split(compConfig.AuthKeyURL, "#")[0],
+			v.NationalIDDocID,
+		)
+		if err != nil {
+			o.writeErrorResponse(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed create authorization : %s", err.Error()))
+
+			return
+		}
+
+		userAuths = append(userAuths, auth)
+	}
+
+	// send the authorizations in the response
+	o.writeResponse(w, http.StatusOK, &getUserAuthResp{UserAuths: userAuths})
+}
+
 func (o *Operation) showDashboard(w http.ResponseWriter, userName string, serviceLinked bool) {
 	endpoint := fmt.Sprintf("/connect?userName=%s", userName)
 	if serviceLinked {
@@ -915,6 +962,74 @@ func (o *Operation) getUserData(username string) (*userData, error) {
 	return uData, nil
 }
 
+func (o *Operation) getClientData(clientID string) (*clientData, error) {
+	cDataBytes, err := o.store.Get(clientID)
+	if err != nil {
+		return nil, fmt.Errorf("get client data: %w", err)
+	}
+
+	var cData *clientData
+
+	err = json.Unmarshal(cDataBytes, &cData)
+	if err != nil {
+		return nil, fmt.Errorf("unamrshal client data: %w", err)
+	}
+
+	return cData, nil
+}
+
+func (o *Operation) getUsers() ([]userData, error) {
+	dataMap, err := o.userStore.GetAll()
+	if err != nil {
+		return nil, fmt.Errorf("get all user data: %w", err)
+	}
+
+	users := make([]userData, 0)
+
+	for _, v := range dataMap {
+		var u *userData
+
+		err = json.Unmarshal(v, &u)
+		if err != nil {
+			return nil, fmt.Errorf("unamrshal client data: %w", err)
+		}
+
+		users = append(users, *u)
+	}
+
+	return users, nil
+}
+
+func (o *Operation) storeNationalID(nationalID string) (string, string, error) {
+	vaultData, err := o.vClient.CreateVault()
+	if err != nil {
+		return "", "", fmt.Errorf("create vault : %w", err)
+	}
+
+	vaultID := vaultData.ID
+
+	// wrap nationalID in a vc
+	_, err = o.createNationalIDCred(vaultID, nationalID)
+	if err != nil {
+		return "", "", fmt.Errorf("create vc for nationalID : %w", err)
+	}
+
+	// TODO https://github.com/trustbloc/sandbox/issues/811 - Save nationalID in a VC
+
+	// save nationalID vc
+	docID, err := o.saveNationalIDDoc(
+		vaultID,
+		map[string]interface{}{
+			nationalID: nationalID,
+		},
+	)
+	if err != nil {
+		return "", "", fmt.Errorf("save nationalID doc : %w", err)
+	}
+
+	return vaultID, docID, nil
+}
+
 func (o *Operation) createNationalIDCred(sub, nationalID string) (*verifiable.Credential, error) {
 	if nationalID == "" {
 		return nil, errors.New("nationalID is mandatory")
@@ -976,6 +1091,62 @@ func (o *Operation) saveNationalIDDoc(vaultID string, content map[string]interfa
 	return docID, nil
 }
 
+func (o *Operation) getComparatorConfig() (*compmodel.Config, error) {
+	confResp, err := o.compClient.GetConfig(compclientops.NewGetConfigParams().
+		WithTimeout(requestTimeout))
+	if err != nil {
+		return nil, fmt.Errorf("get config : %w", err)
+	}
+
+	if confResp.Payload == nil {
+		return nil, errors.New("empty config from comparator")
+	}
+
+	return confResp.Payload, nil
+}
+
+func (o *Operation) getAuthorization(vaultID, rp, docID string) (string, error) {
+	docAuth, err := o.vClient.CreateAuthorization(
+		vaultID,
+		rp,
+		&vault.AuthorizationsScope{
+			Target:  docID,
+			Actions: []string{"read"},
+			Caveats: []vault.Caveat{{Type: zcapld.CaveatTypeExpiry, Duration: uint64(authExpiryTime * time.Second)}},
+		},
+	)
+	if err != nil {
+		return "", fmt.Errorf("create vault authorization : %w", err)
+	}
+
+	if docAuth == nil || docAuth.Tokens == nil {
+		return "", errors.New("missing auth token from vault-server")
+	}
+
+	logger.Infof("docAuthToken : edv=%s kms=%s", docAuth.Tokens.EDV, docAuth.Tokens.KMS)
+
+	// TODO https://github.com/trustbloc/sandbox/issues/809 update request params
+	authResp, err := o.compClient.PostAuthorizations(
+		compclientops.NewPostAuthorizationsParams().
+			WithTimeout(requestTimeout).
+			WithAuthorization(&compmodel.Authorization{}),
+	)
+	if err != nil {
+		return "", fmt.Errorf("create comparator authorization : %w", err)
+	}
+
+	if authResp == nil || authResp.Payload == nil {
+		return "", errors.New("missing auth token from comparator")
+	}
+
+	logger.Infof("authResp : token=%s", authResp.Payload.AuthToken)
+
+	// pass the zcap to the caller
+	auth := authResp.Payload.AuthToken
+
+	return *auth, nil
+}
+
 func (o *Operation) sendHTTPRequest(method, endpoint string, reqBody []byte, status int,
 	httpToken string) ([]byte, error) {
 	logger.Errorf("sendHTTPRequest: method=%s url=%s reqBody=%s", method, endpoint, string(reqBody))
@@ -1013,6 +1184,20 @@ func (o *Operation) sendHTTPRequest(method, endpoint string, reqBody []byte, sta
 	}
 
 	return respBody, nil
+}
+
+func getUserStore(prov storage.Provider) (storage.Store, error) {
+	err := prov.CreateStore(userStoreName)
+	if err != nil && !errors.Is(err, storage.ErrDuplicateStore) {
+		return nil, err
+	}
+
+	txnStore, err := prov.OpenStore(userStoreName)
+	if err != nil {
+		return nil, err
+	}
+
+	return txnStore, nil
 }
 
 func clearCookies(w http.ResponseWriter) {
