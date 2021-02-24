@@ -45,3 +45,17 @@ type profileData struct {
 	DID          string `json:"did"`
 	Callback     string `json:"callback"`
 }
+
+type saveUserDataReq struct {
+	Users []user `json:"users"`
+}
+
+type user struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	NationalID string `json:"nationalID"`
+}
+
+type getUserAuthResp struct {
+	UserAuths []string `json:"userAuths"`
+}
