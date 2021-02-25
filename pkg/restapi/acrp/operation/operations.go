@@ -54,6 +54,7 @@ const (
 	getProfile          = profile + "/{id}"
 	users               = "/users"
 	userAuth            = users + "/auth"
+	extract             = "/extract"
 
 	// store
 	txnStoreName  = "issuer_txn"
@@ -214,7 +215,8 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(getProfile, http.MethodGet, o.getProfile),
 		support.NewHTTPHandler(getProfile, http.MethodDelete, o.deleteProfile),
 		support.NewHTTPHandler(users, http.MethodPost, o.saveUsers),
-		support.NewHTTPHandler(userAuth, http.MethodPost, o.getUserAuths),
+		support.NewHTTPHandler(userAuth, http.MethodGet, o.getUserAuths),
+		support.NewHTTPHandler(extract, http.MethodGet, o.extract),
 	}
 }
 
@@ -346,20 +348,11 @@ func (o *Operation) connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dataBytes, err := o.store.Get(o.accountLinkProfile)
+	data, err := o.getProfileData(o.accountLinkProfile)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get profile data : %s", err.Error()))
 
-		return
-	}
-
-	var data *profileData
-
-	err = json.Unmarshal(dataBytes, &data)
-	if err != nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to unmarshal profile data : %s", err.Error()))
 		return
 	}
 
@@ -861,7 +854,7 @@ func (o *Operation) getUserAuths(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userAuths := make([]string, 0)
+	userAuths := make([]userAuthorization, 0)
 
 	// get the authorization for all
 	for _, v := range u {
@@ -878,11 +871,46 @@ func (o *Operation) getUserAuths(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		userAuths = append(userAuths, auth)
+		userAuths = append(userAuths, userAuthorization{AuthToken: auth})
 	}
 
 	// send the authorizations in the response
 	o.writeResponse(w, http.StatusOK, &getUserAuthResp{UserAuths: userAuths})
+}
+
+func (o *Operation) extract(w http.ResponseWriter, r *http.Request) {
+	data, err := o.getProfileData(o.accountLinkProfile)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get profile data : %s", err.Error()))
+
+		return
+	}
+
+	endpoint := data.URL + "/users/auth?client_id=" + data.ClientID
+
+	respBytes, err := o.sendHTTPRequest(http.MethodGet, endpoint, nil, http.StatusOK, "")
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get user auth data : %s", err.Error()))
+
+		return
+	}
+
+	var userAuths *getUserAuthResp
+
+	err = json.Unmarshal(respBytes, &userAuths)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to unmarshal user auth data : %s", err.Error()))
+
+		return
+	}
+
+	// TODO call comparator endpoint - pass auth and get extracted nationalID data
+
+	// TODO send extracted data; for now passing auth
+	o.writeResponse(w, http.StatusOK, userAuths)
 }
 
 func (o *Operation) showDashboard(w http.ResponseWriter, userName string, serviceLinked bool) {
@@ -976,6 +1004,22 @@ func (o *Operation) getClientData(clientID string) (*clientData, error) {
 	}
 
 	return cData, nil
+}
+
+func (o *Operation) getProfileData(profileID string) (*profileData, error) {
+	dataBytes, err := o.store.Get(profileID)
+	if err != nil {
+		return nil, fmt.Errorf("get profile data: %w", err)
+	}
+
+	var data *profileData
+
+	err = json.Unmarshal(dataBytes, &data)
+	if err != nil {
+		return nil, fmt.Errorf("unamrshal profile data: %w", err)
+	}
+
+	return data, nil
 }
 
 func (o *Operation) getUsers() ([]userData, error) {
