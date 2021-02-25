@@ -374,6 +374,8 @@ func (o *Operation) connect(w http.ResponseWriter, r *http.Request) {
 
 	endpoint := fmt.Sprintf(accountLinkURLFormat, data.URL, data.ClientID, o.hostExternalURL, state)
 
+	logger.Infof("connect: redirectURL=[%s]", endpoint)
+
 	// TODO https://github.com/trustbloc/sandbox/issues/808 use OIDC to get auth token for account comparison
 
 	http.Redirect(w, r, endpoint, http.StatusFound)
@@ -407,8 +409,6 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 
 		return
 	}
-
-	logger.Infof("accountLinkCallback : authToken=%s state=%s", auth[0], state[0])
 
 	uNameBytes, err := o.store.Get(state[0])
 	if err != nil {
@@ -461,6 +461,9 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	logger.Infof("compare : vaultID=[%s] docID=[%s] kmsToken=[%s] edvToken=[%s] auth=[%s]",
+		userData.VaultID, userData.NationalIDDocID, docAuth.Tokens.KMS, docAuth.Tokens.EDV, auth[0])
+
 	query := make([]models.Query, 0)
 	query = append(query,
 		&models.DocQuery{
@@ -468,11 +471,8 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 			VaultID:    &userData.VaultID,
 			AuthTokens: &models.DocQueryAO1AuthTokens{Kms: docAuth.Tokens.KMS, Edv: docAuth.Tokens.EDV},
 		},
-		// TODO https://github.com/trustbloc/sandbox/issues/807 should be auth token from another service
-		&models.DocQuery{
-			DocID:      &userData.NationalIDDocID,
-			VaultID:    &userData.VaultID,
-			AuthTokens: &models.DocQueryAO1AuthTokens{Kms: docAuth.Tokens.KMS, Edv: docAuth.Tokens.EDV},
+		&models.AuthorizedQuery{
+			AuthToken: &auth[0],
 		},
 	)
 
@@ -500,9 +500,9 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if !compareResp.Payload.Result {
-		logger.Errorf("comparison failed")
+	logger.Infof("compare: result=[%s]", compareResp.Payload.Result)
 
+	if !compareResp.Payload.Result {
 		o.loadHTML(w, o.accountNotLinkedHTML, nil)
 
 		return
@@ -533,7 +533,7 @@ func (o *Operation) link(w http.ResponseWriter, r *http.Request) { // nolint: fu
 		return
 	}
 
-	logger.Infof("link : clientID=%s callback url= %s state=%s", clientID, callback, state)
+	logger.Infof("link : clientID=[%s] callbackURL=[%s] state=[%s]", clientID, callback, state)
 
 	cData, err := o.getClientData(clientID[0])
 	if err != nil {
@@ -626,9 +626,6 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Infof("consent - createAuthorization : vaultID=%s rpDID=%s docID=%s",
-		userData.VaultID, data.DID, userData.NationalIDDocID)
-
 	compConfig, err := o.getComparatorConfig()
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
@@ -642,6 +639,7 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 		userData.VaultID,
 		strings.Split(compConfig.AuthKeyURL, "#")[0],
 		userData.NationalIDDocID,
+		data.DID,
 	)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
@@ -653,9 +651,11 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 	// invalid the cookies
 	clearCookies(w)
 
-	logger.Infof("consent : callback url= %s state=%s", data.CallbackURL, data.State)
+	redirectURL := fmt.Sprintf("%s?state=%s&auth=%s", data.CallbackURL, data.State, auth)
 
-	http.Redirect(w, r, fmt.Sprintf("%s?state=%s&auth=%s", data.CallbackURL, data.State, auth), http.StatusFound)
+	logger.Infof("consent : redirectURL=%s", redirectURL)
+
+	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
 func (o *Operation) createClient(w http.ResponseWriter, r *http.Request) {
@@ -835,7 +835,7 @@ func (o *Operation) getUserAuths(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate client
-	_, err := o.getClientData(clientID[0])
+	cData, err := o.getClientData(clientID[0])
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusBadRequest,
 			fmt.Sprintf("failed to client data: %s", err.Error()))
@@ -870,6 +870,7 @@ func (o *Operation) getUserAuths(w http.ResponseWriter, r *http.Request) {
 			v.VaultID,
 			strings.Split(compConfig.AuthKeyURL, "#")[0],
 			v.NationalIDDocID,
+			cData.DID,
 		)
 		if err != nil {
 			o.writeErrorResponse(w, http.StatusInternalServerError,
@@ -1000,7 +1001,7 @@ func (o *Operation) getUsers() ([]userData, error) {
 	return users, nil
 }
 
-func (o *Operation) storeNationalID(nationalID string) (string, string, error) {
+func (o *Operation) storeNationalID(id string) (string, string, error) {
 	vaultData, err := o.vClient.CreateVault()
 	if err != nil {
 		return "", "", fmt.Errorf("create vault : %w", err)
@@ -1009,29 +1010,32 @@ func (o *Operation) storeNationalID(nationalID string) (string, string, error) {
 	vaultID := vaultData.ID
 
 	// wrap nationalID in a vc
-	_, err = o.createNationalIDCred(vaultID, nationalID)
+	_, err = o.createNationalIDCred(vaultID, id)
 	if err != nil {
 		return "", "", fmt.Errorf("create vc for nationalID : %w", err)
 	}
 
 	// TODO https://github.com/trustbloc/sandbox/issues/811 - Save nationalID in a VC
+	content := map[string]interface{}{
+		nationalID: id,
+	}
 
 	// save nationalID vc
 	docID, err := o.saveNationalIDDoc(
 		vaultID,
-		map[string]interface{}{
-			nationalID: nationalID,
-		},
+		content,
 	)
 	if err != nil {
 		return "", "", fmt.Errorf("save nationalID doc : %w", err)
 	}
 
+	logger.Infof("storeNationalID : vaultID=[%s] docID=[%s] content=[%s]", vaultID, docID, content)
+
 	return vaultID, docID, nil
 }
 
-func (o *Operation) createNationalIDCred(sub, nationalID string) (*verifiable.Credential, error) {
-	if nationalID == "" {
+func (o *Operation) createNationalIDCred(sub, id string) (*verifiable.Credential, error) {
+	if id == "" {
 		return nil, errors.New("nationalID is mandatory")
 	}
 
@@ -1045,7 +1049,7 @@ func (o *Operation) createNationalIDCred(sub, nationalID string) (*verifiable.Cr
 
 	credentialSubject := make(map[string]interface{})
 	credentialSubject["id"] = sub
-	credentialSubject[nationalID] = nationalID
+	credentialSubject[nationalID] = id
 
 	cred.Subject = credentialSubject
 
@@ -1105,7 +1109,9 @@ func (o *Operation) getComparatorConfig() (*compmodel.Config, error) {
 	return confResp.Payload, nil
 }
 
-func (o *Operation) getAuthorization(vaultID, rp, docID string) (string, error) {
+func (o *Operation) getAuthorization(vaultID, rp, docID, authDID string) (string, error) {
+	logger.Infof("getAuthorization : vaultID=%s rp=%s docID=%s authDID=%s", vaultID, rp, docID, authDID)
+
 	docAuth, err := o.vClient.CreateAuthorization(
 		vaultID,
 		rp,
@@ -1123,13 +1129,29 @@ func (o *Operation) getAuthorization(vaultID, rp, docID string) (string, error) 
 		return "", errors.New("missing auth token from vault-server")
 	}
 
-	logger.Infof("docAuthToken : edv=%s kms=%s", docAuth.Tokens.EDV, docAuth.Tokens.KMS)
+	logger.Infof("getAuthorization : edv=%s kms=%s", docAuth.Tokens.EDV, docAuth.Tokens.KMS)
 
-	// TODO https://github.com/trustbloc/sandbox/issues/809 update request params
+	scope := &compmodel.Scope{
+		Actions:    []string{"compare"},
+		VaultID:    vaultID,
+		DocID:      &docID,
+		AuthTokens: &compmodel.ScopeAuthTokens{Edv: docAuth.Tokens.EDV, Kms: docAuth.Tokens.KMS},
+	}
+
+	caveat := make([]compmodel.Caveat, 0)
+	caveat = append(caveat, &compmodel.ExpiryCaveat{Duration: int64(authExpiryTime * time.Second)})
+
+	scope.SetCaveats(caveat)
+
 	authResp, err := o.compClient.PostAuthorizations(
 		compclientops.NewPostAuthorizationsParams().
 			WithTimeout(requestTimeout).
-			WithAuthorization(&compmodel.Authorization{}),
+			WithAuthorization(
+				&compmodel.Authorization{
+					RequestingParty: &authDID,
+					Scope:           scope,
+				},
+			),
 	)
 	if err != nil {
 		return "", fmt.Errorf("create comparator authorization : %w", err)
@@ -1139,17 +1161,14 @@ func (o *Operation) getAuthorization(vaultID, rp, docID string) (string, error) 
 		return "", errors.New("missing auth token from comparator")
 	}
 
-	logger.Infof("authResp : token=%s", authResp.Payload.AuthToken)
+	logger.Infof("getAuthorization : token=%s", authResp.Payload.AuthToken)
 
-	// pass the zcap to the caller
-	auth := authResp.Payload.AuthToken
-
-	return *auth, nil
+	return authResp.Payload.AuthToken, nil
 }
 
 func (o *Operation) sendHTTPRequest(method, endpoint string, reqBody []byte, status int,
 	httpToken string) ([]byte, error) {
-	logger.Errorf("sendHTTPRequest: method=%s url=%s reqBody=%s", method, endpoint, string(reqBody))
+	logger.Infof("sendHTTPRequest: method=[%s] url=[%s] reqBody=[%s]", method, endpoint, string(reqBody))
 
 	req, err := http.NewRequest(method, endpoint, bytes.NewBuffer(reqBody))
 	if err != nil {
@@ -1177,7 +1196,7 @@ func (o *Operation) sendHTTPRequest(method, endpoint string, reqBody []byte, sta
 		logger.Warnf("failed to read response body for status: %d", resp.StatusCode)
 	}
 
-	logger.Errorf("httpResponse: status=%d respBody=%s", resp.StatusCode, string(respBody))
+	logger.Infof("httpResponse: status=[%d] respBody=[%s]", resp.StatusCode, string(respBody))
 
 	if resp.StatusCode != status {
 		return nil, fmt.Errorf("%s: %s", resp.Status, string(respBody))
