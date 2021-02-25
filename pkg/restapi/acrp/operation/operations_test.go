@@ -2358,9 +2358,7 @@ func (m *mockComparatorClient) PostAuthorizations(
 		return m.PostAuthorizationsResp, nil
 	}
 
-	authToken := uuid.New().String()
-
-	return &compclientops.PostAuthorizationsOK{Payload: &compmodel.Authorization{AuthToken: &authToken}}, nil
+	return &compclientops.PostAuthorizationsOK{Payload: &compmodel.Authorization{AuthToken: uuid.New().String()}}, nil
 }
 
 func (m *mockComparatorClient) PostCompare(

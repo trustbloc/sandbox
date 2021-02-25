@@ -675,6 +675,8 @@ github.com/hyperledger/aries-framework-go v0.1.5-0.20201028195746-556cee009e20/g
 github.com/hyperledger/aries-framework-go v0.1.6-0.20210120000618-bdf82385e9df/go.mod h1:CB1aCGsuCC/U+mJ43aU5Nx7s6iCYOVquO7kCUn8tVhY=
 github.com/hyperledger/aries-framework-go v0.1.6-0.20210212132055-b94cce120dda h1:s+40jra43As9eY9FjWA22HjRg0/kqTAi8/hXC2xUQqc=
 github.com/hyperledger/aries-framework-go v0.1.6-0.20210212132055-b94cce120dda/go.mod h1:jWpvVjYk1wETWfVJBII71ta6LusGKbzOkha8TOxeBRM=
+github.com/hyperledger/aries-framework-go v0.1.6-0.20210223185118-1d6fb5f95ad4 h1:dvFR8ONBJtiBPNuxJZ0QsWif7eZHOTM6q1CxtRYvyc4=
+github.com/hyperledger/aries-framework-go v0.1.6-0.20210223185118-1d6fb5f95ad4/go.mod h1:A6SHE7BuL1x88YN15R+MT8yG59zv2L4gE141Ou4tJJ4=
 github.com/hyperledger/aries-framework-go-ext/component/storage/couchdb v0.0.0-20201119153638-fc5d5e680587/go.mod h1:M7/MF6JD45J4CfhiHuO/CSt9ryzQR+ApV3IOAn2HKzo=
 github.com/hyperledger/aries-framework-go-ext/component/storage/mysql v0.0.0-20201119153638-fc5d5e680587/go.mod h1:/ySOxjKsxV+rnorkp7VZHw/1/OQtxRYlgibhcQVWw/E=
 github.com/hyperledger/aries-framework-go-ext/component/vdr/sidetree v0.0.0-20210121210840-ee9984a4579c h1:4KLf7FrV0UCxK61nSEy+apL1BKJYK/SXiZYl4+MW2ps=
@@ -1069,8 +1071,8 @@ github.com/trustbloc/edge-core v0.1.6-0.20210212172534-81ab3a5abf5b h1:eHsXkGpH4
 github.com/trustbloc/edge-core v0.1.6-0.20210212172534-81ab3a5abf5b/go.mod h1:+Shv5bDxWL0st/7Oe02JBPR7Fr9nQ6D6BEMoyr8SIcE=
 github.com/trustbloc/edge-core v0.1.6-0.20210218132256-ea94ce52be69 h1:bthi42KSRaWFiX8c0NI5fbQ+lqoVva8hjt9yyhgRs8I=
 github.com/trustbloc/edge-core v0.1.6-0.20210218132256-ea94ce52be69/go.mod h1:+Shv5bDxWL0st/7Oe02JBPR7Fr9nQ6D6BEMoyr8SIcE=
-github.com/trustbloc/edge-service v0.1.6-0.20210223162348-d212466d547b h1:ipQxbWGQtCYJMHpYsQj1XcJtsNYVPuZyjrn3dk+HLso=
-github.com/trustbloc/edge-service v0.1.6-0.20210223162348-d212466d547b/go.mod h1:Z0ZGw+0vFRgSkkmFHw7s2rExGeKgZNedWquVWe0e38Y=
+github.com/trustbloc/edge-service v0.1.6-0.20210225162505-6de9f9a756f3 h1:XGn5+J5NEkIukv6LTlg9vyo3yNRykePPKNtefEvH30s=
+github.com/trustbloc/edge-service v0.1.6-0.20210225162505-6de9f9a756f3/go.mod h1:9MHh3NgIom6Gtk6zi4SFX7koj5Fkc1o+FYTwtOogWa0=
 github.com/trustbloc/edv v0.1.6-0.20210212224738-ec2041a015c9 h1:G40O3d9my8m8U6QVoSX/bT9s6K5Ig5TrMoxRk5PTeSM=
 github.com/trustbloc/edv v0.1.6-0.20210212224738-ec2041a015c9/go.mod h1:zgY2Rde9Pv0aRmjJTdRZkV7ImW3+r5/c6aRc87moynI=
 github.com/trustbloc/edv v0.1.6-0.20210218153427-8562f6f29cbd h1:oD2UNHlZxYwxyY6QvbNfPtix5m2kYbkANlGb4cDakP0=
