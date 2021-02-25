@@ -57,5 +57,11 @@ type user struct {
 }
 
 type getUserAuthResp struct {
-	UserAuths []string `json:"userAuths"`
+	UserAuths []userAuthorization `json:"userAuths"`
+}
+
+type userAuthorization struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	AuthToken string `json:"authToken"`
 }

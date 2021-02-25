@@ -41,7 +41,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}, ComparatorURL: "http://comp.example.com"})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 15, len(svc.GetRESTHandlers()))
+		require.Equal(t, 16, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil),
+			doFunc: mockHTTPResponse(t, nil, nil),
 		}
 		svc.vClient = &mockVaultClient{}
 
@@ -129,7 +129,7 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil),
+			doFunc: mockHTTPResponse(t, nil, nil),
 		}
 		svc.vClient = &mockVaultClient{}
 
@@ -176,7 +176,7 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil),
+			doFunc: mockHTTPResponse(t, nil, nil),
 		}
 		svc.vClient = &mockVaultClient{}
 
@@ -233,7 +233,7 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil),
+			doFunc: mockHTTPResponse(t, nil, nil),
 		}
 		svc.vClient = &mockVaultClient{}
 
@@ -262,7 +262,7 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, &mockHTTPResponseData{status: http.StatusInternalServerError}),
+			doFunc: mockHTTPResponse(t, &mockHTTPResponseData{status: http.StatusInternalServerError}, nil),
 		}
 		svc.vClient = &mockVaultClient{}
 
@@ -287,7 +287,7 @@ func TestRegister(t *testing.T) {
 		require.NotNil(t, svc)
 
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil),
+			doFunc: mockHTTPResponse(t, nil, nil),
 		}
 		svc.vClient = &mockVaultClient{SaveDocErr: errors.New("save error")}
 
@@ -581,11 +581,13 @@ func TestConnect(t *testing.T) {
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to get profile data")
 
-		s[profileID] = nil
+		s[profileID] = []byte("invalid-json")
+
+		rr = httptest.NewRecorder()
 
 		svc.connect(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to unmarshal profile")
+		require.Contains(t, rr.Body.String(), "unamrshal profile data")
 	})
 }
 
@@ -1863,7 +1865,7 @@ func TestSaveUsers(t *testing.T) {
 
 		svc.vClient = &mockVaultClient{}
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil),
+			doFunc: mockHTTPResponse(t, nil, nil),
 		}
 
 		users := []user{
@@ -1925,7 +1927,7 @@ func TestSaveUsers(t *testing.T) {
 
 		svc.vClient = &mockVaultClient{}
 		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil),
+			doFunc: mockHTTPResponse(t, nil, nil),
 		}
 
 		users := []user{
@@ -2121,14 +2123,116 @@ func TestGetAuthorizations(t *testing.T) {
 	})
 }
 
-func mockHTTPResponse(t *testing.T, vcResp *mockHTTPResponseData) func(req *http.Request) (*http.Response, error) {
+// nolint: bodyclose
+func TestExtract(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		s := make(map[string][]byte)
+		profileID := uuid.New().String()
+		svc, err := New(&Config{
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			AccountLinkProfile: profileID,
+			ComparatorURL:      "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.httpClient = &mockHTTPClient{
+			doFunc: mockHTTPResponse(t, nil, nil),
+		}
+
+		dBytes, err := json.Marshal(&profileData{})
+		require.NoError(t, err)
+
+		s[profileID] = dBytes
+
+		req, err := http.NewRequest("GET", extract, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.extract(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+
+		var resp *getUserAuthResp
+
+		err = json.Unmarshal(rr.Body.Bytes(), &resp)
+		require.NoError(t, err)
+		require.Equal(t, 1, len(resp.UserAuths))
+	})
+
+	t.Run("no client data", func(t *testing.T) {
+		profileID := uuid.New().String()
+		svc, err := New(&Config{
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			AccountLinkProfile: profileID,
+			ComparatorURL:      "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		req, err := http.NewRequest("GET", extract, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.extract(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "get profile data")
+	})
+
+	t.Run("auth rest call error", func(t *testing.T) {
+		s := make(map[string][]byte)
+		profileID := uuid.New().String()
+		svc, err := New(&Config{
+			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			AccountLinkProfile: profileID,
+			ComparatorURL:      "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.httpClient = &mockHTTPClient{
+			doFunc: mockHTTPResponse(t, nil, &mockHTTPResponseData{status: http.StatusInternalServerError}),
+		}
+
+		dBytes, err := json.Marshal(&profileData{})
+		require.NoError(t, err)
+
+		s[profileID] = dBytes
+
+		req, err := http.NewRequest("GET", extract, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.extract(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get user auth data")
+
+		svc.httpClient = &mockHTTPClient{
+			doFunc: mockHTTPResponse(
+				t, nil, &mockHTTPResponseData{status: http.StatusOK, respByes: []byte("invalid-json")},
+			),
+		}
+
+		rr = httptest.NewRecorder()
+
+		svc.extract(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to unmarshal user auth data")
+	})
+}
+
+func mockHTTPResponse(t *testing.T, vcResp,
+	authResp *mockHTTPResponseData) func(req *http.Request) (*http.Response, error) {
 	return func(req *http.Request) (*http.Response, error) {
 		status := http.StatusCreated
 		respByes := []byte("")
 
 		var err error
 
-		if req.URL.Path == "/credentials/issueCredential" {
+		switch req.URL.Path {
+		case "/credentials/issueCredential":
 			cred := verifiable.Credential{}
 			cred.ID = uuid.New().URN()
 			cred.Context = []string{credentialContext}
@@ -2146,6 +2250,17 @@ func mockHTTPResponse(t *testing.T, vcResp *mockHTTPResponseData) func(req *http
 
 			if vcResp != nil {
 				status = vcResp.status
+			}
+		case "/users/auth":
+			status = http.StatusOK
+			respByes, err = json.Marshal(
+				getUserAuthResp{UserAuths: []userAuthorization{{AuthToken: uuid.New().String()}}},
+			)
+			require.NoError(t, err)
+
+			if authResp != nil {
+				status = authResp.status
+				respByes = authResp.respByes
 			}
 		}
 
@@ -2166,7 +2281,8 @@ func mockHTTPResponse(t *testing.T, vcResp *mockHTTPResponseData) func(req *http
 }
 
 type mockHTTPResponseData struct {
-	status int
+	status   int
+	respByes []byte
 }
 
 type mockVaultClient struct {
