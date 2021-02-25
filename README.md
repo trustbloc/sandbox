@@ -27,17 +27,19 @@ Refer [Build](docs/demo/build.md) for more detailed information.
 ## Sample Applications
 - [Issuer](docs/issuer/README.md)
 - [Relying Party/Verifier](docs/rp/README.md)
-- [Anonymous Comparator Relying Party (AC-RP)](docs/rp/README.md)
+- [Anonymous Comparator and Extractor - Relying Party (ACE-RP)](docs/ace-rp/README.md)
 
 ## Demo
 - [TrustBloc VCS](docs/demo/sandbox_vcs_playground.md) : CHAPI + VC Services
 - [TrustBloc Adapter](docs/demo/sandbox_adapter_playground.md) : CHAPI + DIDComm
   - [New Bank Account use case](docs/demo/new-bank-account-usecase.md)
   - [Register property use case](docs/demo/register-property-usecase.md)
+- [TrustBloc Anonymous Comparator and Extractor(ACE)](docs/demo/sandbox_ace_playground.md)
 
 ## Components
 - [TrustBloc VCS](docs/components/vcs_components.md)
 - [TrustBloc Adapter](docs/components/adapter_components.md)
+- [TrustBloc Anonymous Comparator and Extractor(ACE)](docs/demo/sandbox_adapter_playground.md)
 
 ## Contributing
 Thank you for your interest in contributing. Please see our [community contribution guidelines](https://github.com/trustbloc/community/blob/main/CONTRIBUTING.md) for more information.
