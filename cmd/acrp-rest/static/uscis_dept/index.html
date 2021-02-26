@@ -53,6 +53,10 @@ SPDX-License-Identifier: Apache-2.0
                 You can create the profile or sign in.
             </p>
         </div>
+        <div class="justify-center items-center m-1 font-medium py-1 px-2 bg-white rounded-md text-red-100 bg-red-700 border border-red-700" id="error-handler" style="display:none" >
+            <p class="text-xl font-normal  max-w-full flex-initial" id="failMsg">
+                <i class="fa fa-exclamation-circle px-2"></i> {{.ErrMsg}}</p>
+        </div>
         <div class="space-y-4 flex justify-center">
             <a class=" w-64 bg-white hover:bg-blue-900 hover:shadow hover:text-white text-center text-gray-800 font-semibold py-2 px-4 border border-blue-900 rounded shadow" href="/showregister">
                 Complete your Profile
@@ -75,5 +79,23 @@ SPDX-License-Identifier: Apache-2.0
         </div>
     </section>
 </footer>
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.1.11.1.js"></script>
+<script type="text/javascript" src="js/action.js"></script>
+<script>
+    function ready(fn) {
+        if (document.readyState !== 'loading'){
+            fn();
+        } else {
+            document.addEventListener('DOMContentLoaded', fn);
+        }
+    }
+    ready(() => {
+        if (!{{.ErrMsg}}) {
+            return;
+        }
+        document.getElementById("error-handler").style.display = "block";
+        document.getElementById("failMsg").innerText = JSON.stringify(JSON.parse({{.ErrMsg}}));
+    })
+</script>
 </html>

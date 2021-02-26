@@ -241,7 +241,8 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if pwd != nil {
-		o.writeErrorResponse(w, http.StatusBadRequest, "username already exists")
+		w.WriteHeader(http.StatusBadRequest)
+		o.showDashboard(w, r.FormValue(username), "Username already exists", "", false)
 
 		return
 	}
@@ -277,7 +278,7 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	o.showDashboard(w, r.FormValue(username), false)
+	o.showDashboard(w, r.FormValue(username), "", vaultID, false)
 }
 
 func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
@@ -331,7 +332,7 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	o.showDashboard(w, r.FormValue(username), true)
+	o.showDashboard(w, r.FormValue(username), "", uData.VaultID, true)
 }
 
 func (o *Operation) logout(w http.ResponseWriter, r *http.Request) {
@@ -384,7 +385,7 @@ func (o *Operation) disconnect(w http.ResponseWriter, r *http.Request) {
 
 	// TODO disconnect with other service / integrate trustbloc features
 
-	o.showDashboard(w, userName[0], false)
+	o.showDashboard(w, userName[0], "", "", false)
 }
 
 func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) { // nolint: funlen,  gocyclo
@@ -530,7 +531,8 @@ func (o *Operation) link(w http.ResponseWriter, r *http.Request) { // nolint: fu
 
 	cData, err := o.getClientData(clientID[0])
 	if err != nil {
-		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get client data: %s", err.Error()))
+		o.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get client data: %s", err.Error()))
 
 		return
 	}
@@ -914,17 +916,28 @@ func (o *Operation) extract(w http.ResponseWriter, r *http.Request) {
 	o.writeResponse(w, http.StatusOK, userAuths)
 }
 
-func (o *Operation) showDashboard(w http.ResponseWriter, userName string, serviceLinked bool) {
+func (o *Operation) showDashboard(w http.ResponseWriter, userName, errMsg, vaultID string, serviceLinked bool) {
 	endpoint := fmt.Sprintf("/connect?userName=%s", userName)
 	if serviceLinked {
 		endpoint = fmt.Sprintf("/disconnect?userName=%s", userName)
 	}
 
-	o.loadHTML(w, o.dashboardHTML, map[string]interface{}{
-		"UserName":      userName,
-		"ServiceLinked": serviceLinked,
-		"URL":           endpoint,
-	})
+	if errMsg == "" {
+		o.loadHTML(w, o.dashboardHTML, map[string]interface{}{
+			"UserName":      userName,
+			"ServiceLinked": serviceLinked,
+			"URL":           endpoint,
+			"VaultID":       vaultID,
+			"ErrMsg":        "",
+		})
+	} else {
+		o.loadHTML(w, o.homePageHTML, map[string]interface{}{
+			"UserName":      userName,
+			"ServiceLinked": serviceLinked,
+			"URL":           endpoint,
+			"ErrMsg":        errMsg,
+		})
+	}
 }
 
 func (o *Operation) loadHTML(w http.ResponseWriter, htmlFileName string, data map[string]interface{}) {

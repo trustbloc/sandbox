@@ -91,7 +91,7 @@ const (
 )
 
 // nolint:gochecknoglobals
-var supportedModes = map[string]string{"rev": "rev_agency", "emp": "emp_dept"}
+var supportedModes = map[string]string{"uscis": "uscis_dept", "cbp": "cbp_dept"}
 
 var logger = log.New("acrp-rest")
 

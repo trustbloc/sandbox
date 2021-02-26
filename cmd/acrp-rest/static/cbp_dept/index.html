@@ -36,7 +36,7 @@ SPDX-License-Identifier: Apache-2.0
     </style>
 </head>
 
-<body class="leading-normal tracking-normal text-white" style="font-family: 'Source Sans Pro', sans-serif;">
+<body class="leading-normal tracking-normal text-white" style="font-family: 'Source Sans Pro', sans-serif;" onload="setRandomEmail()">
 <div class="bg-red-100 border border-red-400 text-red-700 text-center rounded flex items-center justify-center" role="alert">
     <strong class="font-bold">THIS IS NOT A GOVERNMENT SITE.</strong>
     <span class="block sm:inline">&nbsp;It is demo site and all data is fake. Do not enter real account information or SSNs.</span>
@@ -76,7 +76,7 @@ SPDX-License-Identifier: Apache-2.0
 <div class="grid grid-rows-3 grid-flow-col gap-4">
     <!--Sidebar-->
     <div class="row-span-3 text-blue-900  px-4">
-                <h1 class="text-gray-900 leading-tight px-4"> Travel</h1>
+                <h1 class="text-gray-900 leading-tight px-4 py-2"> Travel</h1>
                 <ul class="list-reset flex flex-row md:flex-col text-center md:text-left">
                     <li class="mr-3 flex-1">
                         <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800 no-underline hover:text-green-400 border-b-2 border-gray-800 md:border-gray-900 hover:border-green-400">
@@ -98,22 +98,32 @@ SPDX-License-Identifier: Apache-2.0
     <div class="row-span-3 col-span-3 px-4 py-8">
         <h2 class="text-gray-700 bold text-5xl">Complete Your Application </h2>
         <p class="text-base font-light leading-relaxed text-gray-800 py-8 px-2">
-         Complete your application we need to collect your Social Security Number.
+         In order to complete your application we need to collect your Social Security Number.
         </p>
+        <div class="justify-center items-center m-1 font-medium py-1 px-2 bg-white rounded-md text-red-100 bg-red-700 border border-red-700" id="error-handler" style="display:none" >
+            <p class="text-xl font-normal  max-w-full flex-initial" id="failMsg">
+                <i class="fa fa-exclamation-circle px-2"></i> {{.ErrMsg}}</p>
+        </div>
         <section class="bg-white border" id="account-register" style="display:block">
             <div class="space-y-4 flex justify-left text-black ">
-                <form method="post" id="vpForm" action="/register" class="w-80 p-4 flex flex-col">
+                <form method="post" id="vpForm" action="/register" class="w-80 p-8 flex flex-col">
                     <div class="my-5 text-sm">
-                        <label for="nationalID" class="block text-black">Social Security Number</label>
-                        <input type="text" class="rounded-sm  px-2 py-3 mt-4 focus:outline-none bg-gray-100 w-full" id="nationalID" name="nationalID" pattern="\d{3}-?\d{2}-?\d{4}" class="border" value="555-55-5555" oninvalid="setCustomValidity('Valid format is 123-45-6789')" />
+                        <p for="nationalID" class="block text-black text-lg"> Social Security Number
+                        </p>
+                        <i class="fa fa-info-circle cursor-pointer px-1 tooltip"></i>
+                        <span class="toolTipText italic text-pink-400">Use the SSN registered with USCIS.</span>
+                        <input type="text" class="rounded-sm px-2 py-3 mt-4 font-bold text-lg focus:outline-none bg-gray-100 w-full" id="nationalID" name="nationalID" pattern="\d{3}-?\d{2}-?\d{4}" class="border" value="555-55-5555" oninvalid="setCustomValidity('Valid format is 123-45-6789')" />
                     </div>
-                    <div class="my-5 text-sm">
-                        <label for="username" class="block text-black">Email</label>
-                        <input type="email" autofocus id="username" name="username" class="rounded-sm px-2 py-3 mt-4 focus:outline-none bg-gray-100 w-full text-left" placeholder="Username"
+                    <div class="my-5 text-sm hidden">
+                        <div for="username" class="block text-black" >Email
+                            <i class="fa fa-info-circle cursor-pointer px-2 tooltip"></i>
+                                <span class="toolTipText italic text-pink-400">Use the email registered with USCIS.</span>
+                        </div>
+                        <input type="email"  autofocus id="username" name="username" class="rounded-sm px-2 py-3 mt-4 focus:outline-none bg-gray-100 w-full text-left" placeholder="Username"
                                inputmode="email"
                                pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" maxlength="30" class="border" value="john.smith@example.com" oninvalid="setCustomValidity('Invalid email')"/>
                     </div>
-                    <div class="my-5 text-sm">
+                    <div class="my-5 text-sm hidden">
                         <label for="password" class="block text-black">Password</label>
                         <input type="password" class="rounded-sm  px-2 py-3 mt-4 focus:outline-none bg-gray-100 w-full" id="password" name="password" value="f00B@r!23" />
                     </div>
@@ -142,7 +152,70 @@ SPDX-License-Identifier: Apache-2.0
             </div>
         </section>
     </footer>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.1.11.1.js"></script>
+<script type="text/javascript" src="js/action.js"></script>
+<script src="https://randojs.com/1.0.0.js"></script>
+<script>
+    function ready(fn) {
+        if (document.readyState !== 'loading'){
+            fn();
+        } else {
+            document.addEventListener('DOMContentLoaded', fn);
+        }
+    }
+    ready(() => {
+        if (!{{.ErrMsg}}) {
+            return;
+        }
+        document.getElementById("error-handler").style.display = "block";
+        document.getElementById("failMsg").innerText = JSON.stringify(JSON.parse({{.ErrMsg}}));
+    })
+</script>
+<script>
+    var randomemailprefix = "john.smith";
+    var randomemailsuffix = "@example.com";
+    var randomnumber = rando(1000000, 100000000);
+
+    function setRandomEmail() {
+        document.getElementById("username").value = randomemailprefix + randomnumber + randomemailsuffix;
+    }
+</script>
 </body>
+<style>
+    .tooltip {
+        position: relative;
+        display: inline-block;
+    }
+
+    .tooltip .toolTipText {
+        visibility: hidden;
+        width: 120px;
+        background-color: black;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 0;
+        position: absolute;
+        z-index: 1;
+        top: -5px;
+        left: 110%;
+    }
+
+    .tooltip .toolTipText::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: 100%;
+        margin-top: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: transparent black transparent transparent;
+    }
+    .tooltip:hover .toolTipTextt {
+        visibility: visible;
+    }
+</style>
 </html>
 
 
