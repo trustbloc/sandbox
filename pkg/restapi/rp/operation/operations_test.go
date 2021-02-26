@@ -149,7 +149,7 @@ func TestVerifyVP(t *testing.T) {
 		require.NoError(t, err)
 		b, err := json.Marshal(edgesvcops.CredentialsVerificationFailResponse{
 			Checks: []edgesvcops.CredentialsVerificationCheckResult{
-				{Check: "status", Error: "status check failed"},
+				{Check: "credentialStatus", Error: "status check failed"},
 			},
 		})
 		require.NoError(t, err)
