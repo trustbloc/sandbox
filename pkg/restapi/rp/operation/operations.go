@@ -149,8 +149,7 @@ func (c *Operation) verifyVP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inputData := "vpDataInput"
-	checks := []string{"proof", "credentialStatus"}
-
+	checks := strings.Split(r.Form.Get("checks"), ",")
 	domain := r.Form.Get("domain")
 	challenge := r.Form.Get("challenge")
 

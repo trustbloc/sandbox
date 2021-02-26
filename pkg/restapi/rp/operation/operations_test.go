@@ -207,6 +207,7 @@ func TestVerifyVP(t *testing.T) {
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
 		m["vcDataInput"] = []string{validVP}
+		m["checks"] = []string{"proof,credentialStatus"}
 		svc.verifyVP(rr, &http.Request{Form: m})
 		require.Equal(t, http.StatusOK, rr.Code)
 	})

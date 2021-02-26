@@ -65,8 +65,37 @@ SPDX-License-Identifier: Apache-2.0
                 <li class="mr-3">
                     <a class="inline-block text-black  no-underline hover:text-green hover:text-underline py-2 px-4" href="https://github.com/trustbloc/sandbox"> <i class="fa fa-github"></i></a>
                 </li>
+                <li class="mr-3">
+                    <a id='profileSettings' value ="Profile Settings" href="javascript:void(0)"  onclick="rpSettings(true)" class="inline-block text-gray-400 no-underline hover:text-green hover:text-underline py-2 px-4"><i class="fa fa-cog"></i></a>
+                </li>
             </ul>
         </div>
+
+        <div class="animate-pulse" id="rp-settings" style="display: none">
+            <div style="position: absolute;top: 10px;right: 10px;" class="bg-opacity-100">
+                <div class="block box-border shadow rounded-md p-6 max-w-sm w-full mx-auto place-items-center ring-4 ring-blue-500 ring-opacity-20">
+                    <div>
+                        <label class="inline-flex items-center p-3 text-lg">
+                            <input type="checkbox" class="form-checkbox h-5 w-5" id="verify-cred-status" checked>
+                            <span class="ml-2 text-black font-semibold">Verify Credential Status</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="inline-flex items-center p-3 text-lg">
+                            <input type="checkbox" class="form-checkbox h-5 w-5" id="verify-cred-proof" checked>
+                            <span class="ml-2 text-black font-semibold">Verify Credential Proof</span>
+                        </label>
+                    </div>
+                    <div>
+                        <button class="ml-12 bg-green-500 hover:bg-green-700 bg-opacity-50 p-3 self-center" onclick="rpSettings(false)">
+                            Save Settings
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
     </div>
     <hr class="border-b border-gray-100 opacity-25 my-0 py-0" />
 </nav>
@@ -125,6 +154,7 @@ SPDX-License-Identifier: Apache-2.0
             <input type="hidden" name="vpDataInput" id="vpDataInput">
             <input type="hidden" name="domain" id="domainInput">
             <input type="hidden" name="challenge" id="challengeInput">
+            <input type="hidden" name="checks" id="checksInput">
         </form>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-8 text-center text-black mt-8">
@@ -239,6 +269,14 @@ SPDX-License-Identifier: Apache-2.0
             t = t.parentNode;
         }
         return false;
+    }
+
+    function rpSettings(expand) {
+        if (expand){
+            document.getElementById("rp-settings").style.display = '';
+        } else {
+            document.getElementById("rp-settings").style.display = 'none';
+        }
     }
 
 </script>
@@ -363,6 +401,11 @@ SPDX-License-Identifier: Apache-2.0
     }
 
     async function getVP(value){
+        let allChecks = []
+        document.getElementById("verify-cred-status").checked ?  allChecks.push('credentialStatus') : undefined
+        document.getElementById("verify-cred-proof").checked ?  allChecks.push('proof') : undefined
+        console.log('checks to be performed', allChecks.toString())
+
         const challenge = uuidv4()
         const domain = window.location.hostname
 
@@ -384,6 +427,7 @@ SPDX-License-Identifier: Apache-2.0
         document.getElementById('vpDataInput').value = JSON.stringify(result.data)
         document.getElementById('domainInput').value = domain
         document.getElementById('challengeInput').value = challenge
+        document.getElementById('checksInput').value = allChecks.toString()
 
         document.getElementById('vpForm').submit()
     }
