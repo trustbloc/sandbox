@@ -31,7 +31,7 @@ SPDX-License-Identifier: Apache-2.0
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <style>
         .gradient {
-            background: linear-gradient(to right, #04244b, #004e92, #04244b);
+            background: linear-gradient(to right, #093028,#237a57,#093028);
         }
     </style>
 </head>
@@ -45,7 +45,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-<div class="max-w mx-auto sm:px-6 lg:px-32" style="background-color: #04244b">
+<div class="max-w mx-auto sm:px-6 lg:px-32" style="background-color: #093028">
     <div class="grid grid-cols-2 gap-4">
         <div class="flex items-center"> <img class="block lg:block h-64 w-auto" src="img/custom_border_logo.png"></div>
         <div class="flex items-center justify-end"><a class="bg-white text-gray-900 shadow-lg h-10 w-10 rounded-full focus:outline mr-4 p-3" href="https://github.com/trustbloc/sandbox">
@@ -70,7 +70,7 @@ SPDX-License-Identifier: Apache-2.0
                 </div>
                 <div class="flex-1 flex items-right justify-end sm:items-stretch sm:justify-end">
                     <div class="flex items-right">
-                        <a href="/logout" class="text-blue-800 bg-white px-4 m-5 py-1  rounded-md text-center font-bold">Logout</a>
+                        <a href="/logout" class="text-black bg-white px-4 m-5 py-1  rounded-md text-center font-bold">Logout</a>
                     </div>
                 </div>
             </div>
@@ -100,13 +100,15 @@ SPDX-License-Identifier: Apache-2.0
         </ul>
     </div>
     <div class="row-span-3 col-span-3 px-2 py-8">
-        <h2 class="text-green-600 bold text-5xl">Application Complete! </h2>
-        <p class="text-lg  font-light leading-relaxed text-gray-800 py-8 px-2">
-            Thank you {{.UserName}}, your application for SpeedPass is now being processed.
+        <h2 class="text-green-600 bold text-5xl px-2">Application Complete! </h2>
+        <p class="text-lg  font-light leading-relaxed text-gray-800 py-4 px-2">
+            Thank you Borat, your application for SpeedPass is now being processed.
         </p>
         <p class="text-lg font-light leading-relaxed text-gray-800 px-2">
-          Your application number is:   </p>
+          Your application number is:  </p>
         <p class="text-3xl font-light leading-relaxed text-black px-48" id="myNumber"></p>
+        <p class="text-xl font-light text-sm text-pink-300 px-32">{{.VaultID}}</p>
+
 
         <p class="text-lg font-light leading-relaxed text-gray-800 px-2">
             Keep this number handy, it will be required if you want to track your application progress.  </p>
@@ -118,23 +120,23 @@ SPDX-License-Identifier: Apache-2.0
             faster and safer </a> access to your Application progress report, you can now link your Application
           to your My USCIS account if you have one.</p>
 
-        <p class="text-lg font-light leading-relaxed text-gray-800 px-2 py-4">
+        <p class="text-lg font-light leading-relaxed text-gray-800 px-2">
             You may then use your MYUSCIS account to log in and access all your Application resources, no need to
             remember the application number or prove your identity each time.
         </p>
 
-        <p class="text-lg font-light leading-relaxed text-gray-800 px-2 py-4">
+        <p class="text-lg font-light leading-relaxed text-gray-800 px-2 py-2">
          To proceed you will: <br>
          1. Be redirected to the My USCIS Account login page to log in.<br>
          2. Be asked to share  your SSN on the file at USCIS with CBP for identity proofing. <br>
          3. Be redirected back here for complete the linking.
         </p>
 
-        <p class="text-lg font-light leading-relaxed text-gray-800 px-2 py-8">
+        <p class="text-lg font-light leading-relaxed text-gray-800 px-2 py-4">
             We will not use your SSN for anything other than matching your My USCIS account with your application.
         </p>
 
-        <a class=" w-64 bg-white hover:bg-blue-900 hover:shadow hover:text-white text-center text-gray-800 font-semibold py-4 px-4 border border-blue-900 rounded shadow"  href="{{.URL}}">
+        <a class=" w-64 bg-white hover:bg-pink-900 hover:shadow hover:text-white text-center text-gray-800 font-semibold py-4 px-4 border border-blue-900 rounded shadow"  href="{{.URL}}">
             Redirect me to My USCIS to Link Accounts
         </a>
 

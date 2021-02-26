@@ -31,7 +31,7 @@ SPDX-License-Identifier: Apache-2.0
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <style>
         .gradient {
-            background: linear-gradient(to right, #04244b, #004e92, #04244b);
+            background: linear-gradient(to right, #093028,#237a57,#093028);
         }
     </style>
 </head>
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-<div class="max-w mx-auto sm:px-6 lg:px-32" style="background-color: #04244b">
+<div class="max-w mx-auto sm:px-6 lg:px-32" style="background-color: #093028">
     <div class="grid grid-cols-2 gap-4">
         <div class="flex items-center"> <img class="block lg:block h-64 w-auto" src="img/custom_border_logo.png"></div>
         <div class="flex items-center justify-end"><a class="bg-white text-gray-900 shadow-lg h-10 w-10 rounded-full focus:outline mr-4 p-3" href="https://github.com/trustbloc/sandbox">
@@ -110,8 +110,6 @@ SPDX-License-Identifier: Apache-2.0
                     <div class="my-5 text-sm">
                         <p for="nationalID" class="block text-black text-lg"> Social Security Number
                         </p>
-                        <i class="fa fa-info-circle cursor-pointer px-1 tooltip"></i>
-                        <span class="toolTipText italic text-pink-400">Use the SSN registered with USCIS.</span>
                         <input type="text" class="rounded-sm px-2 py-3 mt-4 font-bold text-lg focus:outline-none bg-gray-100 w-full" id="nationalID" name="nationalID" pattern="\d{3}-?\d{2}-?\d{4}" class="border" value="555-55-5555" oninvalid="setCustomValidity('Valid format is 123-45-6789')" />
                     </div>
                     <div class="my-5 text-sm hidden">
@@ -127,7 +125,7 @@ SPDX-License-Identifier: Apache-2.0
                         <label for="password" class="block text-black">Password</label>
                         <input type="password" class="rounded-sm  px-2 py-3 mt-4 focus:outline-none bg-gray-100 w-full" id="password" name="password" value="f00B@r!23" />
                     </div>
-                    <input class="block text-center text-white bg-gray-800 p-3 duration-300 rounded-sm hover:bg-black w-full" type="submit" value="Submit" />
+                    <input class="block text-center text-white bg-black p-3 duration-300 rounded-sm hover:bg-black w-full" type="submit" value="Submit" />
                 </form>
             </div>
         </section>

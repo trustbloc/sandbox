@@ -29,6 +29,11 @@ SPDX-License-Identifier: Apache-2.0
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <style>
+        .gradient {
+            background: linear-gradient(to right, #04244b, #004e92, #04244b);
+        }
+    </style>
 
 </head>
 <body onload="setRandomEmail();">
@@ -40,15 +45,15 @@ SPDX-License-Identifier: Apache-2.0
 </div>
 <nav class="bg-blue-900">
     <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-        <div class="relative flex items-center justify-between h-16">
+        <div class="relative flex items-center justify-between h-24">
             <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
                 <div class="flex-shrink-0 flex items-center">
-                    <img class="block lg:block h-16 w-auto" src="img/citizenship_logo.png">
+                    <img class="block lg:block h-24 w-auto" src="img/citizenship_logo.png">
                 </div>
                 <div class="hidden sm:block sm:ml-6">
                     <div class="flex space-x-4">
                         <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-                        <a href="/" class="text-white hover:bg-gray-700 hover:text-white px-3 py-6 rounded-md text-sm font-medium">Home</a>
+                        <a href="/" class="text-white hover:bg-gray-700 hover:text-white px-3 py-8 rounded-md text-lg font-medium">Home</a>
                     </div>
                 </div>
             </div>
@@ -102,11 +107,11 @@ SPDX-License-Identifier: Apache-2.0
         </div>
     </div>
 </div>
-<footer class="text-center bg-white shadow border border-black-300">
+<footer class="text-center bg-white shadow border border-black-300 gradient">
     <section class="container mx-auto text-center">
-        <div class="text-sm text-gray-500 font py-1">
+        <div class="text-sm text-white font py-1">
             <img class="object-contain object-top-center h-32 w-full" src="img/custom_logo.png">
-            Copyright &copy; <a href="https://securekey.com/"  class="text-blue-900 hover:text-green-700" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+            Copyright &copy; <a href="https://securekey.com/"  class="text-pink-300 hover:text-green-700" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
         </div>
     </section>
 </footer>
