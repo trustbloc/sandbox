@@ -21,71 +21,71 @@ import (
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 
 	"github.com/trustbloc/sandbox/cmd/common"
-	"github.com/trustbloc/sandbox/pkg/restapi/acrp"
-	"github.com/trustbloc/sandbox/pkg/restapi/acrp/operation"
+	"github.com/trustbloc/sandbox/pkg/restapi/acerp"
+	"github.com/trustbloc/sandbox/pkg/restapi/acerp/operation"
 )
 
 const (
 	hostURLFlagName      = "host-url"
 	hostURLFlagShorthand = "u"
 	hostURLFlagUsage     = "URL to run the rp instance on. Format: HostName:Port."
-	hostURLEnvKey        = "ACRP_HOST_URL"
+	hostURLEnvKey        = "ACE_HOST_URL"
 
 	tlsCertFileFlagName  = "tls-cert-file"
 	tlsCertFileFlagUsage = "tls certificate file." +
 		" Alternatively, this can be set with the following environment variable: " + tlsCertFileEnvKey
-	tlsCertFileEnvKey = "ACRP_TLS_CERT_FILE"
+	tlsCertFileEnvKey = "ACE_TLS_CERT_FILE"
 
 	tlsKeyFileFlagName  = "tls-key-file"
 	tlsKeyFileFlagUsage = "tls key file." +
 		" Alternatively, this can be set with the following environment variable: " + tlsKeyFileEnvKey
-	tlsKeyFileEnvKey = "ACRP_TLS_KEY_FILE"
+	tlsKeyFileEnvKey = "ACE_TLS_KEY_FILE"
 
 	tlsSystemCertPoolFlagName  = "tls-systemcertpool"
 	tlsSystemCertPoolFlagUsage = "Use system certificate pool." +
 		" Possible values [true] [false]. Defaults to false if not set." +
 		" Alternatively, this can be set with the following environment variable: " + tlsSystemCertPoolEnvKey
-	tlsSystemCertPoolEnvKey = "ACRP_TLS_SYSTEMCERTPOOL"
+	tlsSystemCertPoolEnvKey = "ACE_TLS_SYSTEMCERTPOOL"
 
 	tlsCACertsFlagName  = "tls-cacerts"
 	tlsCACertsFlagUsage = "Comma-Separated list of ca certs path." +
 		" Alternatively, this can be set with the following environment variable: " + tlsCACertsEnvKey
-	tlsCACertsEnvKey = "ACRP_TLS_CACERTS"
+	tlsCACertsEnvKey = "ACE_TLS_CACERTS"
 
 	demoModeFlagName  = "demo-mode"
 	demoModeFlagUsage = "Demo mode." +
 		" Mandatory - Possible values [rev] [emp]."
-	demoModeEnvKey = "ACRP_DEMO_MODE"
+	demoModeEnvKey = "ACE_DEMO_MODE"
 
 	// vault server url
 	vaultServerURLFlagName  = "vault-server-url"
 	vaultServerURLFlagUsage = "Vault Server URL."
-	vaultServerURLEnvKey    = "ACRP_VAULT_SERVER_URL"
+	vaultServerURLEnvKey    = "ACE_VAULT_SERVER_URL"
 
 	// comparator url
 	comparatorURLFlagName  = "comparator-url"
 	comparatorURLFlagUsage = "Comparator URL."
-	comparatorURLEnvKey    = "ACRP_COMPARATOR_URL"
+	comparatorURLEnvKey    = "ACE_COMPARATOR_URL"
 
 	// vc issuer server url
 	vcIssuerURLFlagName  = "vc-issuer-url"
 	vcIssuerURLFlagUsage = "VC Issuer URL."
-	vcIssuerURLEnvKey    = "ACRP_VC_ISSUER_URL"
+	vcIssuerURLEnvKey    = "ACE_VC_ISSUER_URL"
 
 	requestTokensFlagName  = "request-tokens"
-	requestTokensEnvKey    = "ACRP_REQUEST_TOKENS" //nolint:gosec
+	requestTokensEnvKey    = "ACE_REQUEST_TOKENS" //nolint:gosec
 	requestTokensFlagUsage = "Tokens used for http request " +
 		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
 
 	// host external url
 	hostExternalURLFlagName  = "host-external-url"
 	hostExternalURLFlagUsage = "Host External URL."
-	hostExternalURLEnvKey    = "ACRP_HOST_EXTERNAL_URL"
+	hostExternalURLEnvKey    = "ACE_HOST_EXTERNAL_URL"
 
 	// account link profile id
 	accountLinkProfileFlagName  = "account-link-profile"
 	accountLinkProfileFlagUsage = "Account Link Profile."
-	accountLinkProfileEnvKey    = "ACRP_ACCOUNT_LINK_PROFILE"
+	accountLinkProfileEnvKey    = "ACE_ACCOUNT_LINK_PROFILE"
 
 	tokenLength2 = 2
 )
@@ -93,7 +93,7 @@ const (
 // nolint:gochecknoglobals
 var supportedModes = map[string]string{"uscis": "uscis_dept", "cbp": "cbp_dept"}
 
-var logger = log.New("acrp-rest")
+var logger = log.New("ace-rp-rest")
 
 type server interface {
 	ListenAndServe(host, certFile, keyFile string, router http.Handler) error
@@ -328,12 +328,12 @@ func startRP(parameters *rpParameters) error {
 		RequestTokens:        parameters.requestTokens,
 	}
 
-	acrpService, err := acrp.New(cfg)
+	aceRpService, err := acerp.New(cfg)
 	if err != nil {
 		return err
 	}
 
-	handlers := acrpService.GetOperations()
+	handlers := aceRpService.GetOperations()
 
 	for _, handler := range handlers {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
@@ -353,6 +353,10 @@ func pathPrefix(path string) *mux.Router {
 	router.Handle("/", fs)
 	router.PathPrefix("/img/").Handler(fs)
 	router.PathPrefix("/showlogin").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		for _, v := range r.Cookies() {
+			http.SetCookie(w, v)
+		}
+
 		http.ServeFile(w, r, path+"/login.html")
 	})
 	router.PathPrefix("/showregister").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

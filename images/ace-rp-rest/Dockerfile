@@ -20,7 +20,7 @@ WORKDIR /opt/workspace/sandbox
 ENV EXECUTABLES go git
 
 FROM golang as sandbox
-RUN make acrp-rest
+RUN make ace-rp-rest
 
 
 FROM alpine:${ALPINE_VER}
@@ -32,11 +32,11 @@ RUN apk add --no-cache \
     jq;
 
 # copy build artifacts from build container
-COPY --from=sandbox /opt/workspace/sandbox/.build/bin/acrp /usr/local/bin
+COPY --from=sandbox /opt/workspace/sandbox/.build/bin/ace-rp /usr/local/bin
 
 # set up nsswitch.conf for Go's "netgo" implementation
 # - https://github.com/golang/go/blob/go1.9.1/src/net/conf.go#L194-L275
 RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
 
 WORKDIR /usr/local/bin
-ENTRYPOINT ["acrp-rest"]
+ENTRYPOINT ["ace-rp-rest"]

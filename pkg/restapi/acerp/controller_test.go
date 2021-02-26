@@ -4,7 +4,7 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-package acrp
+package acerp
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	mockstorage "github.com/trustbloc/edge-core/pkg/storage/mockstore"
 
-	"github.com/trustbloc/sandbox/pkg/restapi/acrp/operation"
+	"github.com/trustbloc/sandbox/pkg/restapi/acerp/operation"
 )
 
 func TestController_New(t *testing.T) {
@@ -31,7 +31,7 @@ func TestController_New(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{ErrOpenStoreHandle: errors.New("store open error")},
 		})
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "create acrp operation")
+		require.Contains(t, err.Error(), "create ace-rp operation")
 		require.Nil(t, controller)
 	})
 }

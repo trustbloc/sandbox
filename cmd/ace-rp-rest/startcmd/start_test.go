@@ -48,7 +48,7 @@ func TestStartCmdWithMissingHostArg(t *testing.T) {
 
 	err := startCmd.Execute()
 	require.Equal(t,
-		"Neither host-url (command line flag) nor ACRP_HOST_URL (environment variable) have been set.",
+		"Neither host-url (command line flag) nor ACE_HOST_URL (environment variable) have been set.",
 		err.Error())
 }
 
@@ -66,7 +66,7 @@ func TestDemoModeArg(t *testing.T) {
 
 		err := startCmd.Execute()
 		require.Contains(t, err.Error(),
-			"Neither demo-mode (command line flag) nor ACRP_DEMO_MODE (environment variable) have been set.")
+			"Neither demo-mode (command line flag) nor ACE_DEMO_MODE (environment variable) have been set.")
 	})
 
 	t.Run("invalid value", func(t *testing.T) {
@@ -194,7 +194,7 @@ func TestVaultServerArg(t *testing.T) {
 
 		err := startCmd.Execute()
 		require.Contains(t, err.Error(),
-			"Neither vault-server-url (command line flag) nor ACRP_VAULT_SERVER_URL (environment variable) have been set.")
+			"Neither vault-server-url (command line flag) nor ACE_VAULT_SERVER_URL (environment variable) have been set.")
 	})
 }
 
@@ -218,7 +218,7 @@ func TestComparatorURLArg(t *testing.T) {
 
 		err := startCmd.Execute()
 		require.Contains(t, err.Error(),
-			"Neither comparator-url (command line flag) nor ACRP_COMPARATOR_URL (environment variable) have been set.")
+			"Neither comparator-url (command line flag) nor ACE_COMPARATOR_URL (environment variable) have been set.")
 	})
 }
 
@@ -238,7 +238,7 @@ func TestVCIssuerArg(t *testing.T) {
 
 		err := startCmd.Execute()
 		require.Contains(t, err.Error(),
-			"Neither vc-issuer-url (command line flag) nor ACRP_VC_ISSUER_URL (environment variable) have been set.")
+			"Neither vc-issuer-url (command line flag) nor ACE_VC_ISSUER_URL (environment variable) have been set.")
 	})
 }
 
@@ -259,7 +259,7 @@ func TestHostExternalURLArg(t *testing.T) {
 
 		err := startCmd.Execute()
 		require.Contains(t, err.Error(),
-			"Neither host-external-url (command line flag) nor ACRP_HOST_EXTERNAL_URL (environment variable) have been set.")
+			"Neither host-external-url (command line flag) nor ACE_HOST_EXTERNAL_URL (environment variable) have been set.")
 	})
 }
 

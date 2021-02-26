@@ -41,9 +41,9 @@ go test $PKGS -count=1 -race -coverprofile=profile.out -covermode=atomic -timeou
 amend_coverage_file
 cd "$pwd" || exit
 
-# Running acrp-rest unit tests
-cd cmd/acrp-rest
-PKGS=`go list github.com/trustbloc/sandbox/cmd/acrp-rest/... 2> /dev/null | \
+# Running ace-rp-rest unit tests
+cd cmd/ace-rp-rest
+PKGS=`go list github.com/trustbloc/sandbox/cmd/ace-rp-rest/... 2> /dev/null | \
                                                  grep -v /mocks`
 go test $PKGS -count=1 -race -coverprofile=profile.out -covermode=atomic -timeout=10m
 amend_coverage_file

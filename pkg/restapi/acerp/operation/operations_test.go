@@ -49,7 +49,7 @@ func TestNew(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{ErrOpenStoreHandle: errors.New("store open error")},
 		})
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "acrp store provider : store open error")
+		require.Contains(t, err.Error(), "ace-rp store provider : store open error")
 		require.Nil(t, svc)
 	})
 

@@ -10,14 +10,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
 
-	"github.com/trustbloc/sandbox/cmd/acrp-rest/startcmd"
+	"github.com/trustbloc/sandbox/cmd/ace-rp-rest/startcmd"
 )
 
-var logger = log.New("acrp-rest")
+var logger = log.New("ace-rp-rest")
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use: "acrp",
+		Use: "ace-rp",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.HelpFunc()(cmd, args)
 		},
