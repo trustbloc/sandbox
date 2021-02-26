@@ -62,7 +62,7 @@ vc_issuer_interop_key=$(curl -o /dev/null -s -w "%{http_code}" --header "Content
 
 vc_issuer_interop=$(curl -o /dev/null -s -w "%{http_code}" --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
    --request POST \
-   --data '{"name":"vc-issuer-interop", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driverId=driver-did-method-rest"},"disableVCStatus":true,"didKeyType":"Ed25519"}' \
+   --data '{"name":"vc-issuer-interop", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "signatureRepresentation":1,"uniRegistrar":{"driverURL":"https://uni-registrar-web.trustbloc.local/1.0/register?driverId=driver-did-method-rest"},"disableVCStatus":false,"didKeyType":"Ed25519"}' \
    --insecure https://issuer-vcs.trustbloc.local/profile)
 
 

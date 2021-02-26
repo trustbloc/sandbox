@@ -44,7 +44,7 @@ const (
 	verifyPresentationURLFormat = "/%s" + "/verifier/presentations"
 
 	// TODO https://github.com/trustbloc/sandbox/issues/352 Configure verifier profiles in Verifier page
-	verifierProfileID = "verifier1"
+	verifierProfileID = "trustbloc-verifier"
 
 	vcsVerifierRequestTokenName = "vcs_verifier" //nolint: gosec
 
@@ -149,7 +149,7 @@ func (c *Operation) verifyVP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inputData := "vpDataInput"
-	checks := []string{"proof", "status"}
+	checks := []string{"proof", "credentialStatus"}
 
 	domain := r.Form.Get("domain")
 	challenge := r.Form.Get("challenge")

@@ -10,7 +10,12 @@ RED=$(tput setaf 1)
 
 trustbloc_ed25519signature2018_ed25519=$(curl -o /dev/null -s -w "%{http_code}" --header "Content-Type: application/json" --header "Authorization: Bearer vcs_verifier_rw_token" \
    --request POST \
-   --data '{"id":"verifier1","name":"Verifier", "credentialChecks":["proof","status"], "presentationChecks":["proof","status"]}' \
+   --data '{"id":"trustbloc-verifier","name":"Verifier", "credentialChecks":["proof","credentialStatus"], "presentationChecks":["proof","credentialStatus"]}' \
+   --insecure https://rp-vcs.trustbloc.local/verifier/profile)
+
+interop_ed25519signature2018_ed25519=$(curl -o /dev/null -s -w "%{http_code}" --header "Content-Type: application/json" --header "Authorization: Bearer vcs_verifier_rw_token" \
+   --request POST \
+   --data '{"id":"vc-verifier-interop","name":"Verifier", "credentialChecks":["proof","credentialStatus"], "presentationChecks":["proof","credentialStatus"]}' \
    --insecure https://rp-vcs.trustbloc.local/verifier/profile)
 
 checkProfileIsCreated()
@@ -27,3 +32,4 @@ checkProfileIsCreated()
 }
 
 checkProfileIsCreated $trustbloc_ed25519signature2018_ed25519 trustbloc-ed5519signature2018-ed25519
+checkProfileIsCreated $interop_ed25519signature2018_ed25519 interop_ed25519signature2018_ed25519
