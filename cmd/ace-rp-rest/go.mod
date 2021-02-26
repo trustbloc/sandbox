@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-module github.com/trustbloc/sandbox/cmd/acrp-rest
+module github.com/trustbloc/sandbox/cmd/ace-rp-rest
 
 replace github.com/trustbloc/sandbox => ../..
 

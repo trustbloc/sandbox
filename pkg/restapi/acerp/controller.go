@@ -4,24 +4,24 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-package acrp
+package acerp
 
 import (
 	"fmt"
 
-	"github.com/trustbloc/sandbox/pkg/restapi/acrp/operation"
+	"github.com/trustbloc/sandbox/pkg/restapi/acerp/operation"
 )
 
 // New returns new controller instance.
 func New(config *operation.Config) (*Controller, error) {
 	var allHandlers []operation.Handler
 
-	acrpService, err := operation.New(config)
+	aceRpService, err := operation.New(config)
 	if err != nil {
-		return nil, fmt.Errorf("create acrp operation : %w", err)
+		return nil, fmt.Errorf("create ace-rp operation : %w", err)
 	}
 
-	allHandlers = append(allHandlers, acrpService.GetRESTHandlers()...)
+	allHandlers = append(allHandlers, aceRpService.GetRESTHandlers()...)
 
 	return &Controller{handlers: allHandlers}, nil
 }

@@ -86,7 +86,7 @@ const (
 	nationalIDVCPath = "$.credentialSubject." + nationalID
 )
 
-var logger = log.New("acrp-restapi")
+var logger = log.New("ace-rp-restapi")
 
 // nolint: gochecknoglobals
 var cookieExpTime = time.Now().Add(cookieExpiryTime * time.Minute)
@@ -151,16 +151,16 @@ type Config struct {
 	RequestTokens        map[string]string
 }
 
-// New returns acrp operation instance.
+// New returns ace-rp operation instance.
 func New(config *Config) (*Operation, error) {
 	store, err := getTxnStore(config.StoreProvider)
 	if err != nil {
-		return nil, fmt.Errorf("acrp store provider : %w", err)
+		return nil, fmt.Errorf("ace-rp store provider : %w", err)
 	}
 
 	userStore, err := getUserStore(config.StoreProvider)
 	if err != nil {
-		return nil, fmt.Errorf("acrp store provider : %w", err)
+		return nil, fmt.Errorf("ace-rp store provider : %w", err)
 	}
 
 	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}}

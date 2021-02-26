@@ -289,7 +289,7 @@ healthCheck issuer $issuerHealthCheckURL 200
 healthCheck rp $rpHealthCheckURL 200
 healthCheck uscis-rp $uscisDemoRPHealthCheckURL 200
 healthCheck cbp-rp $cbpDemoRPHealthCheckURL 200
-if ! test/bdd/fixtures/scripts/acrp_configure.sh; then
+if ! test/bdd/fixtures/scripts/ace_rp_configure.sh; then
    exit -1
 fi
 echo "#### Step 12 is complete"

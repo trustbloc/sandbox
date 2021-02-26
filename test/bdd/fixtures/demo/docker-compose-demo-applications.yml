@@ -68,20 +68,20 @@ services:
 
   uscis-rp.example.com:
     container_name: uscis-rp.example.com
-    image: ${ACRP_IMAGE}:latest
+    image: ${ACE_RP_IMAGE}:latest
     environment:
-      - ACRP_HOST_URL=0.0.0.0:5558
-      - ACRP_HOST_EXTERNAL_URL=https://uscis-rp.trustbloc.local
-      - ACRP_DEMO_MODE=uscis
-      - ACRP_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
-      - ACRP_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
+      - ACE_HOST_URL=0.0.0.0:5558
+      - ACE_HOST_EXTERNAL_URL=https://uscis-rp.trustbloc.local
+      - ACE_DEMO_MODE=uscis
+      - ACE_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - ACE_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
       - DATABASE_URL=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - DATABASE_PREFIX=uscis_db
-      - ACRP_VAULT_SERVER_URL=https://vault.trustbloc.local
-      - ACRP_COMPARATOR_URL=https://rev-agency-comparator.trustbloc.local
+      - ACE_VAULT_SERVER_URL=https://vault.trustbloc.local
+      - ACE_COMPARATOR_URL=https://rev-agency-comparator.trustbloc.local
       - VIRTUAL_HOST=uscis-rp.trustbloc.local
-      - ACRP_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-rev-agency
-      - ACRP_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
+      - ACE_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-rev-agency
+      - ACE_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
     ports:
       - 5558:5558
     command: start
@@ -92,21 +92,21 @@ services:
 
   cbp-rp.example.com:
     container_name: cbp-rp.example.com
-    image: ${ACRP_IMAGE}:latest
+    image: ${ACE_RP_IMAGE}:latest
     environment:
-      - ACRP_HOST_URL=0.0.0.0:5559
-      - ACRP_HOST_EXTERNAL_URL=https://cbp-rp.trustbloc.local
-      - ACRP_DEMO_MODE=cbp
-      - ACRP_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
-      - ACRP_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
+      - ACE_HOST_URL=0.0.0.0:5559
+      - ACE_HOST_EXTERNAL_URL=https://cbp-rp.trustbloc.local
+      - ACE_DEMO_MODE=cbp
+      - ACE_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - ACE_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
       - DATABASE_URL=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - DATABASE_PREFIX=cbp_db
-      - ACRP_VAULT_SERVER_URL=https://vault.trustbloc.local
-      - ACRP_COMPARATOR_URL=https://emp-dept-comparator.trustbloc.local
+      - ACE_VAULT_SERVER_URL=https://vault.trustbloc.local
+      - ACE_COMPARATOR_URL=https://emp-dept-comparator.trustbloc.local
       - VIRTUAL_HOST=cbp-rp.trustbloc.local
-      - ACRP_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-emp-dept
-      - ACRP_ACCOUNT_LINK_PROFILE=uscis-profile
-      - ACRP_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
+      - ACE_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-emp-dept
+      - ACE_ACCOUNT_LINK_PROFILE=uscis-profile
+      - ACE_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
     ports:
       - 5559:5559
     command: start

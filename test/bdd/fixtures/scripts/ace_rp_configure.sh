@@ -66,7 +66,7 @@ code=${cbp_dept_act_linking_client//*RESPONSE_CODE=/}
 clientID=$(echo $response | jq -r .clientID)
 clientSecret=$(echo $response | jq -r .clientSecret)
 
-validateProfileCreation $code $response acrp_client cbp_dept_act_linking_client
+validateProfileCreation $code $response ace_rp_client cbp_dept_act_linking_client
 
 # create profile for uscis_profile_at_cbp
 uscis_profile_at_cbp=$(curl -o /dev/null -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" \
@@ -77,4 +77,4 @@ uscis_profile_at_cbp=$(curl -o /dev/null -s -w "RESPONSE_CODE=%{response_code}" 
 response=${uscis_profile_at_cbp//RESPONSE_CODE*/}
 code=${uscis_profile_at_cbp//*RESPONSE_CODE=/}
 
-validateProfileCreation $code $response acrp_profile uscis_profile_at_cbp
+validateProfileCreation $code $response ace_rp_profile uscis_profile_at_cbp
