@@ -82,6 +82,8 @@ const (
 
 	// json-ld
 	credentialContext = "https://www.w3.org/2018/credentials/v1"
+
+	nationalIDVCPath = "$.credentialSubject." + nationalID
 )
 
 var logger = log.New("acrp-restapi")
@@ -435,7 +437,7 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 
 	docAuth, err := o.vClient.CreateAuthorization(
 		userData.VaultID,
-		strings.Split(confResp.Payload.AuthKeyURL, "#")[0],
+		confResp.Payload.AuthKeyURL,
 		&vault.AuthorizationsScope{
 			Target:  userData.NationalIDDocID,
 			Actions: []string{"read"},
@@ -461,9 +463,10 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 	query := make([]models.Query, 0)
 	query = append(query,
 		&models.DocQuery{
-			DocID:      &userData.NationalIDDocID,
-			VaultID:    &userData.VaultID,
-			AuthTokens: &models.DocQueryAO1AuthTokens{Kms: docAuth.Tokens.KMS, Edv: docAuth.Tokens.EDV},
+			DocID:       &userData.NationalIDDocID,
+			VaultID:     &userData.VaultID,
+			AuthTokens:  &models.DocQueryAO1AuthTokens{Kms: docAuth.Tokens.KMS, Edv: docAuth.Tokens.EDV},
+			DocAttrPath: nationalIDVCPath,
 		},
 		&models.AuthorizedQuery{
 			AuthToken: &auth[0],
@@ -632,7 +635,7 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 	// pass the zcap to the caller
 	auth, err := o.getAuthorization(
 		userData.VaultID,
-		strings.Split(compConfig.AuthKeyURL, "#")[0],
+		compConfig.AuthKeyURL,
 		userData.NationalIDDocID,
 		data.DID,
 	)
@@ -863,7 +866,7 @@ func (o *Operation) getUserAuths(w http.ResponseWriter, r *http.Request) {
 		// pass the zcap to the caller
 		auth, err := o.getAuthorization(
 			v.VaultID,
-			strings.Split(compConfig.AuthKeyURL, "#")[0],
+			compConfig.AuthKeyURL,
 			v.NationalIDDocID,
 			cData.DID,
 		)
@@ -1067,26 +1070,21 @@ func (o *Operation) storeNationalID(id string) (string, string, error) {
 	vaultID := vaultData.ID
 
 	// wrap nationalID in a vc
-	_, err = o.createNationalIDCred(vaultID, id)
+	vc, err := o.createNationalIDCred(vaultID, id)
 	if err != nil {
 		return "", "", fmt.Errorf("create vc for nationalID : %w", err)
-	}
-
-	// TODO https://github.com/trustbloc/sandbox/issues/811 - Save nationalID in a VC
-	content := map[string]interface{}{
-		nationalID: id,
 	}
 
 	// save nationalID vc
 	docID, err := o.saveNationalIDDoc(
 		vaultID,
-		content,
+		vc,
 	)
 	if err != nil {
 		return "", "", fmt.Errorf("save nationalID doc : %w", err)
 	}
 
-	logger.Infof("storeNationalID : vaultID=[%s] docID=[%s] content=[%s]", vaultID, docID, content)
+	logger.Infof("storeNationalID : vaultID=[%s] docID=[%s] content=[%s]", vaultID, docID, vc)
 
 	return vaultID, docID, nil
 }
@@ -1138,13 +1136,13 @@ func (o *Operation) createNationalIDCred(sub, id string) (*verifiable.Credential
 	return vc, nil
 }
 
-func (o *Operation) saveNationalIDDoc(vaultID string, content map[string]interface{}) (string, error) {
+func (o *Operation) saveNationalIDDoc(vaultID string, vc interface{}) (string, error) {
 	docID, err := edvutils.GenerateEDVCompatibleID()
 	if err != nil {
 		return "", fmt.Errorf("create edv doc id : %w", err)
 	}
 
-	_, err = o.vClient.SaveDoc(vaultID, docID, content)
+	_, err = o.vClient.SaveDoc(vaultID, docID, vc)
 	if err != nil {
 		return "", fmt.Errorf("failed to save doc : %w", err)
 	}
@@ -1167,7 +1165,7 @@ func (o *Operation) getComparatorConfig() (*compmodel.Config, error) {
 }
 
 func (o *Operation) getAuthorization(vaultID, rp, docID, authDID string) (string, error) {
-	logger.Infof("getAuthorization : vaultID=%s rp=%s docID=%s authDID=%s", vaultID, rp, docID, authDID)
+	logger.Infof("getAuthorization : vaultID=[%s] rp=[%s] docID=[%s] authDID=[%s]", vaultID, rp, docID, authDID)
 
 	docAuth, err := o.vClient.CreateAuthorization(
 		vaultID,
@@ -1186,13 +1184,14 @@ func (o *Operation) getAuthorization(vaultID, rp, docID, authDID string) (string
 		return "", errors.New("missing auth token from vault-server")
 	}
 
-	logger.Infof("getAuthorization : edv=%s kms=%s", docAuth.Tokens.EDV, docAuth.Tokens.KMS)
+	logger.Infof("getAuthorization : edv=[%s] kms=[%s]", docAuth.Tokens.EDV, docAuth.Tokens.KMS)
 
 	scope := &compmodel.Scope{
-		Actions:    []string{"compare"},
-		VaultID:    vaultID,
-		DocID:      &docID,
-		AuthTokens: &compmodel.ScopeAuthTokens{Edv: docAuth.Tokens.EDV, Kms: docAuth.Tokens.KMS},
+		Actions:     []string{"compare"},
+		VaultID:     vaultID,
+		DocID:       &docID,
+		AuthTokens:  &compmodel.ScopeAuthTokens{Edv: docAuth.Tokens.EDV, Kms: docAuth.Tokens.KMS},
+		DocAttrPath: nationalIDVCPath,
 	}
 
 	caveat := make([]compmodel.Caveat, 0)
@@ -1218,7 +1217,7 @@ func (o *Operation) getAuthorization(vaultID, rp, docID, authDID string) (string
 		return "", errors.New("missing auth token from comparator")
 	}
 
-	logger.Infof("getAuthorization : token=%s", authResp.Payload.AuthToken)
+	logger.Infof("getAuthorization : token=[%s]", authResp.Payload.AuthToken)
 
 	return authResp.Payload.AuthToken, nil
 }
