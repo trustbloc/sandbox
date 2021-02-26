@@ -1043,8 +1043,10 @@ github.com/trustbloc/edge-core v0.1.6-0.20210212172534-81ab3a5abf5b h1:eHsXkGpH4
 github.com/trustbloc/edge-core v0.1.6-0.20210212172534-81ab3a5abf5b/go.mod h1:+Shv5bDxWL0st/7Oe02JBPR7Fr9nQ6D6BEMoyr8SIcE=
 github.com/trustbloc/edge-core v0.1.6-0.20210218132256-ea94ce52be69 h1:bthi42KSRaWFiX8c0NI5fbQ+lqoVva8hjt9yyhgRs8I=
 github.com/trustbloc/edge-core v0.1.6-0.20210218132256-ea94ce52be69/go.mod h1:+Shv5bDxWL0st/7Oe02JBPR7Fr9nQ6D6BEMoyr8SIcE=
-github.com/trustbloc/edge-service v0.1.6-0.20210225162505-6de9f9a756f3 h1:XGn5+J5NEkIukv6LTlg9vyo3yNRykePPKNtefEvH30s=
-github.com/trustbloc/edge-service v0.1.6-0.20210225162505-6de9f9a756f3/go.mod h1:9MHh3NgIom6Gtk6zi4SFX7koj5Fkc1o+FYTwtOogWa0=
+github.com/trustbloc/edge-core v0.1.6-0.20210224175343-275d0e0370c4 h1:03N4TTxOnCDY7ZyCKwoUBhKpefgH9FObePKmBpa3lNM=
+github.com/trustbloc/edge-core v0.1.6-0.20210224175343-275d0e0370c4/go.mod h1:+Shv5bDxWL0st/7Oe02JBPR7Fr9nQ6D6BEMoyr8SIcE=
+github.com/trustbloc/edge-service v0.1.6-0.20210226134309-1070895c7345 h1:gGLnqUh4OOzJ3e3tHb+AmAbwUNJZnOK9KMkpoPh30dw=
+github.com/trustbloc/edge-service v0.1.6-0.20210226134309-1070895c7345/go.mod h1:yaxed6u9LPo+J/gqBaYZhWHCCuLUhs2j5gggVbHFqBI=
 github.com/trustbloc/edv v0.1.6-0.20210212224738-ec2041a015c9 h1:G40O3d9my8m8U6QVoSX/bT9s6K5Ig5TrMoxRk5PTeSM=
 github.com/trustbloc/edv v0.1.6-0.20210212224738-ec2041a015c9/go.mod h1:zgY2Rde9Pv0aRmjJTdRZkV7ImW3+r5/c6aRc87moynI=
 github.com/trustbloc/edv v0.1.6-0.20210218153427-8562f6f29cbd h1:oD2UNHlZxYwxyY6QvbNfPtix5m2kYbkANlGb4cDakP0=
