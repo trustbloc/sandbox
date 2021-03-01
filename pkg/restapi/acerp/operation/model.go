@@ -7,7 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package operation
 
 type userData struct {
-	Password        string `json:"password"`
 	VaultID         string `json:"vaultID"`
 	NationalIDDocID string `json:"nationalIDDocID"`
 }
@@ -44,16 +43,6 @@ type profileData struct {
 	URL          string `json:"url"`
 	DID          string `json:"did"`
 	Callback     string `json:"callback"`
-}
-
-type saveUserDataReq struct {
-	Users []user `json:"users"`
-}
-
-type user struct {
-	ID         string `json:"id"`
-	Name       string `json:"name"`
-	NationalID string `json:"nationalID"`
 }
 
 type getUserAuthResp struct {

@@ -41,7 +41,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}, ComparatorURL: "http://comp.example.com"})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 16, len(svc.GetRESTHandlers()))
+		require.Equal(t, 14, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -315,9 +315,7 @@ func TestLogin(t *testing.T) {
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-		uDataBytes, err := json.Marshal(&userData{
-			Password: samplePassword,
-		})
+		uDataBytes, err := json.Marshal(&userData{})
 		require.NoError(t, err)
 
 		s := make(map[string][]byte)
@@ -347,9 +345,7 @@ func TestLogin(t *testing.T) {
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-		uDataBytes, err := json.Marshal(&userData{
-			Password: samplePassword,
-		})
+		uDataBytes, err := json.Marshal(&userData{})
 		require.NoError(t, err)
 
 		s := make(map[string][]byte)
@@ -439,37 +435,8 @@ func TestLogin(t *testing.T) {
 		require.Contains(t, rr.Body.String(), "unmarshal user data")
 	})
 
-	t.Run("invalid password", func(t *testing.T) {
-		uDataBytes, err := json.Marshal(&userData{
-			Password: samplePassword,
-		})
-		require.NoError(t, err)
-
-		s := make(map[string][]byte)
-		s[sampleUserName] = uDataBytes
-
-		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
-			ComparatorURL: "http://comp.example.com",
-		})
-		require.NoError(t, err)
-		require.NotNil(t, svc)
-
-		rr := httptest.NewRecorder()
-
-		req := &http.Request{Form: make(map[string][]string)}
-		req.Form.Add(username, sampleUserName)
-		req.Form.Add(password, sampleUserName)
-
-		svc.login(rr, req)
-		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "invalid password")
-	})
-
 	t.Run("db error", func(t *testing.T) {
-		uDataBytes, err := json.Marshal(&userData{
-			Password: samplePassword,
-		})
+		uDataBytes, err := json.Marshal(&userData{})
 		require.NoError(t, err)
 
 		s := make(map[string][]byte)
@@ -598,49 +565,6 @@ func TestConnect(t *testing.T) {
 		svc.connect(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "unamrshal profile data")
-	})
-}
-
-func TestDisconnect(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
-		require.NoError(t, err)
-
-		defer func() { require.NoError(t, os.Remove(file.Name())) }()
-
-		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{},
-			DashboardHTML: file.Name(),
-			ComparatorURL: "http://comp.example.com",
-		})
-		require.NoError(t, err)
-		require.NotNil(t, svc)
-
-		rr := httptest.NewRecorder()
-
-		req, err := http.NewRequest("GET", "/disconnect?userName="+sampleUserName, nil)
-		require.NoError(t, err)
-
-		svc.disconnect(rr, req)
-		require.Equal(t, http.StatusOK, rr.Code)
-	})
-
-	t.Run("no username", func(t *testing.T) {
-		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{},
-			ComparatorURL: "http://comp.example.com",
-		})
-		require.NoError(t, err)
-		require.NotNil(t, svc)
-
-		rr := httptest.NewRecorder()
-
-		req, err := http.NewRequest("GET", "/disconnect", nil)
-		require.NoError(t, err)
-
-		svc.disconnect(rr, req)
-		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "missing username")
 	})
 }
 
@@ -1861,132 +1785,6 @@ func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	return m.respValue, nil
-}
-
-// nolint: bodyclose
-func TestSaveUsers(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
-			ComparatorURL: "http://comp.example.com",
-		})
-		require.NoError(t, err)
-		require.NotNil(t, svc)
-
-		svc.vClient = &mockVaultClient{}
-		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil, nil),
-		}
-
-		users := []user{
-			{ID: uuid.New().String(), Name: "Test1", NationalID: "123"},
-			{ID: uuid.New().String(), Name: "Test2", NationalID: "789"},
-		}
-
-		reqBytes, err := json.Marshal(&saveUserDataReq{Users: users})
-		require.NoError(t, err)
-
-		req, err := http.NewRequest("POST", client, bytes.NewBuffer(reqBytes))
-		require.NoError(t, err)
-
-		rr := httptest.NewRecorder()
-
-		svc.saveUsers(rr, req)
-		require.Equal(t, http.StatusCreated, rr.Code)
-	})
-
-	t.Run("invalid request", func(t *testing.T) {
-		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
-			ComparatorURL: "http://comp.example.com",
-		})
-		require.NoError(t, err)
-		require.NotNil(t, svc)
-
-		req, err := http.NewRequest("POST", client, strings.NewReader("invalid-json"))
-		require.NoError(t, err)
-
-		rr := httptest.NewRecorder()
-
-		svc.saveUsers(rr, req)
-		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to decode request")
-
-		reqBytes, err := json.Marshal(&saveUserDataReq{})
-		require.NoError(t, err)
-
-		req, err = http.NewRequest("POST", client, bytes.NewBuffer(reqBytes))
-		require.NoError(t, err)
-
-		rr = httptest.NewRecorder()
-
-		svc.saveUsers(rr, req)
-		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "no user data in the request")
-	})
-
-	t.Run("db error", func(t *testing.T) {
-		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPutBulk: errors.New("save error")},
-			},
-			ComparatorURL: "http://comp.example.com",
-		})
-		require.NoError(t, err)
-		require.NotNil(t, svc)
-
-		svc.vClient = &mockVaultClient{}
-		svc.httpClient = &mockHTTPClient{
-			doFunc: mockHTTPResponse(t, nil, nil),
-		}
-
-		users := []user{
-			{ID: uuid.New().String(), Name: "Test1", NationalID: "123"},
-			{ID: uuid.New().String(), Name: "Test2", NationalID: "789"},
-		}
-
-		reqBytes, err := json.Marshal(&saveUserDataReq{Users: users})
-		require.NoError(t, err)
-
-		req, err := http.NewRequest("POST", client, bytes.NewBuffer(reqBytes))
-		require.NoError(t, err)
-
-		rr := httptest.NewRecorder()
-
-		svc.saveUsers(rr, req)
-		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to save user data")
-	})
-
-	t.Run("vault error", func(t *testing.T) {
-		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPutBulk: errors.New("save error")},
-			},
-			ComparatorURL: "http://comp.example.com",
-		})
-		require.NoError(t, err)
-		require.NotNil(t, svc)
-
-		svc.vClient = &mockVaultClient{CreateVaultErr: errors.New("create vault error")}
-
-		users := []user{
-			{ID: uuid.New().String(), Name: "Test1", NationalID: "123"},
-			{ID: uuid.New().String(), Name: "Test2", NationalID: "789"},
-		}
-
-		reqBytes, err := json.Marshal(&saveUserDataReq{Users: users})
-		require.NoError(t, err)
-
-		req, err := http.NewRequest("POST", client, bytes.NewBuffer(reqBytes))
-		require.NoError(t, err)
-
-		rr := httptest.NewRecorder()
-
-		svc.saveUsers(rr, req)
-		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to store nationalID")
-	})
 }
 
 func TestGetAuthorizations(t *testing.T) {
