@@ -20,6 +20,8 @@ services:
         - VAULT_REMOTE_KMS_URL=https://vault-kms.trustbloc.local
         - VAULT_EDV_URL=https://edv.trustbloc.local/encrypted-data-vaults
         - VAULT_DSN=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+        - VAULT_DID_METHOD=trustbloc
+        - VAULT_DID_DOMAIN=${BLOC_DOMAIN}
         - VIRTUAL_HOST=vault.trustbloc.local
         - VIRTUAL_PROTO=https
     ports:

@@ -23,9 +23,14 @@ services:
       - VIRTUAL_HOST=edv.trustbloc.local
       - EDV_EXTENSIONS=ReturnFullDocumentsOnQuery,Batch
       - EDV_DATABASE_TIMEOUT=60
+      - EDV_TLS_SYSTEMCERTPOOL=true
+      - EDV_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - EDV_DID_DOMAIN=${BLOC_DOMAIN}
     ports:
       - 8081:8081
     command: start
+    volumes:
+      - ../keys/tls:/etc/tls
     networks:
       - demo_demo-net
 

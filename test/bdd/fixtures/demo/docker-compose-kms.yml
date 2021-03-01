@@ -146,7 +146,7 @@ services:
       - KMS_KEY_MANAGER_STORAGE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - KMS_KEY_MANAGER_STORAGE_PREFIX=vaultkms
       - KMS_ZCAP_ENABLE=true
-      - KMS_DID_DOMAIN=testnet.trustbloc.local
+      - KMS_DID_DOMAIN=${BLOC_DOMAIN}
       - VIRTUAL_HOST=vault-kms.trustbloc.local
       - VIRTUAL_PROTO=https
     ports:

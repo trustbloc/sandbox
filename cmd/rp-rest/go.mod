@@ -7,11 +7,11 @@ module github.com/trustbloc/sandbox/cmd/rp-rest
 replace github.com/trustbloc/sandbox => ../..
 
 require (
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/spf13/cobra v1.1.1
 	github.com/stretchr/testify v1.7.0
-	github.com/trustbloc/edge-core v0.1.6-0.20210224175343-275d0e0370c4
+	github.com/trustbloc/edge-core v0.1.6-0.20210226125453-b9a45cad81f5
 	github.com/trustbloc/sandbox v0.0.0
 )
 
