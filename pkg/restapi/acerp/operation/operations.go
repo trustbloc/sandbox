@@ -128,6 +128,7 @@ type Operation struct {
 	vcIssuerURL          string
 	requestTokens        map[string]string
 	accountLinkProfile   string
+	extractorProfile     string
 	hostExternalURL      string
 	vClient              vaultClient
 	compClient           comparatorClient
@@ -146,6 +147,7 @@ type Config struct {
 	ComparatorURL        string
 	VCIssuerURL          string
 	AccountLinkProfile   string
+	ExtractorProfile     string
 	HostExternalURL      string
 	RequestTokens        map[string]string
 }
@@ -188,6 +190,7 @@ func New(config *Config) (*Operation, error) {
 		accountNotLinkedHTML: config.AccountNotLinkedHTML,
 		vcIssuerURL:          config.VCIssuerURL,
 		accountLinkProfile:   config.AccountLinkProfile,
+		extractorProfile:     config.ExtractorProfile,
 		hostExternalURL:      config.HostExternalURL,
 		requestTokens:        config.RequestTokens,
 		vClient:              vaultclient.New(config.VaultServerURL, vaultclient.WithHTTPClient(httpClient)),
@@ -214,7 +217,8 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(profile, http.MethodPost, o.createProfile),
 		support.NewHTTPHandler(getProfile, http.MethodGet, o.getProfile),
 		support.NewHTTPHandler(getProfile, http.MethodDelete, o.deleteProfile),
-		support.NewHTTPHandler(userAuth, http.MethodGet, o.getUserAuths),
+		support.NewHTTPHandler(users, http.MethodGet, o.getUsers),
+		support.NewHTTPHandler(userAuth, http.MethodPost, o.createUserAuths),
 		support.NewHTTPHandler(extract, http.MethodGet, o.extract),
 	}
 }
@@ -224,7 +228,7 @@ func (o *Operation) GetRESTHandlers() []Handler {
 	return o.handlers
 }
 
-func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
+func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint: funlen
 	err := r.ParseForm()
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to parse form data: %s", err.Error()))
@@ -256,6 +260,8 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uData := userData{
+		ID:              uuid.NewString(),
+		UserName:        r.FormValue(username),
 		VaultID:         vaultID,
 		NationalIDDocID: docID,
 	}
@@ -272,6 +278,14 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("unable to save user data: %s", err.Error()))
+
+		return
+	}
+
+	err = o.userStore.Put(uData.ID, []byte(uData.UserName))
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to save id-username mapping data: %s", err.Error()))
 
 		return
 	}
@@ -746,28 +760,35 @@ func (o *Operation) deleteProfile(w http.ResponseWriter, r *http.Request) {
 	o.writeResponse(w, http.StatusOK, nil)
 }
 
-func (o *Operation) getUserAuths(w http.ResponseWriter, r *http.Request) {
-	clientID := r.URL.Query()["client_id"]
-	if len(clientID) == 0 {
-		o.writeErrorResponse(w, http.StatusBadRequest, "missing client_id")
+func (o *Operation) getUsers(w http.ResponseWriter, r *http.Request) {
+	// get all the users
+	u, err := o.getAllUsers()
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed get user data: %s", err.Error()))
+
+		return
+	}
+
+	// send the user data in the response
+	o.writeResponse(w, http.StatusOK, &getUserDataResp{Users: u})
+}
+
+func (o *Operation) createUserAuths(w http.ResponseWriter, r *http.Request) {
+	// get all the users
+	u, err := o.getAllUsers()
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed get user data: %s", err.Error()))
 
 		return
 	}
 
 	// validate client
-	cData, err := o.getClientData(clientID[0])
+	cData, err := o.getClientData(o.extractorProfile)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusBadRequest,
 			fmt.Sprintf("failed to client data: %s", err.Error()))
-
-		return
-	}
-
-	// get all the users
-	u, err := o.getUsers()
-	if err != nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed get user data: %s", err.Error()))
 
 		return
 	}
@@ -801,6 +822,8 @@ func (o *Operation) getUserAuths(w http.ResponseWriter, r *http.Request) {
 
 		userAuths = append(userAuths, userAuthorization{AuthToken: auth})
 	}
+
+	// TODO post the user authorizations to the extractor service
 
 	// send the authorizations in the response
 	o.writeResponse(w, http.StatusOK, &getUserAuthResp{UserAuths: userAuths})
@@ -961,15 +984,26 @@ func (o *Operation) getProfileData(profileID string) (*profileData, error) {
 	return data, nil
 }
 
-func (o *Operation) getUsers() ([]userData, error) {
+func (o *Operation) getAllUsers() ([]userData, error) {
 	dataMap, err := o.userStore.GetAll()
 	if err != nil {
 		return nil, fmt.Errorf("get all user data: %w", err)
 	}
 
-	users := make([]userData, 0)
+	userNames := make([]string, 0)
 
 	for _, v := range dataMap {
+		userNames = append(userNames, string(v))
+	}
+
+	userDataMap, err := o.store.GetBulk(userNames...)
+	if err != nil {
+		return nil, fmt.Errorf("get user data keys=%s : %w", userNames, err)
+	}
+
+	users := make([]userData, 0)
+
+	for _, v := range userDataMap {
 		var u *userData
 
 		err = json.Unmarshal(v, &u)

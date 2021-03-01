@@ -7,6 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package operation
 
 type userData struct {
+	ID              string `json:"id"`
+	UserName        string `json:"userName"`
 	VaultID         string `json:"vaultID"`
 	NationalIDDocID string `json:"nationalIDDocID"`
 }
@@ -53,4 +55,8 @@ type userAuthorization struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	AuthToken string `json:"authToken"`
+}
+
+type getUserDataResp struct {
+	Users []userData `json:"users"`
 }

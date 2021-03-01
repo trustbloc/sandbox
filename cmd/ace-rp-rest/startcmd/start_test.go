@@ -134,6 +134,7 @@ func getValidArgs(logLevel string) []string {
 	args = append(args, accountLinkProfileArg()...)
 	args = append(args, requestTokensArg()...)
 	args = append(args, comparatorURLArg()...)
+	args = append(args, extractorProfileArg()...)
 
 	if logLevel != "" {
 		args = append(args, logLevelArg(logLevel)...)
@@ -328,6 +329,9 @@ func setEnvVars(t *testing.T) {
 	err = os.Setenv(accountLinkProfileEnvKey, "profile-test")
 	require.Nil(t, err)
 
+	err = os.Setenv(extractorProfileEnvKey, "extractor-abc")
+	require.Nil(t, err)
+
 	err = os.Setenv(comparatorURLEnvKey, "https://comparator")
 	require.Nil(t, err)
 }
@@ -361,6 +365,9 @@ func unsetEnvVars(t *testing.T) {
 	require.Nil(t, err)
 
 	err = os.Unsetenv(accountLinkProfileEnvKey)
+	require.Nil(t, err)
+
+	err = os.Unsetenv(extractorProfileEnvKey)
 	require.Nil(t, err)
 
 	err = os.Unsetenv(comparatorURLEnvKey)
@@ -405,6 +412,10 @@ func hostExternalURLArg() []string {
 
 func accountLinkProfileArg() []string {
 	return []string{flag + accountLinkProfileFlagName, "profile-abc"}
+}
+
+func extractorProfileArg() []string {
+	return []string{flag + extractorProfileFlagName, "extractor-abc"}
 }
 
 func databaseURLArg() []string {
