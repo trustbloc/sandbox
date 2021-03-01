@@ -44,7 +44,6 @@ const (
 	login               = "/login"
 	logout              = "/logout"
 	connect             = "/connect"
-	disconnect          = "/disconnect"
 	link                = "/link"
 	accountLinkCallback = "/callback"
 	consent             = "/consent"
@@ -207,7 +206,6 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(login, http.MethodPost, o.login),
 		support.NewHTTPHandler(logout, http.MethodGet, o.logout),
 		support.NewHTTPHandler(connect, http.MethodGet, o.connect),
-		support.NewHTTPHandler(disconnect, http.MethodGet, o.disconnect),
 		support.NewHTTPHandler(link, http.MethodGet, o.link),
 		support.NewHTTPHandler(accountLinkCallback, http.MethodGet, o.accountLinkCallback),
 		support.NewHTTPHandler(consent, http.MethodGet, o.consent),
@@ -216,7 +214,6 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(profile, http.MethodPost, o.createProfile),
 		support.NewHTTPHandler(getProfile, http.MethodGet, o.getProfile),
 		support.NewHTTPHandler(getProfile, http.MethodDelete, o.deleteProfile),
-		support.NewHTTPHandler(users, http.MethodPost, o.saveUsers),
 		support.NewHTTPHandler(userAuth, http.MethodGet, o.getUserAuths),
 		support.NewHTTPHandler(extract, http.MethodGet, o.extract),
 	}
@@ -259,7 +256,6 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uData := userData{
-		Password:        r.FormValue(password),
 		VaultID:         vaultID,
 		NationalIDDocID: docID,
 	}
@@ -295,12 +291,6 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 	uData, err := o.getUserData(r.FormValue(username))
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to get user data: %s", err.Error()))
-
-		return
-	}
-
-	if r.FormValue(password) != uData.Password {
-		o.writeErrorResponse(w, http.StatusBadRequest, "invalid password")
 
 		return
 	}
@@ -375,19 +365,6 @@ func (o *Operation) connect(w http.ResponseWriter, r *http.Request) {
 	// TODO https://github.com/trustbloc/sandbox/issues/808 use OIDC to get auth token for account comparison
 
 	http.Redirect(w, r, endpoint, http.StatusFound)
-}
-
-func (o *Operation) disconnect(w http.ResponseWriter, r *http.Request) {
-	userName := r.URL.Query()["userName"]
-	if len(userName) == 0 {
-		o.writeErrorResponse(w, http.StatusBadRequest, "missing username")
-
-		return
-	}
-
-	// TODO disconnect with other service / integrate trustbloc features
-
-	o.showDashboard(w, userName[0], "", "", false)
 }
 
 func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) { // nolint: funlen,  gocyclo
@@ -767,61 +744,6 @@ func (o *Operation) deleteProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	o.writeResponse(w, http.StatusOK, nil)
-}
-
-func (o *Operation) saveUsers(w http.ResponseWriter, r *http.Request) {
-	data := &saveUserDataReq{}
-
-	err := json.NewDecoder(r.Body).Decode(data)
-	if err != nil {
-		o.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to decode request: %s", err.Error()))
-
-		return
-	}
-
-	if len(data.Users) == 0 {
-		o.writeErrorResponse(w, http.StatusBadRequest, "no user data in the request")
-
-		return
-	}
-
-	keys := make([]string, 0)
-	vals := make([][]byte, 0)
-
-	for _, v := range data.Users {
-		logger.Infof("saveUser : data=%s", v)
-
-		keys = append(keys, v.ID)
-
-		vaultID, docID, vErr := o.storeNationalID(v.NationalID)
-		if vErr != nil {
-			o.writeErrorResponse(w, http.StatusInternalServerError,
-				fmt.Sprintf("failed to store nationalID: %s", vErr.Error()))
-
-			return
-		}
-
-		valBytes, mErr := json.Marshal(&userData{VaultID: vaultID, NationalIDDocID: docID})
-		if mErr != nil {
-			o.writeErrorResponse(w, http.StatusInternalServerError,
-				fmt.Sprintf("failed to marshal user data: %s", mErr.Error()))
-
-			return
-		}
-
-		vals = append(vals, valBytes)
-	}
-
-	err = o.userStore.PutBulk(keys, vals)
-	if err != nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to save user data - %s", err.Error()))
-
-		return
-	}
-
-	o.writeResponse(w, http.StatusCreated, data)
 }
 
 func (o *Operation) getUserAuths(w http.ResponseWriter, r *http.Request) {
