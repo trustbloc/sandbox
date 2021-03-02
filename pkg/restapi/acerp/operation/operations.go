@@ -18,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dchest/uniuri"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
@@ -53,7 +54,7 @@ const (
 	getProfile          = profile + "/{id}"
 	users               = "/users"
 	userAuth            = users + "/auth"
-	extract             = "/extract"
+	generateUserAuth    = userAuth + "/generate"
 
 	// store
 	txnStoreName  = "issuer_txn"
@@ -74,6 +75,7 @@ const (
 
 	vcsIssuerRequestTokenName = "vcs_issuer"
 	requestTimeout            = 30 * time.Second
+	userIDLen                 = 7
 
 	// external paths
 	issueCredentialURLFormat = "%s" + "/credentials/issueCredential"
@@ -218,8 +220,7 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(getProfile, http.MethodGet, o.getProfile),
 		support.NewHTTPHandler(getProfile, http.MethodDelete, o.deleteProfile),
 		support.NewHTTPHandler(users, http.MethodGet, o.getUsers),
-		support.NewHTTPHandler(userAuth, http.MethodPost, o.createUserAuths),
-		support.NewHTTPHandler(extract, http.MethodGet, o.extract),
+		support.NewHTTPHandler(generateUserAuth, http.MethodPost, o.generateUserAuths),
 	}
 }
 
@@ -260,7 +261,7 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint
 	}
 
 	uData := userData{
-		ID:              uuid.NewString(),
+		ID:              strings.ToUpper(uniuri.NewLen(userIDLen)),
 		UserName:        r.FormValue(username),
 		VaultID:         vaultID,
 		NationalIDDocID: docID,
@@ -762,7 +763,7 @@ func (o *Operation) deleteProfile(w http.ResponseWriter, r *http.Request) {
 
 func (o *Operation) getUsers(w http.ResponseWriter, r *http.Request) {
 	// get all the users
-	u, err := o.getAllUsers()
+	u, err := o.fetchUsers()
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed get user data: %s", err.Error()))
@@ -774,9 +775,19 @@ func (o *Operation) getUsers(w http.ResponseWriter, r *http.Request) {
 	o.writeResponse(w, http.StatusOK, &getUserDataResp{Users: u})
 }
 
-func (o *Operation) createUserAuths(w http.ResponseWriter, r *http.Request) {
+func (o *Operation) generateUserAuths(w http.ResponseWriter, r *http.Request) { // nolint: funlen
+	data := &generateUserAuthReq{}
+
+	err := json.NewDecoder(r.Body).Decode(data)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to decode request: %s", err.Error()))
+
+		return
+	}
+
 	// get all the users
-	u, err := o.getAllUsers()
+	u, err := o.fetchUsers(data.Users...)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed get user data: %s", err.Error()))
@@ -807,15 +818,15 @@ func (o *Operation) createUserAuths(w http.ResponseWriter, r *http.Request) {
 	// get the authorization for all
 	for _, v := range u {
 		// pass the zcap to the caller
-		auth, err := o.getAuthorization(
+		auth, authErr := o.getAuthorization(
 			v.VaultID,
 			compConfig.AuthKeyURL,
 			v.NationalIDDocID,
 			cData.DID,
 		)
-		if err != nil {
+		if authErr != nil {
 			o.writeErrorResponse(w, http.StatusInternalServerError,
-				fmt.Sprintf("failed create authorization : %s", err.Error()))
+				fmt.Sprintf("failed create authorization : %s", authErr.Error()))
 
 			return
 		}
@@ -823,24 +834,18 @@ func (o *Operation) createUserAuths(w http.ResponseWriter, r *http.Request) {
 		userAuths = append(userAuths, userAuthorization{AuthToken: auth})
 	}
 
-	// TODO post the user authorizations to the extractor service
-
-	// send the authorizations in the response
-	o.writeResponse(w, http.StatusOK, &getUserAuthResp{UserAuths: userAuths})
-}
-
-func (o *Operation) extract(w http.ResponseWriter, r *http.Request) {
-	data, err := o.getProfileData(o.accountLinkProfile)
+	reqBytes, err := json.Marshal(&userAuthData{UserAuths: userAuths})
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to get profile data : %s", err.Error()))
+			fmt.Sprintf("failed to marshal request to extractor service : %s", err.Error()))
 
 		return
 	}
 
-	endpoint := data.URL + "/users/auth?client_id=" + data.ClientID
+	// post the user authorizations to the extractor service
+	endpoint := cData.Callback + userAuth
 
-	respBytes, err := o.sendHTTPRequest(http.MethodGet, endpoint, nil, http.StatusOK, "")
+	_, err = o.sendHTTPRequest(http.MethodGet, endpoint, reqBytes, http.StatusOK, "")
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get user auth data : %s", err.Error()))
@@ -848,20 +853,8 @@ func (o *Operation) extract(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var userAuths *getUserAuthResp
-
-	err = json.Unmarshal(respBytes, &userAuths)
-	if err != nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to unmarshal user auth data : %s", err.Error()))
-
-		return
-	}
-
-	// TODO call comparator endpoint - pass auth and get extracted nationalID data
-
-	// TODO send extracted data; for now passing auth
-	o.writeResponse(w, http.StatusOK, userAuths)
+	// send the authorizations in the response
+	o.writeResponse(w, http.StatusOK, &userAuthData{UserAuths: userAuths})
 }
 
 func (o *Operation) showDashboard(w http.ResponseWriter, userName, errMsg, vaultID string, serviceLinked bool) {
@@ -984,16 +977,27 @@ func (o *Operation) getProfileData(profileID string) (*profileData, error) {
 	return data, nil
 }
 
-func (o *Operation) getAllUsers() ([]userData, error) {
-	dataMap, err := o.userStore.GetAll()
-	if err != nil {
-		return nil, fmt.Errorf("get all user data: %w", err)
-	}
-
+func (o *Operation) fetchUsers(ids ...string) ([]userData, error) {
 	userNames := make([]string, 0)
 
-	for _, v := range dataMap {
-		userNames = append(userNames, string(v))
+	if len(ids) == 0 {
+		dataMap, err := o.userStore.GetAll()
+		if err != nil {
+			return nil, fmt.Errorf("get all user data: %w", err)
+		}
+
+		for _, v := range dataMap {
+			userNames = append(userNames, string(v))
+		}
+	} else {
+		dataSlice, err := o.userStore.GetBulk(ids...)
+		if err != nil {
+			return nil, fmt.Errorf("get all user data: %w", err)
+		}
+
+		for _, v := range dataSlice {
+			userNames = append(userNames, string(v))
+		}
 	}
 
 	userDataMap, err := o.store.GetBulk(userNames...)

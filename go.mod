@@ -9,6 +9,7 @@ go 1.15
 require (
 	github.com/cenkalti/backoff/v4 v4.1.0
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
 	github.com/go-openapi/runtime v0.19.26
 	github.com/go-openapi/strfmt v0.20.0
 	github.com/google/uuid v1.2.0

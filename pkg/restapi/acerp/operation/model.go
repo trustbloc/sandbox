@@ -47,7 +47,7 @@ type profileData struct {
 	Callback     string `json:"callback"`
 }
 
-type getUserAuthResp struct {
+type userAuthData struct {
 	UserAuths []userAuthorization `json:"userAuths"`
 }
 
@@ -59,4 +59,8 @@ type userAuthorization struct {
 
 type getUserDataResp struct {
 	Users []userData `json:"users"`
+}
+
+type generateUserAuthReq struct {
+	Users []string `json:"users"`
 }
