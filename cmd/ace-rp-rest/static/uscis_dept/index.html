@@ -29,7 +29,11 @@ SPDX-License-Identifier: Apache-2.0
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-
+    <style>
+        .gradient {
+            background: linear-gradient(to right, #04244b, #004e92, #04244b);
+        }
+    </style>
 </head>
 <div class="bg-red-100 border border-red-400 text-red-700 text-center rounded flex items-center justify-center" role="alert">
     <strong class="font-bold">THIS IS NOT A GOVERNMENT SITE.</strong>
@@ -71,11 +75,11 @@ SPDX-License-Identifier: Apache-2.0
         </div>
     </div>
 </div>
-<footer class="text-center bg-white shadow border border-black-300">
+<footer class="text-center gradient shadow border border-black-300">
     <section class="container mx-auto text-center">
-        <div class="text-sm text-gray-500 font py-1">
-            <img class="object-contain object-top-center h-32 w-full" src="img/custom_logo.png">
-            Copyright &copy; <a href="https://securekey.com/"  class="text-blue-900 hover:text-green-700" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+        <div class="text-sm text-white font py-1">
+            <img class="object-contain object-top-center h-32 w-full text-white" src="img/custom_logo.png">
+            Copyright &copy; <a href="https://securekey.com/"  class="text-white hover:text-red-300" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
         </div>
     </section>
 </footer>
