@@ -87,6 +87,11 @@ const (
 	accountLinkProfileFlagUsage = "Account Link Profile."
 	accountLinkProfileEnvKey    = "ACE_ACCOUNT_LINK_PROFILE"
 
+	// extractor profile id
+	extractorProfileFlagName  = "extractor-profile"
+	extractorProfileFlagUsage = "Extractor Profile."
+	extractorProfileEnvKey    = "ACE_EXTRACTOR_PROFILE"
+
 	tokenLength2 = 2
 )
 
@@ -126,6 +131,7 @@ type rpParameters struct {
 	comparatorURL      string
 	vcIssuerURL        string
 	accountLinkProfile string
+	extractorProfile   string
 	requestTokens      map[string]string
 }
 
@@ -214,6 +220,12 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen, gocyclo
 				return err
 			}
 
+			extractorProfile, err := cmdutils.GetUserSetVarFromString(cmd,
+				extractorProfileFlagName, extractorProfileEnvKey, true)
+			if err != nil {
+				return err
+			}
+
 			parameters := &rpParameters{
 				srv:                srv,
 				hostURL:            strings.TrimSpace(hostURL),
@@ -229,6 +241,7 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen, gocyclo
 				comparatorURL:      comparatorURL,
 				vcIssuerURL:        vcIssuerURL,
 				accountLinkProfile: accountLinkProfile,
+				extractorProfile:   extractorProfile,
 				requestTokens:      requestTokens,
 			}
 
@@ -288,6 +301,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(vcIssuerURLFlagName, "", "", vcIssuerURLFlagUsage)
 	startCmd.Flags().StringP(hostExternalURLFlagName, "", "", hostExternalURLFlagUsage)
 	startCmd.Flags().StringP(accountLinkProfileFlagName, "", "", accountLinkProfileFlagUsage)
+	startCmd.Flags().StringP(extractorProfileFlagName, "", "", extractorProfileFlagUsage)
 	startCmd.Flags().StringArrayP(requestTokensFlagName, "", []string{}, requestTokensFlagUsage)
 	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
 }
@@ -324,6 +338,7 @@ func startRP(parameters *rpParameters) error {
 		ComparatorURL:        parameters.comparatorURL,
 		VCIssuerURL:          parameters.vcIssuerURL,
 		AccountLinkProfile:   parameters.accountLinkProfile,
+		ExtractorProfile:     parameters.extractorProfile,
 		HostExternalURL:      parameters.hostExternalURL,
 		RequestTokens:        parameters.requestTokens,
 	}

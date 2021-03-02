@@ -41,7 +41,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}, ComparatorURL: "http://comp.example.com"})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 14, len(svc.GetRESTHandlers()))
+		require.Equal(t, 15, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -1769,30 +1769,77 @@ func TestDeleteProfile(t *testing.T) {
 	})
 }
 
-type mockHTTPClient struct {
-	respValue *http.Response
-	respErr   error
-	doFunc    func(req *http.Request) (*http.Response, error)
-}
-
-func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
-	if m.respErr != nil {
-		return nil, m.respErr
-	}
-
-	if m.doFunc != nil {
-		return m.doFunc(req)
-	}
-
-	return m.respValue, nil
-}
-
-func TestGetAuthorizations(t *testing.T) {
+func TestGetUsers(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		s := make(map[string][]byte)
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
 			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		userStore := make(map[string][]byte)
+		svc.userStore = &mockstorage.MockStore{Store: userStore}
+
+		uData := userData{
+			ID:              uuid.NewString(),
+			UserName:        sampleUserName,
+			VaultID:         uuid.NewString(),
+			NationalIDDocID: uuid.NewString(),
+		}
+
+		uBytes, err := json.Marshal(uData)
+		require.NoError(t, err)
+
+		s[uData.UserName] = uBytes
+		userStore[uData.ID] = []byte(uData.UserName)
+
+		req, err := http.NewRequest("GET", users, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.getUsers(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+
+		var resp *getUserDataResp
+
+		err = json.Unmarshal(rr.Body.Bytes(), &resp)
+		require.NoError(t, err)
+		require.Equal(t, 1, len(resp.Users))
+	})
+
+	t.Run("db error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrGetAll: errors.New("get all error")},
+			},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		req, err := http.NewRequest("GET", users, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.getUsers(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "get all user data")
+	})
+}
+
+func TestCreateAuthorizations(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		cID := uuid.New().String()
+
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider:    &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL:    "http://comp.example.com",
+			ExtractorProfile: cID,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1803,23 +1850,30 @@ func TestGetAuthorizations(t *testing.T) {
 		userStore := make(map[string][]byte)
 		svc.userStore = &mockstorage.MockStore{Store: userStore}
 
-		uBytes, err := json.Marshal(userData{VaultID: uuid.New().String(), NationalIDDocID: uuid.New().String()})
+		uData := userData{
+			ID:              uuid.NewString(),
+			UserName:        sampleUserName,
+			VaultID:         uuid.NewString(),
+			NationalIDDocID: uuid.NewString(),
+		}
+
+		uBytes, err := json.Marshal(uData)
 		require.NoError(t, err)
 
-		userStore[uuid.New().String()] = uBytes
+		s[uData.UserName] = uBytes
+		userStore[uData.ID] = []byte(uData.UserName)
 
-		cID := uuid.New().String()
 		cIDBytes, err := json.Marshal(&clientData{})
 		require.NoError(t, err)
 
 		s[cID] = cIDBytes
 
-		req, err := http.NewRequest("GET", userAuth+"?client_id="+cID, nil)
+		req, err := http.NewRequest(http.MethodPost, userAuth, nil)
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 
-		svc.getUserAuths(rr, req)
+		svc.createUserAuths(rr, req)
 		require.Equal(t, http.StatusOK, rr.Code)
 
 		var resp *getUserAuthResp
@@ -1837,60 +1891,43 @@ func TestGetAuthorizations(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
-		req, err := http.NewRequest("GET", userAuth, nil)
+		req, err := http.NewRequest(http.MethodPost, userAuth, nil)
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 
-		svc.getUserAuths(rr, req)
-		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "missing client_id")
-
-		req, err = http.NewRequest("GET", userAuth+"?client_id="+uuid.New().String(), nil)
-		require.NoError(t, err)
-
-		rr = httptest.NewRecorder()
-
-		svc.getUserAuths(rr, req)
+		svc.createUserAuths(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "get client data")
 	})
 
 	t.Run("db error", func(t *testing.T) {
-		s := make(map[string][]byte)
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: s, ErrGetAll: errors.New("get all error")},
+				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrGetAll: errors.New("get all error")},
 			},
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
-		svc.vClient = &mockVaultClient{}
-		svc.httpClient = &mockHTTPClient{}
-
-		cID := uuid.New().String()
-		cIDBytes, err := json.Marshal(&clientData{})
-		require.NoError(t, err)
-
-		s[cID] = cIDBytes
-
-		req, err := http.NewRequest("GET", userAuth+"?client_id="+cID, nil)
+		req, err := http.NewRequest(http.MethodPost, userAuth, nil)
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 
-		svc.getUserAuths(rr, req)
+		svc.createUserAuths(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "get all user data")
 	})
 
 	t.Run("comparator and vault error", func(t *testing.T) {
+		cID := uuid.New().String()
 		s := make(map[string][]byte)
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
-			ComparatorURL: "http://comp.example.com",
+			StoreProvider:    &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL:    "http://comp.example.com",
+			ExtractorProfile: cID,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -1901,23 +1938,30 @@ func TestGetAuthorizations(t *testing.T) {
 		userStore := make(map[string][]byte)
 		svc.userStore = &mockstorage.MockStore{Store: userStore}
 
-		uBytes, err := json.Marshal(userData{VaultID: uuid.New().String(), NationalIDDocID: uuid.New().String()})
+		uData := userData{
+			ID:              uuid.NewString(),
+			UserName:        sampleUserName,
+			VaultID:         uuid.NewString(),
+			NationalIDDocID: uuid.NewString(),
+		}
+
+		uBytes, err := json.Marshal(uData)
 		require.NoError(t, err)
 
-		userStore[uuid.New().String()] = uBytes
+		s[uData.UserName] = uBytes
+		userStore[uData.ID] = []byte(uData.UserName)
 
-		cID := uuid.New().String()
 		cIDBytes, err := json.Marshal(&clientData{})
 		require.NoError(t, err)
 
 		s[cID] = cIDBytes
 
-		req, err := http.NewRequest("GET", userAuth+"?client_id="+cID, nil)
+		req, err := http.NewRequest(http.MethodPost, userAuth, nil)
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 
-		svc.getUserAuths(rr, req)
+		svc.createUserAuths(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed create authorization")
 
@@ -1925,10 +1969,28 @@ func TestGetAuthorizations(t *testing.T) {
 
 		rr = httptest.NewRecorder()
 
-		svc.getUserAuths(rr, req)
+		svc.createUserAuths(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed get config from comparator")
 	})
+}
+
+type mockHTTPClient struct {
+	respValue *http.Response
+	respErr   error
+	doFunc    func(req *http.Request) (*http.Response, error)
+}
+
+func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
+	if m.respErr != nil {
+		return nil, m.respErr
+	}
+
+	if m.doFunc != nil {
+		return m.doFunc(req)
+	}
+
+	return m.respValue, nil
 }
 
 // nolint: bodyclose
