@@ -24,8 +24,8 @@ issuerVCSHealthCheckURL=https://issuer-vcs.trustbloc.local/healthcheck
 rpVCSHealthCheckURL=https://rp-vcs.trustbloc.local/healthcheck
 holderVCSHealthCheckURL=https://holder-vcs.trustbloc.local/healthcheck
 governanceVCSHealthCheckURL=https://governance-vcs.trustbloc.local/healthcheck
-revAgencyComparatorHealthCheckURL=https://rev-agency-comparator.trustbloc.local/healthcheck
-empDeptComparatorHealthCheckURL=https://emp-dept-comparator.trustbloc.local/healthcheck
+uscisComparatorHealthCheckURL=https://uscis-comparator.trustbloc.local/healthcheck
+cbpComparatorHealthCheckURL=https://cbp-comparator.trustbloc.local/healthcheck
 vaultServerHealthCheckURL=https://vault.trustbloc.local/healthcheck
 cshHealthCheckURL=https://csh.trustbloc.local/healthcheck
 authzKMSHealthCheckURL=https://oathkeeper-auth-keyserver.trustbloc.local/healthcheck
@@ -238,8 +238,8 @@ healthCheck governanceVCS $governanceVCSHealthCheckURL 200
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-vault.yml down && docker-compose -f docker-compose-vault.yml up --force-recreate) > docker.log 2>&1 & )
 healthCheck vault $vaultServerHealthCheckURL 200
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-comparator.yml down && docker-compose -f docker-compose-comparator.yml up --force-recreate) > docker.log 2>&1 & )
-healthCheck rev-agency-comparator $revAgencyComparatorHealthCheckURL 200
-healthCheck emp-dept-comparator $empDeptComparatorHealthCheckURL 200
+healthCheck uscis-comparator $uscisComparatorHealthCheckURL 200
+healthCheck cbp-comparator $cbpComparatorHealthCheckURL 200
 if ! test/bdd/fixtures/scripts/vcs_issuer_configure.sh; then
   exit -1
 fi

@@ -52,8 +52,8 @@ cat > ${SANDBOX_HOME}/hosts <<EOF
 127.0.0.1 holder-vcs.trustbloc.local
 127.0.0.1 governance-vcs.trustbloc.local
 127.0.0.1 did-method.trustbloc.local
-127.0.0.1 rev-agency-comparator.trustbloc.local
-127.0.0.1 emp-dept-comparator.trustbloc.local
+127.0.0.1 uscis-comparator.trustbloc.local
+127.0.0.1 cbp-comparator.trustbloc.local
 127.0.0.1 vault.trustbloc.local
 127.0.0.1 csh.trustbloc.local
 127.0.0.1 vault-kms.trustbloc.local
