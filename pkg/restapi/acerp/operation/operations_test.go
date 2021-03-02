@@ -331,7 +331,7 @@ func TestLogin(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		req := &http.Request{Form: make(map[string][]string)}
+		req := &http.Request{Form: make(map[string][]string), URL: &url.URL{}}
 		req.Form.Add(username, sampleUserName)
 		req.Form.Add(password, samplePassword)
 
@@ -361,12 +361,10 @@ func TestLogin(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		req := &http.Request{Form: make(map[string][]string), Header: make(map[string][]string)}
+		req := &http.Request{Form: make(map[string][]string), Header: make(map[string][]string),
+			URL: &url.URL{RawQuery: "action=link&id=1234"}}
 		req.Form.Add(username, sampleUserName)
 		req.Form.Add(password, samplePassword)
-
-		cookie := http.Cookie{Name: actionCookie, Value: linkAction}
-		req.AddCookie(&cookie)
 
 		svc.login(rr, req)
 		require.Equal(t, http.StatusOK, rr.Code)
@@ -451,7 +449,7 @@ func TestLogin(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		req := &http.Request{Form: make(map[string][]string)}
+		req := &http.Request{Form: make(map[string][]string), URL: &url.URL{}}
 		req.Form.Add(username, sampleUserName)
 		req.Form.Add(password, samplePassword)
 
@@ -570,6 +568,11 @@ func TestConnect(t *testing.T) {
 
 func TestAccountLink(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "*.html")
+		require.NoError(t, err)
+
+		defer func() { require.NoError(t, os.Remove(file.Name())) }()
+
 		s := make(map[string][]byte)
 
 		svc, err := New(&Config{
@@ -577,6 +580,7 @@ func TestAccountLink(t *testing.T) {
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
 			ComparatorURL:      "http://comp.example.com",
+			LoginHTML:          file.Name(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -596,12 +600,7 @@ func TestAccountLink(t *testing.T) {
 		rr := httptest.NewRecorder()
 
 		svc.link(rr, req)
-		require.Equal(t, http.StatusFound, rr.Code)
-
-		ep, err := url.Parse(rr.Header().Get("Location"))
-		require.NoError(t, err)
-
-		require.Equal(t, ep.Path, "/showlogin")
+		require.Equal(t, http.StatusOK, rr.Code)
 	})
 
 	t.Run("no clientID", func(t *testing.T) {
@@ -751,6 +750,8 @@ func TestAccountLink(t *testing.T) {
 }
 
 func TestConsent(t *testing.T) {
+	queryFmt := "?id=%s&sessionid=%s"
+
 	t.Run("success", func(t *testing.T) {
 		s := make(map[string][]byte)
 		svc, err := New(&Config{
@@ -782,14 +783,8 @@ func TestConsent(t *testing.T) {
 		stateID := uuid.New().String()
 		s[stateID] = b
 
-		req, err := http.NewRequest("GET", "", nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, stateID, sessionid), nil)
 		require.NoError(t, err)
-
-		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
-		req.AddCookie(&cookie)
-
-		cookie = http.Cookie{Name: idCookie, Value: stateID}
-		req.AddCookie(&cookie)
 
 		rr := httptest.NewRecorder()
 
@@ -804,7 +799,7 @@ func TestConsent(t *testing.T) {
 		require.NotEmpty(t, ep.Query().Get("auth"))
 	})
 
-	t.Run("missing session cookie", func(t *testing.T) {
+	t.Run("missing session query param", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider:      &mockstorage.Provider{},
 			AccountLinkProfile: "http://third-party-svc",
@@ -815,34 +810,12 @@ func TestConsent(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		req, err := http.NewRequest("GET", "", nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, "", ""), nil)
 		require.NoError(t, err)
 
 		svc.consent(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to get session cookie")
-	})
-
-	t.Run("missing id cookie", func(t *testing.T) {
-		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{},
-			AccountLinkProfile: "http://third-party-svc",
-			ComparatorURL:      "http://comp.example.com",
-		})
-		require.NoError(t, err)
-		require.NotNil(t, svc)
-
-		rr := httptest.NewRecorder()
-
-		req, err := http.NewRequest("GET", "", nil)
-		require.NoError(t, err)
-
-		cookie := http.Cookie{Name: sessionidCookie, Value: uuid.New().String()}
-		req.AddCookie(&cookie)
-
-		svc.consent(rr, req)
-		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to get id cookie")
+		require.Contains(t, rr.Body.String(), "sessionid or id can't be empty")
 	})
 
 	t.Run("sessionid not found", func(t *testing.T) {
@@ -857,14 +830,8 @@ func TestConsent(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		req, err := http.NewRequest("GET", "", nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, uuid.NewString(), uuid.NewString()), nil)
 		require.NoError(t, err)
-
-		cookie := http.Cookie{Name: sessionidCookie, Value: uuid.New().String()}
-		req.AddCookie(&cookie)
-
-		cookie = http.Cookie{Name: idCookie, Value: uuid.New().String()}
-		req.AddCookie(&cookie)
 
 		svc.consent(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
@@ -891,14 +858,8 @@ func TestConsent(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		req, err := http.NewRequest("GET", "", nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, uuid.NewString(), sessionid), nil)
 		require.NoError(t, err)
-
-		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
-		req.AddCookie(&cookie)
-
-		cookie = http.Cookie{Name: idCookie, Value: uuid.New().String()}
-		req.AddCookie(&cookie)
 
 		svc.consent(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
@@ -919,14 +880,8 @@ func TestConsent(t *testing.T) {
 		sessionid := uuid.New().String()
 		s[sessionid] = []byte(sampleUserName)
 
-		req, err := http.NewRequest("GET", "", nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, uuid.NewString(), sessionid), nil)
 		require.NoError(t, err)
-
-		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
-		req.AddCookie(&cookie)
-
-		cookie = http.Cookie{Name: idCookie, Value: uuid.New().String()}
-		req.AddCookie(&cookie)
 
 		rr := httptest.NewRecorder()
 
@@ -956,14 +911,8 @@ func TestConsent(t *testing.T) {
 		stateID := uuid.New().String()
 		s[stateID] = []byte("invalid data")
 
-		req, err := http.NewRequest("GET", "", nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, stateID, sessionid), nil)
 		require.NoError(t, err)
-
-		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
-		req.AddCookie(&cookie)
-
-		cookie = http.Cookie{Name: idCookie, Value: stateID}
-		req.AddCookie(&cookie)
 
 		rr := httptest.NewRecorder()
 
@@ -1002,14 +951,8 @@ func TestConsent(t *testing.T) {
 		stateID := uuid.New().String()
 		s[stateID] = b
 
-		req, err := http.NewRequest("GET", "", nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, stateID, sessionid), nil)
 		require.NoError(t, err)
-
-		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
-		req.AddCookie(&cookie)
-
-		cookie = http.Cookie{Name: idCookie, Value: stateID}
-		req.AddCookie(&cookie)
 
 		rr := httptest.NewRecorder()
 
@@ -1057,14 +1000,8 @@ func TestConsent(t *testing.T) {
 		stateID := uuid.New().String()
 		s[stateID] = b
 
-		req, err := http.NewRequest("GET", "", nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, stateID, sessionid), nil)
 		require.NoError(t, err)
-
-		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
-		req.AddCookie(&cookie)
-
-		cookie = http.Cookie{Name: idCookie, Value: stateID}
-		req.AddCookie(&cookie)
 
 		rr := httptest.NewRecorder()
 
@@ -1104,14 +1041,8 @@ func TestConsent(t *testing.T) {
 		stateID := uuid.New().String()
 		s[stateID] = b
 
-		req, err := http.NewRequest("GET", "", nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, stateID, sessionid), nil)
 		require.NoError(t, err)
-
-		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
-		req.AddCookie(&cookie)
-
-		cookie = http.Cookie{Name: idCookie, Value: stateID}
-		req.AddCookie(&cookie)
 
 		rr := httptest.NewRecorder()
 
@@ -1151,14 +1082,8 @@ func TestConsent(t *testing.T) {
 		stateID := uuid.New().String()
 		s[stateID] = b
 
-		req, err := http.NewRequest("GET", "", nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, stateID, sessionid), nil)
 		require.NoError(t, err)
-
-		cookie := http.Cookie{Name: sessionidCookie, Value: sessionid}
-		req.AddCookie(&cookie)
-
-		cookie = http.Cookie{Name: idCookie, Value: stateID}
-		req.AddCookie(&cookie)
 
 		rr := httptest.NewRecorder()
 

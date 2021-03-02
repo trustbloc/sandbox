@@ -329,6 +329,7 @@ func startRP(parameters *rpParameters) error {
 	cfg := &operation.Config{
 		StoreProvider:        storeProvider,
 		HomePageHTML:         basePath + "/index.html",
+		LoginHTML:            basePath + "/login.html",
 		DashboardHTML:        basePath + "/dashboard.html",
 		ConsentHTML:          basePath + "/consent.html",
 		AccountLinkedHTML:    basePath + "/accountlinked.html",

@@ -72,7 +72,7 @@ SPDX-License-Identifier: Apache-2.0
             </p>
         </div>
         <div class="space-y-4 flex justify-center">
-            <form method="post" id="vpForm" action="/login" class="shadow-lg w-80 p-4 flex flex-col">
+            <form method="post" id="vpForm" action="/login{{.QueryParam}}" class="shadow-lg w-80 p-4 flex flex-col">
                 <div class="my-5 text-sm">
                     <label for="username" class="block text-black">Email</label>
                     <i class="fa fa-info-circle cursor-pointer px-2 tooltip"></i>
