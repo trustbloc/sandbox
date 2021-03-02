@@ -89,9 +89,6 @@ const (
 
 var logger = log.New("ace-rp-restapi")
 
-// nolint: gochecknoglobals
-var cookieExpTime = time.Now().Add(cookieExpiryTime * time.Minute)
-
 type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
@@ -122,6 +119,7 @@ type Operation struct {
 	userStore            storage.Store
 	handlers             []Handler
 	homePageHTML         string
+	loginHTML            string
 	dashboardHTML        string
 	consentHTML          string
 	accountLinkedHTML    string
@@ -140,6 +138,7 @@ type Operation struct {
 type Config struct {
 	StoreProvider        storage.Provider
 	HomePageHTML         string
+	LoginHTML            string
 	DashboardHTML        string
 	ConsentHTML          string
 	AccountLinkedHTML    string
@@ -185,6 +184,7 @@ func New(config *Config) (*Operation, error) {
 		store:                store,
 		userStore:            userStore,
 		homePageHTML:         config.HomePageHTML,
+		loginHTML:            config.LoginHTML,
 		dashboardHTML:        config.DashboardHTML,
 		consentHTML:          config.ConsentHTML,
 		httpClient:           httpClient,
@@ -310,15 +310,23 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	actionCookie, err := r.Cookie(actionCookie)
-	if err != nil && !errors.Is(err, http.ErrNoCookie) {
-		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get action cookie: %s", err.Error()))
+	action := ""
+	id := ""
 
-		return
-	}
+	if r.URL.Query() != nil {
+		actionParam := r.URL.Query()["action"]
+		if len(actionParam) != 0 {
+			action = actionParam[0]
+		}
 
-	if errors.Is(err, http.ErrNoCookie) {
-		logger.Warnf("action cookie not found")
+		idParam := r.URL.Query()["id"]
+		if len(idParam) != 0 {
+			id = idParam[0]
+
+			logger.Warnf("id=%s", id)
+		}
+
+		logger.Infof("loginQueryParam: action=%s id=%s", action, id)
 	}
 
 	sessionID := uuid.New().String()
@@ -330,11 +338,10 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie := http.Cookie{Name: sessionidCookie, Value: sessionID, Expires: cookieExpTime}
-	http.SetCookie(w, &cookie)
-
-	if actionCookie != nil && actionCookie.Value == linkAction {
-		o.loadHTML(w, o.consentHTML, map[string]interface{}{})
+	if action == linkAction {
+		o.loadHTML(w, o.consentHTML, map[string]interface{}{
+			"QueryParam": fmt.Sprintf("?action=%s&id=%s&sessionid=%s", action, id, sessionID),
+		})
 
 		return
 	}
@@ -500,7 +507,7 @@ func (o *Operation) accountLinkCallback(w http.ResponseWriter, r *http.Request) 
 	o.loadHTML(w, o.accountLinkedHTML, nil)
 }
 
-func (o *Operation) link(w http.ResponseWriter, r *http.Request) { // nolint: funlen
+func (o *Operation) link(w http.ResponseWriter, r *http.Request) {
 	clientID := r.URL.Query()["client_id"]
 	if len(clientID) == 0 {
 		o.writeErrorResponse(w, http.StatusBadRequest, "missing client_id")
@@ -556,35 +563,37 @@ func (o *Operation) link(w http.ResponseWriter, r *http.Request) { // nolint: fu
 		return
 	}
 
-	// set cookies
-	cookie := http.Cookie{Name: actionCookie, Value: linkAction, Expires: cookieExpTime, Path: "/"}
-	http.SetCookie(w, &cookie)
-
-	cookie = http.Cookie{Name: idCookie, Value: sessionid, Expires: cookieExpTime, Path: "/"}
-	http.SetCookie(w, &cookie)
-
-	http.Redirect(w, r, "/showlogin", http.StatusFound)
+	o.loadHTML(w, o.loginHTML, map[string]interface{}{
+		"QueryParam": fmt.Sprintf("?action=%s&id=%s", linkAction, sessionid),
+	})
 }
 
 // nolint: funlen
-func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
-	// get the session id
-	sessionidCookieData, err := r.Cookie(sessionidCookie)
-	if err != nil {
-		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get session cookie: %s", err.Error()))
+func (o *Operation) consent(w http.ResponseWriter, r *http.Request) { // nolint: gocyclo
+	id := ""
+	sessionID := ""
+
+	if r.URL.Query() != nil {
+		idParam := r.URL.Query()["id"]
+		if len(idParam) != 0 {
+			id = idParam[0]
+		}
+
+		sessionIDParam := r.URL.Query()["sessionid"]
+		if len(sessionIDParam) != 0 {
+			sessionID = sessionIDParam[0]
+		}
+
+		logger.Infof("consentQueryParam: id=%s sessionID=%s", id, sessionID)
+	}
+
+	if id == "" || sessionID == "" {
+		o.writeErrorResponse(w, http.StatusBadRequest, "sessionid or id can't be empty")
 
 		return
 	}
 
-	// get the session id
-	idCookieData, err := r.Cookie(idCookie)
-	if err != nil {
-		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get id cookie: %s", err.Error()))
-
-		return
-	}
-
-	username, err := o.store.Get(sessionidCookieData.Value)
+	username, err := o.store.Get(sessionID)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get session data: %s", err.Error()))
 
@@ -599,7 +608,7 @@ func (o *Operation) consent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get the session data from db
-	dataBytes, err := o.store.Get(idCookieData.Value)
+	dataBytes, err := o.store.Get(id)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get state data: %s", err.Error()))
 
