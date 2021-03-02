@@ -79,9 +79,10 @@ services:
       - DATABASE_PREFIX=uscis_db
       - ACE_VAULT_SERVER_URL=https://vault.trustbloc.local
       - ACE_COMPARATOR_URL=https://uscis-comparator.trustbloc.local
-      - VIRTUAL_HOST=uscis-rp.trustbloc.local
       - ACE_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-uscis
       - ACE_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
+      - ACE_EXTRACTOR_PROFILE=benefit-dept-profile
+      - VIRTUAL_HOST=uscis-rp.trustbloc.local
     ports:
       - 5558:5558
     command: start
@@ -103,12 +104,36 @@ services:
       - DATABASE_PREFIX=cbp_db
       - ACE_VAULT_SERVER_URL=https://vault.trustbloc.local
       - ACE_COMPARATOR_URL=https://cbp-comparator.trustbloc.local
-      - VIRTUAL_HOST=cbp-rp.trustbloc.local
       - ACE_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-cbp
       - ACE_ACCOUNT_LINK_PROFILE=uscis-profile
       - ACE_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
+      - VIRTUAL_HOST=cbp-rp.trustbloc.local
     ports:
       - 5559:5559
+    command: start
+    volumes:
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo_demo-net
+
+  benefits-dept-rp.example.com:
+    container_name: benefits-dept-rp.example.com
+    image: ${ACE_RP_IMAGE}:latest
+    environment:
+      - ACE_HOST_URL=0.0.0.0:5560
+      - ACE_HOST_EXTERNAL_URL=https://benefits-dept-rp.trustbloc.local
+      # TODO - update this to new benefits_dept mode
+      - ACE_DEMO_MODE=cbp
+      - ACE_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - ACE_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
+      - DATABASE_URL=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - DATABASE_PREFIX=benefits_dept
+      - ACE_VAULT_SERVER_URL=https://vault.trustbloc.local
+      - ACE_COMPARATOR_URL=https://benefits-dept-comparator.trustbloc.local
+      - ACE_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-benefits-dept
+      - VIRTUAL_HOST=benefits-dept-rp.trustbloc.local
+    ports:
+      - 5560:5560
     command: start
     volumes:
       - ../keys/tls:/etc/tls

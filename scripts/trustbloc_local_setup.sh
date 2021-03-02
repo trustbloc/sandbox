@@ -16,6 +16,7 @@ cat > ${SANDBOX_HOME}/hosts <<EOF
 127.0.0.1 issuer.trustbloc.local
 127.0.0.1 uscis-rp.trustbloc.local
 127.0.0.1 cbp-rp.trustbloc.local
+127.0.0.1 benefits-dept-rp.trustbloc.local
 127.0.0.1 cms.trustbloc.local
 127.0.0.1 myagent.trustbloc.local
 127.0.0.1 myagent-support.trustbloc.local
@@ -54,6 +55,7 @@ cat > ${SANDBOX_HOME}/hosts <<EOF
 127.0.0.1 did-method.trustbloc.local
 127.0.0.1 uscis-comparator.trustbloc.local
 127.0.0.1 cbp-comparator.trustbloc.local
+127.0.0.1 benefits-dept-comparator.trustbloc.local
 127.0.0.1 vault.trustbloc.local
 127.0.0.1 csh.trustbloc.local
 127.0.0.1 vault-kms.trustbloc.local
