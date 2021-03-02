@@ -221,6 +221,7 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(getProfile, http.MethodDelete, o.deleteProfile),
 		support.NewHTTPHandler(users, http.MethodGet, o.getUsers),
 		support.NewHTTPHandler(generateUserAuth, http.MethodPost, o.generateUserAuths),
+		support.NewHTTPHandler(userAuth, http.MethodPost, o.saveUserAuths),
 	}
 }
 
@@ -771,7 +772,7 @@ func (o *Operation) deleteProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Operation) getUsers(w http.ResponseWriter, r *http.Request) {
-	// get all the users
+	// TODO get only last 5 users; for now getting all the users
 	u, err := o.fetchUsers()
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
@@ -840,7 +841,7 @@ func (o *Operation) generateUserAuths(w http.ResponseWriter, r *http.Request) { 
 			return
 		}
 
-		userAuths = append(userAuths, userAuthorization{AuthToken: auth})
+		userAuths = append(userAuths, userAuthorization{ID: v.ID, Name: v.UserName, AuthToken: auth})
 	}
 
 	reqBytes, err := json.Marshal(&userAuthData{UserAuths: userAuths})
@@ -854,7 +855,7 @@ func (o *Operation) generateUserAuths(w http.ResponseWriter, r *http.Request) { 
 	// post the user authorizations to the extractor service
 	endpoint := pData.Callback + userAuth
 
-	_, err = o.sendHTTPRequest(http.MethodGet, endpoint, reqBytes, http.StatusOK, "")
+	_, err = o.sendHTTPRequest(http.MethodPost, endpoint, reqBytes, http.StatusOK, "")
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get user auth data : %s", err.Error()))
@@ -864,6 +865,48 @@ func (o *Operation) generateUserAuths(w http.ResponseWriter, r *http.Request) { 
 
 	// send the authorizations in the response
 	o.writeResponse(w, http.StatusOK, &userAuthData{UserAuths: userAuths})
+}
+
+func (o *Operation) saveUserAuths(w http.ResponseWriter, r *http.Request) {
+	// decode request
+	data := &userAuthData{}
+
+	err := json.NewDecoder(r.Body).Decode(data)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to decode request: %s", err.Error()))
+
+		return
+	}
+
+	if len(data.UserAuths) == 0 {
+		o.writeErrorResponse(w, http.StatusBadRequest, "no user auths in the request")
+
+		return
+	}
+
+	authBytes, err := json.Marshal(data)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to marshal user auth data: %s", err.Error()))
+
+		return
+	}
+
+	// create a new id and save the data
+	id := uuid.NewString()
+
+	err = o.store.Put(id, authBytes)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to save user auth data: %s", err.Error()))
+
+		return
+	}
+
+	logger.Infof("saveUserAuths: id=%s data=%s", id, string(authBytes))
+
+	// send response
+	o.writeResponse(w, http.StatusOK, map[string]string{"id": id})
 }
 
 func (o *Operation) showDashboard(w http.ResponseWriter, userName, errMsg, vaultID string, serviceLinked bool) {

@@ -41,7 +41,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}, ComparatorURL: "http://comp.example.com"})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 14, len(svc.GetRESTHandlers()))
+		require.Equal(t, 15, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -1916,6 +1916,146 @@ func TestCreateAuthorizations(t *testing.T) {
 		svc.generateUserAuths(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed get config from comparator")
+	})
+
+	t.Run("user/auth rest call error", func(t *testing.T) {
+		cID := uuid.New().String()
+
+		s := make(map[string][]byte)
+		svc, err := New(&Config{
+			StoreProvider:    &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			ComparatorURL:    "http://comp.example.com",
+			ExtractorProfile: cID,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.vClient = &mockVaultClient{}
+		svc.compClient = &mockComparatorClient{}
+		svc.httpClient = &mockHTTPClient{
+			doFunc: mockHTTPResponse(t, nil, &mockHTTPResponseData{status: http.StatusInternalServerError}),
+		}
+
+		userStore := make(map[string][]byte)
+		svc.userStore = &mockstorage.MockStore{Store: userStore}
+
+		uData := userData{
+			ID:              uuid.NewString(),
+			UserName:        sampleUserName,
+			VaultID:         uuid.NewString(),
+			NationalIDDocID: uuid.NewString(),
+		}
+
+		uBytes, err := json.Marshal(uData)
+		require.NoError(t, err)
+
+		s[uData.UserName] = uBytes
+		userStore[uData.ID] = []byte(uData.UserName)
+
+		cIDBytes, err := json.Marshal(&clientData{})
+		require.NoError(t, err)
+
+		s[cID] = cIDBytes
+
+		uBytes, err = json.Marshal(generateUserAuthReq{})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, userAuth, bytes.NewReader(uBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.generateUserAuths(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get user auth data")
+	})
+}
+
+func TestSaveUserAuth(t *testing.T) {
+	userAuths := make([]userAuthorization, 0)
+	userAuths = append(userAuths, userAuthorization{
+		Name:      sampleUserName,
+		ID:        uuid.NewString(),
+		AuthToken: "abc123",
+	})
+
+	reqBytes, err := json.Marshal(userAuthData{UserAuths: userAuths})
+	require.NoError(t, err)
+
+	t.Run("success", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		req, err := http.NewRequest("POST", client, bytes.NewBuffer(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.saveUserAuths(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("invalid request", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		req, err := http.NewRequest("POST", client, strings.NewReader("invalid-json"))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.saveUserAuths(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to decode request")
+	})
+
+	t.Run("no auths in the request", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		rBytes, err := json.Marshal(userAuthData{})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest("POST", client, bytes.NewBuffer(rBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.saveUserAuths(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "no user auths in the request")
+	})
+
+	t.Run("db error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPut: errors.New("save error")},
+			},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		req, err := http.NewRequest("POST", client, bytes.NewBuffer(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.saveUserAuths(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to save user auth data")
 	})
 }
 
