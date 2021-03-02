@@ -804,11 +804,11 @@ func (o *Operation) generateUserAuths(w http.ResponseWriter, r *http.Request) { 
 		return
 	}
 
-	// validate client
-	cData, err := o.getClientData(o.extractorProfile)
+	// validate profile
+	pData, err := o.getProfileData(o.extractorProfile)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to client data: %s", err.Error()))
+			fmt.Sprintf("failed to get profile data: %s", err.Error()))
 
 		return
 	}
@@ -831,7 +831,7 @@ func (o *Operation) generateUserAuths(w http.ResponseWriter, r *http.Request) { 
 			v.VaultID,
 			compConfig.AuthKeyURL,
 			v.NationalIDDocID,
-			cData.DID,
+			pData.DID,
 		)
 		if authErr != nil {
 			o.writeErrorResponse(w, http.StatusInternalServerError,
@@ -852,7 +852,7 @@ func (o *Operation) generateUserAuths(w http.ResponseWriter, r *http.Request) { 
 	}
 
 	// post the user authorizations to the extractor service
-	endpoint := cData.Callback + userAuth
+	endpoint := pData.Callback + userAuth
 
 	_, err = o.sendHTTPRequest(http.MethodGet, endpoint, reqBytes, http.StatusOK, "")
 	if err != nil {

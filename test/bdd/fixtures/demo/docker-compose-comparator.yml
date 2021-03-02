@@ -52,6 +52,28 @@ services:
     networks:
       - demo_demo-net
 
+  benefits-dept-comparator.rest.example.com:
+    container_name: benefits-dept-comparator.rest.example.com
+    image: ${COMPARATOR_REST_IMAGE}:${COMPARATOR_REST_IMAGE_TAG}
+    environment:
+      - COMPARATOR_HOST_URL=0.0.0.0:8065
+      - COMPARATOR_TLS_SYSTEMCERTPOOL=true
+      - COMPARATOR_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
+      - COMPARATOR_DSN=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
+      - COMPARATOR_DID_DOMAIN=${BLOC_DOMAIN}
+      - COMPARATOR_DATABASE_PREFIX=benefitsdeptcomparator
+      - VIRTUAL_HOST=benefits-dept-comparator.trustbloc.local
+      - COMPARATOR_CSH_URL=https://csh.trustbloc.local
+      - COMPARATOR_VAULT_URL=https://vault.trustbloc.local
+    ports:
+      - 8065:8065
+    entrypoint: ""
+    command:  /bin/sh -c "comparator-rest start"
+    volumes:
+      - ../keys/tls:/etc/tls
+    networks:
+      - demo_demo-net
+
 networks:
   demo_demo-net:
     external: true

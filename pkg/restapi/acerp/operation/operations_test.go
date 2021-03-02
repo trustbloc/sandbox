@@ -1833,7 +1833,7 @@ func TestCreateAuthorizations(t *testing.T) {
 
 		svc.generateUserAuths(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "get client data")
+		require.Contains(t, rr.Body.String(), "failed to get profile data")
 	})
 
 	t.Run("db error", func(t *testing.T) {

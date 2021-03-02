@@ -35,6 +35,7 @@ services:
           - consent-login.trustbloc.local
           - uscis-rp.trustbloc.local
           - cbp-rp.trustbloc.local
+          - benefits-dept-rp.trustbloc.local
           - router.trustbloc.local
           - issuer.trustbloc.local
           - issuer-adapter.trustbloc.local
@@ -64,6 +65,7 @@ services:
           - vault-kms.trustbloc.local
           - uscis-comparator.trustbloc.local
           - cbp-comparator.trustbloc.local
+          - benefits-dept-comparator.trustbloc.local
 
   shared.couchdb:
     container_name: shared.couchdb
