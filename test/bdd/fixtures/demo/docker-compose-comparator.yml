@@ -8,8 +8,8 @@ version: '3'
 
 services:
 
-  rev-agency-comparator.rest.example.com:
-    container_name: rev-agency-comparator.rest.example.com
+  uscis-comparator.rest.example.com:
+    container_name: uscis-comparator.rest.example.com
     image: ${COMPARATOR_REST_IMAGE}:${COMPARATOR_REST_IMAGE_TAG}
     environment:
         - COMPARATOR_HOST_URL=0.0.0.0:8064
@@ -17,8 +17,8 @@ services:
         - COMPARATOR_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
         - COMPARATOR_DSN=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
         - COMPARATOR_DID_DOMAIN=${BLOC_DOMAIN}
-        - COMPARATOR_DATABASE_PREFIX=revagenycomparator
-        - VIRTUAL_HOST=rev-agency-comparator.trustbloc.local
+        - COMPARATOR_DATABASE_PREFIX=usciscomparator
+        - VIRTUAL_HOST=uscis-comparator.trustbloc.local
         - COMPARATOR_CSH_URL=https://csh.trustbloc.local
         - COMPARATOR_VAULT_URL=https://vault.trustbloc.local
     ports:
@@ -30,8 +30,8 @@ services:
     networks:
       - demo_demo-net
 
-  emp-dept-comparator.rest.example.com:
-    container_name: emp-dept-comparator.rest.example.com
+  cbp-comparator.rest.example.com:
+    container_name: cbp-comparator.rest.example.com
     image: ${COMPARATOR_REST_IMAGE}:${COMPARATOR_REST_IMAGE_TAG}
     environment:
       - COMPARATOR_HOST_URL=0.0.0.0:8062
@@ -39,8 +39,8 @@ services:
       - COMPARATOR_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - COMPARATOR_DSN=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - COMPARATOR_DID_DOMAIN=${BLOC_DOMAIN}
-      - COMPARATOR_DATABASE_PREFIX=empdeptcomparator
-      - VIRTUAL_HOST=emp-dept-comparator.trustbloc.local
+      - COMPARATOR_DATABASE_PREFIX=cbpcomparator
+      - VIRTUAL_HOST=cbp-comparator.trustbloc.local
       - COMPARATOR_CSH_URL=https://csh.trustbloc.local
       - COMPARATOR_VAULT_URL=https://vault.trustbloc.local
     ports:
