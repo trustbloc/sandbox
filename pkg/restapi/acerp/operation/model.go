@@ -6,6 +6,8 @@ SPDX-License-Identifier: Apache-2.0
 
 package operation
 
+import "github.com/hyperledger/aries-framework-go/pkg/doc/util"
+
 type userData struct {
 	ID              string `json:"id"`
 	UserName        string `json:"userName"`
@@ -48,7 +50,9 @@ type profileData struct {
 }
 
 type userAuthData struct {
-	UserAuths []userAuthorization `json:"userAuths"`
+	Source        string                         `json:"source"`
+	SubmittedTime *util.TimeWithTrailingZeroMsec `json:"submittedTime"`
+	UserAuths     []userAuthorization            `json:"userAuths"`
 }
 
 type userAuthorization struct {
@@ -63,4 +67,20 @@ type getUserDataResp struct {
 
 type generateUserAuthReq struct {
 	Users []string `json:"users"`
+}
+
+type extractResp struct {
+	ExtractData []extractData `json:"extractData"`
+}
+
+type extractData struct {
+	Source        string                         `json:"source"`
+	SubmittedTime *util.TimeWithTrailingZeroMsec `json:"submittedTime"`
+	Data          []userExtractedData            `json:"userDetails"`
+}
+
+type userExtractedData struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	NationalID string `json:"nationalID"`
 }

@@ -43,7 +43,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}, ComparatorURL: "http://comp.example.com"})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 15, len(svc.GetRESTHandlers()))
+		require.Equal(t, 16, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -2199,6 +2199,136 @@ func TestSaveUserAuth(t *testing.T) {
 	})
 }
 
+func TestExtractUserData(t *testing.T) {
+	uData := userAuthData{
+		Source:        "test",
+		SubmittedTime: util.NewTime(time.Now()),
+		UserAuths: []userAuthorization{
+			{ID: uuid.NewString(), Name: sampleUserName, AuthToken: uuid.NewString()},
+			{ID: uuid.NewString(), Name: sampleUserName, AuthToken: uuid.NewString()},
+		},
+	}
+
+	uBytes, err := json.Marshal(uData)
+	require.NoError(t, err)
+
+	t.Run("success", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: mem.NewProvider(),
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.compClient = &mockComparatorClient{}
+
+		err = svc.userAuthStore.Put(uuid.NewString(), uBytes, storage.Tag{Name: userTagName})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, userExtract, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.extractUserData(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+
+		var resp *extractResp
+
+		err = json.Unmarshal(rr.Body.Bytes(), &resp)
+		require.NoError(t, err)
+		require.Equal(t, 1, len(resp.ExtractData))
+		require.Equal(t, 2, len(resp.ExtractData[0].Data))
+	})
+
+	t.Run("db error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				OpenStoreReturn: &mockstorage.Store{ErrQuery: errors.New("query error")},
+			},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		req, err := http.NewRequest(http.MethodGet, userExtract, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.extractUserData(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get user auth data: get all user auth data")
+	})
+
+	t.Run("invalid data in the db", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: mem.NewProvider(),
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		err = svc.userAuthStore.Put(uuid.NewString(), []byte("invalid-data"), storage.Tag{Name: userTagName})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, userExtract, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.extractUserData(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get user auth data: unamrshal user auth data invalid-data")
+	})
+
+	t.Run("extract api error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: mem.NewProvider(),
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.compClient = &mockComparatorClient{PostExtractErr: errors.New("extract api error")}
+
+		err = svc.userAuthStore.Put(uuid.NewString(), uBytes, storage.Tag{Name: userTagName})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, userExtract, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.extractUserData(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to extract data")
+
+		svc.compClient = &mockComparatorClient{PostExtractResp: &compclientops.PostExtractOK{Payload: &compmodel.ExtractResp{
+			Documents: []*compmodel.ExtractRespDocumentsItems0{},
+		}}}
+
+		rr = httptest.NewRecorder()
+
+		svc.extractUserData(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "count of documents 0 doesnt match the expected 2")
+
+		svc.compClient = &mockComparatorClient{PostExtractResp: &compclientops.PostExtractOK{Payload: &compmodel.ExtractResp{
+			Documents: []*compmodel.ExtractRespDocumentsItems0{
+				{ID: uuid.NewString(), Contents: 1256},
+				{ID: uuid.NewString(), Contents: "1256"},
+			},
+		}}}
+
+		rr = httptest.NewRecorder()
+
+		svc.extractUserData(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "invalid content; expected string type")
+	})
+}
+
 type mockHTTPClient struct {
 	respValue *http.Response
 	respErr   error
@@ -2324,6 +2454,8 @@ type mockComparatorClient struct {
 	PostAuthorizationsResp *compclientops.PostAuthorizationsOK
 	PostCompareErr         error
 	PostCompareResp        *compclientops.PostCompareOK
+	PostExtractErr         error
+	PostExtractResp        *compclientops.PostExtractOK
 }
 
 func (m *mockComparatorClient) GetConfig(params *compclientops.GetConfigParams) (*compclientops.GetConfigOK, error) {
@@ -2366,4 +2498,27 @@ func (m *mockComparatorClient) PostCompare(
 	}
 
 	return &compclientops.PostCompareOK{Payload: &compmodel.ComparisonResult{Result: true}}, nil
+}
+
+func (m *mockComparatorClient) PostExtract(
+	params *compclientops.PostExtractParams) (*compclientops.PostExtractOK, error) {
+	if m.PostExtractErr != nil {
+		return nil, m.PostExtractErr
+	}
+
+	if m.PostExtractResp != nil {
+		return m.PostExtractResp, nil
+	}
+
+	respDoc := make([]*compmodel.ExtractRespDocumentsItems0, 0)
+	for _, v := range params.Extract.Queries() {
+		respDoc = append(respDoc, &compmodel.ExtractRespDocumentsItems0{
+			ID:       v.ID(),
+			Contents: uuid.NewString(),
+		})
+	}
+
+	return &compclientops.PostExtractOK{Payload: &compmodel.ExtractResp{
+		Documents: respDoc,
+	}}, nil
 }
