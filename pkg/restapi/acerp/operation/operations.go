@@ -55,10 +55,12 @@ const (
 	users               = "/users"
 	userAuth            = users + "/auth"
 	generateUserAuth    = userAuth + "/generate"
+	userExtract         = users + "/extract"
 
 	// store
-	txnStoreName  = "issuer_txn"
-	userStoreName = "user_txn"
+	txnStoreName      = "issuer_txn"
+	userStoreName     = "user_txn"
+	userAuthStoreName = "userauth_txn"
 
 	// form param
 	username   = "username"
@@ -106,6 +108,7 @@ type comparatorClient interface {
 	GetConfig(params *compclientops.GetConfigParams) (*compclientops.GetConfigOK, error)
 	PostAuthorizations(params *compclientops.PostAuthorizationsParams) (*compclientops.PostAuthorizationsOK, error)
 	PostCompare(params *compclientops.PostCompareParams) (*compclientops.PostCompareOK, error)
+	PostExtract(params *compclientops.PostExtractParams) (*compclientops.PostExtractOK, error)
 }
 
 // Handler http handler for each controller API endpoint.
@@ -119,6 +122,7 @@ type Handler interface {
 type Operation struct {
 	store                storage.Store
 	userStore            storage.Store
+	userAuthStore        storage.Store
 	handlers             []Handler
 	homePageHTML         string
 	loginHTML            string
@@ -164,7 +168,12 @@ func New(config *Config) (*Operation, error) {
 
 	userStore, err := getUserStore(config.StoreProvider)
 	if err != nil {
-		return nil, fmt.Errorf("ace-rp store provider : %w", err)
+		return nil, fmt.Errorf("ace-rp userStore store provider : %w", err)
+	}
+
+	userAuthStore, err := getUserAuthStore(config.StoreProvider)
+	if err != nil {
+		return nil, fmt.Errorf("ace-rp userAuthStore store provider : %w", err)
 	}
 
 	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}}
@@ -185,6 +194,7 @@ func New(config *Config) (*Operation, error) {
 	op := &Operation{
 		store:                store,
 		userStore:            userStore,
+		userAuthStore:        userAuthStore,
 		homePageHTML:         config.HomePageHTML,
 		loginHTML:            config.LoginHTML,
 		dashboardHTML:        config.DashboardHTML,
@@ -224,6 +234,7 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(users, http.MethodGet, o.getUsers),
 		support.NewHTTPHandler(generateUserAuth, http.MethodPost, o.generateUserAuths),
 		support.NewHTTPHandler(userAuth, http.MethodPost, o.saveUserAuths),
+		support.NewHTTPHandler(userExtract, http.MethodGet, o.extractUserData),
 	}
 }
 
@@ -846,7 +857,14 @@ func (o *Operation) generateUserAuths(w http.ResponseWriter, r *http.Request) { 
 		userAuths = append(userAuths, userAuthorization{ID: v.ID, Name: v.UserName, AuthToken: auth})
 	}
 
-	reqBytes, err := json.Marshal(&userAuthData{UserAuths: userAuths})
+	uData := &userAuthData{
+		// TODO config source name
+		Source:        "Test Service",
+		SubmittedTime: util.NewTime(time.Now()),
+		UserAuths:     userAuths,
+	}
+
+	reqBytes, err := json.Marshal(uData)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to marshal request to extractor service : %s", err.Error()))
@@ -866,7 +884,7 @@ func (o *Operation) generateUserAuths(w http.ResponseWriter, r *http.Request) { 
 	}
 
 	// send the authorizations in the response
-	o.writeResponse(w, http.StatusOK, &userAuthData{UserAuths: userAuths})
+	o.writeResponse(w, http.StatusOK, uData)
 }
 
 func (o *Operation) saveUserAuths(w http.ResponseWriter, r *http.Request) {
@@ -897,7 +915,7 @@ func (o *Operation) saveUserAuths(w http.ResponseWriter, r *http.Request) {
 	// create a new id and save the data
 	id := uuid.NewString()
 
-	err = o.store.Put(id, authBytes)
+	err = o.userAuthStore.Put(id, authBytes, storage.Tag{Name: userTagName})
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to save user auth data: %s", err.Error()))
@@ -905,10 +923,94 @@ func (o *Operation) saveUserAuths(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Infof("saveUserAuths: id=%s data=%s", id, string(authBytes))
+	logger.Infof("saveUserAuths: id=[%s] data=[%s]", id, string(authBytes))
 
 	// send response
 	o.writeResponse(w, http.StatusOK, map[string]string{"id": id})
+}
+
+func (o *Operation) extractUserData(w http.ResponseWriter, r *http.Request) { // nolint: funlen
+	userAuthData, err := o.fetchUserAuths()
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get user auth data: %s", err.Error()))
+
+		return
+	}
+
+	queries := make([]compmodel.Query, 0)
+	queryMap := make(map[string]string)
+
+	for _, authData := range userAuthData {
+		for _, auths := range authData.UserAuths {
+			queryID := uuid.NewString()
+
+			query := &compmodel.AuthorizedQuery{AuthToken: &auths.AuthToken}
+			query.SetID(queryID)
+
+			queries = append(queries, query)
+			queryMap[queryID] = auths.ID
+		}
+	}
+
+	request := &compmodel.Extract{}
+	request.SetQueries(queries)
+
+	extractRes, err := o.compClient.PostExtract(
+		compclientops.NewPostExtractParams().WithTimeout(requestTimeout).WithExtract(request),
+	)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to extract data: %s", err))
+
+		return
+	}
+
+	if len(extractRes.Payload.Documents) != len(queries) {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("count of documents %d doesnt match the expected %d",
+				len(extractRes.Payload.Documents), len(queries)))
+
+		return
+	}
+
+	userNationalIDMap := make(map[string]string)
+
+	for _, k := range extractRes.Payload.Documents {
+		logger.Infof("extract: id=%s content=%v type=%T", k.ID, k.Contents, k.Contents)
+
+		nationalID, ok := k.Contents.(string)
+		if !ok {
+			o.writeErrorResponse(w, http.StatusInternalServerError, "invalid content; expected string type")
+
+			return
+		}
+
+		userNationalIDMap[queryMap[k.ID]] = nationalID
+	}
+
+	eData := make([]extractData, 0)
+
+	for _, authData := range userAuthData {
+		uData := make([]userExtractedData, 0)
+
+		for _, auths := range authData.UserAuths {
+			uData = append(uData, userExtractedData{
+				ID:         auths.ID,
+				Name:       auths.Name,
+				NationalID: userNationalIDMap[auths.ID],
+			})
+		}
+
+		eData = append(eData, extractData{
+			Source:        authData.Source,
+			SubmittedTime: authData.SubmittedTime,
+			Data:          uData,
+		})
+	}
+
+	// send response
+	o.writeResponse(w, http.StatusOK, extractResp{ExtractData: eData})
 }
 
 func (o *Operation) showDashboard(w http.ResponseWriter, userName, errMsg, vaultID string, serviceLinked bool) {
@@ -1102,6 +1204,43 @@ func (o *Operation) getAllUsernames() ([]string, error) {
 	}
 
 	return userNames, nil
+}
+
+func (o *Operation) fetchUserAuths() ([]userAuthData, error) {
+	users := make([]userAuthData, 0)
+
+	userDataIterator, err := o.userAuthStore.Query("user")
+	if err != nil {
+		return nil, fmt.Errorf("get all user auth data: %w", err)
+	}
+
+	moreUserData, err := userDataIterator.Next()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get next user auth data: %w", err)
+	}
+
+	for moreUserData {
+		userDataValue, err := userDataIterator.Value()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user auth data value: %w", err)
+		}
+
+		var u *userAuthData
+
+		err = json.Unmarshal(userDataValue, &u)
+		if err != nil {
+			return nil, fmt.Errorf("unamrshal user auth data %s : %w", string(userDataValue), err)
+		}
+
+		users = append(users, *u)
+
+		moreUserData, err = userDataIterator.Next()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get next user's data: %w", err)
+		}
+	}
+
+	return users, nil
 }
 
 func (o *Operation) storeNationalID(id string) (string, string, error) {
@@ -1313,6 +1452,20 @@ func getUserStore(prov storage.Provider) (storage.Store, error) {
 	err = prov.SetStoreConfig(userStoreName, storage.StoreConfiguration{TagNames: []string{userTagName}})
 	if err != nil {
 		return nil, fmt.Errorf("failed to set store configuration for user store: %w", err)
+	}
+
+	return txnStore, nil
+}
+
+func getUserAuthStore(prov storage.Provider) (storage.Store, error) {
+	txnStore, err := prov.OpenStore(userAuthStoreName)
+	if err != nil {
+		return nil, err
+	}
+
+	err = prov.SetStoreConfig(userAuthStoreName, storage.StoreConfiguration{TagNames: []string{userTagName}})
+	if err != nil {
+		return nil, fmt.Errorf("failed to set store configuration for user-auth store: %w", err)
 	}
 
 	return txnStore, nil
