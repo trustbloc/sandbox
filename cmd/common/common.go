@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
+	"github.com/hyperledger/aries-framework-go-ext/component/storage/couchdb"
+	"github.com/hyperledger/aries-framework-go-ext/component/storage/mysql"
+	"github.com/hyperledger/aries-framework-go/component/storageutil/mem"
+	"github.com/hyperledger/aries-framework-go/spi/storage"
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
-	"github.com/trustbloc/edge-core/pkg/storage"
-	couchdbstore "github.com/trustbloc/edge-core/pkg/storage/couchdb"
-	"github.com/trustbloc/edge-core/pkg/storage/memstore"
-	"github.com/trustbloc/edge-core/pkg/storage/mysql"
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
 )
 
@@ -81,10 +81,10 @@ var supportedEdgeStorageProviders = map[string]func(string, string) (storage.Pro
 		return mysql.NewProvider(dbURL, mysql.WithDBPrefix(prefix))
 	},
 	"mem": func(_, _ string) (storage.Provider, error) { // nolint:unparam
-		return memstore.NewProvider(), nil
+		return mem.NewProvider(), nil
 	},
 	"couchdb": func(dbURL, prefix string) (storage.Provider, error) {
-		return couchdbstore.NewProvider(dbURL, couchdbstore.WithDBPrefix(prefix))
+		return couchdb.NewProvider(dbURL, couchdb.WithDBPrefix(prefix))
 	},
 }
 

@@ -13,8 +13,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/hyperledger/aries-framework-go/component/storageutil/mem"
 	"github.com/stretchr/testify/require"
-	"github.com/trustbloc/edge-core/pkg/storage/memstore"
 
 	"github.com/trustbloc/sandbox/pkg/restapi/rp/operation"
 )
@@ -56,7 +56,7 @@ func config() (*operation.Config, func()) {
 
 	return &operation.Config{
 		OIDCProviderURL:        path,
-		TransientStoreProvider: memstore.NewProvider(),
+		TransientStoreProvider: mem.NewProvider(),
 	}, cleanup
 }
 

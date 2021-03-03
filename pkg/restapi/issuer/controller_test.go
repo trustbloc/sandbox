@@ -10,8 +10,8 @@ import (
 	"errors"
 	"testing"
 
+	mockstorage "github.com/hyperledger/aries-framework-go/component/storageutil/mock"
 	"github.com/stretchr/testify/require"
-	mockstorage "github.com/trustbloc/edge-core/pkg/storage/mockstore"
 
 	"github.com/trustbloc/sandbox/pkg/restapi/issuer/operation"
 )
@@ -25,10 +25,10 @@ func TestController_New(t *testing.T) {
 
 	t.Run("test new - error", func(t *testing.T) {
 		controller, err := New(&operation.Config{
-			StoreProvider: &mockstorage.Provider{ErrCreateStore: errors.New("store create error")},
+			StoreProvider: &mockstorage.Provider{ErrOpenStore: errors.New("store open error")},
 		})
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "issuer store provider : store create error")
+		require.Contains(t, err.Error(), "issuer store provider : store open error")
 		require.Nil(t, controller)
 	})
 }
