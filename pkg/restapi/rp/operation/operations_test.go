@@ -19,9 +19,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	memstore "github.com/hyperledger/aries-framework-go/component/storageutil/mem"
+	mockstore "github.com/hyperledger/aries-framework-go/component/storageutil/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/trustbloc/edge-core/pkg/storage/memstore"
-	"github.com/trustbloc/edge-core/pkg/storage/mockstore"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/verifier/operation"
 )
 
@@ -81,17 +81,7 @@ func TestNew(t *testing.T) {
 		config, cleanup := config(t)
 		defer cleanup()
 		config.TransientStoreProvider = &mockstore.Provider{
-			ErrOpenStoreHandle: errors.New("test"),
-		}
-		_, err := New(config)
-		require.Error(t, err)
-	})
-
-	t.Run("error if unable to create transient store", func(t *testing.T) {
-		config, cleanup := config(t)
-		defer cleanup()
-		config.TransientStoreProvider = &mockstore.Provider{
-			ErrCreateStore: errors.New("generic"),
+			ErrOpenStore: errors.New("test"),
 		}
 		_, err := New(config)
 		require.Error(t, err)
@@ -118,7 +108,8 @@ func TestVerifyVP(t *testing.T) {
 		svc, err := New(config)
 		require.NoError(t, err)
 		svc.client = &mockHTTPClient{postValue: &http.Response{
-			StatusCode: http.StatusOK, Body: ioutil.NopCloser(strings.NewReader("data"))}}
+			StatusCode: http.StatusOK, Body: ioutil.NopCloser(strings.NewReader("data")),
+		}}
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
@@ -154,7 +145,8 @@ func TestVerifyVP(t *testing.T) {
 		})
 		require.NoError(t, err)
 		svc.client = &mockHTTPClient{postValue: &http.Response{
-			StatusCode: http.StatusBadRequest, Body: ioutil.NopCloser(strings.NewReader(string(b)))}}
+			StatusCode: http.StatusBadRequest, Body: ioutil.NopCloser(strings.NewReader(string(b))),
+		}}
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
@@ -170,7 +162,8 @@ func TestVerifyVP(t *testing.T) {
 		svc, err := New(config)
 		require.NoError(t, err)
 		svc.client = &mockHTTPClient{postValue: &http.Response{
-			StatusCode: http.StatusOK, Body: nil}}
+			StatusCode: http.StatusOK, Body: nil,
+		}}
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
@@ -186,7 +179,8 @@ func TestVerifyVP(t *testing.T) {
 		svc, err := New(config)
 		require.NoError(t, err)
 		svc.client = &mockHTTPClient{postValue: &http.Response{
-			StatusCode: http.StatusOK, Body: nil}}
+			StatusCode: http.StatusOK, Body: nil,
+		}}
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
@@ -202,7 +196,8 @@ func TestVerifyVP(t *testing.T) {
 		svc, err := New(config)
 		require.NoError(t, err)
 		svc.client = &mockHTTPClient{postValue: &http.Response{
-			StatusCode: http.StatusOK, Body: nil}}
+			StatusCode: http.StatusOK, Body: nil,
+		}}
 
 		rr := httptest.NewRecorder()
 		m := make(map[string][]string)
@@ -271,8 +266,7 @@ func TestCreateOIDCRequest(t *testing.T) {
 		config, cleanup := config(t)
 		defer cleanup()
 		config.TransientStoreProvider = &mockstore.Provider{
-			Store: &mockstore.MockStore{
-				Store:  make(map[string][]byte),
+			OpenStoreReturn: &mockstore.Store{
 				ErrPut: errors.New("test"),
 			},
 		}
@@ -294,12 +288,14 @@ func TestHandleOIDCCallback(t *testing.T) {
 		config, configCleanup := config(t)
 		defer configCleanup()
 
+		storeToReturnFromMockProvider, err := memstore.NewProvider().OpenStore("mockstoretoreturn")
+		require.NoError(t, err)
+
+		err = storeToReturnFromMockProvider.Put(state, []byte(state))
+		require.NoError(t, err)
+
 		config.TransientStoreProvider = &mockstore.Provider{
-			Store: &mockstore.MockStore{
-				Store: map[string][]byte{
-					state: []byte(state),
-				},
-			},
+			OpenStoreReturn: storeToReturnFromMockProvider,
 		}
 
 		o, err := New(config)
@@ -320,12 +316,14 @@ func TestHandleOIDCCallback(t *testing.T) {
 		config, configCleanup := config(t)
 		defer configCleanup()
 
+		storeToReturnFromMockProvider, err := memstore.NewProvider().OpenStore("mockstoretoreturn")
+		require.NoError(t, err)
+
+		err = storeToReturnFromMockProvider.Put(state, []byte(state))
+		require.NoError(t, err)
+
 		config.TransientStoreProvider = &mockstore.Provider{
-			Store: &mockstore.MockStore{
-				Store: map[string][]byte{
-					state: []byte(state),
-				},
-			},
+			OpenStoreReturn: storeToReturnFromMockProvider,
 		}
 
 		o, err := New(config)
@@ -374,11 +372,9 @@ func TestHandleOIDCCallback(t *testing.T) {
 		defer cleanup()
 
 		config.TransientStoreProvider = &mockstore.Provider{
-			Store: &mockstore.MockStore{
-				Store: map[string][]byte{
-					state: []byte(state),
-				},
-				ErrGet: errors.New("generic"),
+			OpenStoreReturn: &mockstore.Store{
+				GetReturn: []byte(state),
+				ErrGet:    errors.New("generic"),
 			},
 		}
 
@@ -397,12 +393,14 @@ func TestHandleOIDCCallback(t *testing.T) {
 		defer configCleanup()
 		config.DIDCOMMVPHTML = ""
 
+		storeToReturnFromMockProvider, err := memstore.NewProvider().OpenStore("mockstoretoreturn")
+		require.NoError(t, err)
+
+		err = storeToReturnFromMockProvider.Put(state, []byte(state))
+		require.NoError(t, err)
+
 		config.TransientStoreProvider = &mockstore.Provider{
-			Store: &mockstore.MockStore{
-				Store: map[string][]byte{
-					state: []byte(state),
-				},
-			},
+			OpenStoreReturn: storeToReturnFromMockProvider,
 		}
 
 		o, err := New(config)

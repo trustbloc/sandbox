@@ -21,10 +21,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hyperledger/aries-framework-go/component/storageutil/mem"
+	mockstorage "github.com/hyperledger/aries-framework-go/component/storageutil/mock"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
+	"github.com/hyperledger/aries-framework-go/spi/storage"
 	"github.com/stretchr/testify/require"
-	mockstorage "github.com/trustbloc/edge-core/pkg/storage/mockstore"
 	compclientops "github.com/trustbloc/edge-service/pkg/client/comparator/client/operations"
 	compmodel "github.com/trustbloc/edge-service/pkg/client/comparator/models"
 	"github.com/trustbloc/edge-service/pkg/restapi/vault"
@@ -46,7 +48,7 @@ func TestNew(t *testing.T) {
 
 	t.Run("error", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{ErrOpenStoreHandle: errors.New("store open error")},
+			StoreProvider: &mockstorage.Provider{ErrOpenStore: errors.New("store open error")},
 		})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "ace-rp store provider : store open error")
@@ -72,7 +74,7 @@ func TestRegister(t *testing.T) {
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			DashboardHTML: file.Name(),
 			RequestTokens: map[string]string{vcsIssuerRequestTokenName: "test"},
 			ComparatorURL: "http://comp.example.com",
@@ -101,12 +103,15 @@ func TestRegister(t *testing.T) {
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-		s := make(map[string][]byte)
-		s[sampleUserName] = []byte(password)
+		storeToReturnFromMockProvider, err := mem.NewProvider().OpenStore("mockstoretoreturn")
+		require.NoError(t, err)
+
+		err = storeToReturnFromMockProvider.Put(sampleUserName, []byte(password))
+		require.NoError(t, err)
 
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: s},
+				OpenStoreReturn: storeToReturnFromMockProvider,
 			},
 			HomePageHTML:  file.Name(),
 			ComparatorURL: "http://comp.example.com",
@@ -126,7 +131,7 @@ func TestRegister(t *testing.T) {
 	t.Run("save user data error", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPut: errors.New("save error")},
+				OpenStoreReturn: &mockstorage.Store{ErrPut: errors.New("save error")},
 			},
 			ComparatorURL: "http://comp.example.com",
 		})
@@ -172,9 +177,7 @@ func TestRegister(t *testing.T) {
 
 	t.Run("html error", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte)},
-			},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -198,9 +201,7 @@ func TestRegister(t *testing.T) {
 
 	t.Run("create vault error", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte)},
-			},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -230,7 +231,7 @@ func TestRegister(t *testing.T) {
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			DashboardHTML: file.Name(),
 			ComparatorURL: "http://comp.example.com",
 		})
@@ -259,7 +260,7 @@ func TestRegister(t *testing.T) {
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			DashboardHTML: file.Name(),
 			ComparatorURL: "http://comp.example.com",
 		})
@@ -284,7 +285,7 @@ func TestRegister(t *testing.T) {
 
 	t.Run("failed to save doc", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			RequestTokens: map[string]string{vcsIssuerRequestTokenName: "test"},
 			ComparatorURL: "http://comp.example.com",
 		})
@@ -318,11 +319,14 @@ func TestLogin(t *testing.T) {
 		uDataBytes, err := json.Marshal(&userData{})
 		require.NoError(t, err)
 
-		s := make(map[string][]byte)
-		s[sampleUserName] = uDataBytes
+		storeToReturnFromMockProvider, err := mem.NewProvider().OpenStore("mockstoretoreturn")
+		require.NoError(t, err)
+
+		err = storeToReturnFromMockProvider.Put(sampleUserName, uDataBytes)
+		require.NoError(t, err)
 
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: &mockstorage.Provider{OpenStoreReturn: storeToReturnFromMockProvider},
 			DashboardHTML: file.Name(),
 			ComparatorURL: "http://comp.example.com",
 		})
@@ -348,11 +352,14 @@ func TestLogin(t *testing.T) {
 		uDataBytes, err := json.Marshal(&userData{})
 		require.NoError(t, err)
 
-		s := make(map[string][]byte)
-		s[sampleUserName] = uDataBytes
+		storeToReturnFromMockProvider, err := mem.NewProvider().OpenStore("mockstoretoreturn")
+		require.NoError(t, err)
+
+		err = storeToReturnFromMockProvider.Put(sampleUserName, uDataBytes)
+		require.NoError(t, err)
 
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: &mockstorage.Provider{OpenStoreReturn: storeToReturnFromMockProvider},
 			ConsentHTML:   file.Name(),
 			ComparatorURL: "http://comp.example.com",
 		})
@@ -361,8 +368,10 @@ func TestLogin(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		req := &http.Request{Form: make(map[string][]string), Header: make(map[string][]string),
-			URL: &url.URL{RawQuery: "action=link&id=1234"}}
+		req := &http.Request{
+			Form: make(map[string][]string), Header: make(map[string][]string),
+			URL: &url.URL{RawQuery: "action=link&id=1234"},
+		}
 		req.Form.Add(username, sampleUserName)
 		req.Form.Add(password, samplePassword)
 
@@ -391,10 +400,8 @@ func TestLogin(t *testing.T) {
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-		s := make(map[string][]byte)
-
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 			HomePageHTML:  file.Name(),
 		})
@@ -415,8 +422,14 @@ func TestLogin(t *testing.T) {
 		s := make(map[string][]byte)
 		s[sampleUserName] = []byte("invalid-json-data")
 
+		storeToReturnFromMockProvider, err := mem.NewProvider().OpenStore("mockstoretoreturn")
+		require.NoError(t, err)
+
+		err = storeToReturnFromMockProvider.Put(sampleUserName, []byte("invalid-json-data"))
+		require.NoError(t, err)
+
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: &mockstorage.Provider{OpenStoreReturn: storeToReturnFromMockProvider},
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -437,11 +450,11 @@ func TestLogin(t *testing.T) {
 		uDataBytes, err := json.Marshal(&userData{})
 		require.NoError(t, err)
 
-		s := make(map[string][]byte)
-		s[sampleUserName] = uDataBytes
-
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s, ErrPut: errors.New("db error")}},
+			StoreProvider: &mockstorage.Provider{OpenStoreReturn: &mockstorage.Store{
+				GetReturn: uDataBytes,
+				ErrPut:    errors.New("db error"),
+			}},
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -485,10 +498,12 @@ func TestLogout(t *testing.T) {
 
 func TestConnect(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		s := make(map[string][]byte)
 		profileID := uuid.New().String()
+
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:      memProvider,
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: profileID,
 			ComparatorURL:      "http://comp.example.com",
@@ -499,7 +514,11 @@ func TestConnect(t *testing.T) {
 		dBytes, err := json.Marshal(&profileData{})
 		require.NoError(t, err)
 
-		s[profileID] = dBytes
+		userStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = userStore.Put(profileID, dBytes)
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", "/connect?userName="+sampleUserName, nil)
 		require.NoError(t, err)
@@ -536,10 +555,12 @@ func TestConnect(t *testing.T) {
 	})
 
 	t.Run("data error", func(t *testing.T) {
-		s := make(map[string][]byte)
 		profileID := uuid.New().String()
+
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:      memProvider,
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: profileID,
 			ComparatorURL:      "http://comp.example.com",
@@ -556,7 +577,11 @@ func TestConnect(t *testing.T) {
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to get profile data")
 
-		s[profileID] = []byte("invalid-json")
+		userStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = userStore.Put(profileID, []byte("invalid-json"))
+		require.NoError(t, err)
 
 		rr = httptest.NewRecorder()
 
@@ -573,10 +598,10 @@ func TestAccountLink(t *testing.T) {
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
 
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:      memProvider,
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
 			ComparatorURL:      "http://comp.example.com",
@@ -589,7 +614,11 @@ func TestAccountLink(t *testing.T) {
 		cIDBytes, err := json.Marshal(&clientData{})
 		require.NoError(t, err)
 
-		s[cID] = cIDBytes
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = txnStore.Put(cID, cIDBytes)
+		require.NoError(t, err)
 
 		state := uuid.New().String()
 		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkProfile, cID, svc.hostExternalURL, state)
@@ -605,7 +634,7 @@ func TestAccountLink(t *testing.T) {
 
 	t.Run("no clientID", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{},
+			StoreProvider:      mem.NewProvider(),
 			AccountLinkProfile: "http://third-party-svc",
 			ComparatorURL:      "http://comp.example.com",
 		})
@@ -624,7 +653,7 @@ func TestAccountLink(t *testing.T) {
 
 	t.Run("no callback url", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{},
+			StoreProvider:      mem.NewProvider(),
 			AccountLinkProfile: "http://third-party-svc",
 			ComparatorURL:      "http://comp.example.com",
 		})
@@ -643,7 +672,7 @@ func TestAccountLink(t *testing.T) {
 
 	t.Run("no state", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{},
+			StoreProvider:      mem.NewProvider(),
 			AccountLinkProfile: "http://third-party-svc",
 			HostExternalURL:    "http://my-external",
 			ComparatorURL:      "http://comp.example.com",
@@ -664,9 +693,7 @@ func TestAccountLink(t *testing.T) {
 
 	t.Run("client not found", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte)},
-			},
+			StoreProvider:      mem.NewProvider(),
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
 			ComparatorURL:      "http://comp.example.com",
@@ -688,10 +715,9 @@ func TestAccountLink(t *testing.T) {
 	})
 
 	t.Run("invalid client data", func(t *testing.T) {
-		s := make(map[string][]byte)
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: s, ErrPut: errors.New("store error")},
+				OpenStoreReturn: &mockstorage.Store{ErrPut: errors.New("store error")},
 			},
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
@@ -700,11 +726,8 @@ func TestAccountLink(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
-		cID := uuid.New().String()
-		s[cID] = []byte("invalid json")
-
 		state := uuid.New().String()
-		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkProfile, cID, svc.hostExternalURL, state)
+		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkProfile, uuid.New().String(), svc.hostExternalURL, state)
 
 		req, err := http.NewRequest("GET", endpoint, nil)
 		require.NoError(t, err)
@@ -713,14 +736,16 @@ func TestAccountLink(t *testing.T) {
 
 		svc.link(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
-		require.Contains(t, rr.Body.String(), "unamrshal client data")
+		require.Contains(t, rr.Body.String(), "unmarshal client data")
 	})
 
 	t.Run("store error", func(t *testing.T) {
-		s := make(map[string][]byte)
+		cIDBytes, err := json.Marshal(&clientData{})
+		require.NoError(t, err)
+
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: s, ErrPut: errors.New("store error")},
+				OpenStoreReturn: &mockstorage.Store{GetReturn: cIDBytes, ErrPut: errors.New("store error")},
 			},
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
@@ -729,14 +754,8 @@ func TestAccountLink(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
-		cID := uuid.New().String()
-		cIDBytes, err := json.Marshal(&clientData{})
-		require.NoError(t, err)
-
-		s[cID] = cIDBytes
-
 		state := uuid.New().String()
-		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkProfile, cID, svc.hostExternalURL, state)
+		endpoint := fmt.Sprintf(accountLinkURLFormat, svc.accountLinkProfile, uuid.New().String(), svc.hostExternalURL, state)
 
 		req, err := http.NewRequest("GET", endpoint, nil)
 		require.NoError(t, err)
@@ -753,9 +772,10 @@ func TestConsent(t *testing.T) {
 	queryFmt := "?id=%s&sessionid=%s"
 
 	t.Run("success", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:      memProvider,
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
 			ComparatorURL:      "http://comp.example.com",
@@ -766,12 +786,19 @@ func TestConsent(t *testing.T) {
 		svc.vClient = &mockVaultClient{}
 		svc.compClient = &mockComparatorClient{}
 
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
 		sessionid := uuid.New().String()
-		s[sessionid] = []byte(sampleUserName)
+
+		err = txnStore.Put(sessionid, []byte(sampleUserName))
+		require.NoError(t, err)
 
 		b, err := json.Marshal(&userData{})
 		require.NoError(t, err)
-		s[sampleUserName] = b
+
+		err = txnStore.Put(sampleUserName, b)
+		require.NoError(t, err)
 
 		data := &sessionData{
 			State:       uuid.New().String(),
@@ -781,7 +808,8 @@ func TestConsent(t *testing.T) {
 		require.NoError(t, err)
 
 		stateID := uuid.New().String()
-		s[stateID] = b
+		err = txnStore.Put(stateID, b)
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, stateID, sessionid), nil)
 		require.NoError(t, err)
@@ -801,7 +829,7 @@ func TestConsent(t *testing.T) {
 
 	t.Run("missing session query param", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{},
+			StoreProvider:      mem.NewProvider(),
 			AccountLinkProfile: "http://third-party-svc",
 			ComparatorURL:      "http://comp.example.com",
 		})
@@ -820,7 +848,7 @@ func TestConsent(t *testing.T) {
 
 	t.Run("sessionid not found", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider:      mem.NewProvider(),
 			AccountLinkProfile: "http://third-party-svc",
 			HostExternalURL:    "http://my-external",
 			ComparatorURL:      "http://comp.example.com",
@@ -839,9 +867,10 @@ func TestConsent(t *testing.T) {
 	})
 
 	t.Run("stateID not found", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:      memProvider,
 			AccountLinkProfile: "http://third-party-svc",
 			HostExternalURL:    "http://my-external",
 			ComparatorURL:      "http://comp.example.com",
@@ -849,12 +878,19 @@ func TestConsent(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
 		sessionid := uuid.New().String()
-		s[sessionid] = []byte(sampleUserName)
+
+		err = txnStore.Put(sessionid, []byte(sampleUserName))
+		require.NoError(t, err)
 
 		b, err := json.Marshal(&userData{})
 		require.NoError(t, err)
-		s[sampleUserName] = b
+
+		err = txnStore.Put(sampleUserName, b)
+		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 
@@ -867,9 +903,9 @@ func TestConsent(t *testing.T) {
 	})
 
 	t.Run("no data for the user", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:      memProvider,
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
 			ComparatorURL:      "http://comp.example.com",
@@ -877,8 +913,13 @@ func TestConsent(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
 		sessionid := uuid.New().String()
-		s[sessionid] = []byte(sampleUserName)
+
+		err = txnStore.Put(sessionid, []byte(sampleUserName))
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, uuid.NewString(), sessionid), nil)
 		require.NoError(t, err)
@@ -891,9 +932,10 @@ func TestConsent(t *testing.T) {
 	})
 
 	t.Run("invalid state data", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:      memProvider,
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
 			ComparatorURL:      "http://comp.example.com",
@@ -901,15 +943,23 @@ func TestConsent(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
 		sessionid := uuid.New().String()
-		s[sessionid] = []byte(sampleUserName)
+		err = txnStore.Put(sessionid, []byte(sampleUserName))
+		require.NoError(t, err)
 
 		b, err := json.Marshal(&userData{})
 		require.NoError(t, err)
-		s[sampleUserName] = b
+
+		err = txnStore.Put(sampleUserName, b)
+		require.NoError(t, err)
 
 		stateID := uuid.New().String()
-		s[stateID] = []byte("invalid data")
+
+		err = txnStore.Put(stateID, []byte("invalid data"))
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, stateID, sessionid), nil)
 		require.NoError(t, err)
@@ -922,9 +972,10 @@ func TestConsent(t *testing.T) {
 	})
 
 	t.Run("comparator config error", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:      memProvider,
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
 			ComparatorURL:      "http://comp.example.com",
@@ -935,21 +986,30 @@ func TestConsent(t *testing.T) {
 		svc.compClient = &mockComparatorClient{GetConfigErr: errors.New("config error")}
 
 		sessionid := uuid.New().String()
-		s[sessionid] = []byte(sampleUserName)
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = txnStore.Put(sessionid, []byte(sampleUserName))
+		require.NoError(t, err)
 
 		b, err := json.Marshal(&userData{})
 		require.NoError(t, err)
-		s[sampleUserName] = b
+
+		err = txnStore.Put(sampleUserName, b)
+		require.NoError(t, err)
 
 		data := &sessionData{
 			State:       uuid.New().String(),
 			CallbackURL: "https://url/callback",
 		}
+
 		b, err = json.Marshal(data)
 		require.NoError(t, err)
 
 		stateID := uuid.New().String()
-		s[stateID] = b
+
+		err = txnStore.Put(stateID, b)
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, stateID, sessionid), nil)
 		require.NoError(t, err)
@@ -970,9 +1030,10 @@ func TestConsent(t *testing.T) {
 	})
 
 	t.Run("vault create auth error", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:      memProvider,
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
 			ComparatorURL:      "http://comp.example.com",
@@ -984,21 +1045,30 @@ func TestConsent(t *testing.T) {
 		svc.compClient = &mockComparatorClient{}
 
 		sessionid := uuid.New().String()
-		s[sessionid] = []byte(sampleUserName)
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = txnStore.Put(sessionid, []byte(sampleUserName))
+		require.NoError(t, err)
 
 		b, err := json.Marshal(&userData{})
 		require.NoError(t, err)
-		s[sampleUserName] = b
+
+		err = txnStore.Put(sampleUserName, b)
+		require.NoError(t, err)
 
 		data := &sessionData{
 			State:       uuid.New().String(),
 			CallbackURL: "https://url/callback",
 		}
+
 		b, err = json.Marshal(data)
 		require.NoError(t, err)
 
 		stateID := uuid.New().String()
-		s[stateID] = b
+
+		err = txnStore.Put(stateID, b)
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, stateID, sessionid), nil)
 		require.NoError(t, err)
@@ -1011,9 +1081,10 @@ func TestConsent(t *testing.T) {
 	})
 
 	t.Run("no auth token", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:      memProvider,
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
 			ComparatorURL:      "http://comp.example.com",
@@ -1025,21 +1096,30 @@ func TestConsent(t *testing.T) {
 		svc.compClient = &mockComparatorClient{}
 
 		sessionid := uuid.New().String()
-		s[sessionid] = []byte(sampleUserName)
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = txnStore.Put(sessionid, []byte(sampleUserName))
+		require.NoError(t, err)
 
 		b, err := json.Marshal(&userData{})
 		require.NoError(t, err)
-		s[sampleUserName] = b
+
+		err = txnStore.Put(sampleUserName, b)
+		require.NoError(t, err)
 
 		data := &sessionData{
 			State:       uuid.New().String(),
 			CallbackURL: "https://url/callback",
 		}
+
 		b, err = json.Marshal(data)
 		require.NoError(t, err)
 
 		stateID := uuid.New().String()
-		s[stateID] = b
+
+		err = txnStore.Put(stateID, b)
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, stateID, sessionid), nil)
 		require.NoError(t, err)
@@ -1052,9 +1132,10 @@ func TestConsent(t *testing.T) {
 	})
 
 	t.Run("comparator auth failures", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider:      &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:      memProvider,
 			HostExternalURL:    "http://my-external",
 			AccountLinkProfile: "http://third-party-svc",
 			ComparatorURL:      "http://comp.example.com",
@@ -1066,21 +1147,30 @@ func TestConsent(t *testing.T) {
 		svc.compClient = &mockComparatorClient{PostAuthorizationsErr: errors.New("http error")}
 
 		sessionid := uuid.New().String()
-		s[sessionid] = []byte(sampleUserName)
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = txnStore.Put(sessionid, []byte(sampleUserName))
+		require.NoError(t, err)
 
 		b, err := json.Marshal(&userData{})
 		require.NoError(t, err)
-		s[sampleUserName] = b
+
+		err = txnStore.Put(sampleUserName, b)
+		require.NoError(t, err)
 
 		data := &sessionData{
 			State:       uuid.New().String(),
 			CallbackURL: "https://url/callback",
 		}
+
 		b, err = json.Marshal(data)
 		require.NoError(t, err)
 
 		stateID := uuid.New().String()
-		s[stateID] = b
+
+		err = txnStore.Put(stateID, b)
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", fmt.Sprintf(queryFmt, stateID, sessionid), nil)
 		require.NoError(t, err)
@@ -1106,9 +1196,10 @@ func TestAccountLinkCallback(t *testing.T) {
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider:     &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:     memProvider,
 			AccountLinkedHTML: file.Name(),
 			ComparatorURL:     "http://comp.example.com",
 		})
@@ -1118,13 +1209,19 @@ func TestAccountLinkCallback(t *testing.T) {
 		svc.vClient = &mockVaultClient{}
 		svc.compClient = &mockComparatorClient{}
 
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
 		state := uuid.New().String()
-		s[state] = []byte(sampleUserName)
+
+		err = txnStore.Put(state, []byte(sampleUserName))
+		require.NoError(t, err)
 
 		uDataBytes, err := json.Marshal(&userData{})
 		require.NoError(t, err)
 
-		s[sampleUserName] = uDataBytes
+		err = txnStore.Put(sampleUserName, uDataBytes)
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", "/callback?auth="+uuid.New().String()+"&state="+state, nil)
 		require.NoError(t, err)
@@ -1137,7 +1234,7 @@ func TestAccountLinkCallback(t *testing.T) {
 
 	t.Run("missing auth", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1155,7 +1252,7 @@ func TestAccountLinkCallback(t *testing.T) {
 
 	t.Run("missing state", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1172,9 +1269,10 @@ func TestAccountLinkCallback(t *testing.T) {
 	})
 
 	t.Run("db error", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: memProvider,
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1191,7 +1289,11 @@ func TestAccountLinkCallback(t *testing.T) {
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to get state")
 
-		s[state] = []byte(sampleUserName)
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = txnStore.Put(state, []byte(sampleUserName))
+		require.NoError(t, err)
 
 		rr = httptest.NewRecorder()
 
@@ -1201,9 +1303,10 @@ func TestAccountLinkCallback(t *testing.T) {
 	})
 
 	t.Run("vault server error", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: memProvider,
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1212,13 +1315,19 @@ func TestAccountLinkCallback(t *testing.T) {
 		svc.vClient = &mockVaultClient{CreateAuthorizationErr: errors.New("create auth error")}
 		svc.compClient = &mockComparatorClient{}
 
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
 		state := uuid.New().String()
-		s[state] = []byte(sampleUserName)
+
+		err = txnStore.Put(state, []byte(sampleUserName))
+		require.NoError(t, err)
 
 		uDataBytes, err := json.Marshal(&userData{})
 		require.NoError(t, err)
 
-		s[sampleUserName] = uDataBytes
+		err = txnStore.Put(sampleUserName, uDataBytes)
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", "/callback?auth="+uuid.New().String()+"&state="+state, nil)
 		require.NoError(t, err)
@@ -1239,9 +1348,10 @@ func TestAccountLinkCallback(t *testing.T) {
 	})
 
 	t.Run("comparator - get error", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: memProvider,
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1249,13 +1359,19 @@ func TestAccountLinkCallback(t *testing.T) {
 
 		svc.compClient = &mockComparatorClient{GetConfigErr: errors.New("config error")}
 
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
 		state := uuid.New().String()
-		s[state] = []byte(sampleUserName)
+
+		err = txnStore.Put(state, []byte(sampleUserName))
+		require.NoError(t, err)
 
 		uDataBytes, err := json.Marshal(&userData{})
 		require.NoError(t, err)
 
-		s[sampleUserName] = uDataBytes
+		err = txnStore.Put(sampleUserName, uDataBytes)
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", "/callback?auth="+uuid.New().String()+"&state="+state, nil)
 		require.NoError(t, err)
@@ -1276,9 +1392,10 @@ func TestAccountLinkCallback(t *testing.T) {
 	})
 
 	t.Run("comparator - compare error", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: memProvider,
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1287,13 +1404,19 @@ func TestAccountLinkCallback(t *testing.T) {
 		svc.vClient = &mockVaultClient{}
 		svc.compClient = &mockComparatorClient{PostCompareErr: errors.New("compare error")}
 
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
 		state := uuid.New().String()
-		s[state] = []byte(sampleUserName)
+
+		err = txnStore.Put(state, []byte(sampleUserName))
+		require.NoError(t, err)
 
 		uDataBytes, err := json.Marshal(&userData{})
 		require.NoError(t, err)
 
-		s[sampleUserName] = uDataBytes
+		err = txnStore.Put(sampleUserName, uDataBytes)
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", "/callback?auth="+uuid.New().String()+"&state="+state, nil)
 		require.NoError(t, err)
@@ -1317,7 +1440,7 @@ func TestAccountLinkCallback(t *testing.T) {
 func TestCreateClient(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1352,7 +1475,7 @@ func TestCreateClient(t *testing.T) {
 
 	t.Run("invalid request", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1371,7 +1494,7 @@ func TestCreateClient(t *testing.T) {
 	t.Run("db error", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPut: errors.New("save error")},
+				OpenStoreReturn: &mockstorage.Store{ErrPut: errors.New("save error")},
 			},
 			ComparatorURL: "http://comp.example.com",
 		})
@@ -1394,10 +1517,10 @@ func TestCreateClient(t *testing.T) {
 
 func TestGetCreate(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
 
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: memProvider,
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1414,7 +1537,11 @@ func TestGetCreate(t *testing.T) {
 		reqBytes, err := json.Marshal(cReq)
 		require.NoError(t, err)
 
-		s[id] = reqBytes
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = txnStore.Put(id, reqBytes)
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", client+"/"+id, nil)
 		require.NoError(t, err)
@@ -1436,7 +1563,7 @@ func TestGetCreate(t *testing.T) {
 
 	t.Run("no data for the id", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1453,18 +1580,22 @@ func TestGetCreate(t *testing.T) {
 	})
 
 	t.Run("invalid data for the id", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
 
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: memProvider,
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
 		id := uuid.New().String()
 
-		s[id] = []byte("invalid-json")
+		err = txnStore.Put(id, []byte("invalid-json"))
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", client+"/"+id, nil)
 		require.NoError(t, err)
@@ -1480,7 +1611,7 @@ func TestGetCreate(t *testing.T) {
 func TestCreateProfile(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1517,7 +1648,7 @@ func TestCreateProfile(t *testing.T) {
 
 	t.Run("invalid request", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1536,7 +1667,7 @@ func TestCreateProfile(t *testing.T) {
 	t.Run("db error", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPut: errors.New("save error")},
+				OpenStoreReturn: &mockstorage.Store{ErrPut: errors.New("save error")},
 			},
 			ComparatorURL: "http://comp.example.com",
 		})
@@ -1559,10 +1690,10 @@ func TestCreateProfile(t *testing.T) {
 
 func TestGetProfile(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
 
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: memProvider,
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1579,7 +1710,11 @@ func TestGetProfile(t *testing.T) {
 		reqBytes, err := json.Marshal(cReq)
 		require.NoError(t, err)
 
-		s[id] = reqBytes
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = txnStore.Put(id, reqBytes)
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", profile+"/"+id, nil)
 		require.NoError(t, err)
@@ -1601,7 +1736,7 @@ func TestGetProfile(t *testing.T) {
 
 	t.Run("no data for the id", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1618,18 +1753,22 @@ func TestGetProfile(t *testing.T) {
 	})
 
 	t.Run("invalid data for the id", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
 
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: memProvider,
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
 		id := uuid.New().String()
 
-		s[id] = []byte("invalid-json")
+		err = txnStore.Put(id, []byte("invalid-json"))
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", client+"/"+id, nil)
 		require.NoError(t, err)
@@ -1644,10 +1783,10 @@ func TestGetProfile(t *testing.T) {
 
 func TestDeleteProfile(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		s := make(map[string][]byte)
+		memProvider := mem.NewProvider()
 
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: memProvider,
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1662,7 +1801,11 @@ func TestDeleteProfile(t *testing.T) {
 		reqBytes, err := json.Marshal(cReq)
 		require.NoError(t, err)
 
-		s[id] = reqBytes
+		txnStore, err := memProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = txnStore.Put(id, reqBytes)
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("DELETE", profile+"/"+id, nil)
 		require.NoError(t, err)
@@ -1676,7 +1819,7 @@ func TestDeleteProfile(t *testing.T) {
 	t.Run("db error", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrDelete: errors.New("delete error")},
+				OpenStoreReturn: &mockstorage.Store{ErrDelete: errors.New("delete error")},
 			},
 			ComparatorURL: "http://comp.example.com",
 		})
@@ -1696,16 +1839,19 @@ func TestDeleteProfile(t *testing.T) {
 
 func TestGetUsers(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		s := make(map[string][]byte)
+		svcMemProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider: svcMemProvider,
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
-		userStore := make(map[string][]byte)
-		svc.userStore = &mockstorage.MockStore{Store: userStore}
+		userStore, err := mem.NewProvider().OpenStore("userstore")
+		require.NoError(t, err)
+
+		svc.userStore = userStore
 
 		uData := userData{
 			ID:              uuid.NewString(),
@@ -1717,8 +1863,14 @@ func TestGetUsers(t *testing.T) {
 		uBytes, err := json.Marshal(uData)
 		require.NoError(t, err)
 
-		s[uData.UserName] = uBytes
-		userStore[uData.ID] = []byte(uData.UserName)
+		txnStore, err := svcMemProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = txnStore.Put(uData.UserName, uBytes)
+		require.NoError(t, err)
+
+		err = userStore.Put(uData.ID, []byte(uData.UserName), storage.Tag{Name: userTagName})
+		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", users, nil)
 		require.NoError(t, err)
@@ -1734,26 +1886,6 @@ func TestGetUsers(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 1, len(resp.Users))
 	})
-
-	t.Run("db error", func(t *testing.T) {
-		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrGetAll: errors.New("get all error")},
-			},
-			ComparatorURL: "http://comp.example.com",
-		})
-		require.NoError(t, err)
-		require.NotNil(t, svc)
-
-		req, err := http.NewRequest("GET", users, nil)
-		require.NoError(t, err)
-
-		rr := httptest.NewRecorder()
-
-		svc.getUsers(rr, req)
-		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "get all user data")
-	})
 }
 
 // nolint: bodyclose
@@ -1761,9 +1893,10 @@ func TestCreateAuthorizations(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		cID := uuid.New().String()
 
-		s := make(map[string][]byte)
+		svcMemProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider:    &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:    svcMemProvider,
 			ComparatorURL:    "http://comp.example.com",
 			ExtractorProfile: cID,
 		})
@@ -1776,8 +1909,10 @@ func TestCreateAuthorizations(t *testing.T) {
 			doFunc: mockHTTPResponse(t, nil, &mockHTTPResponseData{status: http.StatusOK}),
 		}
 
-		userStore := make(map[string][]byte)
-		svc.userStore = &mockstorage.MockStore{Store: userStore}
+		userStore, err := mem.NewProvider().OpenStore("userstore")
+		require.NoError(t, err)
+
+		svc.userStore = userStore
 
 		uData := userData{
 			ID:              uuid.NewString(),
@@ -1789,13 +1924,20 @@ func TestCreateAuthorizations(t *testing.T) {
 		uBytes, err := json.Marshal(uData)
 		require.NoError(t, err)
 
-		s[uData.UserName] = uBytes
-		userStore[uData.ID] = []byte(uData.UserName)
+		txnStore, err := svcMemProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = txnStore.Put(uData.UserName, uBytes)
+		require.NoError(t, err)
+
+		err = userStore.Put(uData.ID, []byte(uData.UserName), storage.Tag{Name: userTagName})
+		require.NoError(t, err)
 
 		cIDBytes, err := json.Marshal(&clientData{})
 		require.NoError(t, err)
 
-		s[cID] = cIDBytes
+		err = txnStore.Put(cID, cIDBytes)
+		require.NoError(t, err)
 
 		uBytes, err = json.Marshal(generateUserAuthReq{})
 		require.NoError(t, err)
@@ -1817,7 +1959,7 @@ func TestCreateAuthorizations(t *testing.T) {
 
 	t.Run("invalid client id", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1836,34 +1978,13 @@ func TestCreateAuthorizations(t *testing.T) {
 		require.Contains(t, rr.Body.String(), "failed to get profile data")
 	})
 
-	t.Run("db error", func(t *testing.T) {
-		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrGetAll: errors.New("get all error")},
-			},
-			ComparatorURL: "http://comp.example.com",
-		})
-		require.NoError(t, err)
-		require.NotNil(t, svc)
-
-		uBytes, err := json.Marshal(generateUserAuthReq{})
-		require.NoError(t, err)
-
-		req, err := http.NewRequest(http.MethodPost, userAuth, bytes.NewReader(uBytes))
-		require.NoError(t, err)
-
-		rr := httptest.NewRecorder()
-
-		svc.generateUserAuths(rr, req)
-		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "get all user data")
-	})
-
 	t.Run("comparator and vault error", func(t *testing.T) {
 		cID := uuid.New().String()
-		s := make(map[string][]byte)
+
+		svcMemProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider:    &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:    svcMemProvider,
 			ComparatorURL:    "http://comp.example.com",
 			ExtractorProfile: cID,
 		})
@@ -1873,8 +1994,10 @@ func TestCreateAuthorizations(t *testing.T) {
 		svc.vClient = &mockVaultClient{CreateAuthorizationErr: errors.New("vault error")}
 		svc.compClient = &mockComparatorClient{}
 
-		userStore := make(map[string][]byte)
-		svc.userStore = &mockstorage.MockStore{Store: userStore}
+		userStore, err := mem.NewProvider().OpenStore("userstore")
+		require.NoError(t, err)
+
+		svc.userStore = userStore
 
 		uData := userData{
 			ID:              uuid.NewString(),
@@ -1886,13 +2009,20 @@ func TestCreateAuthorizations(t *testing.T) {
 		uBytes, err := json.Marshal(uData)
 		require.NoError(t, err)
 
-		s[uData.UserName] = uBytes
-		userStore[uData.ID] = []byte(uData.UserName)
+		txnStore, err := svcMemProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = txnStore.Put(uData.UserName, uBytes)
+		require.NoError(t, err)
+
+		err = userStore.Put(uData.ID, []byte(uData.UserName), storage.Tag{Name: userTagName})
+		require.NoError(t, err)
 
 		cIDBytes, err := json.Marshal(&clientData{})
 		require.NoError(t, err)
 
-		s[cID] = cIDBytes
+		err = txnStore.Put(cID, cIDBytes)
+		require.NoError(t, err)
 
 		uBytes, err = json.Marshal(generateUserAuthReq{})
 		require.NoError(t, err)
@@ -1921,9 +2051,10 @@ func TestCreateAuthorizations(t *testing.T) {
 	t.Run("user/auth rest call error", func(t *testing.T) {
 		cID := uuid.New().String()
 
-		s := make(map[string][]byte)
+		svcMemProvider := mem.NewProvider()
+
 		svc, err := New(&Config{
-			StoreProvider:    &mockstorage.Provider{Store: &mockstorage.MockStore{Store: s}},
+			StoreProvider:    svcMemProvider,
 			ComparatorURL:    "http://comp.example.com",
 			ExtractorProfile: cID,
 		})
@@ -1936,8 +2067,10 @@ func TestCreateAuthorizations(t *testing.T) {
 			doFunc: mockHTTPResponse(t, nil, &mockHTTPResponseData{status: http.StatusInternalServerError}),
 		}
 
-		userStore := make(map[string][]byte)
-		svc.userStore = &mockstorage.MockStore{Store: userStore}
+		userStore, err := mem.NewProvider().OpenStore("userstore")
+		require.NoError(t, err)
+
+		svc.userStore = userStore
 
 		uData := userData{
 			ID:              uuid.NewString(),
@@ -1949,13 +2082,20 @@ func TestCreateAuthorizations(t *testing.T) {
 		uBytes, err := json.Marshal(uData)
 		require.NoError(t, err)
 
-		s[uData.UserName] = uBytes
-		userStore[uData.ID] = []byte(uData.UserName)
+		txnStore, err := svcMemProvider.OpenStore(txnStoreName)
+		require.NoError(t, err)
+
+		err = txnStore.Put(uData.UserName, uBytes)
+		require.NoError(t, err)
+
+		err = userStore.Put(uData.ID, []byte(uData.UserName), storage.Tag{Name: userTagName})
+		require.NoError(t, err)
 
 		cIDBytes, err := json.Marshal(&clientData{})
 		require.NoError(t, err)
 
-		s[cID] = cIDBytes
+		err = txnStore.Put(cID, cIDBytes)
+		require.NoError(t, err)
 
 		uBytes, err = json.Marshal(generateUserAuthReq{})
 		require.NoError(t, err)
@@ -1984,7 +2124,7 @@ func TestSaveUserAuth(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -2001,7 +2141,7 @@ func TestSaveUserAuth(t *testing.T) {
 
 	t.Run("invalid request", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -2019,7 +2159,7 @@ func TestSaveUserAuth(t *testing.T) {
 
 	t.Run("no auths in the request", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: &mockstorage.Provider{Store: &mockstorage.MockStore{Store: make(map[string][]byte)}},
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -2041,7 +2181,7 @@ func TestSaveUserAuth(t *testing.T) {
 	t.Run("db error", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{
-				Store: &mockstorage.MockStore{Store: make(map[string][]byte), ErrPut: errors.New("save error")},
+				OpenStoreReturn: &mockstorage.Store{ErrPut: errors.New("save error")},
 			},
 			ComparatorURL: "http://comp.example.com",
 		})

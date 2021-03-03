@@ -24,8 +24,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
+	"github.com/hyperledger/aries-framework-go/spi/storage"
 	"github.com/trustbloc/edge-core/pkg/log"
-	"github.com/trustbloc/edge-core/pkg/storage"
 	"github.com/trustbloc/edge-core/pkg/zcapld"
 	compclient "github.com/trustbloc/edge-service/pkg/client/comparator/client"
 	compclientops "github.com/trustbloc/edge-service/pkg/client/comparator/client/operations"
@@ -85,6 +85,8 @@ const (
 	credentialContext = "https://www.w3.org/2018/credentials/v1"
 
 	nationalIDVCPath = "$.credentialSubject." + nationalID
+
+	userTagName = "user"
 )
 
 var logger = log.New("ace-rp-restapi")
@@ -239,7 +241,7 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint
 	}
 
 	pwd, err := o.store.Get(r.FormValue(username))
-	if err != nil && !errors.Is(err, storage.ErrValueNotFound) {
+	if err != nil && !errors.Is(err, storage.ErrDataNotFound) {
 		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to get user data: %s", err.Error()))
 
 		return
@@ -284,7 +286,7 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint
 		return
 	}
 
-	err = o.userStore.Put(uData.ID, []byte(uData.UserName))
+	err = o.userStore.Put(uData.ID, []byte(uData.UserName), storage.Tag{Name: userTagName})
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("unable to save id-username mapping data: %s", err.Error()))
@@ -968,11 +970,6 @@ func (o *Operation) writeResponse(rw http.ResponseWriter, status int, v interfac
 }
 
 func getTxnStore(prov storage.Provider) (storage.Store, error) {
-	err := prov.CreateStore(txnStoreName)
-	if err != nil && !errors.Is(err, storage.ErrDuplicateStore) {
-		return nil, err
-	}
-
 	txnStore, err := prov.OpenStore(txnStoreName)
 	if err != nil {
 		return nil, err
@@ -1007,7 +1004,7 @@ func (o *Operation) getClientData(clientID string) (*clientData, error) {
 
 	err = json.Unmarshal(cDataBytes, &cData)
 	if err != nil {
-		return nil, fmt.Errorf("unamrshal client data: %w", err)
+		return nil, fmt.Errorf("unmarshal client data: %w", err)
 	}
 
 	return cData, nil
@@ -1030,47 +1027,81 @@ func (o *Operation) getProfileData(profileID string) (*profileData, error) {
 }
 
 func (o *Operation) fetchUsers(ids ...string) ([]userData, error) {
-	userNames := make([]string, 0)
+	var usernamesToFetch []string
 
 	if len(ids) == 0 {
-		dataMap, err := o.userStore.GetAll()
+		allUsernames, err := o.getAllUsernames()
 		if err != nil {
-			return nil, fmt.Errorf("get all user data: %w", err)
+			return nil, fmt.Errorf("failed to get all usernames: %w", err)
 		}
 
-		for _, v := range dataMap {
-			userNames = append(userNames, string(v))
-		}
+		usernamesToFetch = allUsernames
 	} else {
-		dataSlice, err := o.userStore.GetBulk(ids...)
+		usernamesToFetch = make([]string, len(ids))
+
+		usernames, err := o.userStore.GetBulk(ids...)
 		if err != nil {
 			return nil, fmt.Errorf("get all user data: %w", err)
 		}
 
-		for _, v := range dataSlice {
-			userNames = append(userNames, string(v))
+		for i, v := range usernames {
+			usernamesToFetch[i] = string(v)
 		}
 	}
 
-	userDataMap, err := o.store.GetBulk(userNames...)
-	if err != nil {
-		return nil, fmt.Errorf("get user data keys=%s : %w", userNames, err)
-	}
-
-	users := make([]userData, 0)
-
-	for _, v := range userDataMap {
-		var u *userData
-
-		err = json.Unmarshal(v, &u)
+	if len(usernamesToFetch) > 0 {
+		bulkData, err := o.store.GetBulk(usernamesToFetch...)
 		if err != nil {
-			return nil, fmt.Errorf("unamrshal client data: %w", err)
+			return nil, fmt.Errorf("get user data keys=%s : %w", usernamesToFetch, err)
 		}
 
-		users = append(users, *u)
+		users := make([]userData, len(bulkData))
+
+		for i, v := range bulkData {
+			var u userData
+
+			err = json.Unmarshal(v, &u)
+			if err != nil {
+				return nil, fmt.Errorf("unamrshal client data: %w", err)
+			}
+
+			users[i] = u
+		}
+
+		return users, nil
 	}
 
-	return users, nil
+	return make([]userData, 0), nil
+}
+
+func (o *Operation) getAllUsernames() ([]string, error) {
+	userNames := make([]string, 0)
+
+	userDataIterator, err := o.userStore.Query("user")
+	if err != nil {
+		return nil, fmt.Errorf("get all user data: %w", err)
+	}
+
+	moreUserData, err := userDataIterator.Next()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get next user's data: %w", err)
+	}
+
+	for moreUserData {
+		userDataValue, err := userDataIterator.Value()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user data value: %w", err)
+		}
+
+		userNames = append(userNames, string(userDataValue))
+
+		moreUserData, err = userDataIterator.Next()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get next user's data: %w", err)
+		}
+	}
+
+	return userNames, nil
 }
 
 func (o *Operation) storeNationalID(id string) (string, string, error) {
@@ -1274,14 +1305,14 @@ func (o *Operation) sendHTTPRequest(method, endpoint string, reqBody []byte, sta
 }
 
 func getUserStore(prov storage.Provider) (storage.Store, error) {
-	err := prov.CreateStore(userStoreName)
-	if err != nil && !errors.Is(err, storage.ErrDuplicateStore) {
-		return nil, err
-	}
-
 	txnStore, err := prov.OpenStore(userStoreName)
 	if err != nil {
 		return nil, err
+	}
+
+	err = prov.SetStoreConfig(userStoreName, storage.StoreConfiguration{TagNames: []string{userTagName}})
+	if err != nil {
+		return nil, fmt.Errorf("failed to set store configuration for user store: %w", err)
 	}
 
 	return txnStore, nil

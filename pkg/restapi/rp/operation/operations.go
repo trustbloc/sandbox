@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hyperledger/aries-framework-go/spi/storage"
 	"github.com/trustbloc/edge-core/pkg/log"
-	"github.com/trustbloc/edge-core/pkg/storage"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/verifier/operation"
 
 	"github.com/trustbloc/sandbox/pkg/internal/common/support"
@@ -122,9 +122,11 @@ func New(config *Config) (*Operation, error) {
 
 	var err error
 
-	svc.oidcClient, err = oidcclient.New(&oidcclient.Config{OIDCClientID: config.OIDCClientID,
+	svc.oidcClient, err = oidcclient.New(&oidcclient.Config{
+		OIDCClientID:     config.OIDCClientID,
 		OIDCClientSecret: config.OIDCClientSecret, OIDCCallbackURL: config.OIDCCallbackURL,
-		OIDCProviderURL: config.OIDCProviderURL, TLSConfig: config.TLSConfig})
+		OIDCProviderURL: config.OIDCProviderURL, TLSConfig: config.TLSConfig,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create oidc client : %w", err)
 	}
@@ -250,7 +252,7 @@ func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = c.transientStore.Get(state)
-	if errors.Is(err, storage.ErrValueNotFound) {
+	if errors.Is(err, storage.ErrDataNotFound) {
 		logger.Errorf("invalid state parameter")
 		c.didcommDemoResult(w, "invalid state parameter", "")
 
@@ -426,10 +428,5 @@ func (c *Operation) GetRESTHandlers() []Handler {
 }
 
 func createStore(p storage.Provider) (storage.Store, error) {
-	err := p.CreateStore(transientStoreName)
-	if err != nil && !errors.Is(err, storage.ErrDuplicateStore) {
-		return nil, fmt.Errorf("failed to create store [%s] : %w", transientStoreName, err)
-	}
-
 	return p.OpenStore(transientStoreName)
 }

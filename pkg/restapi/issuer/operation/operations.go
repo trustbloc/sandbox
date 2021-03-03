@@ -23,8 +23,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
+	"github.com/hyperledger/aries-framework-go/spi/storage"
 	"github.com/trustbloc/edge-core/pkg/log"
-	"github.com/trustbloc/edge-core/pkg/storage"
 	vcprofile "github.com/trustbloc/edge-service/pkg/doc/vc/profile"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
 	"golang.org/x/oauth2"
@@ -175,9 +175,11 @@ func New(config *Config) (*Operation, error) {
 	}
 
 	if config.OIDCProviderURL != "" {
-		svc.oidcClient, err = oidcclient.New(&oidcclient.Config{OIDCClientID: config.OIDCClientID,
+		svc.oidcClient, err = oidcclient.New(&oidcclient.Config{
+			OIDCClientID:     config.OIDCClientID,
 			OIDCClientSecret: config.OIDCClientSecret, OIDCCallbackURL: config.OIDCCallbackURL,
-			OIDCProviderURL: config.OIDCProviderURL, TLSConfig: config.TLSConfig})
+			OIDCProviderURL: config.OIDCProviderURL, TLSConfig: config.TLSConfig,
+		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to create oidc client : %w", err)
 		}
@@ -458,7 +460,7 @@ func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := c.store.Get(state)
-	if errors.Is(err, storage.ErrValueNotFound) {
+	if errors.Is(err, storage.ErrDataNotFound) {
 		logger.Errorf("invalid state parameter")
 		c.didcommDemoResult(w, "invalid state parameter")
 
@@ -1140,7 +1142,6 @@ func (c *Operation) storeCredential(cred []byte, vcsProfile string) error {
 	}
 
 	storeReq, err := http.NewRequest("POST", c.vcsURL+"/store", bytes.NewBuffer(storeVCBytes))
-
 	if err != nil {
 		return err
 	}
@@ -1284,11 +1285,6 @@ func (c *Operation) GetRESTHandlers() []Handler {
 }
 
 func getTxnStore(prov storage.Provider) (storage.Store, error) {
-	err := prov.CreateStore(txnStoreName)
-	if err != nil && !errors.Is(err, storage.ErrDuplicateStore) {
-		return nil, err
-	}
-
 	txnStore, err := prov.OpenStore(txnStoreName)
 	if err != nil {
 		return nil, err
