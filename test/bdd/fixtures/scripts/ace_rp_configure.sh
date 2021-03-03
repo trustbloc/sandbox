@@ -99,7 +99,7 @@ validateProfileCreation $code $response ace_rp_profile uscis_profile_at_cbp
 # create extractor profile for benefits at uscis
 benefits_dept_profile_at_uscis=$(curl -o /dev/null -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" \
    --request POST \
-   --data '{"id":"benefit-dept-profile", "name":"Benefits Settlement Department", "url":"https://benefits-dept-rp.trustbloc.local", "did":"'"${benefitsDeptComparatorConfigDID}"'"}' \
+   --data '{"id":"benefit-dept-profile", "name":"Benefits Settlement Department", "url":"https://benefits-dept-rp.trustbloc.local", "did":"'"${benefitsDeptComparatorConfigDID}"'", "callback":"https://benefits-dept-rp.trustbloc.local"}' \
    --insecure https://uscis-rp.trustbloc.local/profile)
 
 response=${benefits_dept_profile_at_uscis//RESPONSE_CODE*/}
