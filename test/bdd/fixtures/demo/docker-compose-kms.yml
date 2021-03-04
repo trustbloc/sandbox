@@ -20,7 +20,7 @@ services:
       - KMS_DATABASE_TYPE=couchdb
       - KMS_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - KMS_DATABASE_PREFIX=authzkeystore
-      - KMS_SECRET_LOCK_KEY_PATH=/etc/tls/service-lock.key
+      - KMS_SECRET_LOCK_KEY_PATH=/etc/tls/secret-lock.key
       - KMS_PRIMARY_KEY_DATABASE_TYPE=couchdb
       - KMS_PRIMARY_KEY_DATABASE_URL=${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
       - KMS_PRIMARY_KEY_DATABASE_PREFIX=authzkmspk
@@ -68,6 +68,8 @@ services:
       - VIRTUAL_HOST=ops-kms.trustbloc.local
       - VIRTUAL_PROTO=https
       - KMS_ZCAP_ENABLE=true
+      - KMS_CACHE_EXPIRATION=10m
+      - KMS_SECRET_LOCK_KEY_PATH=/etc/tls/secret-lock.key
     ports:
       - 8073:8073
     entrypoint: ""

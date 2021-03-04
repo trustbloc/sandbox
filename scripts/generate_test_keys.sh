@@ -102,6 +102,6 @@ openssl rand -out test/bdd/fixtures/keys/session_cookies/auth.key 32
 openssl rand -out test/bdd/fixtures/keys/session_cookies/enc.key 32
 
 # create secrete lock key
-openssl rand 32 | base64 | sed 's/+/-/g; s/\//_/g' > test/bdd/fixtures/keys/tls/service-lock.key
+openssl rand 32 | base64 | sed 's/+/-/g; s/\//_/g' > test/bdd/fixtures/keys/tls/secret-lock.key
 
 echo "done generating sandbox PKI"
