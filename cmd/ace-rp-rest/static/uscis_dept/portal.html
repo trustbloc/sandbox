@@ -1,0 +1,150 @@
+<!--
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ -->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta charset="utf-8">
+    <link rel="icon" type="images/x-icon" href="img/custom_logo.png" >
+    <title>USCIS Internal Management Portal</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="author" content="">
+
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss/dist/tailwind.min.css">
+    <!--Replace with your tailwind.css once created-->
+
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <style>
+        .gradient {
+            background: linear-gradient(to right, #04244b, #004e92, #04244b);
+        }
+    </style>
+</head>
+
+<body class="leading-normal tracking-normal text-white" style="font-family: 'Source Sans Pro', sans-serif;" onload="getUsers()">
+<div class="bg-red-100 border border-red-400 text-red-700 text-center rounded flex items-center justify-center" role="alert">
+    <strong class="font-bold">THIS IS NOT A GOVERNMENT SITE.</strong>
+    <span class="block sm:inline">&nbsp;It is demo site and all data is fake. Do not enter real account information or SSNs.</span>
+    <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+     </span>
+</div>
+
+<div class="max-w mx-auto sm:px-6 lg:px-32 gradient">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="flex items-center"> <img class="block lg:block h-36 w-auto" src="img/custom_logo.png">
+            <h2 class="text-white bold text-3xl">USCIS Internal Management Portal</h2>
+        </div>
+
+        <div class="flex items-center justify-end">
+            <i class="fa fa-user-circle mr-4 "></i>
+            <h2 class="text-white bold text-xl">Jacky Labat</h2>
+        </div>
+        </div>
+    </div>
+</div>
+    <div class="row-span-3 col-span-3 px-48 py-12">
+
+        <p class="text-gray-700 bold text-3xl text-leading text-center">
+            <button class="w-12 bg-gray-100 py-2 px-4 border text-lg text-blue-900 border-blue-900 rounded shadow"  onClick="window.location.reload();">
+                <i class="fa fa-refresh" aria-hidden="true"></i>
+            </button> Federal Benefits SSN Release Authorization</p>
+
+
+        <div class="space-y-4 flex justify-center">
+            <div class="w-full mx-auto overflow-auto">
+                <div class="bg-white rounded my-6">
+                    <table class="overflow-x-auto w-full table-fixed text-black shadow-lg" id="allUserTable">
+                        <thead>
+                        <tr class="border-b text-xl text-left">
+                            <th class="w-1/12"></th>
+                            <th class="w-1/8">Key</th>
+                            <th class="w-1/4">Email</th>
+                            <th class="w-1/2">SSN Ref No.</th>
+                        </tr>
+                        </thead>
+                    </table>
+                    <p class="text-2xl font-light text-center leading-relaxed text-red-700 py-8 px-2 hidden"
+                       id="errMsg" style="display: none"> No Records Found</p>
+                </div>
+            </div>
+        </div>
+        <p class="mt-2 text-left text-lg text-gray-600 py-4">
+            Clicking <a class="font-bold">Release</a> will provide the <a class="underline italic">Utopian Federal Benefits Settlement Dept</a>
+            system access to the selected account Social Security Number(s) and send a notification to process the information within the next 60 minutes.
+            This action will also send an email to your supervisor<a class="underline italic text-blue-600"> Jill.Templeton@internal.uscis.dhs.gov </a> notifying them of the release.
+        </p>
+
+        <p class="mt-2 text-left text-lg font-bold text-gray-600 py-2">
+            I hereby authorize the <a class="underline italic text-blue-600">Utopian Federal Benefits Settlement Dept </a>
+            to access the above account Social Security Numbers for benefit settlement processing
+            <a class="underline text-blue-600">Jacky Labat</a>
+        </p>
+        <div class="space-y-4 flex justify-center py-8">
+        <a class=" w-64 bg-green-100 hover:bg-blue-900 hover:shadow hover:text-white text-center text-gray-800 text-xl font-bold py-4 px-4 border border-blue-900 rounded shadow"  href="/users/auth">
+            Authorize Release
+        </a>
+        </div>
+        <div class="py-12">
+        </div>
+
+    </div>
+</div>
+
+<footer class="text-center gradient">
+    <section class="container mx-auto text-center">
+        <div class="text-sm text-white font py-6">
+            <img class="object-contain object-top-center h-32 w-full" src="img/custom_logo.png">
+            Copyright &copy; <a href="https://securekey.com/"  class="text-white hover:text-green-700" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+        </div>
+    </section>
+</footer>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    function ready(fn) {
+        if (document.readyState !== 'loading'){
+            fn();
+        } else {
+            document.addEventListener('DOMContentLoaded', fn);
+        }
+    }
+    ready(() => {});
+
+    function getUsers(){
+        console.log("start available users");
+        let response = axios.get('/users').then(response => {
+            console.log("response :",response.data);
+            createUserTable(response.data);
+        }).catch(error => document.getElementById("errMsg").style.display = "block");
+        createUserTable(response)
+    }
+
+    function createUserTable(data){
+        for(key in data["users"]){
+            var table = document.getElementById('allUserTable');
+            var tr = "<tr class=\"text-lg text-black  text-left\">";
+            tr += "<td><input type=\"checkbox\" />     </td><td class=\"  py-1 \">" + data["users"][key].id + "</td><td class=\"  py-1 \"> " +
+                data["users"][key].userName + "</td><td class=\"  py-1 \"> " + data["users"][key].vaultID + "</td></tr>";
+            table.innerHTML += tr;
+        }
+    }
+</script>
+</body>
+</html>
+
+
