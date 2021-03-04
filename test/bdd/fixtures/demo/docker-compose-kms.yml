@@ -151,6 +151,7 @@ services:
       - KMS_DID_DOMAIN=${BLOC_DOMAIN}
       - VIRTUAL_HOST=vault-kms.trustbloc.local
       - VIRTUAL_PROTO=https
+      - KMS_SECRET_LOCK_KEY_PATH=/etc/tls/secret-lock.key
     ports:
       - 8071:8071
     entrypoint: ""
