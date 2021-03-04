@@ -47,7 +47,7 @@ SPDX-License-Identifier: Apache-2.0
 <div class="max-w mx-auto sm:px-6 lg:px-32 gradient">
     <div class="grid grid-cols-2 gap-4">
         <div class="flex items-center"> <img class="block lg:block h-36 w-auto" src="img/custom_logo.png">
-            <h2 class="text-white bold text-3xl">USCIS Internal Management Portal</h2>
+            <a href="/internal" class="text-white bold text-3xl">USCIS Internal Management Portal</a>
         </div>
 
         <div class="flex items-center justify-end">
@@ -56,14 +56,22 @@ SPDX-License-Identifier: Apache-2.0
         </div>
         </div>
     </div>
-</div>
-    <div class="row-span-3 col-span-3 px-48 py-12">
 
+    <div class="bg-red-100 text-black text-xl text-center" id="banner" style="display: none">
+        <div class="max-w-7xl mx-auto py-3 px-3 sm:px-6 lg:px-48">
+                   <span class="md:inline" id="error"></span>
+        </div>
+    </div>
+<div class="w-full h-full fixed top-0 left-0 bg-black opacity-75 z-50" id="loading-screen" style="display:none">
+        <span class="text-green-500 opacity-75 top-1/2 my-0 mx-auto block relative w-0 h-0" style="top: 50%;">
+         <i class="fa fa-spinner fa-spin fa-5x"></i>
+       </span>
+</div>
+    <div class="row-span-3 col-span-3 px-48 py-12" id="userTable" style="display: block">
         <p class="text-gray-700 bold text-3xl text-leading text-center">
             <button class="w-12 bg-gray-100 py-2 px-4 border text-lg text-blue-900 border-blue-900 rounded shadow"  onClick="window.location.reload();">
                 <i class="fa fa-refresh" aria-hidden="true"></i>
             </button> Federal Benefits SSN Release Authorization</p>
-
 
         <div class="space-y-4 flex justify-center">
             <div class="w-full mx-auto overflow-auto">
@@ -94,14 +102,41 @@ SPDX-License-Identifier: Apache-2.0
             to access the above account Social Security Numbers for benefit settlement processing
             <a class="underline text-blue-600">Jacky Labat</a>
         </p>
-        <div class="space-y-4 flex justify-center py-8">
-        <a class=" w-64 bg-green-100 hover:bg-blue-900 hover:shadow hover:text-white text-center text-gray-800 text-xl font-bold py-4 px-4 border border-blue-900 rounded shadow"  href="/users/auth">
-            Authorize Release
-        </a>
-        </div>
-        <div class="py-12">
+        <div class="flex space-x-4 justify-center py-8">
+            <button class="w-64 bg-green-100 hover:bg-blue-900 hover:shadow hover:text-white text-center text-gray-800 text-xl font-bold py-4 px-2 border border-blue-900 rounded shadow"
+                    type="submit" id="release"> Authorize Release </button>
+            <input type="button" class="w-64 bg-red-100 hover:bg-blue-900 hover:shadow hover:text-white text-center text-gray-800 text-xl font-bold py-4 px-2 border border-blue-900 rounded shadow"
+                   value="Cancel" onclick="showFailureAuth()" />
         </div>
 
+        <span id="error"></span>
+        <div class="py-12">
+        </div>
+    </div>
+<div class="row-span-3 col-span-3 px-48 py-24" id="successAuth" style="display: none">
+    <div class="space-y-4 flex justify-center">
+        <p class="text-gray-700 bold text-3xl text-leading text-center">Federal Benefits SSN Release Authorization</p>
+    </div>
+    <div class="space-y-4 flex justify-center py-24">
+        <i class="fa fa-check-circle text-green-600 fa-5x" aria-hidden="true"></i>
+    </div>
+    <p class="mt-2 text-left text-lg text-center leading-text text-black py-8">
+        The authorizations and notifications for processing have been sent.
+    </p>
+    <div class="py-24">
+    </div>
+</div>
+<div class="row-span-3 col-span-3 px-48 py-24" id="failureAuth" style="display: none">
+    <div class="space-y-4 flex justify-center">
+        <p class="text-gray-700 bold text-3xl text-leading text-center">Federal Benefits SSN Release Authorization</p>
+    </div>
+    <div class="space-y-4 flex justify-center py-16">
+        <i class="fa fa-times-circle-o text-red-600 fa-5x" aria-hidden="true"></i>
+    </div>
+    <p class="mt-2 text-left text-lg text-center leading-text text-black py-4">
+        The authorizations and notifications has failed or cancelled. <a href="/internal" class="text-white bg-blue-900 px-2 py-1  rounded-md text-center font-bold">Retry</a>
+    </p>
+    <div class="py-24">
     </div>
 </div>
 
@@ -114,6 +149,7 @@ SPDX-License-Identifier: Apache-2.0
     </section>
 </footer>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script>
     function ready(fn) {
@@ -123,17 +159,19 @@ SPDX-License-Identifier: Apache-2.0
             document.addEventListener('DOMContentLoaded', fn);
         }
     }
-    ready(() => {});
+    ready(() => {
+        prepareGenerateUserAuthRequest();
+    });
 
+    <!-- Get the list of registered users -->
     function getUsers(){
-        console.log("start available users");
-        let response = axios.get('/users').then(response => {
+        axios.get('/users').then(response => {
             console.log("response :",response.data);
             createUserTable(response.data);
         }).catch(error => document.getElementById("errMsg").style.display = "block");
-        createUserTable(response)
     }
 
+    <!-- Dynamically create the table based on the list of the tables.-->
     function createUserTable(data){
         for(key in data["users"]){
             var table = document.getElementById('allUserTable');
@@ -142,6 +180,47 @@ SPDX-License-Identifier: Apache-2.0
                 data["users"][key].userName + "</td><td class=\"  py-1 \"> " + data["users"][key].vaultID + "</td></tr>";
             table.innerHTML += tr;
         }
+    }
+
+    function showFailureAuth() {
+        document.getElementById('failureAuth').style.display = "block";
+        document.getElementById("userTable").style.display = "none";
+    }
+       <!-- Generate Authorize Release -->
+    function prepareGenerateUserAuthRequest(){
+        let jsonData = {};
+        let userTable = document.getElementById('allUserTable');
+        $('#release').click(function() {
+            let result = [];
+            $('input:checkbox:checked', userTable).each(function() {
+                result.push($(this).parent().next().text());
+            });
+            jsonData["users"] = result;
+            console.log("prepared result:", jsonData);
+            if (result.length !== 0 ){
+                document.getElementById("loading-screen").style.display = "block";
+                axios.post('/users/auth/generate',
+                    jsonData
+                ).then(function (response) {
+                    console.log("generate auth response:", response);
+                    document.getElementById("successAuth").style.display = "block";
+                    document.getElementById("userTable").style.display = "none";
+                    document.getElementById("loading-screen").style.display = "none";
+                    document.getElementById("banner").style.display = "none";
+                }).catch(error => {
+                    console.log(error)
+                    document.getElementById("failureAuth").style.display = "block";
+                    document.getElementById("userTable").style.display = "none";
+                    document.getElementById("successAuth").style.display = "none";
+                    document.getElementById("banner").style.display = "none";
+                })
+            } else {
+               let error = document.getElementById("error");
+                    document.getElementById("banner").style.display = "block";
+                    error.textContent = "No record is selected";
+                    error.style.color = "black"
+            }
+        });
     }
 </script>
 </body>
