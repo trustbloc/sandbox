@@ -26,6 +26,7 @@ import (
 	"github.com/hyperledger/aries-framework-go/spi/storage"
 	"github.com/trustbloc/edge-core/pkg/log"
 	vcprofile "github.com/trustbloc/edge-service/pkg/doc/vc/profile"
+	"github.com/trustbloc/edge-service/pkg/doc/vc/status/csl"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
 	"golang.org/x/oauth2"
 
@@ -53,7 +54,7 @@ const (
 
 	credentialContext = "https://www.w3.org/2018/credentials/v1"
 
-	vcsUpdateStatusEndpoint = "/updateStatus"
+	vcsUpdateStatusURLFormat = "%s/%s" + "/credentials/status"
 
 	vcsProfileCookie     = "vcsProfile"
 	demoTypeCookie       = "demoType"
@@ -584,8 +585,6 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) { //nolint:
 		return
 	}
 
-	creds := make([]json.RawMessage, 0)
-
 	for _, cred := range vp.Credentials() {
 		cre, ok := cred.(map[string]interface{})
 		if !ok {
@@ -604,34 +603,43 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) { //nolint:
 			return
 		}
 
-		creds = append(creds, credBytes)
-	}
+		vc, errParse := verifiable.ParseCredential(credBytes, verifiable.WithDisabledProofCheck())
+		if errParse != nil {
+			logger.Errorf("failed to parse credentials: %s", errParse.Error())
+			c.writeErrorResponse(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed to parse credentials: %s", errParse.Error()))
 
-	reqBytes, err := prepareUpdateCredentialStatusRequest(creds)
-	if err != nil {
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to prepare update credential status request: %s", err.Error()))
+			return
+		}
 
-		return
-	}
+		reqBytes, errPrepare := prepareUpdateCredentialStatusRequest(vc)
+		if errPrepare != nil {
+			c.writeErrorResponse(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed to prepare update credential status request: %s", errPrepare.Error()))
 
-	req, err := http.NewRequest("POST", c.vcsURL+vcsUpdateStatusEndpoint,
-		bytes.NewBuffer(reqBytes))
-	if err != nil {
-		logger.Errorf("failed to create new http request: %s", err.Error())
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to create new http request: %s", err.Error()))
+			return
+		}
 
-		return
-	}
+		endpointURL := fmt.Sprintf(vcsUpdateStatusURLFormat, c.vcsURL, vc.Issuer.CustomFields["name"].(string))
 
-	_, err = sendHTTPRequest(req, c.httpClient, http.StatusOK, c.requestTokens[vcsIssuerRequestTokenName])
-	if err != nil {
-		logger.Errorf("failed to update vc status: %s", err.Error())
-		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to update vc status: %s", err.Error()))
+		req, errReq := http.NewRequest("POST", endpointURL,
+			bytes.NewBuffer(reqBytes))
+		if errReq != nil {
+			logger.Errorf("failed to create new http request: %s", errReq.Error())
+			c.writeErrorResponse(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed to create new http request: %s", errReq.Error()))
 
-		return
+			return
+		}
+
+		_, err = sendHTTPRequest(req, c.httpClient, http.StatusOK, c.requestTokens[vcsIssuerRequestTokenName])
+		if err != nil {
+			logger.Errorf("failed to update vc status: %s", err.Error())
+			c.writeErrorResponse(w, http.StatusBadRequest,
+				fmt.Sprintf("failed to update vc status: %s", err.Error()))
+
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -1173,9 +1181,10 @@ func prepareStoreVCRequest(cred []byte, profile string) ([]byte, error) {
 	return json.Marshal(storeVCRequest)
 }
 
-func prepareUpdateCredentialStatusRequest(creds []json.RawMessage) ([]byte, error) {
+func prepareUpdateCredentialStatusRequest(vc *verifiable.Credential) ([]byte, error) {
 	request := edgesvcops.UpdateCredentialStatusRequest{
-		Credentials: creds,
+		CredentialID:     vc.ID,
+		CredentialStatus: edgesvcops.CredentialStatus{Type: csl.RevocationList2020Status, Status: "1"},
 	}
 
 	return json.Marshal(request)

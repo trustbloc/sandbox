@@ -1372,16 +1372,12 @@ func TestRevokeVC(t *testing.T) {
 	})
 
 	t.Run("test vc html not exist", func(t *testing.T) {
-		router := mux.NewRouter()
-		router.HandleFunc(vcsUpdateStatusEndpoint, func(writer http.ResponseWriter, request *http.Request) {
-			writer.WriteHeader(http.StatusOK)
-		})
+		serv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer serv.Close()
 
-		vcs := httptest.NewServer(router)
-
-		defer vcs.Close()
-
-		svc, err := New(&Config{VCHTML: "", VCSURL: vcs.URL, StoreProvider: &mockstorage.Provider{}})
+		svc, err := New(&Config{VCHTML: "", VCSURL: serv.URL, StoreProvider: &mockstorage.Provider{}})
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
@@ -1397,16 +1393,12 @@ func TestRevokeVC(t *testing.T) {
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
-		router := mux.NewRouter()
-		router.HandleFunc(vcsUpdateStatusEndpoint, func(writer http.ResponseWriter, request *http.Request) {
-			writer.WriteHeader(http.StatusOK)
-		})
+		serv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer serv.Close()
 
-		vcs := httptest.NewServer(router)
-
-		defer vcs.Close()
-
-		svc, err := New(&Config{VCHTML: file.Name(), VCSURL: vcs.URL, StoreProvider: &mockstorage.Provider{}})
+		svc, err := New(&Config{VCHTML: file.Name(), VCSURL: serv.URL, StoreProvider: &mockstorage.Provider{}})
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
