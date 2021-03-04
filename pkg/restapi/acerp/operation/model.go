@@ -56,6 +56,7 @@ type profileData struct {
 }
 
 type userAuthData struct {
+	ID            string                         `json:"id"`
 	Source        string                         `json:"source"`
 	SubmittedTime *util.TimeWithTrailingZeroMsec `json:"submittedTime"`
 	UserAuths     []userAuthorization            `json:"userAuths"`
@@ -80,9 +81,13 @@ type extractResp struct {
 }
 
 type extractData struct {
+	ID            string                         `json:"id"`
 	Source        string                         `json:"source"`
 	SubmittedTime *util.TimeWithTrailingZeroMsec `json:"submittedTime"`
-	Data          []userExtractedData            `json:"userDetails"`
+}
+
+type getExtractData struct {
+	Data []userExtractedData `json:"userDetails"`
 }
 
 type userExtractedData struct {

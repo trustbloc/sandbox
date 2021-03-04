@@ -43,7 +43,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}, ComparatorURL: "http://comp.example.com"})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 16, len(svc.GetRESTHandlers()))
+		require.Equal(t, 17, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -2288,7 +2288,7 @@ func TestSaveUserAuth(t *testing.T) {
 	})
 }
 
-func TestExtractUserData(t *testing.T) {
+func TestExtractRequests(t *testing.T) {
 	uData := userAuthData{
 		Source:        "test",
 		SubmittedTime: util.NewTime(time.Now()),
@@ -2319,7 +2319,7 @@ func TestExtractUserData(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		svc.extractUserData(rr, req)
+		svc.extractRequests(rr, req)
 		require.Equal(t, http.StatusOK, rr.Code)
 
 		var resp *extractResp
@@ -2327,7 +2327,6 @@ func TestExtractUserData(t *testing.T) {
 		err = json.Unmarshal(rr.Body.Bytes(), &resp)
 		require.NoError(t, err)
 		require.Equal(t, 1, len(resp.ExtractData))
-		require.Equal(t, 2, len(resp.ExtractData[0].Data))
 	})
 
 	t.Run("get only 5 records", func(t *testing.T) {
@@ -2360,7 +2359,7 @@ func TestExtractUserData(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		svc.extractUserData(rr, req)
+		svc.extractRequests(rr, req)
 		require.Equal(t, http.StatusOK, rr.Code)
 
 		var resp *extractResp
@@ -2385,7 +2384,7 @@ func TestExtractUserData(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		svc.extractUserData(rr, req)
+		svc.extractRequests(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to get user auth data: get all user auth data")
 	})
@@ -2406,9 +2405,97 @@ func TestExtractUserData(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 
-		svc.extractUserData(rr, req)
+		svc.extractRequests(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to get user auth data: unamrshal user auth data invalid-data")
+	})
+}
+
+func TestGetUserExtract(t *testing.T) {
+	uData := userAuthData{
+		Source:        "test",
+		SubmittedTime: util.NewTime(time.Now()),
+		UserAuths: []userAuthorization{
+			{ID: uuid.NewString(), Name: sampleUserName, AuthToken: uuid.NewString()},
+			{ID: uuid.NewString(), Name: sampleUserName, AuthToken: uuid.NewString()},
+		},
+	}
+
+	uBytes, err := json.Marshal(uData)
+	require.NoError(t, err)
+
+	t.Run("success", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: mem.NewProvider(),
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.compClient = &mockComparatorClient{}
+
+		id := uuid.NewString()
+
+		err = svc.userAuthStore.Put(id, uBytes, storage.Tag{Name: userTagName})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, userExtract+"/"+id, nil)
+		require.NoError(t, err)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.getUserExtract(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+
+		var resp *getExtractData
+
+		err = json.Unmarshal(rr.Body.Bytes(), &resp)
+		require.NoError(t, err)
+		require.Equal(t, 2, len(resp.Data))
+	})
+
+	t.Run("db error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				OpenStoreReturn: &mockstorage.Store{ErrGet: errors.New("get error")},
+			},
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		req, err := http.NewRequest(http.MethodGet, userExtract+"/"+uuid.NewString(), nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.getUserExtract(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get user auth data")
+	})
+
+	t.Run("invalid data in the db", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: mem.NewProvider(),
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		id := uuid.NewString()
+
+		err = svc.userAuthStore.Put(id, []byte("invalid-data"), storage.Tag{Name: userTagName})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, userExtract+"/"+id, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.getUserExtract(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to unmarshal user auth data")
 	})
 
 	t.Run("extract api error", func(t *testing.T) {
@@ -2421,15 +2508,17 @@ func TestExtractUserData(t *testing.T) {
 
 		svc.compClient = &mockComparatorClient{PostExtractErr: errors.New("extract api error")}
 
-		err = svc.userAuthStore.Put(uuid.NewString(), uBytes, storage.Tag{Name: userTagName})
+		id := uuid.NewString()
+
+		err = svc.userAuthStore.Put(id, uBytes, storage.Tag{Name: userTagName})
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodGet, userExtract, nil)
+		req, err := http.NewRequest(http.MethodGet, userExtract+"/"+id, nil)
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 
-		svc.extractUserData(rr, req)
+		svc.getUserExtract(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to extract data")
 
@@ -2439,7 +2528,7 @@ func TestExtractUserData(t *testing.T) {
 
 		rr = httptest.NewRecorder()
 
-		svc.extractUserData(rr, req)
+		svc.getUserExtract(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "count of documents 0 doesnt match the expected 2")
 
@@ -2452,7 +2541,7 @@ func TestExtractUserData(t *testing.T) {
 
 		rr = httptest.NewRecorder()
 
-		svc.extractUserData(rr, req)
+		svc.getUserExtract(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "invalid content; expected string type")
 	})

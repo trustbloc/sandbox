@@ -57,6 +57,7 @@ const (
 	userAuth            = users + "/auth"
 	generateUserAuth    = userAuth + "/generate"
 	userExtract         = users + "/extract"
+	getUserExtract      = userExtract + "/{id}"
 
 	// store
 	txnStoreName      = "issuer_txn"
@@ -141,6 +142,7 @@ type Operation struct {
 	hostExternalURL      string
 	vClient              vaultClient
 	compClient           comparatorClient
+	svcName              string
 }
 
 // Config config.
@@ -160,6 +162,7 @@ type Config struct {
 	ExtractorProfile     string
 	HostExternalURL      string
 	RequestTokens        map[string]string
+	SvcName              string
 }
 
 // New returns ace-rp operation instance.
@@ -214,6 +217,7 @@ func New(config *Config) (*Operation, error) {
 		requestTokens:        config.RequestTokens,
 		vClient:              vaultclient.New(config.VaultServerURL, vaultclient.WithHTTPClient(httpClient)),
 		compClient:           compclient.New(transport, strfmt.Default).Operations,
+		svcName:              config.SvcName,
 	}
 
 	op.registerHandler()
@@ -239,7 +243,8 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(users, http.MethodGet, o.getUsers),
 		support.NewHTTPHandler(generateUserAuth, http.MethodPost, o.generateUserAuths),
 		support.NewHTTPHandler(userAuth, http.MethodPost, o.saveUserAuths),
-		support.NewHTTPHandler(userExtract, http.MethodGet, o.extractUserData),
+		support.NewHTTPHandler(userExtract, http.MethodGet, o.extractRequests),
+		support.NewHTTPHandler(getUserExtract, http.MethodGet, o.getUserExtract),
 	}
 }
 
@@ -880,8 +885,7 @@ func (o *Operation) generateUserAuths(w http.ResponseWriter, r *http.Request) { 
 	}
 
 	uData := &userAuthData{
-		// TODO config source name
-		Source:        "Test Service",
+		Source:        o.svcName,
 		SubmittedTime: util.NewTime(time.Now()),
 		UserAuths:     userAuths,
 	}
@@ -927,6 +931,9 @@ func (o *Operation) saveUserAuths(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// create a new id and save the data
+	data.ID = uuid.NewString()
+
 	authBytes, err := json.Marshal(data)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to marshal user auth data: %s", err.Error()))
@@ -934,10 +941,7 @@ func (o *Operation) saveUserAuths(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// create a new id and save the data
-	id := uuid.NewString()
-
-	err = o.userAuthStore.Put(id, authBytes, storage.Tag{Name: userTagName})
+	err = o.userAuthStore.Put(data.ID, authBytes, storage.Tag{Name: userTagName})
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to save user auth data: %s", err.Error()))
@@ -945,13 +949,13 @@ func (o *Operation) saveUserAuths(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Infof("saveUserAuths: id=[%s] data=[%s]", id, string(authBytes))
+	logger.Infof("saveUserAuths: id=[%s] data=[%s]", data.ID, string(authBytes))
 
 	// send response
-	o.writeResponse(w, http.StatusOK, map[string]string{"id": id})
+	o.writeResponse(w, http.StatusOK, map[string]string{"id": data.ID})
 }
 
-func (o *Operation) extractUserData(w http.ResponseWriter, r *http.Request) { // nolint: funlen
+func (o *Operation) extractRequests(w http.ResponseWriter, r *http.Request) {
 	userAuthData, err := o.fetchUserAuths()
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
@@ -960,22 +964,55 @@ func (o *Operation) extractUserData(w http.ResponseWriter, r *http.Request) { //
 		return
 	}
 
+	eData := make([]extractData, 0)
+
+	for _, authData := range userAuthData {
+		eData = append(eData, extractData{
+			ID:            authData.ID,
+			Source:        authData.Source,
+			SubmittedTime: authData.SubmittedTime,
+		})
+	}
+
+	// send response
+	o.writeResponse(w, http.StatusOK, extractResp{ExtractData: eData})
+}
+
+func (o *Operation) getUserExtract(w http.ResponseWriter, r *http.Request) { // nolint: funlen
+	id := strings.Split(r.URL.Path, "/")[3]
+
+	userAuthDataByte, err := o.userAuthStore.Get(id)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get user auth data %s : %s", id, err.Error()))
+
+		return
+	}
+
+	var u *userAuthData
+
+	err = json.Unmarshal(userAuthDataByte, &u)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to unmarshal user auth data %s : %s", string(userAuthDataByte), err.Error()))
+
+		return
+	}
+
 	queries := make([]compmodel.Query, 0)
 	queryMap := make(map[string]string)
 
-	for _, authData := range userAuthData {
-		for _, auths := range authData.UserAuths {
-			queryID := uuid.NewString()
+	for _, auths := range u.UserAuths {
+		queryID := uuid.NewString()
 
-			query := &compmodel.AuthorizedQuery{AuthToken: &auths.AuthToken}
-			query.SetID(queryID)
+		query := &compmodel.AuthorizedQuery{AuthToken: &auths.AuthToken}
+		query.SetID(queryID)
 
-			queries = append(queries, query)
-			queryMap[queryID] = auths.ID
+		queries = append(queries, query)
+		queryMap[queryID] = auths.ID
 
-			logger.Infof("extractUserData: id=[%s] name=[%s] queryID=[%s] token=[%s]",
-				auths.ID, auths.Name, query.ID(), query.AuthToken)
-		}
+		logger.Infof("extractUserData: id=[%s] name=[%s] queryID=[%s] token=[%s]",
+			auths.ID, auths.Name, query.ID(), query.AuthToken)
 	}
 
 	request := &compmodel.Extract{}
@@ -1014,28 +1051,20 @@ func (o *Operation) extractUserData(w http.ResponseWriter, r *http.Request) { //
 		userNationalIDMap[queryMap[k.ID]] = nationalID
 	}
 
-	eData := make([]extractData, 0)
+	uData := make([]userExtractedData, 0)
 
-	for _, authData := range userAuthData {
-		uData := make([]userExtractedData, 0)
-
-		for _, auths := range authData.UserAuths {
-			uData = append(uData, userExtractedData{
-				ID:         auths.ID,
-				Name:       auths.Name,
-				NationalID: userNationalIDMap[auths.ID],
-			})
-		}
-
-		eData = append(eData, extractData{
-			Source:        authData.Source,
-			SubmittedTime: authData.SubmittedTime,
-			Data:          uData,
+	for _, auths := range u.UserAuths {
+		uData = append(uData, userExtractedData{
+			ID:         auths.ID,
+			Name:       auths.Name,
+			NationalID: userNationalIDMap[auths.ID],
 		})
 	}
 
 	// send response
-	o.writeResponse(w, http.StatusOK, extractResp{ExtractData: eData})
+	o.writeResponse(w, http.StatusOK, getExtractData{
+		Data: uData,
+	})
 }
 
 func (o *Operation) showDashboard(w http.ResponseWriter, userName, errMsg, vaultID string, serviceLinked bool) {
