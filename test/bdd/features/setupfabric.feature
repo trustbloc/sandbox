@@ -44,19 +44,19 @@ Feature:
     And we wait 10 seconds
 
     # Check blockchain endpoint
-    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/0.0.1/blockchain/version"
+    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/v1/anchor/version"
     Then the JSON path "name" of the response equals "Hyperledger Fabric"
     And the JSON path "version" of the response equals "2.2.1"
 
     # Check cas endpoint
-    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/0.0.1/cas/version"
+    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/v1/cas/version"
     Then the JSON path "name" of the response equals "cas"
     And the JSON path "version" of the response equals "0.1.3"
 
     Given variable "token_fileidx_w" is assigned the value "TOKEN_FILEIDX_W"
 
     # generate trustbloc config file
-    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/0.0.1/blockchain/blocks?from-time=1&max-blocks=1"
+    When an HTTP GET is sent to "https://peer0-org1.trustbloc.local/sidetree/v1/anchor/blocks?from-time=1&max-blocks=1"
     Then the JSON path "#" of the response has 1 items
     And the JSON path "0.header.number" of the response equals "1"
     And the JSON path "0.header.previousHash" of the response is saved to variable "previous-hash"
