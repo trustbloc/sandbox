@@ -221,7 +221,7 @@ func TestRegister(t *testing.T) {
 
 		svc.register(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to store national id in vault - err:create vault")
+		require.Contains(t, rr.Body.String(), "failed to store national id in vault  - err:create vault")
 	})
 
 	t.Run("missing national id", func(t *testing.T) {
@@ -1839,10 +1839,8 @@ func TestDeleteProfile(t *testing.T) {
 
 func TestGetUsers(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		svcMemProvider := mem.NewProvider()
-
 		svc, err := New(&Config{
-			StoreProvider: svcMemProvider,
+			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
 		})
 		require.NoError(t, err)
@@ -1863,13 +1861,19 @@ func TestGetUsers(t *testing.T) {
 		uBytes, err := json.Marshal(uData)
 		require.NoError(t, err)
 
-		txnStore, err := svcMemProvider.OpenStore(txnStoreName)
+		err = svc.store.Put(uData.UserName, uBytes)
 		require.NoError(t, err)
 
-		err = txnStore.Put(uData.UserName, uBytes)
+		uMap := userIDNameMap{
+			ID:          uData.ID,
+			UserName:    uData.UserName,
+			CreatedTime: util.NewTime(time.Now()),
+		}
+
+		uBytes, err = json.Marshal(uMap)
 		require.NoError(t, err)
 
-		err = userStore.Put(uData.ID, []byte(uData.UserName), storage.Tag{Name: userTagName})
+		err = userStore.Put(uData.ID, uBytes, storage.Tag{Name: userTagName})
 		require.NoError(t, err)
 
 		req, err := http.NewRequest("GET", users, nil)
@@ -1885,6 +1889,61 @@ func TestGetUsers(t *testing.T) {
 		err = json.Unmarshal(rr.Body.Bytes(), &resp)
 		require.NoError(t, err)
 		require.Equal(t, 1, len(resp.Users))
+	})
+
+	t.Run("get only 5 records", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: mem.NewProvider(),
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		userStore, err := mem.NewProvider().OpenStore("userstore")
+		require.NoError(t, err)
+
+		svc.userStore = userStore
+
+		for i := 0; i < 10; i++ {
+			reqData := userData{
+				ID:              uuid.NewString(),
+				UserName:        sampleUserName,
+				VaultID:         uuid.NewString(),
+				NationalIDDocID: uuid.NewString(),
+			}
+
+			reqBytes, mErr := json.Marshal(reqData)
+			require.NoError(t, mErr)
+
+			err = svc.store.Put(reqData.UserName, reqBytes)
+			require.NoError(t, err)
+
+			uMap := userIDNameMap{
+				ID:          reqData.ID,
+				UserName:    reqData.UserName,
+				CreatedTime: util.NewTime(time.Now()),
+			}
+
+			reqBytes, err = json.Marshal(uMap)
+			require.NoError(t, err)
+
+			err = userStore.Put(reqData.ID, reqBytes, storage.Tag{Name: userTagName})
+			require.NoError(t, err)
+		}
+
+		req, err := http.NewRequest("GET", users, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.getUsers(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+
+		var resp *getUserDataResp
+
+		err = json.Unmarshal(rr.Body.Bytes(), &resp)
+		require.NoError(t, err)
+		require.Equal(t, 5, len(resp.Users))
 	})
 }
 
@@ -1933,13 +1992,25 @@ func TestCreateAuthorizations(t *testing.T) {
 		err = userStore.Put(uData.ID, []byte(uData.UserName), storage.Tag{Name: userTagName})
 		require.NoError(t, err)
 
+		uMap := userIDNameMap{
+			ID:          uData.ID,
+			UserName:    uData.UserName,
+			CreatedTime: util.NewTime(time.Now()),
+		}
+
+		uBytes, err = json.Marshal(uMap)
+		require.NoError(t, err)
+
+		err = userStore.Put(uData.ID, uBytes, storage.Tag{Name: userTagName})
+		require.NoError(t, err)
+
 		cIDBytes, err := json.Marshal(&clientData{})
 		require.NoError(t, err)
 
 		err = txnStore.Put(cID, cIDBytes)
 		require.NoError(t, err)
 
-		uBytes, err = json.Marshal(generateUserAuthReq{})
+		uBytes, err = json.Marshal(generateUserAuthReq{Users: []string{uData.ID}})
 		require.NoError(t, err)
 
 		req, err := http.NewRequest(http.MethodPost, userAuth, bytes.NewReader(uBytes))
@@ -2015,7 +2086,16 @@ func TestCreateAuthorizations(t *testing.T) {
 		err = txnStore.Put(uData.UserName, uBytes)
 		require.NoError(t, err)
 
-		err = userStore.Put(uData.ID, []byte(uData.UserName), storage.Tag{Name: userTagName})
+		uMap := userIDNameMap{
+			ID:          uData.ID,
+			UserName:    uData.UserName,
+			CreatedTime: util.NewTime(time.Now()),
+		}
+
+		uBytes, err = json.Marshal(uMap)
+		require.NoError(t, err)
+
+		err = userStore.Put(uData.ID, uBytes, storage.Tag{Name: userTagName})
 		require.NoError(t, err)
 
 		cIDBytes, err := json.Marshal(&clientData{})
@@ -2088,7 +2168,16 @@ func TestCreateAuthorizations(t *testing.T) {
 		err = txnStore.Put(uData.UserName, uBytes)
 		require.NoError(t, err)
 
-		err = userStore.Put(uData.ID, []byte(uData.UserName), storage.Tag{Name: userTagName})
+		uMap := userIDNameMap{
+			ID:          uData.ID,
+			UserName:    uData.UserName,
+			CreatedTime: util.NewTime(time.Now()),
+		}
+
+		uBytes, err = json.Marshal(uMap)
+		require.NoError(t, err)
+
+		err = userStore.Put(uData.ID, uBytes, storage.Tag{Name: userTagName})
 		require.NoError(t, err)
 
 		cIDBytes, err := json.Marshal(&clientData{})
@@ -2239,6 +2328,46 @@ func TestExtractUserData(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 1, len(resp.ExtractData))
 		require.Equal(t, 2, len(resp.ExtractData[0].Data))
+	})
+
+	t.Run("get only 5 records", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: mem.NewProvider(),
+			ComparatorURL: "http://comp.example.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		svc.compClient = &mockComparatorClient{}
+
+		for i := 0; i < 10; i++ {
+			reqBytes, mErr := json.Marshal(userAuthData{
+				Source:        "test" + fmt.Sprint(i),
+				SubmittedTime: util.NewTime(time.Now()),
+				UserAuths: []userAuthorization{
+					{ID: uuid.NewString(), Name: sampleUserName, AuthToken: uuid.NewString()},
+					{ID: uuid.NewString(), Name: sampleUserName, AuthToken: uuid.NewString()},
+				},
+			})
+			require.NoError(t, mErr)
+
+			err = svc.userAuthStore.Put(uuid.NewString(), reqBytes, storage.Tag{Name: userTagName})
+			require.NoError(t, err)
+		}
+
+		req, err := http.NewRequest(http.MethodGet, userExtract, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.extractUserData(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+
+		var resp *extractResp
+
+		err = json.Unmarshal(rr.Body.Bytes(), &resp)
+		require.NoError(t, err)
+		require.Equal(t, 5, len(resp.ExtractData))
 	})
 
 	t.Run("db error", func(t *testing.T) {
