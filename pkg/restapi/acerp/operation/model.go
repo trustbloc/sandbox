@@ -15,6 +15,12 @@ type userData struct {
 	NationalIDDocID string `json:"nationalIDDocID"`
 }
 
+type userIDNameMap struct {
+	ID          string                         `json:"id"`
+	UserName    string                         `json:"userName"`
+	CreatedTime *util.TimeWithTrailingZeroMsec `json:"createdTime"`
+}
+
 type sessionData struct {
 	DID         string `json:"did"`
 	State       string `json:"state"`

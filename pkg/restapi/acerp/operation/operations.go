@@ -15,6 +15,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -74,6 +75,8 @@ const (
 	sessionidCookie  = "sessionid"
 	cookieExpiryTime = 5
 	authExpiryTime   = 5
+	// TODO- this should be configurable
+	resultLimit = 5
 
 	vcsIssuerRequestTokenName = "vcs_issuer"
 	requestTimeout            = 30 * time.Second
@@ -161,17 +164,19 @@ type Config struct {
 
 // New returns ace-rp operation instance.
 func New(config *Config) (*Operation, error) {
-	store, err := getTxnStore(config.StoreProvider)
+	store, err := getStore(config.StoreProvider, txnStoreName, nil)
 	if err != nil {
 		return nil, fmt.Errorf("ace-rp store provider : %w", err)
 	}
 
-	userStore, err := getUserStore(config.StoreProvider)
+	userStore, err := getStore(config.StoreProvider, userStoreName,
+		&storage.StoreConfiguration{TagNames: []string{userTagName}})
 	if err != nil {
 		return nil, fmt.Errorf("ace-rp userStore store provider : %w", err)
 	}
 
-	userAuthStore, err := getUserAuthStore(config.StoreProvider)
+	userAuthStore, err := getStore(config.StoreProvider, userAuthStoreName,
+		&storage.StoreConfiguration{TagNames: []string{userTagName}})
 	if err != nil {
 		return nil, fmt.Errorf("ace-rp userAuthStore store provider : %w", err)
 	}
@@ -253,14 +258,16 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint
 
 	pwd, err := o.store.Get(r.FormValue(username))
 	if err != nil && !errors.Is(err, storage.ErrDataNotFound) {
-		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to get user data: %s", err.Error()))
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to get user data %s : %s", r.FormValue(username), err.Error()))
 
 		return
 	}
 
 	if pwd != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		o.showDashboard(w, r.FormValue(username), "Username already exists", "", false)
+		o.showDashboard(w, r.FormValue(username),
+			fmt.Sprintf("Username '%s' already exists", r.FormValue(username)), "", false)
 
 		return
 	}
@@ -269,7 +276,7 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint
 	vaultID, docID, err := o.storeNationalID(r.FormValue(nationalID))
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to store national id in vault - err:%s", err.Error()))
+			fmt.Sprintf("failed to store national id in vault %s - err:%s", r.FormValue(nationalID), err.Error()))
 
 		return
 	}
@@ -292,12 +299,26 @@ func (o *Operation) register(w http.ResponseWriter, r *http.Request) { // nolint
 	err = o.store.Put(r.FormValue(username), uDataBytes)
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("unable to save user data: %s", err.Error()))
+			fmt.Sprintf("unable to save user data %s: %s", r.FormValue(username), err.Error()))
 
 		return
 	}
 
-	err = o.userStore.Put(uData.ID, []byte(uData.UserName), storage.Tag{Name: userTagName})
+	uMap := userIDNameMap{
+		ID:          uData.ID,
+		UserName:    uData.UserName,
+		CreatedTime: util.NewTime(time.Now()),
+	}
+
+	uMapBytes, err := json.Marshal(uMap)
+	if err != nil {
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to unmarshal user data - err:%s", err.Error()))
+
+		return
+	}
+
+	err = o.userStore.Put(uData.ID, uMapBytes, storage.Tag{Name: userTagName})
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("unable to save id-username mapping data: %s", err.Error()))
@@ -319,7 +340,8 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 
 	uData, err := o.getUserData(r.FormValue(username))
 	if err != nil {
-		o.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("unable to get user data: %s", err.Error()))
+		o.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to get user data %s: %s", r.FormValue(username), err.Error()))
 
 		return
 	}
@@ -785,7 +807,6 @@ func (o *Operation) deleteProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Operation) getUsers(w http.ResponseWriter, r *http.Request) {
-	// TODO get only last 5 users; for now getting all the users
 	u, err := o.fetchUsers()
 	if err != nil {
 		o.writeErrorResponse(w, http.StatusInternalServerError,
@@ -840,6 +861,7 @@ func (o *Operation) generateUserAuths(w http.ResponseWriter, r *http.Request) { 
 
 	// get the authorization for all
 	for _, v := range u {
+		logger.Infof("generateUserAuths: id=[%s] vaultID=[%s] nationalDocID=[%s]", v.ID, v.VaultID, v.NationalIDDocID)
 		// pass the zcap to the caller
 		auth, authErr := o.getAuthorization(
 			v.VaultID,
@@ -950,6 +972,9 @@ func (o *Operation) extractUserData(w http.ResponseWriter, r *http.Request) { //
 
 			queries = append(queries, query)
 			queryMap[queryID] = auths.ID
+
+			logger.Infof("extractUserData: id=[%s] name=[%s] queryID=[%s] token=[%s]",
+				auths.ID, auths.Name, query.ID(), query.AuthToken)
 		}
 	}
 
@@ -1071,15 +1096,6 @@ func (o *Operation) writeResponse(rw http.ResponseWriter, status int, v interfac
 	}
 }
 
-func getTxnStore(prov storage.Provider) (storage.Store, error) {
-	txnStore, err := prov.OpenStore(txnStoreName)
-	if err != nil {
-		return nil, err
-	}
-
-	return txnStore, nil
-}
-
 func (o *Operation) getUserData(username string) (*userData, error) {
 	uDataBytes, err := o.store.Get(username)
 	if err != nil {
@@ -1139,17 +1155,26 @@ func (o *Operation) fetchUsers(ids ...string) ([]userData, error) {
 
 		usernamesToFetch = allUsernames
 	} else {
-		usernamesToFetch = make([]string, len(ids))
+		usernamesToFetch = make([]string, 0)
 
-		usernames, err := o.userStore.GetBulk(ids...)
+		userData, err := o.userStore.GetBulk(ids...)
 		if err != nil {
 			return nil, fmt.Errorf("get all user data: %w", err)
 		}
 
-		for i, v := range usernames {
-			usernamesToFetch[i] = string(v)
+		for _, v := range userData {
+			var u *userIDNameMap
+
+			err = json.Unmarshal(v, &u)
+			if err != nil {
+				return nil, fmt.Errorf("unamrshal user data %s : %w", string(v), err)
+			}
+
+			usernamesToFetch = append(usernamesToFetch, u.UserName)
 		}
 	}
+
+	logger.Infof("usernamesToFetch=%s", usernamesToFetch)
 
 	if len(usernamesToFetch) > 0 {
 		bulkData, err := o.store.GetBulk(usernamesToFetch...)
@@ -1164,7 +1189,7 @@ func (o *Operation) fetchUsers(ids ...string) ([]userData, error) {
 
 			err = json.Unmarshal(v, &u)
 			if err != nil {
-				return nil, fmt.Errorf("unamrshal client data: %w", err)
+				return nil, fmt.Errorf("unamrshal user data %s: %w", string(v), err)
 			}
 
 			users[i] = u
@@ -1177,7 +1202,7 @@ func (o *Operation) fetchUsers(ids ...string) ([]userData, error) {
 }
 
 func (o *Operation) getAllUsernames() ([]string, error) {
-	userNames := make([]string, 0)
+	userIDNames := make([]userIDNameMap, 0)
 
 	userDataIterator, err := o.userStore.Query("user")
 	if err != nil {
@@ -1195,12 +1220,34 @@ func (o *Operation) getAllUsernames() ([]string, error) {
 			return nil, fmt.Errorf("failed to get user data value: %w", err)
 		}
 
-		userNames = append(userNames, string(userDataValue))
+		var u *userIDNameMap
+
+		err = json.Unmarshal(userDataValue, &u)
+		if err != nil {
+			return nil, fmt.Errorf("unamrshal user data %s : %w", string(userDataValue), err)
+		}
+
+		userIDNames = append(userIDNames, *u)
 
 		moreUserData, err = userDataIterator.Next()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get next user's data: %w", err)
 		}
+	}
+
+	sort.Slice(userIDNames, func(i, j int) bool {
+		return userIDNames[i].CreatedTime.After(userIDNames[j].CreatedTime.Time)
+	})
+
+	// TODO configure this limit value
+	if len(userIDNames) > resultLimit {
+		userIDNames = userIDNames[:resultLimit]
+	}
+
+	userNames := make([]string, 0)
+
+	for _, v := range userIDNames {
+		userNames = append(userNames, v.UserName)
 	}
 
 	return userNames, nil
@@ -1238,6 +1285,15 @@ func (o *Operation) fetchUserAuths() ([]userAuthData, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to get next user's data: %w", err)
 		}
+	}
+
+	sort.Slice(users, func(i, j int) bool {
+		return users[i].SubmittedTime.After(users[j].SubmittedTime.Time)
+	})
+
+	// TODO configure this limit value
+	if len(users) > resultLimit {
+		users = users[:resultLimit]
 	}
 
 	return users, nil
@@ -1443,29 +1499,17 @@ func (o *Operation) sendHTTPRequest(method, endpoint string, reqBody []byte, sta
 	return respBody, nil
 }
 
-func getUserStore(prov storage.Provider) (storage.Store, error) {
-	txnStore, err := prov.OpenStore(userStoreName)
+func getStore(prov storage.Provider, name string, config *storage.StoreConfiguration) (storage.Store, error) {
+	txnStore, err := prov.OpenStore(name)
 	if err != nil {
 		return nil, err
 	}
 
-	err = prov.SetStoreConfig(userStoreName, storage.StoreConfiguration{TagNames: []string{userTagName}})
-	if err != nil {
-		return nil, fmt.Errorf("failed to set store configuration for user store: %w", err)
-	}
-
-	return txnStore, nil
-}
-
-func getUserAuthStore(prov storage.Provider) (storage.Store, error) {
-	txnStore, err := prov.OpenStore(userAuthStoreName)
-	if err != nil {
-		return nil, err
-	}
-
-	err = prov.SetStoreConfig(userAuthStoreName, storage.StoreConfiguration{TagNames: []string{userTagName}})
-	if err != nil {
-		return nil, fmt.Errorf("failed to set store configuration for user-auth store: %w", err)
+	if config != nil {
+		err = prov.SetStoreConfig(name, *config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to set store configuration for user-auth store: %w", err)
+		}
 	}
 
 	return txnStore, nil
