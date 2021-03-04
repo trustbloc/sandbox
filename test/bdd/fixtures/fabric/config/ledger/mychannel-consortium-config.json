@@ -11,7 +11,7 @@
         {
           "Name": "protocol",
           "Version": "0.1",
-          "Config": "file://./did-sidetree-protocol-v0_1.json",
+          "Config": "file://./did-sidetree-protocol-v1_0.json",
           "Format": "json",
           "Tags": ["sidetree"]
         }
@@ -33,7 +33,7 @@
         {
           "Name": "protocol",
           "Version": "0.1",
-          "Config": "file://./did-sidetree-protocol-v0_1.json",
+          "Config": "file://./did-sidetree-protocol-v1_0.json",
           "Format": "json",
           "Tags": ["sidetree"]
         }
