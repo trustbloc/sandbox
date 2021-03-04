@@ -342,6 +342,8 @@ func startRP(parameters *rpParameters) error {
 		ExtractorProfile:     parameters.extractorProfile,
 		HostExternalURL:      parameters.hostExternalURL,
 		RequestTokens:        parameters.requestTokens,
+		// TODO support to configure this name
+		SvcName: "Test Service",
 	}
 
 	aceRpService, err := acerp.New(cfg)
