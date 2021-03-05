@@ -66,23 +66,23 @@ services:
     networks:
       - demo_demo-net
 
-  uscis-rp.example.com:
-    container_name: uscis-rp.example.com
+  ucis-rp.example.com:
+    container_name: ucis-rp.example.com
     image: ${ACE_RP_IMAGE}:latest
     environment:
       - ACE_HOST_URL=0.0.0.0:5558
-      - ACE_HOST_EXTERNAL_URL=https://uscis-rp.trustbloc.local
-      - ACE_DEMO_MODE=uscis
+      - ACE_HOST_EXTERNAL_URL=https://ucis-rp.trustbloc.local
+      - ACE_DEMO_MODE=ucis
       - ACE_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - ACE_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
       - DATABASE_URL=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
-      - DATABASE_PREFIX=uscis_db
+      - DATABASE_PREFIX=ucis_db
       - ACE_VAULT_SERVER_URL=https://vault.trustbloc.local
-      - ACE_COMPARATOR_URL=https://uscis-comparator.trustbloc.local
-      - ACE_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-uscis
+      - ACE_COMPARATOR_URL=https://ucis-comparator.trustbloc.local
+      - ACE_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-ucis
       - ACE_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
       - ACE_EXTRACTOR_PROFILE=benefit-dept-profile
-      - VIRTUAL_HOST=uscis-rp.trustbloc.local
+      - VIRTUAL_HOST=ucis-rp.trustbloc.local
     ports:
       - 5558:5558
     command: start
@@ -105,7 +105,7 @@ services:
       - ACE_VAULT_SERVER_URL=https://vault.trustbloc.local
       - ACE_COMPARATOR_URL=https://cbp-comparator.trustbloc.local
       - ACE_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-cbp
-      - ACE_ACCOUNT_LINK_PROFILE=uscis-profile
+      - ACE_ACCOUNT_LINK_PROFILE=ucis-profile
       - ACE_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
       - VIRTUAL_HOST=cbp-rp.trustbloc.local
     ports:

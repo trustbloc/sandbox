@@ -21,22 +21,22 @@ validateProfileCreation()
    fi
 }
 
-# uscis - configure comparator
-uscisComparatorConfig=$(.build/bin/demo comparator getConfig https://uscis-comparator.trustbloc.local)
-uscisComparatorConfigDID=$(echo "${uscisComparatorConfig}" | jq -r '.did')
-uscisComparatorConfigPrivateKey=$(echo "${uscisComparatorConfig}" | jq -r '.privateKey')
-uscisComparatorConfigKeyID=$(echo "${uscisComparatorConfig}" | jq -r '.keyID')
+# ucis - configure comparator
+ucisComparatorConfig=$(.build/bin/demo comparator getConfig https://ucis-comparator.trustbloc.local)
+ucisComparatorConfigDID=$(echo "${ucisComparatorConfig}" | jq -r '.did')
+ucisComparatorConfigPrivateKey=$(echo "${ucisComparatorConfig}" | jq -r '.privateKey')
+ucisComparatorConfigKeyID=$(echo "${ucisComparatorConfig}" | jq -r '.keyID')
 
-# uscis - create vc issuer profile
-vc_issuer_uscis=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
+# ucis - create vc issuer profile
+vc_issuer_ucis=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
    --request POST \
-   --data '{"name":"vc-issuer-uscis", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "did":"'"${uscisComparatorConfigDID}"'","didPrivateKey":"'"${uscisComparatorConfigPrivateKey}"'","didKeyID":"'"${uscisComparatorConfigKeyID}"'","signatureRepresentation":1,"didKeyType":"Ed25519"}' \
+   --data '{"name":"vc-issuer-ucis", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "did":"'"${ucisComparatorConfigDID}"'","didPrivateKey":"'"${ucisComparatorConfigPrivateKey}"'","didKeyID":"'"${ucisComparatorConfigKeyID}"'","signatureRepresentation":1,"didKeyType":"Ed25519"}' \
    --insecure https://issuer-vcs.trustbloc.local/profile)
 
-response=${vc_issuer_uscis//RESPONSE_CODE*/}
-code=${vc_issuer_uscis//*RESPONSE_CODE=/}
+response=${vc_issuer_ucis//RESPONSE_CODE*/}
+code=${vc_issuer_ucis//*RESPONSE_CODE=/}
 
-validateProfileCreation $code $response vc_issuer vc_issuer_uscis
+validateProfileCreation $code $response vc_issuer vc_issuer_ucis
 
 # cbp - configure comparator
 cbpComparatorConfig=$(.build/bin/demo comparator getConfig https://cbp-comparator.trustbloc.local)
@@ -72,11 +72,11 @@ code=${vc_issuer_benefits_dept//*RESPONSE_CODE=/}
 
 validateProfileCreation $code $response vc_issuer vc_issuer_benefits_dept
 
-# create client with uscis (Utopia Citizenship and Immigration) agent
+# create client with ucis (Utopia Citizenship and Immigration) agent
 cbp_dept_act_linking_client=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" \
    --request POST \
    --data '{"did":"'"${cbpComparatorConfigDID}"'", "callback":"https://cbp-rp.trustbloc.local"}' \
-   --insecure https://uscis-rp.trustbloc.local/client)
+   --insecure https://ucis-rp.trustbloc.local/client)
 
 response=${cbp_dept_act_linking_client//RESPONSE_CODE*/}
 code=${cbp_dept_act_linking_client//*RESPONSE_CODE=/}
@@ -85,24 +85,24 @@ clientSecret=$(echo $response | jq -r .clientSecret)
 
 validateProfileCreation $code $response ace_rp_client cbp_dept_act_linking_client
 
-# create profile for uscis_profile_at_cbp
-uscis_profile_at_cbp=$(curl -o /dev/null -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" \
+# create profile for ucis_profile_at_cbp
+ucis_profile_at_cbp=$(curl -o /dev/null -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" \
    --request POST \
-   --data '{"id":"uscis-profile", "name":"Utopia Citizen and Immigration", "url":"https://uscis-rp.trustbloc.local", "clientID":"'"${clientID}"'", "clientSecret":"'"${clientSecret}"'", "did":"'"${cbpComparatorConfigDID}"'"}' \
+   --data '{"id":"ucis-profile", "name":"Utopia Citizen and Immigration", "url":"https://ucis-rp.trustbloc.local", "clientID":"'"${clientID}"'", "clientSecret":"'"${clientSecret}"'", "did":"'"${cbpComparatorConfigDID}"'"}' \
    --insecure https://cbp-rp.trustbloc.local/profile)
 
-response=${uscis_profile_at_cbp//RESPONSE_CODE*/}
-code=${uscis_profile_at_cbp//*RESPONSE_CODE=/}
+response=${ucis_profile_at_cbp//RESPONSE_CODE*/}
+code=${ucis_profile_at_cbp//*RESPONSE_CODE=/}
 
-validateProfileCreation $code $response ace_rp_profile uscis_profile_at_cbp
+validateProfileCreation $code $response ace_rp_profile ucis_profile_at_cbp
 
-# create extractor profile for benefits at uscis
-benefits_dept_profile_at_uscis=$(curl -o /dev/null -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" \
+# create extractor profile for benefits at ucis
+benefits_dept_profile_at_ucis=$(curl -o /dev/null -s -w "RESPONSE_CODE=%{response_code}" --header "Content-Type: application/json" \
    --request POST \
    --data '{"id":"benefit-dept-profile", "name":"Benefits Settlement Department", "url":"https://benefits-dept-rp.trustbloc.local", "did":"'"${benefitsDeptComparatorConfigDID}"'", "callback":"https://benefits-dept-rp.trustbloc.local"}' \
-   --insecure https://uscis-rp.trustbloc.local/profile)
+   --insecure https://ucis-rp.trustbloc.local/profile)
 
-response=${benefits_dept_profile_at_uscis//RESPONSE_CODE*/}
-code=${benefits_dept_profile_at_uscis//*RESPONSE_CODE=/}
+response=${benefits_dept_profile_at_ucis//RESPONSE_CODE*/}
+code=${benefits_dept_profile_at_ucis//*RESPONSE_CODE=/}
 
-validateProfileCreation $code $response ace_rp_profile benefits_dept_profile_at_uscis
+validateProfileCreation $code $response ace_rp_profile benefits_dept_profile_at_ucis

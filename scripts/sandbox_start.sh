@@ -24,7 +24,7 @@ issuerVCSHealthCheckURL=https://issuer-vcs.trustbloc.local/healthcheck
 rpVCSHealthCheckURL=https://rp-vcs.trustbloc.local/healthcheck
 holderVCSHealthCheckURL=https://holder-vcs.trustbloc.local/healthcheck
 governanceVCSHealthCheckURL=https://governance-vcs.trustbloc.local/healthcheck
-uscisComparatorHealthCheckURL=https://uscis-comparator.trustbloc.local/healthcheck
+ucisComparatorHealthCheckURL=https://ucis-comparator.trustbloc.local/healthcheck
 cbpComparatorHealthCheckURL=https://cbp-comparator.trustbloc.local/healthcheck
 benefitsDeptComparatorHealthCheckURL=https://benefits-dept-comparator.trustbloc.local/healthcheck
 vaultServerHealthCheckURL=https://vault.trustbloc.local/healthcheck
@@ -39,7 +39,7 @@ rpAdapterHealthCheckURL=https://rp-adapter.trustbloc.local:10161/healthcheck
 issuerAdapterHealthCheckURL=https://issuer-adapter.trustbloc.local:10061/healthcheck
 rpHealthCheckURL=https://rp.trustbloc.local/bankaccount
 issuerHealthCheckURL=https://issuer.trustbloc.local/drivinglicense
-uscisDemoRPHealthCheckURL=https://uscis-rp.trustbloc.local
+ucisDemoRPHealthCheckURL=https://ucis-rp.trustbloc.local
 cbpDemoRPHealthCheckURL=https://cbp-rp.trustbloc.local
 benefitsDeptDemoRPHealthCheckURL=https://benefits-dept-rp.trustbloc.local
 cmsHealthCheckURL=https://cms.trustbloc.local/
@@ -240,7 +240,7 @@ healthCheck governanceVCS $governanceVCSHealthCheckURL 200
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-vault.yml down && docker-compose -f docker-compose-vault.yml up --force-recreate) > docker.log 2>&1 & )
 healthCheck vault $vaultServerHealthCheckURL 200
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-comparator.yml down && docker-compose -f docker-compose-comparator.yml up --force-recreate) > docker.log 2>&1 & )
-healthCheck uscis-comparator $uscisComparatorHealthCheckURL 200
+healthCheck ucis-comparator $ucisComparatorHealthCheckURL 200
 healthCheck cbp-comparator $cbpComparatorHealthCheckURL 200
 healthCheck benefits-dept-comparator $benefitsDeptComparatorHealthCheckURL 200
 if ! test/bdd/fixtures/scripts/vcs_issuer_configure.sh; then
@@ -290,7 +290,7 @@ echo "#### Step 12 start demo application"
 (cd test/bdd/fixtures/demo; (docker-compose -f docker-compose-demo-applications.yml down && docker-compose -f docker-compose-demo-applications.yml up --force-recreate) > docker.log 2>&1 & )
 healthCheck issuer $issuerHealthCheckURL 200
 healthCheck rp $rpHealthCheckURL 200
-healthCheck uscis-rp $uscisDemoRPHealthCheckURL 200
+healthCheck ucis-rp $ucisDemoRPHealthCheckURL 200
 healthCheck cbp-rp $cbpDemoRPHealthCheckURL 200
 healthCheck benefits-dept-rp $benefitsDeptDemoRPHealthCheckURL 200
 if ! test/bdd/fixtures/scripts/ace_rp_configure.sh; then
