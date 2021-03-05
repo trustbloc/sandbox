@@ -3,7 +3,7 @@
 ## Components
 | Component                                          | Cloud URL (Sandbox) | Cloud URL (Dev) | Local URL*                                      |
 |----------------------------------------------------|---------------------|-----------------|-------------------------------------------------|
-| Utopia Citizenship and Immigration Services (UCIS) |                     |                 | [Click Here](https://uscis-rp.trustbloc.local/) |
+| Utopia Citizenship and Immigration Services (UCIS) |                     |                 | [Click Here](https://ucis-rp.trustbloc.local/) |
 | Utopia Customs and Border Protection (CBP)         |                     |                 | [Click Here](https://cbp-rp.trustbloc.local/)   |
 
 *: Refer [here](./build.md) to run the demo locally.
