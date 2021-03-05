@@ -43,7 +43,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}, ComparatorURL: "http://comp.example.com"})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 17, len(svc.GetRESTHandlers()))
+		require.Equal(t, 18, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
