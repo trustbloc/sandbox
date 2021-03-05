@@ -1014,14 +1014,16 @@ func (o *Operation) getUserExtract(w http.ResponseWriter, r *http.Request) { // 
 	for _, auths := range u.UserAuths {
 		queryID := uuid.NewString()
 
-		query := &compmodel.AuthorizedQuery{AuthToken: &auths.AuthToken}
+		t := auths.AuthToken
+
+		query := &compmodel.AuthorizedQuery{AuthToken: &t}
 		query.SetID(queryID)
 
 		queries = append(queries, query)
 		queryMap[queryID] = auths.ID
 
 		logger.Infof("extractUserData: id=[%s] name=[%s] queryID=[%s] token=[%s]",
-			auths.ID, auths.Name, query.ID(), query.AuthToken)
+			auths.ID, auths.Name, query.ID(), *query.AuthToken)
 	}
 
 	request := &compmodel.Extract{}
