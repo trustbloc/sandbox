@@ -150,7 +150,7 @@ done
 generateDIDMethodConfigMock(){
 echo "generate did-method config"
 
-.build/did-method-cli/cli create-config --sidetree-url https://sidetree-mock.trustbloc.local/sidetree/0.0.1 \
+.build/did-method-cli/cli create-config --sidetree-url https://sidetree-mock.trustbloc.local/sidetree/v1 \
 --tls-cacerts ./test/bdd/fixtures/keys/tls/trustbloc-dev-ca.crt --sidetree-write-token rw_token \
 --recoverykey-file ./test/bdd/fixtures/keys/recover/public.pem --updatekey-file ./test/bdd/fixtures/keys/update/public.pem \
 --config-file ./test/bdd/fixtures/discovery-config/sidetree-mock/config-data/testnet.trustbloc.local.json --output-directory ./test/bdd/fixtures/discovery-config/sidetree-mock/temp
