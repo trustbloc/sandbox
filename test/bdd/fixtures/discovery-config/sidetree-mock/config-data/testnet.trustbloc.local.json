@@ -14,7 +14,7 @@
       "domain": "stakeholder-one.trustbloc.local",
       "policy": {"cache": {"maxAge": 300}},
       "endpoints": [
-        "https://sidetree-mock.trustbloc.local/sidetree/0.0.1"
+        "https://sidetree-mock.trustbloc.local/sidetree/v1"
       ],
       "privateKeyJwkPath": "./test/bdd/fixtures/discovery-config/sidetree-mock/config-data/stakeholder_jwk.json"
     }

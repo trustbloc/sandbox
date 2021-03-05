@@ -17,7 +17,7 @@ require (
 	github.com/square/go-jose/v3 v3.0.0-20200630053402-0a67ce9b0693
 	github.com/trustbloc/edge-core v0.1.6-0.20210218132256-ea94ce52be69
 	github.com/trustbloc/edge-service v0.1.6-0.20210221135425-f48851fa0210
-	github.com/trustbloc/fabric-peer-test-common v0.1.6-0.20210201222114-5da8a5c9d197
+	github.com/trustbloc/fabric-peer-test-common v0.1.6
 )
 
-replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.4-0.20200626180529-18936b36feca
+replace github.com/hyperledger/fabric-protos-go => github.com/trustbloc/fabric-protos-go-ext v0.1.5
