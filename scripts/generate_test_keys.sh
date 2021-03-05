@@ -25,6 +25,7 @@ mkdir -p test/bdd/fixtures/keys/recover-org3
 mkdir -p test/bdd/fixtures/keys/update-org3
 mkdir -p test/bdd/fixtures/keys/update2-org3
 mkdir -p test/bdd/fixtures/keys/session_cookies
+mkdir -p test/bdd/fixtures/keys/issuer-stores
 
 localhostSSLConf=$(mktemp)
 echo "subjectKeyIdentifier=hash
@@ -100,6 +101,9 @@ openssl ec -in test/bdd/fixtures/keys/update2-org3/key.pem -pubout -out test/bdd
 # create session cookie keys
 openssl rand -out test/bdd/fixtures/keys/session_cookies/auth.key 32
 openssl rand -out test/bdd/fixtures/keys/session_cookies/enc.key 32
+
+# create issuer store key
+openssl rand -out test/bdd/fixtures/keys/issuer-stores/oidc-enc.key 32
 
 # create secrete lock key
 openssl rand 32 | base64 | sed 's/+/-/g; s/\//_/g' > test/bdd/fixtures/keys/tls/secret-lock.key
