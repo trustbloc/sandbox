@@ -37,8 +37,8 @@ func TestStartCmdContents(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
 	require.Equal(t, "start", startCmd.Use)
-	require.Equal(t, "Start AC RP", startCmd.Short)
-	require.Equal(t, "Start Anonymous Comparator RP", startCmd.Long)
+	require.Equal(t, "Start ACE RP", startCmd.Short)
+	require.Equal(t, "Start Anonymous Comparator and Extractor (ACE) RP", startCmd.Long)
 
 	checkFlagPropertiesCorrect(t, startCmd, hostURLFlagName, hostURLFlagShorthand, hostURLFlagUsage)
 }

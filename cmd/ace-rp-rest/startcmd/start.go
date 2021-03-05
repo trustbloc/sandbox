@@ -54,22 +54,22 @@ const (
 
 	demoModeFlagName  = "demo-mode"
 	demoModeFlagUsage = "Demo mode." +
-		" Mandatory - Possible values [rev] [emp]."
+		" Mandatory - Possible values [uscis] [cbp] [benefits]."
 	demoModeEnvKey = "ACE_DEMO_MODE"
 
 	// vault server url
 	vaultServerURLFlagName  = "vault-server-url"
-	vaultServerURLFlagUsage = "Vault Server URL."
+	vaultServerURLFlagUsage = "URL of the vault server. This field is mandatory."
 	vaultServerURLEnvKey    = "ACE_VAULT_SERVER_URL"
 
 	// comparator url
 	comparatorURLFlagName  = "comparator-url"
-	comparatorURLFlagUsage = "Comparator URL."
+	comparatorURLFlagUsage = "URL of the comparator. This field is mandatory."
 	comparatorURLEnvKey    = "ACE_COMPARATOR_URL"
 
 	// vc issuer server url
 	vcIssuerURLFlagName  = "vc-issuer-url"
-	vcIssuerURLFlagUsage = "VC Issuer URL."
+	vcIssuerURLFlagUsage = "URL of the VC Issuer service. This field is mandatory."
 	vcIssuerURLEnvKey    = "ACE_VC_ISSUER_URL"
 
 	requestTokensFlagName  = "request-tokens"
@@ -79,7 +79,7 @@ const (
 
 	// host external url
 	hostExternalURLFlagName  = "host-external-url"
-	hostExternalURLFlagUsage = "Host External URL."
+	hostExternalURLFlagUsage = "Host External URL. This field is mandatory."
 	hostExternalURLEnvKey    = "ACE_HOST_EXTERNAL_URL"
 
 	// account link profile id
@@ -96,9 +96,18 @@ const (
 )
 
 // nolint:gochecknoglobals
-var supportedModes = map[string]string{"uscis": "uscis_dept", "cbp": "cbp_dept"}
+var supportedModes = map[string]demoModeConf{
+	"uscis":    {uiPath: "uscis_dept", svcName: "USCIS"},
+	"cbp":      {uiPath: "cbp_dept", svcName: "CBP"},
+	"benefits": {uiPath: "benefits_dep", svcName: "Benefits Settlement"},
+}
 
 var logger = log.New("ace-rp-rest")
+
+type demoModeConf struct {
+	uiPath  string
+	svcName string
+}
 
 type server interface {
 	ListenAndServe(host, certFile, keyFile string, router http.Handler) error
@@ -126,7 +135,7 @@ type rpParameters struct {
 	tlsCACerts         []string
 	logLevel           string
 	dbParams           *common.DBParameters
-	mode               string
+	modeConf           demoModeConf
 	vaultServerURL     string
 	comparatorURL      string
 	vcIssuerURL        string
@@ -154,8 +163,8 @@ func GetStartCmd(srv server) *cobra.Command {
 func createStartCmd(srv server) *cobra.Command { //nolint: funlen, gocyclo
 	return &cobra.Command{
 		Use:   "start",
-		Short: "Start AC RP",
-		Long:  "Start Anonymous Comparator RP",
+		Short: "Start ACE RP",
+		Long:  "Start Anonymous Comparator and Extractor (ACE) RP",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			hostURL, err := cmdutils.GetUserSetVarFromString(cmd, hostURLFlagName, hostURLEnvKey, false)
 			if err != nil {
@@ -182,7 +191,7 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen, gocyclo
 				return err
 			}
 
-			demoMode, ok := supportedModes[demoModeFlag]
+			demoModeConf, ok := supportedModes[demoModeFlag]
 			if !ok {
 				return fmt.Errorf("invalid demo mode : %s", demoModeFlag)
 			}
@@ -236,7 +245,7 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen, gocyclo
 				tlsCACerts:         tlsConfg.caCerts,
 				logLevel:           loggingLevel,
 				dbParams:           dbParams,
-				mode:               demoMode,
+				modeConf:           demoModeConf,
 				vaultServerURL:     vaultServerURL,
 				comparatorURL:      comparatorURL,
 				vcIssuerURL:        vcIssuerURL,
@@ -318,7 +327,7 @@ func startRP(parameters *rpParameters) error {
 
 	tlsConfig := &tls.Config{RootCAs: rootCAs, MinVersion: tls.VersionTLS12}
 
-	basePath := "static/" + parameters.mode
+	basePath := "static/" + parameters.modeConf.uiPath
 	router := pathPrefix(basePath)
 
 	storeProvider, err := common.InitEdgeStore(parameters.dbParams, logger)
@@ -342,8 +351,7 @@ func startRP(parameters *rpParameters) error {
 		ExtractorProfile:     parameters.extractorProfile,
 		HostExternalURL:      parameters.hostExternalURL,
 		RequestTokens:        parameters.requestTokens,
-		// TODO support to configure this name
-		SvcName: "Test Service",
+		SvcName:              parameters.modeConf.svcName,
 	}
 
 	aceRpService, err := acerp.New(cfg)
