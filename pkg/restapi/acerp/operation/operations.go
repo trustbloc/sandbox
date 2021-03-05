@@ -245,6 +245,9 @@ func (o *Operation) registerHandler() {
 		support.NewHTTPHandler(userAuth, http.MethodPost, o.saveUserAuths),
 		support.NewHTTPHandler(userExtract, http.MethodGet, o.extractRequests),
 		support.NewHTTPHandler(getUserExtract, http.MethodGet, o.getUserExtract),
+
+		// TODO find a way to handle this in start.go
+		support.NewHTTPHandler("/showlogin", http.MethodGet, o.showlogin),
 	}
 }
 
@@ -388,6 +391,12 @@ func (o *Operation) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	o.showDashboard(w, r.FormValue(username), "", uData.VaultID, true)
+}
+
+func (o *Operation) showlogin(w http.ResponseWriter, r *http.Request) {
+	clearCookies(w)
+
+	o.loadHTML(w, o.loginHTML, map[string]interface{}{"QueryParam": ""})
 }
 
 func (o *Operation) logout(w http.ResponseWriter, r *http.Request) {

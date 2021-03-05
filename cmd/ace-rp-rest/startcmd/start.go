@@ -379,13 +379,6 @@ func pathPrefix(path string) *mux.Router {
 	router.Handle("/", fs)
 	router.PathPrefix("/img/").Handler(fs)
 	router.PathPrefix("/internal/img/").Handler(fs)
-	router.PathPrefix("/showlogin").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		for _, v := range r.Cookies() {
-			http.SetCookie(w, v)
-		}
-
-		http.ServeFile(w, r, path+"/login.html")
-	})
 	router.PathPrefix("/showregister").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, path+"/register.html")
 	})

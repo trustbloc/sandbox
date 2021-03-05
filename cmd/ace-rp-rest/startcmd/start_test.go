@@ -283,7 +283,7 @@ func TestTStaticPaths(t *testing.T) {
 	tests := []struct {
 		url string
 	}{
-		{"/showlogin"},
+		{"/internal"},
 		{"/showregister"},
 	}
 
