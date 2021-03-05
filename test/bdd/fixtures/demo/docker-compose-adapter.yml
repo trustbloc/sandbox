@@ -27,6 +27,7 @@ services:
       - ADAPTER_REST_DSN_TIMEOUT=120
       - ADAPTER_REST_GOVERNANCE_VCS_URL=https://governance-vcs.trustbloc.local
       - ADAPTER_REST_REQUEST_TOKENS=vcs_governance=vcs_governance_rw_token
+      - OIDC_STORE_KEY=/etc/store-keys/oidc-enc.key
     ports:
       - ${ISSUER_ADAPTER_PORT}:${ISSUER_ADAPTER_PORT}
       - ${ISSUER_ADAPTER_DIDCOMM_PORT}:${ISSUER_ADAPTER_DIDCOMM_PORT}
@@ -34,6 +35,7 @@ services:
     command:  /bin/sh -c "/tmp/scripts/didcomm/issuer_adapter_configure.sh& adapter-rest start"
     volumes:
       - ../keys/tls:/etc/tls
+      - ../keys/issuer-stores:/etc/store-keys
       - ../scripts/:/tmp/scripts
     networks:
       - demo_demo-net
