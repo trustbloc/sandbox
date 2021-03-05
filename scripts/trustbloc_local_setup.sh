@@ -14,7 +14,7 @@ cp test/bdd/fixtures/keys/tls/trustbloc-dev-ca.* ${SANDBOX_HOME}/certs
 cat > ${SANDBOX_HOME}/hosts <<EOF
 127.0.0.1 rp.trustbloc.local
 127.0.0.1 issuer.trustbloc.local
-127.0.0.1 uscis-rp.trustbloc.local
+127.0.0.1 ucis-rp.trustbloc.local
 127.0.0.1 cbp-rp.trustbloc.local
 127.0.0.1 benefits-dept-rp.trustbloc.local
 127.0.0.1 cms.trustbloc.local
@@ -53,7 +53,7 @@ cat > ${SANDBOX_HOME}/hosts <<EOF
 127.0.0.1 holder-vcs.trustbloc.local
 127.0.0.1 governance-vcs.trustbloc.local
 127.0.0.1 did-method.trustbloc.local
-127.0.0.1 uscis-comparator.trustbloc.local
+127.0.0.1 ucis-comparator.trustbloc.local
 127.0.0.1 cbp-comparator.trustbloc.local
 127.0.0.1 benefits-dept-comparator.trustbloc.local
 127.0.0.1 vault.trustbloc.local

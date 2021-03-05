@@ -54,7 +54,7 @@ const (
 
 	demoModeFlagName  = "demo-mode"
 	demoModeFlagUsage = "Demo mode." +
-		" Mandatory - Possible values [uscis] [cbp] [benefits]."
+		" Mandatory - Possible values [ucis] [cbp] [benefits]."
 	demoModeEnvKey = "ACE_DEMO_MODE"
 
 	// vault server url
@@ -97,7 +97,7 @@ const (
 
 // nolint:gochecknoglobals
 var supportedModes = map[string]demoModeConf{
-	"uscis":    {uiPath: "uscis_dept", svcName: "USCIS"},
+	"ucis":     {uiPath: "ucis_dept", svcName: "UCIS"},
 	"cbp":      {uiPath: "cbp_dept", svcName: "CBP"},
 	"benefits": {uiPath: "benefits_dep", svcName: "Benefits Settlement"},
 }
