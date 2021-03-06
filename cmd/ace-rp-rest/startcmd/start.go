@@ -99,7 +99,7 @@ const (
 var supportedModes = map[string]demoModeConf{
 	"ucis":     {uiPath: "ucis_dept", svcName: "UCIS"},
 	"cbp":      {uiPath: "cbp_dept", svcName: "CBP"},
-	"benefits": {uiPath: "benefits_dep", svcName: "Benefits Settlement"},
+	"benefits": {uiPath: "benefits_dept", svcName: "Benefits Settlement"},
 }
 
 var logger = log.New("ace-rp-rest")

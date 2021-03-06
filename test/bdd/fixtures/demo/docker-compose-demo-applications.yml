@@ -122,8 +122,7 @@ services:
     environment:
       - ACE_HOST_URL=0.0.0.0:5560
       - ACE_HOST_EXTERNAL_URL=https://benefits-dept-rp.trustbloc.local
-      # TODO - update this to new benefits_dept mode
-      - ACE_DEMO_MODE=cbp
+      - ACE_DEMO_MODE=benefits
       - ACE_TLS_CACERTS=/etc/tls/trustbloc-dev-ca.crt
       - ACE_TLS_KEY_FILE=/etc/tls/trustbloc-dev-ca.key
       - DATABASE_URL=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
