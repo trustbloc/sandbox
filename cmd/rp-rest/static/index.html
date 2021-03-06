@@ -203,7 +203,12 @@ SPDX-License-Identifier: Apache-2.0
                 <h4 class="mt-10 text-lg font-medium tracking-wide uppercase leading-tight">Apply for University Grant</h4>
             </div>
         </div>
-
+         <div class="bg-white rounded-lg shadow-lg">
+             <div class="px-4 py-8">
+                    <button id="universityDegree" onclick="getPRCardBBS()" class="h-24"><img src="img/icon-home-8.png"></button>
+                    <h4 class="mt-10 text-lg font-medium tracking-wide uppercase leading-tight">Employment Verification</h4>
+            </div>
+         </div>
         </div>
 
         </div>
@@ -334,6 +339,42 @@ SPDX-License-Identifier: Apache-2.0
                     ]
                 }
             }},
+        prCardBBS : {
+            web: {
+                VerifiablePresentation: {
+                    query: [
+                        {
+                            type: "QueryByFrame",
+                            credentialQuery: {
+                                reason: "We need you to prove your eligibility to work.",
+                                frame: {
+                                    "@context": [
+                                        "https://www.w3.org/2018/credentials/v1",
+                                        "https://w3id.org/citizenship/v1",
+                                        "https://w3id.org/security/bbs/v1"
+                                    ],
+                                    "type": ["VerifiableCredential", "PermanentResidentCard"],
+                                    "@explicit": true,
+                                    "issuer": {},
+                                    "issuanceDate": {},
+                                    "credentialSubject": {
+                                        "@explicit": true,
+                                        "type": ["PermanentResident", "Person"],
+                                        "givenName": {},
+                                        "familyName": {},
+                                        "gender": {}
+                                    }
+                                },
+                                example: {
+                                    "@context": ["https://www.w3.org/2018/credentials/v1", "https://w3id.org/citizenship/v1"],
+                                    type: ["PermanentResidentCard"]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
         cmtr : { web: {
                 VerifiablePresentation: {
                     query: [
@@ -433,6 +474,10 @@ SPDX-License-Identifier: Apache-2.0
     }
     async function getPRCard() {
         await getVP("prCard")
+    }
+
+    async function getPRCardBBS() {
+        await getVP("prCardBBS")
     }
 
     async function getStudentCard() {
