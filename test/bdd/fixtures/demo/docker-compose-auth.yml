@@ -95,6 +95,8 @@ services:
       - VIRTUAL_HOST=hydra.trustbloc.local
       - VIRTUAL_PORT=4444
       - VIRTUAL_PROTO=https
+      - OIDC_DYNAMIC_CLIENT_REGISTRATION_DEFAULT_SCOPE=openid,offline_access
+      - WEBFINGER_OIDC_DISCOVERY_CLIENT_REGISTRATION_URL=https://hydra.trustbloc.local:4445/clients/
     restart: unless-stopped
     volumes:
       - ../scripts/hydra/hydra_configure.sh:/tmp/hydra_configure.sh
