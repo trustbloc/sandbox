@@ -39,7 +39,7 @@ Refer [Build](docs/demo/build.md) for more detailed information.
 ## Components
 - [TrustBloc VCS](docs/components/vcs_components.md)
 - [TrustBloc Adapter](docs/components/adapter_components.md)
-- [TrustBloc Anonymous Comparator and Extractor(ACE)](docs/demo/sandbox_adapter_playground.md)
+- [TrustBloc Anonymous Comparator and Extractor(ACE)](docs/components/ace_components.md)
 
 ## Contributing
 Thank you for your interest in contributing. Please see our [community contribution guidelines](https://github.com/trustbloc/community/blob/main/CONTRIBUTING.md) for more information.
