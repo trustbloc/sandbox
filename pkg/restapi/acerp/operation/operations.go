@@ -890,7 +890,7 @@ func (o *Operation) generateUserAuths(w http.ResponseWriter, r *http.Request) { 
 			return
 		}
 
-		userAuths = append(userAuths, userAuthorization{ID: v.ID, Name: v.UserName, AuthToken: auth})
+		userAuths = append(userAuths, userAuthorization{ID: v.ID, Name: v.UserName, DID: v.VaultID, AuthToken: auth})
 	}
 
 	uData := &userAuthData{
@@ -1068,6 +1068,7 @@ func (o *Operation) getUserExtract(w http.ResponseWriter, r *http.Request) { // 
 		uData = append(uData, userExtractedData{
 			ID:         auths.ID,
 			Name:       auths.Name,
+			DID:        auths.DID,
 			NationalID: userNationalIDMap[auths.ID],
 		})
 	}
