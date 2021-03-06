@@ -89,6 +89,10 @@ didkey_ed25519signature2018_ed25519=$(curl -o /dev/null -s -w "%{http_code}" --h
    --data '{"name":"didkey-ed25519signature2018-ed25519", "uri":"http://example.com", "signatureType":"Ed25519Signature2018", "did":"did:key:z6MkjtF2htvLuxPu3wAuVgu1zZ5Jgwvu7QkJkyvyGX478RrM","didPrivateKey":"5k9LgFFpxYCrHKyKxZWj6CWZNs6rFkPfQiggMUCwRBifjP4wLXZaFuFr1vhwK7Kj9YLowXZr3tQvwpLDonXBJUpm","didKeyID":"did:key:z6MkjtF2htvLuxPu3wAuVgu1zZ5Jgwvu7QkJkyvyGX478RrM#z6MkjtF2htvLuxPu3wAuVgu1zZ5Jgwvu7QkJkyvyGX478RrM","signatureRepresentation":1,"disableVCStatus":true,"didKeyType":"Ed25519"}' \
    --insecure https://issuer-vcs.trustbloc.local/profile)
 
+didkey_BbsBlsSignature2020_bls12381G2=$(curl -o /dev/null -s -w "%{http_code}" --header "Content-Type: application/json" --header "Authorization: Bearer vcs_issuer_rw_token" \
+   --request POST \
+   --data '{"name":"didkey-bbsblssignature2020-bls12381g2", "uri":"http://example.com", "signatureType":"BbsBlsSignature2020", "did":"did:key:zUC72c7u4BYVmfYinDceXkNAwzPEyuEE23kUmJDjLy8495KH3pjLwFhae1Fww9qxxRdLnS2VNNwni6W3KbYZKsicDtiNNEp76fYWR6HCD8jAz6ihwmLRjcHH6kB294Xfg1SL1qQ","didPrivateKey":"6gsgGpdx7p1nYoKJ4b5fKt1xEomWdnemg9nJFX6mqNCh","didKeyID":"did:key:zUC72c7u4BYVmfYinDceXkNAwzPEyuEE23kUmJDjLy8495KH3pjLwFhae1Fww9qxxRdLnS2VNNwni6W3KbYZKsicDtiNNEp76fYWR6HCD8jAz6ihwmLRjcHH6kB294Xfg1SL1qQ#zUC72c7u4BYVmfYinDceXkNAwzPEyuEE23kUmJDjLy8495KH3pjLwFhae1Fww9qxxRdLnS2VNNwni6W3KbYZKsicDtiNNEp76fYWR6HCD8jAz6ihwmLRjcHH6kB294Xfg1SL1qQ","signatureRepresentation":0,"disableVCStatus":true,"didKeyType":"BLS12381G2"}' \
+   --insecure https://issuer-vcs.trustbloc.local/profile)
 
 checkProfileIsCreated $trustbloc_ed25519signature2018_ed25519 trustbloc-ed5519signature2018-ed25519
 checkProfileIsCreated $trustbloc_jsonwebsignature2020_ed25519 trustbloc-jsonwebsignature2020-ed25519
@@ -99,7 +103,8 @@ checkProfileIsCreated $interop_jsonwebsignature2020_p256 interop-jsonwebsignatur
 checkProfileIsCreated $vc_issuer_interop_key vc-issuer-interop-key
 checkProfileIsCreated $vc_issuer_interop vc-issuer-interop
 #checkProfileIsCreated $verseone_ed25519signature2018_ed25519 verseone-ed25519signature2018-ed25519
-checkProfileIsCreated $elem_ed25519signature2018_ed25519 elem-ed25519signature2018-ed25519p
+checkProfileIsCreated $elem_ed25519signature2018_ed25519 elem-ed25519signature2018-ed25519
 #checkProfileIsCreated $sov_ed25519signature2018_ed25519 sov-ed25519signature2018-ed25519
 checkProfileIsCreated $didkey_ed25519signature2018_ed25519 didkey-ed25519signature2018-ed25519
+checkProfileIsCreated $didkey_BbsBlsSignature2020_bls12381G2 didkey-bbsblssignature2020-bls12381g2
 
