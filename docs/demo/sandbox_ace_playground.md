@@ -10,6 +10,10 @@
 
 *: Refer [here](./build.md) to run the demo locally.
 
+## References
+- [Comparator Demo Recording](https://youtu.be/cB5IvOVKg9Y)
+- [Extractor Demo Recording](https://youtu.be/82yUmKdMVPA)
+
 ## Comparator Demo Steps
 1. Register for an account at `Utopia Citizenship and Immigration Services (UCIS)`:
    - UI Navigation 
