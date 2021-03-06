@@ -7,7 +7,7 @@ module github.com/trustbloc/sandbox/test/bdd
 go 1.15
 
 require (
-	github.com/btcsuite/btcutil v1.0.1
+	github.com/btcsuite/btcutil v1.0.2
 	github.com/cucumber/godog v0.8.1
 	github.com/go-openapi/runtime v0.19.26
 	github.com/go-openapi/strfmt v0.20.0
@@ -15,8 +15,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.7.0
 	github.com/square/go-jose/v3 v3.0.0-20200630053402-0a67ce9b0693
-	github.com/trustbloc/edge-core v0.1.6-0.20210218132256-ea94ce52be69
-	github.com/trustbloc/edge-service v0.1.6-0.20210221135425-f48851fa0210
+	github.com/trustbloc/edge-core v0.1.6
+	github.com/trustbloc/edge-service v0.1.6
 	github.com/trustbloc/fabric-peer-test-common v0.1.6
 )
 
