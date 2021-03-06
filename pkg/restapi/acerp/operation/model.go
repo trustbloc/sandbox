@@ -65,6 +65,7 @@ type userAuthData struct {
 type userAuthorization struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
+	DID       string `json:"did"`
 	AuthToken string `json:"authToken"`
 }
 
@@ -93,5 +94,6 @@ type getExtractData struct {
 type userExtractedData struct {
 	ID         string `json:"id"`
 	Name       string `json:"name"`
+	DID        string `json:"did"`
 	NationalID string `json:"nationalID"`
 }
