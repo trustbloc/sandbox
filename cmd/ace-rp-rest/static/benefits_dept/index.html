@@ -1,0 +1,202 @@
+<!--
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ -->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta charset="utf-8">
+    <link rel="icon" type="images/x-icon" href="img/federal_logo.png" >
+    <title>Utopian Federal Benefits Settlements Department</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="author" content="">
+
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss/dist/tailwind.min.css">
+    <!--Replace with your tailwind.css once created-->
+
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        .gradient {
+            background: linear-gradient(to right, #302b63, #302b63, #302b63
+            );
+        }
+    </style>
+</head>
+
+<body class="leading-normal tracking-normal text-white" style="font-family: 'Source Sans Pro', sans-serif;" onload="getProcessingData()">
+<div class="bg-red-100 border border-red-400 text-red-700 text-center rounded flex items-center justify-center" role="alert">
+    <strong class="font-bold">THIS IS NOT A GOVERNMENT SITE.</strong>
+    <span class="block sm:inline">&nbsp;It is demo site and all data is fake. Do not enter real account information or SSNs.</span>
+    <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+     </span>
+</div>
+
+<div class="max-w mx-auto sm:px-6 lg:px-32 gradient">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="flex items-center"> <img class="block lg:block h-36 w-auto" src="img/federal_logo.png">
+            <a href="/internal" class="text-white bold text-3xl">Utopian Federal Benefits Settlement Department</a>
+        </div>
+
+        <div class="flex items-center justify-end">
+            <i class="fa fa-user-circle mr-4 "></i>
+            <h2 class="text-white bold text-xl">Jacky Labat</h2>
+        </div>
+    </div>
+</div>
+
+<div class="bg-red-100 text-black text-xl text-center" id="banner" style="display: none">
+    <div class="max-w-7xl mx-auto py-3 px-3 sm:px-6 lg:px-48">
+        <span class="md:inline" id="error"></span>
+    </div>
+</div>
+<div class="w-full h-full fixed top-0 left-0 bg-black opacity-75 z-50" id="loading-screen" style="display:none">
+        <span class="text-green-500 opacity-75 top-1/2 my-0 mx-auto block relative w-0 h-0" style="top: 50%;">
+         <i class="fa fa-spinner fa-spin fa-5x"></i>
+       </span>
+</div>
+<div class="row-span-3 col-span-3 px-48 py-12" id="processingTable" style="display: block">
+    <p class="text-gray-700 bold text-3xl text-leading text-center">
+        <button class="w-12 bg-gray-100 py-2 px-4 border text-lg text-blue-900 border-blue-900 rounded shadow"
+                onClick="window.location.reload();">
+            <i class="fa fa-refresh" aria-hidden="true"></i>
+        </button> SSN Processing Inbox</p>
+    <div class="space-y-4 flex justify-center py-4">
+        <div class="w-full mx-auto overflow-auto">
+            <div class="bg-white rounded my-6">
+                <table class="overflow-x-auto border-b w-full table-fixed text-black py-16" id="extractTable">
+                    <thead>
+                    <tr class="border text-xl text-center text-white shadow-lg" style="background-color: #302b63">
+                        <th class="w-1/4">Application Name</th>
+                        <th class="w-1/4">Submitted Time</th>
+                        <th class="w-1/4"></th>
+                    </tr>
+                    </thead>
+                </table>
+                <p class="text-2xl font-light text-center leading-relaxed text-red-700 py-8 px-2 hidden"
+                   id="errMsg" style="display: none"> No Processing Request Found</p>
+            </div>
+        </div>
+    </div>
+    <span id="error"></span>
+    <p class="mt-2 text-left text-lg text-gray-600  text-center">
+        By Clicking <a class="font-bold">View</a> you are agreeing to conform to the <a class="underline italic">Utopian Federal Benefits Settlement Dept </a>
+        policies on handling Social Security Number.
+    </p>
+</div>
+
+<div class="row-span-4 col-span-3 px-24 py-4" id="viewProcessing" style="display:none">
+<div class="space-y-4 flex justify-center py-24">
+    <div class="w-full mx-auto overflow-auto">
+        <div class="bg-white rounded my-6">
+            <h2 class="text-black text-xl text-center font-bold">SSN Processing Detailed View</h2>
+            <table class="overflow-x-auto w-full table-fixed border text-black shadow-lg" id="viewTable">
+                <thead>
+                <tr class="border-b text-xl text-left bg-green-100">
+                    <th class="w-1/8">SSN</th>
+                    <th class="w-1/8">Email</th>
+                    <th class="w-1/8">DID</th>
+                </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+</div>
+<div class="py-48">
+</div>
+<footer class="text-center gradient">
+    <section class="container mx-auto text-center">
+        <div class="text-sm text-white font py-6">
+            <img class="object-contain object-top-center h-32 w-full" src="img/federal_logo.png">
+            Copyright &copy; <a href="https://securekey.com/"  class="text-white hover:text-green-700" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+        </div>
+    </section>
+</footer>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script type='text/javascript'></script>
+<script>
+    function ready(fn) {
+        if (document.readyState !== 'loading'){
+            fn();
+        } else {
+            document.addEventListener('DOMContentLoaded', fn);
+        }
+    }
+    ready(() => {});
+
+    <!-- Get the list of registered users -->
+    function getProcessingData(){
+        axios.get('https://benefits-dept-rp.trustbloc.local/users/extract').then(response => {
+            console.log("Extract response :",response.data);
+            createExtractTable(response.data);
+        }).catch(error => document.getElementById("errMsg").style.display = "block");
+    }
+
+    <!-- Dynamically create the table based on the list of the submissions.-->
+    function createExtractTable(data){
+        for(key in data["extractData"]){
+            var table = document.getElementById('extractTable');
+            var tr = "<tr class=\"text-lg text-black  text-center\">";
+            tr += "<td class=\"  py-1 hidden nr\">" + data["extractData"][key].id + "</td><td class=\"  py-1 \">" + data["extractData"][key].source + "</td>" +
+                "<td class=\"  py-1 \"> " + data["extractData"][key].submittedTime + "</td>" +
+                "<td><button class=\"processingBtn w-24 bg-gray-100 hover:bg-blue-900 " +
+                "hover:shadow hover:text-white text-center text-gray-800 text-xl font-bold py-2 px-2 border border-green-600 " +
+                "rounded shadow-lg\"'>View</button></td></tr>";
+            table.innerHTML += tr;
+        }
+
+        $(".processingBtn").click(function () {
+            var id = $(this).closest("tr").find(".nr").text();
+            prepareProcessingView(id);
+        });
+    }
+    <!-- Dynamically create the view table -->
+    function createViewTable(data){
+        for(key in data["userDetails"]){
+            var table = document.getElementById('viewTable');
+            var tr = "<tr class=\" text-lg text-black  text-left\">";
+            tr += "<td class=\"  py-1 \">" + data["userDetails"][key].nationalID + "</td>" +
+                "<td class=\"  py-1 \"> " + data["userDetails"][key].name + "</td>" +
+                "<td class=\"  py-1 \"> " + data["userDetails"][key].did + "</td>" +
+                "</tr>";
+            table.innerHTML += tr;
+        }
+    }
+    <!-- Dynamically populate the Processing view-->
+    function prepareProcessingView(id){
+        let table = document.getElementById("viewTable");
+        $("#viewTable").find("tr:not(:first)").remove();
+        document.getElementById("loading-screen").style.display = "block";
+        document.getElementById("viewProcessing").style.display = "none";
+        axios.get('https://benefits-dept-rp.trustbloc.local/users/extract/'+id
+            ).then(function (response) {
+                console.log("generate view data response:", response.data);
+                createViewTable(response.data);
+            document.getElementById("errMsg").style.display = "none";
+            document.getElementById("viewProcessing").style.display = "block";
+            document.getElementById("loading-screen").style.display = "none";
+        }).catch(error => {
+            document.getElementById("loading-screen").style.display = "none";
+            document.getElementById("errMsg").innerHTML = "Server Error has occurred. Retry";
+            document.getElementById("errMsg").style.display = "block";
+            console.log(error);
+        })
+    }
+</script>
+</body>
+</html>
+
+
