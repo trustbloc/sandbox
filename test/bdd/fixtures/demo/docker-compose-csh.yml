@@ -18,6 +18,8 @@ services:
         - DATABASE_URL=couchdb://${COUCHDB_USERNAME}:${COUCHDB_PASSWORD}@shared.couchdb:5984
         - DATABASE_PREFIX=confidentialstoragehub
         - VIRTUAL_HOST=csh.trustbloc.local
+        - TRUSTBLOC_DID_DOMAIN=testnet.trustbloc.local
+        - IDENTITY_DID_METHOD=trustbloc
     ports:
       - 8063:8063
     entrypoint: ""
