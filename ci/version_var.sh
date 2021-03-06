@@ -6,8 +6,8 @@
 
 
 # Release Parameters
-BASE_VERSION=0.1.6
-IS_RELEASE=true
+BASE_VERSION=0.1.7
+IS_RELEASE=false
 
 SOURCE_REPO=sandbox
 BASE_RP_PKG_NAME=sandbox-rp
