@@ -139,7 +139,7 @@ SPDX-License-Identifier: Apache-2.0
 
     <!-- Get the list of registered users -->
     function getProcessingData(){
-        axios.get('https://benefits-dept-rp.trustbloc.local/users/extract').then(response => {
+        axios.get('/users/extract').then(response => {
             console.log("Extract response :",response.data);
             createExtractTable(response.data);
         }).catch(error => document.getElementById("errMsg").style.display = "block");
