@@ -82,6 +82,7 @@ services:
       - ACE_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-ucis
       - ACE_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
       - ACE_EXTRACTOR_PROFILE=benefit-dept-profile
+      - ACE_DID_RESOLVER_URL=https://did-resolver.trustbloc.local/1.0/identifiers
       - VIRTUAL_HOST=ucis-rp.trustbloc.local
     ports:
       - 5558:5558
@@ -107,6 +108,7 @@ services:
       - ACE_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-cbp
       - ACE_ACCOUNT_LINK_PROFILE=ucis-profile
       - ACE_REQUEST_TOKENS=vcs_issuer=vcs_issuer_rw_token
+      - ACE_DID_RESOLVER_URL=https://did-resolver.trustbloc.local/1.0/identifiers
       - VIRTUAL_HOST=cbp-rp.trustbloc.local
     ports:
       - 5559:5559
@@ -130,6 +132,7 @@ services:
       - ACE_VAULT_SERVER_URL=https://vault.trustbloc.local
       - ACE_COMPARATOR_URL=https://benefits-dept-comparator.trustbloc.local
       - ACE_VC_ISSUER_URL=https://issuer-vcs.trustbloc.local/vc-issuer-benefits-dept
+      - ACE_DID_RESOLVER_URL=https://did-resolver.trustbloc.local/1.0/identifiers
       - VIRTUAL_HOST=benefits-dept-rp.trustbloc.local
     ports:
       - 5560:5560

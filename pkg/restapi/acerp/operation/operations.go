@@ -25,6 +25,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
+	vdrapi "github.com/hyperledger/aries-framework-go/pkg/framework/aries/api/vdr"
 	"github.com/hyperledger/aries-framework-go/spi/storage"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/zcapld"
@@ -143,6 +144,7 @@ type Operation struct {
 	vClient              vaultClient
 	compClient           comparatorClient
 	svcName              string
+	vdri                 vdrapi.Registry
 }
 
 // Config config.
@@ -163,6 +165,7 @@ type Config struct {
 	HostExternalURL      string
 	RequestTokens        map[string]string
 	SvcName              string
+	VDRI                 vdrapi.Registry
 }
 
 // New returns ace-rp operation instance.
@@ -218,6 +221,7 @@ func New(config *Config) (*Operation, error) {
 		vClient:              vaultclient.New(config.VaultServerURL, vaultclient.WithHTTPClient(httpClient)),
 		compClient:           compclient.New(transport, strfmt.Default).Operations,
 		svcName:              config.SvcName,
+		vdri:                 config.VDRI,
 	}
 
 	op.registerHandler()
@@ -1354,6 +1358,12 @@ func (o *Operation) storeNationalID(id string) (string, string, error) {
 		return "", "", fmt.Errorf("create vc for nationalID : %w", err)
 	}
 
+	// resolve DID
+	err = resolveDID(o.vdri, vaultID, 10)
+	if err != nil {
+		return "", "", fmt.Errorf("resolve did %s : %w", vaultID, err)
+	}
+
 	// save nationalID vc
 	docID, err := o.saveNationalIDDoc(
 		vaultID,
@@ -1565,4 +1575,25 @@ func clearCookies(w http.ResponseWriter) {
 
 	cookie = http.Cookie{Name: idCookie, Value: "", MaxAge: cookieExpiryTime, Path: "/"}
 	http.SetCookie(w, &cookie)
+}
+
+// nolint: interfacer
+func resolveDID(vdrRegistry vdrapi.Registry, did string, maxRetry int) error {
+	for i := 1; i <= maxRetry; i++ {
+		var err error
+		_, err = vdrRegistry.Resolve(did)
+
+		if err != nil {
+			if !strings.Contains(err.Error(), "DID does not exist") {
+				return err
+			}
+
+			fmt.Printf("did %s not found will retry %d of %d\n", did, i, maxRetry)
+			time.Sleep(3 * time.Second) //nolint:gomnd
+
+			continue
+		}
+	}
+
+	return nil
 }

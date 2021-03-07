@@ -14,6 +14,11 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/hyperledger/aries-framework-go-ext/component/vdr/trustbloc"
+	vdrapi "github.com/hyperledger/aries-framework-go/pkg/framework/aries/api/vdr"
+	"github.com/hyperledger/aries-framework-go/pkg/framework/context"
+	vdrpkg "github.com/hyperledger/aries-framework-go/pkg/vdr"
+	"github.com/hyperledger/aries-framework-go/pkg/vdr/httpbinding"
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/restapi/logspec"
@@ -92,6 +97,11 @@ const (
 	extractorProfileFlagUsage = "Extractor Profile."
 	extractorProfileEnvKey    = "ACE_EXTRACTOR_PROFILE"
 
+	// did resolver url
+	didResolverURLFlagName  = "did-resolver-url"
+	didResolverURLFlagUsage = "DID Resolver URL."
+	didResolverURLEnvKey    = "ACE_DID_RESOLVER_URL"
+
 	tokenLength2 = 2
 )
 
@@ -142,6 +152,7 @@ type rpParameters struct {
 	accountLinkProfile string
 	extractorProfile   string
 	requestTokens      map[string]string
+	didResolverURL     string
 }
 
 type tlsConfig struct {
@@ -235,6 +246,12 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen, gocyclo
 				return err
 			}
 
+			didResolverURL, err := cmdutils.GetUserSetVarFromString(cmd,
+				didResolverURLFlagName, didResolverURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
 			parameters := &rpParameters{
 				srv:                srv,
 				hostURL:            strings.TrimSpace(hostURL),
@@ -252,6 +269,7 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen, gocyclo
 				accountLinkProfile: accountLinkProfile,
 				extractorProfile:   extractorProfile,
 				requestTokens:      requestTokens,
+				didResolverURL:     didResolverURL,
 			}
 
 			return startRP(parameters)
@@ -311,6 +329,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(hostExternalURLFlagName, "", "", hostExternalURLFlagUsage)
 	startCmd.Flags().StringP(accountLinkProfileFlagName, "", "", accountLinkProfileFlagUsage)
 	startCmd.Flags().StringP(extractorProfileFlagName, "", "", extractorProfileFlagUsage)
+	startCmd.Flags().StringP(didResolverURLFlagName, "", "", didResolverURLFlagUsage)
 	startCmd.Flags().StringArrayP(requestTokensFlagName, "", []string{}, requestTokensFlagUsage)
 	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
 }
@@ -335,6 +354,11 @@ func startRP(parameters *rpParameters) error {
 		return err
 	}
 
+	vdri, err := createVDRI(parameters.didResolverURL, tlsConfig)
+	if err != nil {
+		return err
+	}
+
 	cfg := &operation.Config{
 		StoreProvider:        storeProvider,
 		HomePageHTML:         basePath + "/index.html",
@@ -352,6 +376,7 @@ func startRP(parameters *rpParameters) error {
 		HostExternalURL:      parameters.hostExternalURL,
 		RequestTokens:        parameters.requestTokens,
 		SvcName:              parameters.modeConf.svcName,
+		VDRI:                 vdri,
 	}
 
 	aceRpService, err := acerp.New(cfg)
@@ -409,4 +434,30 @@ func getRequestTokens(cmd *cobra.Command) (map[string]string, error) {
 	}
 
 	return tokens, nil
+}
+
+func createVDRI(didResolverURL string, tlsConfig *tls.Config) (vdrapi.Registry, error) {
+	didResolverVDRI, err := httpbinding.New(didResolverURL,
+		httpbinding.WithAccept(func(method string) bool {
+			return method == "v1" || method == "elem" || method == "sov" ||
+				method == "web" || method == "key" || method == "factom"
+		}))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new universal resolver vdr: %w", err)
+	}
+
+	vdrProvider, err := context.New(context.WithKMS(nil))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new vdr provider: %w", err)
+	}
+
+	blocVDR, err := trustbloc.New(nil,
+		trustbloc.WithResolverURL(didResolverURL),
+		trustbloc.WithTLSConfig(tlsConfig),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return vdrpkg.New(vdrProvider, vdrpkg.WithVDR(blocVDR), vdrpkg.WithVDR(didResolverVDRI)), nil
 }
