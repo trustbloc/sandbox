@@ -8,6 +8,8 @@ replace github.com/trustbloc/sandbox => ../..
 
 require (
 	github.com/gorilla/mux v1.8.0
+	github.com/hyperledger/aries-framework-go v0.1.6
+	github.com/hyperledger/aries-framework-go-ext/component/vdr/trustbloc v0.0.0-20210306194409-6e4c5d622fbc
 	github.com/spf13/cobra v1.1.1
 	github.com/stretchr/testify v1.7.0
 	github.com/trustbloc/edge-core v0.1.6

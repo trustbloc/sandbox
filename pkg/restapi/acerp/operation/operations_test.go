@@ -23,8 +23,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/hyperledger/aries-framework-go/component/storageutil/mem"
 	mockstorage "github.com/hyperledger/aries-framework-go/component/storageutil/mock"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/did"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
+	vdrmock "github.com/hyperledger/aries-framework-go/pkg/mock/vdr"
 	"github.com/hyperledger/aries-framework-go/spi/storage"
 	"github.com/stretchr/testify/require"
 	compclientops "github.com/trustbloc/edge-service/pkg/client/comparator/client/operations"
@@ -78,6 +80,7 @@ func TestRegister(t *testing.T) {
 			DashboardHTML: file.Name(),
 			RequestTokens: map[string]string{vcsIssuerRequestTokenName: "test"},
 			ComparatorURL: "http://comp.example.com",
+			VDRI:          &vdrmock.MockVDRegistry{ResolveValue: &did.Doc{}},
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -134,6 +137,7 @@ func TestRegister(t *testing.T) {
 				OpenStoreReturn: &mockstorage.Store{ErrPut: errors.New("save error")},
 			},
 			ComparatorURL: "http://comp.example.com",
+			VDRI:          &vdrmock.MockVDRegistry{ResolveValue: &did.Doc{}},
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -179,6 +183,7 @@ func TestRegister(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: mem.NewProvider(),
 			ComparatorURL: "http://comp.example.com",
+			VDRI:          &vdrmock.MockVDRegistry{ResolveValue: &did.Doc{}},
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -288,6 +293,7 @@ func TestRegister(t *testing.T) {
 			StoreProvider: mem.NewProvider(),
 			RequestTokens: map[string]string{vcsIssuerRequestTokenName: "test"},
 			ComparatorURL: "http://comp.example.com",
+			VDRI:          &vdrmock.MockVDRegistry{ResolveValue: &did.Doc{}},
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -2685,10 +2691,10 @@ func (m *mockComparatorClient) GetConfig(params *compclientops.GetConfigParams) 
 		return m.GetConfigResp, nil
 	}
 
-	did := "did:example:789"
+	didID := "did:example:789"
 
 	return &compclientops.GetConfigOK{
-		Payload: &compmodel.Config{AuthKeyURL: "did:example:123#xyz", Did: &did},
+		Payload: &compmodel.Config{AuthKeyURL: "did:example:123#xyz", Did: &didID},
 	}, nil
 }
 

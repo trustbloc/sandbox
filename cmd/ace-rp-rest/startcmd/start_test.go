@@ -135,6 +135,7 @@ func getValidArgs(logLevel string) []string {
 	args = append(args, requestTokensArg()...)
 	args = append(args, comparatorURLArg()...)
 	args = append(args, extractorProfileArg()...)
+	args = append(args, didResolverURLArg()...)
 
 	if logLevel != "" {
 		args = append(args, logLevelArg(logLevel)...)
@@ -171,6 +172,7 @@ func TestDatabaseTypeArg(t *testing.T) {
 		args = append(args, comparatorURLArg()...)
 		args = append(args, hostExternalURLArg()...)
 		args = append(args, accountLinkProfileArg()...)
+		args = append(args, didResolverURLArg()...)
 		args = append(args, []string{flag + common.DatabasePrefixFlagName, "test"}...)
 		args = append(args, []string{flag + common.DatabaseURLFlagName, "invalid-driver://test"}...)
 		startCmd.SetArgs(args)
@@ -334,6 +336,9 @@ func setEnvVars(t *testing.T) {
 
 	err = os.Setenv(comparatorURLEnvKey, "https://comparator")
 	require.Nil(t, err)
+
+	err = os.Setenv(didResolverURLEnvKey, "https://did-resolver-url")
+	require.Nil(t, err)
 }
 
 func unsetEnvVars(t *testing.T) {
@@ -371,6 +376,9 @@ func unsetEnvVars(t *testing.T) {
 	require.Nil(t, err)
 
 	err = os.Unsetenv(comparatorURLEnvKey)
+	require.Nil(t, err)
+
+	err = os.Unsetenv(didResolverURLEnvKey)
 	require.Nil(t, err)
 }
 
@@ -416,6 +424,10 @@ func accountLinkProfileArg() []string {
 
 func extractorProfileArg() []string {
 	return []string{flag + extractorProfileFlagName, "extractor-abc"}
+}
+
+func didResolverURLArg() []string {
+	return []string{flag + didResolverURLFlagName, "https://did-resolver-url"}
 }
 
 func databaseURLArg() []string {
