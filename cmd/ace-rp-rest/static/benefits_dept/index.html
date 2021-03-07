@@ -181,7 +181,7 @@ SPDX-License-Identifier: Apache-2.0
         $("#viewTable").find("tr:not(:first)").remove();
         document.getElementById("loading-screen").style.display = "block";
         document.getElementById("viewProcessing").style.display = "none";
-        axios.get('https://benefits-dept-rp.trustbloc.local/users/extract/'+id
+        axios.get('/users/extract/'+id
             ).then(function (response) {
                 console.log("generate view data response:", response.data);
                 createViewTable(response.data);
