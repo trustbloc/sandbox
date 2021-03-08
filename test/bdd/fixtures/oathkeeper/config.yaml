@@ -27,6 +27,7 @@ authenticators:
         - StudentCard
         - TravelCard
         - PermanentResidentCard
+        - VaccinationCertificate
         - CertifiedMillTestReport
         - CrudeProductCredential
         - UniversityDegreeCredential

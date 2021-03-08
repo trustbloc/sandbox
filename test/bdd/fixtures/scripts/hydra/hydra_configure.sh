@@ -14,7 +14,7 @@ hydra clients create \
     --secret secret \
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \
-    --scope StudentCard,TravelCard,PermanentResidentCard,CertifiedMillTestReport,CrudeProductCredential,UniversityDegreeCredential,CreditCardStatement,mDL,CreditScore \
+    --scope StudentCard,TravelCard,PermanentResidentCard,VaccinationCertificate,CertifiedMillTestReport,CrudeProductCredential,UniversityDegreeCredential,CreditCardStatement,mDL,CreditScore \
     --skip-tls-verify \
     --callbacks https://issuer.trustbloc.local/callback
 echo "Finish Creating client"
