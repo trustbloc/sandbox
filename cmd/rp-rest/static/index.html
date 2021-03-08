@@ -171,6 +171,13 @@ SPDX-License-Identifier: Apache-2.0
             </div>
         </div>
 
+            <div class="bg-white rounded-lg shadow-lg">
+                <div class="px-4 py-8">
+                    <button id="vaccinationCertificate" onclick="getVaccinationCertificate()" class="h-24"><img src="img/icon-home-3.svg"></button>
+                    <h4 class="mt-10 text-lg font-medium tracking-wide uppercase leading-tight">Vaccination Certificate Verification</h4>
+                </div>
+            </div>
+
         <div class="bg-white rounded-lg shadow-lg">
                 <div class="px-4 py-8">
                     <button id="studentCard" onclick="getStudentCard()" class="h-24"><img src="img/icon-home-2.svg"></button>
@@ -291,7 +298,8 @@ SPDX-License-Identifier: Apache-2.0
         .catch(e => console.error('Error in installHandler:', e));
 
     const webQueryOpts = {
-        studentCard : { web: {
+        studentCard : {
+            web: {
                 VerifiablePresentation: {
                     query: [
                         {
@@ -306,8 +314,10 @@ SPDX-License-Identifier: Apache-2.0
                         }
                     ]
                 }
-            }},
-        travelCard : { web: {
+            }
+        },
+        travelCard : {
+            web: {
                 VerifiablePresentation: {
                     query: [
                         {
@@ -322,8 +332,10 @@ SPDX-License-Identifier: Apache-2.0
                         }
                     ]
                 }
-            }},
-        prCard : { web: {
+            }
+        },
+        prCard : {
+            web: {
                 VerifiablePresentation: {
                     query: [
                         {
@@ -338,7 +350,8 @@ SPDX-License-Identifier: Apache-2.0
                         }
                     ]
                 }
-            }},
+            }
+        },
         prCardBBS : {
             web: {
                 VerifiablePresentation: {
@@ -375,7 +388,26 @@ SPDX-License-Identifier: Apache-2.0
                 }
             }
         },
-        cmtr : { web: {
+        vaccinationCertificate : {
+            web: {
+                VerifiablePresentation: {
+                    query: [
+                        {
+                            type: "QueryByExample",
+                            credentialQuery: {
+                                reason: "Please present your Vaccination Certifcate",
+                                example: {
+                                    "@context": ["https://www.w3.org/2018/credentials/v1"],
+                                    type: ["VaccinationCertificate"]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        cmtr : {
+            web: {
                 VerifiablePresentation: {
                     query: [
                         {
@@ -390,8 +422,10 @@ SPDX-License-Identifier: Apache-2.0
                         }
                     ]
                 }
-            }},
-        cpr : { web: {
+            }
+        },
+        cpr : {
+            web: {
                 VerifiablePresentation: {
                     query: [
                         {
@@ -406,8 +440,10 @@ SPDX-License-Identifier: Apache-2.0
                         }
                     ]
                 }
-            }},
-        universityDegree : { web: {
+            }
+        },
+        universityDegree : {
+            web: {
                 VerifiablePresentation: {
                     query: [
                         {
@@ -422,7 +458,8 @@ SPDX-License-Identifier: Apache-2.0
                         }
                     ],
                 }
-            }},
+            }
+        },
     }
 
     async function installHandler() {
@@ -454,7 +491,7 @@ SPDX-License-Identifier: Apache-2.0
         credentialQuery.web.VerifiablePresentation.domain = domain
         credentialQuery.web.VerifiablePresentation.challenge = challenge
 
-        console.log("Sending webcredential query", credentialQuery)
+        console.log("Sending webcredential query = ", JSON.stringify(credentialQuery))
         const result = await navigator.credentials.get(credentialQuery);
 
         if (!result || !result.data || !result.data.type) {
@@ -474,6 +511,10 @@ SPDX-License-Identifier: Apache-2.0
     }
     async function getPRCard() {
         await getVP("prCard")
+    }
+
+    async function getVaccinationCertificate() {
+        await getVP("vaccinationCertificate")
     }
 
     async function getPRCardBBS() {
