@@ -177,11 +177,8 @@ SPDX-License-Identifier: Apache-2.0
             var table = document.getElementById('allUserTable');
             var tr = "<tr class=\"text-lg text-black  text-left\">";
             var  maskedUser = createMaskedUsername(data["users"][key].userName);
-            var ssnLength = data["users"][key].vaultID.length
-            var  parsedSSN = parseLongSSNRef(data["users"][key].vaultID, ssnLength+1);
-            console.log("what is length", ssnLength+1);
             tr += "<td><input type=\"checkbox\" />     </td><td class=\"  py-1 \">" + data["users"][key].id + "</td><td class=\"  py-1 \"> " +
-                maskedUser + "</td><td class=\"  py-1 \"> " + parsedSSN + "</td></tr>";
+                maskedUser + "</td><td class=\"  py-1 \"> " + data["users"][key].vaultID + "</td></tr>";
             table.innerHTML += tr;
         }
     }
@@ -200,13 +197,6 @@ SPDX-License-Identifier: Apache-2.0
             }
         }
         return maskid +postfix;
-    }
-
-    <!-- Parsing long did and adding dots in middle of string to make it appear non human readable. -->
-    function parseLongSSNRef(ssn, limit){
-        let  middleLength = limit/2 ;
-        console.log("what is middle length", middleLength);
-        return ssn.substring(0, middleLength) + '...' + ssn.substring(middleLength, limit);
     }
 
     function showFailureAuth() {
