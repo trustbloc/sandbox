@@ -91,7 +91,7 @@ SPDX-License-Identifier: Apache-2.0
                 </div>
             </div>
         </div>
-        <p class="mt-2 text-left text-lg text-gray-600 py-4">
+        <p class="mt-2 text-left text-lg text-gray-600 py-8">
             Clicking <a class="font-bold">Release</a> will provide the <a class="underline italic">Utopian Federal Benefits Settlement Dept</a>
             system access to the selected account Social Security Number(s) and send a notification to process the information within the next 60 minutes.
             This action will also send an email to your supervisor<a class="underline italic text-blue-600"> Jill.Templeton@internal.UCIS.dhs.gov </a> notifying them of the release.
@@ -176,10 +176,37 @@ SPDX-License-Identifier: Apache-2.0
         for(key in data["users"]){
             var table = document.getElementById('allUserTable');
             var tr = "<tr class=\"text-lg text-black  text-left\">";
+            var  maskedUser = createMaskedUsername(data["users"][key].userName);
+            var ssnLength = data["users"][key].vaultID.length
+            var  parsedSSN = parseLongSSNRef(data["users"][key].vaultID, ssnLength+1);
+            console.log("what is length", ssnLength+1);
             tr += "<td><input type=\"checkbox\" />     </td><td class=\"  py-1 \">" + data["users"][key].id + "</td><td class=\"  py-1 \"> " +
-                data["users"][key].userName + "</td><td class=\"  py-1 \"> " + data["users"][key].vaultID + "</td></tr>";
+                maskedUser + "</td><td class=\"  py-1 \"> " + parsedSSN + "</td></tr>";
             table.innerHTML += tr;
         }
+    }
+    <!-- Masking the stored username  -->
+    function createMaskedUsername(username){
+        var maskid = "";
+        var prefix= username.substring(0, username .lastIndexOf("@"));
+        var postfix= username.substring(username .lastIndexOf("@"));
+
+        for(var i=0; i<prefix.length; i++){
+            if(i == 0 || i == prefix.length - 1) {
+                maskid = maskid + prefix[i].toString();
+            }
+            else {
+                maskid = maskid + "*";
+            }
+        }
+        return maskid +postfix;
+    }
+
+    <!-- Parsing long did and adding dots in middle of string to make it appear non human readable. -->
+    function parseLongSSNRef(ssn, limit){
+        let  middleLength = limit/2 ;
+        console.log("what is middle length", middleLength);
+        return ssn.substring(0, middleLength) + '...' + ssn.substring(middleLength, limit);
     }
 
     function showFailureAuth() {
