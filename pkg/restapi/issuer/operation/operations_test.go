@@ -1746,6 +1746,220 @@ func TestDIDCommAssuranceDataHandler(t *testing.T) {
 	})
 }
 
+func TestVerifyDIDAuthHandler(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		reqBytes, err := json.Marshal(&verifyDIDAuthReq{
+			Holder:      holder,
+			Domain:      domain,
+			Challenge:   challenge,
+			DIDAuthResp: []byte(authResp),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, verifyDIDAuthPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.verifyDIDAuthHandler(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("bad request", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, verifyDIDAuthPath, strings.NewReader("invalid-json"))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.verifyDIDAuthHandler(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to decode request")
+	})
+
+	t.Run("invalid domain", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		reqBytes, err := json.Marshal(&verifyDIDAuthReq{
+			Holder:      holder,
+			Domain:      uuid.New().String(),
+			Challenge:   challenge,
+			DIDAuthResp: []byte(authResp),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, verifyDIDAuthPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.verifyDIDAuthHandler(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to validate did auth resp")
+	})
+}
+
+func TestCreateCredentialHandler(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "[%s]", assuranceData)
+			fmt.Fprintln(w)
+		}))
+		defer cms.Close()
+
+		vcsRouter := mux.NewRouter()
+		vcsRouter.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusOK)
+			_, err := writer.Write([]byte(profileData))
+			if err != nil {
+				panic(err)
+			}
+		})
+		vcsRouter.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusCreated)
+			_, err := writer.Write([]byte(testCredentialRequest))
+			if err != nil {
+				panic(err)
+			}
+		})
+
+		vcs := httptest.NewServer(vcsRouter)
+
+		defer vcs.Close()
+
+		cfg := &Config{
+			StoreProvider: memstore.NewProvider(),
+			CMSURL:        cms.URL,
+			VCSURL:        vcs.URL,
+		}
+
+		svc, err := New(cfg)
+		require.NoError(t, err)
+
+		reqBytes, err := json.Marshal(&createCredentialReq{
+			Scope:      uuid.NewString(),
+			VCSProfile: uuid.NewString(),
+			UserID:     uuid.NewString(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, verifyDIDAuthPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.createCredentialHandler(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("bad request", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "[%s]", assuranceData)
+			fmt.Fprintln(w)
+		}))
+		defer cms.Close()
+
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, verifyDIDAuthPath, strings.NewReader("invalid-json"))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.createCredentialHandler(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to decode request")
+	})
+
+	t.Run("cms error", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		}))
+		defer cms.Close()
+
+		cfg := &Config{
+			StoreProvider: memstore.NewProvider(),
+			CMSURL:        cms.URL,
+		}
+
+		svc, err := New(cfg)
+		require.NoError(t, err)
+
+		reqBytes, err := json.Marshal(&createCredentialReq{
+			Scope:      uuid.NewString(),
+			VCSProfile: uuid.NewString(),
+			UserID:     uuid.NewString(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, verifyDIDAuthPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.createCredentialHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get cms user data")
+	})
+
+	t.Run("profile error", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "[%s]", assuranceData)
+			fmt.Fprintln(w)
+		}))
+		defer cms.Close()
+
+		vcsRouter := mux.NewRouter()
+		vcsRouter.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusInternalServerError)
+		})
+
+		vcs := httptest.NewServer(vcsRouter)
+
+		defer vcs.Close()
+
+		cfg := &Config{
+			StoreProvider: memstore.NewProvider(),
+			CMSURL:        cms.URL,
+			VCSURL:        vcs.URL,
+		}
+
+		svc, err := New(cfg)
+		require.NoError(t, err)
+
+		reqBytes, err := json.Marshal(&createCredentialReq{
+			Scope:      uuid.NewString(),
+			VCSProfile: uuid.NewString(),
+			UserID:     uuid.NewString(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, verifyDIDAuthPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.createCredentialHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to create credential")
+	})
+}
+
 func handleRequest(handler Handler, headers map[string]string, path string, addCookie bool) (*bytes.Buffer, int, error) { //nolint:lll
 	var cookie *http.Cookie
 

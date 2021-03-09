@@ -48,6 +48,8 @@ const (
 	didcommAssuranceData = "/didcomm/assurance"
 	oauth2GetRequestPath = "/oauth2/request"
 	oauth2CallbackPath   = "/oauth2/callback"
+	verifyDIDAuthPath    = "/verify/didauth"
+	createCredentialPath = "/credential"
 
 	// http query params
 	stateQueryParam = "state"
@@ -199,6 +201,8 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(settings, http.MethodGet, c.settings),
 		support.NewHTTPHandler(getCreditScore, http.MethodGet, c.getCreditScore),
 		support.NewHTTPHandler(callback, http.MethodGet, c.callback),
+		support.NewHTTPHandler(verifyDIDAuthPath, http.MethodPost, c.verifyDIDAuthHandler),
+		support.NewHTTPHandler(createCredentialPath, http.MethodPost, c.createCredentialHandler),
 
 		// chapi
 		support.NewHTTPHandler(revoke, http.MethodPost, c.revokeVC),
@@ -357,7 +361,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 		return
 	}
 
-	cred, err := c.prepareCredential(subject, info, vcsProfileCookie.Value)
+	cred, err := c.prepareCredential(subject, info.Scope, vcsProfileCookie.Value)
 	if err != nil {
 		logger.Errorf("failed to create credential: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -441,6 +445,60 @@ func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Errorf("failed to write response : %s", err)
 	}
+}
+
+func (c *Operation) verifyDIDAuthHandler(w http.ResponseWriter, r *http.Request) {
+	req := &verifyDIDAuthReq{}
+
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to decode request: %s", err.Error()))
+
+		return
+	}
+
+	err = c.validateAuthResp(req.DIDAuthResp, req.Holder, req.Domain, req.Challenge)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to validate did auth resp : %s", err.Error()))
+
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, []byte(""))
+}
+
+func (c *Operation) createCredentialHandler(w http.ResponseWriter, r *http.Request) {
+	req := &createCredentialReq{}
+
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to decode request: %s", err.Error()))
+
+		return
+	}
+
+	// get data from cms
+	userData, err := c.getCMSUserData(req.Scope, req.UserID)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get cms user data : %s", err.Error()))
+
+		return
+	}
+
+	// create credential
+	cred, err := c.prepareCredential(userData, req.Scope, req.VCSProfile)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create credential: %s", err.Error()))
+
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, cred)
 }
 
 func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
@@ -868,9 +926,8 @@ func (c *Operation) didcommAssuraceHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	assuranceData, err := c.getAssuracneData(userData.AssuranceScope, userData.ID)
+	assuranceData, err := c.getCMSUserData(userData.AssuranceScope, userData.ID)
 	if err != nil {
-		logger.Errorf("failed to get assurance data : %s", err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get assurance data : %s", err.Error()))
 
@@ -890,8 +947,8 @@ func (c *Operation) didcommAssuraceHandler(w http.ResponseWriter, r *http.Reques
 	c.writeResponse(w, http.StatusOK, dataBytes)
 }
 
-func (c *Operation) getAssuracneData(assuranceScope, userID string) (map[string]interface{}, error) {
-	u := c.cmsURL + "/" + assuranceScope + "s?userid=" + userID
+func (c *Operation) getCMSUserData(scope, userID string) (map[string]interface{}, error) {
+	u := c.cmsURL + "/" + scope + "?userid=" + userID
 
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
@@ -986,7 +1043,7 @@ func unmarshalSubject(data []byte) (map[string]interface{}, error) {
 	return subjects[0], nil
 }
 
-func (c *Operation) prepareCredential(subject map[string]interface{}, info *token.Introspection,
+func (c *Operation) prepareCredential(subject map[string]interface{}, scope string,
 	vcsProfile string) ([]byte, error) {
 	// will be replaced by DID auth response subject ID
 	subject["id"] = ""
@@ -1016,7 +1073,7 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, info *toke
 	cred := &verifiable.Credential{}
 	cred.Context = vcContext
 	cred.Subject = subject
-	cred.Types = []string{"VerifiableCredential", info.Scope}
+	cred.Types = []string{"VerifiableCredential", scope}
 	cred.Issued = util.NewTime(time.Now().UTC())
 	cred.Issuer.ID = profileResponse.DID
 	cred.Issuer.CustomFields = make(verifiable.CustomFields)
@@ -1085,6 +1142,10 @@ func (c *Operation) createCredential(cred, authResp, holder, domain, challenge, 
 		return nil, errors.New("invalid credential subject")
 	}
 
+	return c.issueCredential(id, credential)
+}
+
+func (c *Operation) issueCredential(profileID string, credential *verifiable.Credential) ([]byte, error) {
 	credBytes, err := credential.MarshalJSON()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get credential bytes: %w", err)
@@ -1097,7 +1158,7 @@ func (c *Operation) createCredential(cred, authResp, holder, domain, challenge, 
 		return nil, fmt.Errorf("failed to marshal credential")
 	}
 
-	endpointURL := fmt.Sprintf(issueCredentialURLFormat, c.vcsURL, id)
+	endpointURL := fmt.Sprintf(issueCredentialURLFormat, c.vcsURL, profileID)
 
 	req, err := http.NewRequest("POST", endpointURL, bytes.NewBuffer(body))
 	if err != nil {
@@ -1272,6 +1333,8 @@ func getFormValue(k string, vals url.Values) (string, bool) {
 
 // writeResponse writes interface value to response
 func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg string) {
+	logger.Errorf(msg)
+
 	rw.WriteHeader(status)
 
 	if _, err := rw.Write([]byte(msg)); err != nil {
@@ -1280,7 +1343,7 @@ func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg s
 }
 
 // writeResponse writes interface value to response
-func (c *Operation) writeResponse(rw http.ResponseWriter, status int, data []byte) {
+func (c *Operation) writeResponse(rw http.ResponseWriter, status int, data []byte) { // nolint: unparam
 	rw.WriteHeader(status)
 
 	if _, err := rw.Write(data); err != nil {

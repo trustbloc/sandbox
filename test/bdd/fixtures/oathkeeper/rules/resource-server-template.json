@@ -415,5 +415,36 @@
     "authorizer": {
       "handler": "allow"
     }
+  },
+  {
+    "id": "boardingpass-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi:1337"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.trustbloc.local/boardingpasses<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "noop"
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
   }
 ]
