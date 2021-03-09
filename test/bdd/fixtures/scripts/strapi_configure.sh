@@ -32,7 +32,7 @@ GENERATE_PRCARD_COMMAND="strapi generate:api permanentresidentcards UserID:strin
 
 $GENERATE_PRCARD_COMMAND
 
-# generate the permanent resident card api and model
+# generate the vaccination certificate api and model
 GENERATE_VCERT_CARD_COMMAND="strapi generate:api vaccinationcertificates UserID:string VcMetadata:json VcCredentialSubject:json"
 
 $GENERATE_VCERT_CARD_COMMAND
@@ -71,6 +71,11 @@ $GENERATE_CS_COMMAND
 GENERATE_DLEVIDENCE_COMMAND="strapi generate:api mdlevidences UserID:string metadata:json data:json"
 
 $GENERATE_DLEVIDENCE_COMMAND
+
+# generate the boarding pass api and model
+GENERATE_BOARDING_PASS_COMMAND="strapi generate:api boardingpasses UserID:string VcMetadata:json VcCredentialSubject:json"
+
+$GENERATE_BOARDING_PASS_COMMAND
 
 sleep 30
 
@@ -160,7 +165,7 @@ result=$(curl --header "Content-Type: application/json" --header "Authorization:
 # check for error
 if [ "$result" != "null" ]
    then
-        echo "error insert prcards data in strapi: $result"
+        echo "error insert vaccinationcertificates data in strapi: $result"
 fi
 
 # Add certifiedmilltestreports data for above created user
@@ -238,6 +243,18 @@ result=$(curl --header "Content-Type: application/json" --header "Authorization:
 if [ "$result" != "null" ]
    then
         echo "error insert mdlevidences data in strapi: $result"
+fi
+
+# TODO add boaring pass data
+# Add boarding pass data for above created user
+result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
+   --request POST \
+   --data '{"userid":"100", "vcmetadata":{"@context": [ "https://www.w3.org/2018/credentials/v1" ], "name": "Boarding Pass", "description": "Boarding Pass for Mr.John Smith"}, "vccredentialsubject": { "name" : "myName" }}' \
+   --insecure http://strapi:1337/boardingpasses | jq  -r ".error")
+# check for error
+if [ "$result" != "null" ]
+   then
+        echo "error insert boardingpasses data in strapi: $result"
 fi
 
 echo "STRAPI SETUP IS COMPLETED"

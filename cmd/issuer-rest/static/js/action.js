@@ -85,7 +85,7 @@ $(document).ready(function () {
             $('#demoType').val("DIDComm");
             $('#didCommScope').val("mDL");
             $('#adapterProfile').val("tb-dl-issuer");
-            $('#assuranceScope').val("mdlevidence");
+            $('#assuranceScope').val("mdlevidences");
             $(this).data('clicked', true);
             document.getElementById('didFormSubmit').click();
         }
@@ -96,7 +96,7 @@ $(document).ready(function () {
             $('#demoType').val("DIDComm");
             $('#didCommScope').val("mDL");
             $('#adapterProfile').val("tb-dl-issuer");
-            $('#assuranceScope').val("mdlevidence");
+            $('#assuranceScope').val("mdlevidences");
             $(this).data('clicked', true);
         }
     });
