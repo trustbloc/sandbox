@@ -63,7 +63,7 @@ const (
 	didCommDemo          = "DIDComm"
 	nonDIDCommDemo       = "nonDIDComm"
 
-	issueCredentialURLFormat = "%s/%s" + "/credentials/issueCredential"
+	issueCredentialURLFormat = "%s/%s" + "/credentials/issue"
 
 	// contexts
 	trustBlocExampleContext = "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld"

@@ -393,7 +393,7 @@ func TestOperation_Callback(t *testing.T) {
 					panic(err)
 				}
 			})
-			vcsRouter.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
+			vcsRouter.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
 				writer.WriteHeader(http.StatusCreated)
 				_, err := writer.Write([]byte(testCredentialRequest))
 				if err != nil {
@@ -461,7 +461,7 @@ func TestOperation_Callback(t *testing.T) {
 					panic(err)
 				}
 			})
-			vcsRouter.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
+			vcsRouter.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
 				writer.WriteHeader(http.StatusCreated)
 				_, err := writer.Write([]byte(testCredentialRequest))
 				if err != nil {
@@ -514,7 +514,7 @@ func TestOperation_GenerateVC(t *testing.T) {
 			writer.WriteHeader(http.StatusOK)
 		})
 
-		router.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
+		router.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusCreated)
 			_, err := writer.Write([]byte(testCredentialRequest))
 			if err != nil {
@@ -683,7 +683,7 @@ func TestOperation_GenerateVC(t *testing.T) {
 			writer.WriteHeader(http.StatusInternalServerError)
 		})
 
-		router.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
+		router.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusCreated)
 			_, err := writer.Write([]byte(testCredentialRequest))
 			if err != nil {
@@ -746,7 +746,7 @@ func TestOperation_GenerateVC(t *testing.T) {
 			writer.WriteHeader(http.StatusOK)
 		})
 
-		router.HandleFunc("/{id}/credentials/issueCredential", func(writer http.ResponseWriter, request *http.Request) {
+		router.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusCreated)
 			_, err := writer.Write([]byte(testCredentialRequest))
 			if err != nil {

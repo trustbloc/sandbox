@@ -41,7 +41,7 @@ const (
 	scopeQueryParam = "scope"
 	flowQueryParam  = "flow"
 	// edge-service verifier endpoints
-	verifyPresentationURLFormat = "/%s" + "/verifier/presentations"
+	verifyPresentationURLFormat = "/%s" + "/verifier/presentations/verify"
 
 	// TODO https://github.com/trustbloc/sandbox/issues/352 Configure verifier profiles in Verifier page
 	verifierProfileID = "trustbloc-verifier"

@@ -2580,7 +2580,7 @@ func mockHTTPResponse(t *testing.T, vcResp,
 		var err error
 
 		switch req.URL.Path {
-		case "/credentials/issueCredential":
+		case "/credentials/issue":
 			cred := verifiable.Credential{}
 			cred.ID = uuid.New().URN()
 			cred.Context = []string{credentialContext}
