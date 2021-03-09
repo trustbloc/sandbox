@@ -85,7 +85,7 @@ const (
 	userIDLen                 = 7
 
 	// external paths
-	issueCredentialURLFormat = "%s" + "/credentials/issueCredential"
+	issueCredentialURLFormat = "%s" + "/credentials/issue"
 	accountLinkURLFormat     = "%s/link?client_id=%s&callback=%s/callback&state=%s"
 
 	// json-ld
