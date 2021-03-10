@@ -1589,7 +1589,7 @@ func resolveDID(vdrRegistry vdrapi.Registry, did string, maxRetry int) error {
 			}
 
 			fmt.Printf("did %s not found will retry %d of %d\n", did, i, maxRetry)
-			time.Sleep(3 * time.Second) //nolint:gomnd
+			time.Sleep(1 * time.Second)
 
 			continue
 		}
