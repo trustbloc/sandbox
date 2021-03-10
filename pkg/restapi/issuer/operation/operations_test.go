@@ -1849,6 +1849,7 @@ func TestCreateCredentialHandler(t *testing.T) {
 		require.NoError(t, err)
 
 		reqBytes, err := json.Marshal(&createCredentialReq{
+			Holder:     uuid.NewString(),
 			Scope:      uuid.NewString(),
 			VCSProfile: uuid.NewString(),
 			UserID:     uuid.NewString(),
