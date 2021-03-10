@@ -18,7 +18,9 @@ type verifyDIDAuthReq struct {
 }
 
 type createCredentialReq struct {
-	Scope      string `json:"scope"`
+	Holder     string `json:"holder"`
 	VCSProfile string `json:"vcsProfile"`
+	Scope      string `json:"scope"`
+	Collection string `json:"collection"`
 	UserID     string `json:"userID"`
 }

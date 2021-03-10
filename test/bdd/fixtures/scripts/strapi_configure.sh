@@ -245,11 +245,10 @@ if [ "$result" != "null" ]
         echo "error insert mdlevidences data in strapi: $result"
 fi
 
-# TODO add boaring pass data
 # Add boarding pass data for above created user
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
-   --data '{"userid":"100", "vcmetadata":{"@context": [ "https://www.w3.org/2018/credentials/v1" ], "name": "Boarding Pass", "description": "Boarding Pass for Mr.John Smith"}, "vccredentialsubject": { "name" : "myName" }}' \
+   --data '{"userid":"100", "vcmetadata":{"@context": [ "https://www.w3.org/2018/credentials/v1", https://trustbloc.github.io/context/vc/examples/booking-ref-v1.jsonld" ], "name": "Boarding Pass", "description": "Boarding Pass for Mr.John Smith"}, "vccredentialsubject": { "referenceNumber": "K1J 3XA", "issuedBy" : "Taylor Chartered Flights" }}' \
    --insecure http://strapi:1337/boardingpasses | jq  -r ".error")
 # check for error
 if [ "$result" != "null" ]

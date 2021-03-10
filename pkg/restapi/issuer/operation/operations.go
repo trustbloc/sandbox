@@ -481,13 +481,15 @@ func (c *Operation) createCredentialHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	// get data from cms
-	userData, err := c.getCMSUserData(req.Scope, req.UserID)
+	userData, err := c.getCMSUserData(req.Collection, req.UserID)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get cms user data : %s", err.Error()))
 
 		return
 	}
+
+	// TODO support for dynamically adding subject data
 
 	// create credential
 	cred, err := c.prepareCredential(userData, req.Scope, req.VCSProfile)
@@ -498,7 +500,15 @@ func (c *Operation) createCredentialHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	c.writeResponse(w, http.StatusOK, cred)
+	signedVC, err := c.issueCredential(req.VCSProfile, req.Holder, cred)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to sign credential: %s", err.Error()))
+
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, signedVC)
 }
 
 func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
@@ -1043,8 +1053,7 @@ func unmarshalSubject(data []byte) (map[string]interface{}, error) {
 	return subjects[0], nil
 }
 
-func (c *Operation) prepareCredential(subject map[string]interface{}, scope string,
-	vcsProfile string) ([]byte, error) {
+func (c *Operation) prepareCredential(subject map[string]interface{}, scope, vcsProfile string) ([]byte, error) {
 	// will be replaced by DID auth response subject ID
 	subject["id"] = ""
 
@@ -1131,7 +1140,11 @@ func (c *Operation) createCredential(cred, authResp, holder, domain, challenge, 
 		return nil, fmt.Errorf("DID Auth failed: %w", err)
 	}
 
-	credential, err := verifiable.ParseCredential([]byte(cred), verifiable.WithDisabledProofCheck())
+	return c.issueCredential(id, holder, []byte(cred))
+}
+
+func (c *Operation) issueCredential(profileID, holder string, cred []byte) ([]byte, error) {
+	credential, err := verifiable.ParseCredential(cred, verifiable.WithDisabledProofCheck())
 	if err != nil {
 		return nil, fmt.Errorf("invalid credential: %w", err)
 	}
@@ -1142,10 +1155,6 @@ func (c *Operation) createCredential(cred, authResp, holder, domain, challenge, 
 		return nil, errors.New("invalid credential subject")
 	}
 
-	return c.issueCredential(id, credential)
-}
-
-func (c *Operation) issueCredential(profileID string, credential *verifiable.Credential) ([]byte, error) {
 	credBytes, err := credential.MarshalJSON()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get credential bytes: %w", err)
