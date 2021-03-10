@@ -34,6 +34,7 @@ authenticators:
         - CreditCardStatement
         - mDL
         - CreditScore
+        - BookingReferenceCredential
   noop:
     enabled: true
 

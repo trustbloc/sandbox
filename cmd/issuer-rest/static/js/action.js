@@ -62,7 +62,14 @@ $(document).ready(function () {
         }
     });
 
-    $('#studentCard, #prCard, #vaccinationCertificate, #travelCard, #cpr, #universityDegree, #cmtr').on('click', function() {
+    $('#bookingReference').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $('#scope').val("BookingReferenceCredential");
+            $(this).data('clicked', true);
+        }
+    });
+
+    $('#studentCard, #prCard, #vaccinationCertificate, #travelCard, #cpr, #universityDegree, #cmtr, #bookingReference').on('click', function() {
         if (document.cookie.split('vcsProfile').length > 1) {
             var cookieValue = document.cookie.split("vcsProfile=")[1].split(';')[0];
             $('#vcsProfile').val(cookieValue);
@@ -148,7 +155,11 @@ $(document).ready(function () {
 
             $('#demoSetupForm').attr('action', '/login?');
 
-        }  else if ($("#revokeVCBtn").data('clicked')) {
+        }  else if ($("#bookingReference").data('clicked')) {
+
+            $('#demoSetupForm').attr('action', '/login?');
+
+        } else if ($("#revokeVCBtn").data('clicked')) {
 
             $('#demoSetupForm').attr('action', 'view/revoke.html');
 

@@ -37,6 +37,12 @@ GENERATE_VCERT_CARD_COMMAND="strapi generate:api vaccinationcertificates UserID:
 
 $GENERATE_VCERT_CARD_COMMAND
 
+# generate the booking reference credential api and model
+GENERATE_BRFC_CARD_COMMAND="strapi generate:api bookingreferencecredentials UserID:string VcMetadata:json VcCredentialSubject:json"
+
+$GENERATE_BRFC_CARD_COMMAND
+
+
 # generate the certifiedmilltestreports and model
 GENERATE_CMTR_COMMAND="strapi generate:api certifiedmilltestreports UserID:string VcMetadata:json Cmtr:json"
 
@@ -199,6 +205,18 @@ result=$(curl --header "Content-Type: application/json" --header "Authorization:
 if [ "$result" != "null" ]
    then
         echo "error insert universitydegreecredentials data in strapi: $result"
+fi
+
+
+# Add booking reference credential for above created user
+result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
+   --request POST \
+   --data '{"userid":"100", "vcmetadata":{"@context": [ "https://trustbloc.github.io/context/vc/examples/booking-ref-v1.jsonld" ], "name": "Boarding Pass", "description": "Boarding Pass for Mr.John Smith"}, "vccredentialsubject": { "referenceNumber": "K1J 3XA", "issuedBy" : "Taylor Chartered Flights" }}' \
+   --insecure http://strapi:1337/bookingreferencecredentials | jq  -r ".error")
+# check for error
+if [ "$result" != "null" ]
+   then
+        echo "error insert booking reference credential data in strapi: $result"
 fi
 
 # Add creditcardstatements data for above created user
