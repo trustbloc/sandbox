@@ -62,11 +62,20 @@ $(document).ready(function () {
         }
     });
 
-    $('#studentCard, #prCard, #vaccinationCertificate, #travelCard, #cpr, #universityDegree, #cmtr').on('click', function() {
+    $('#studentCard, #prCard, #travelCard, #cpr, #universityDegree, #cmtr').on('click', function() {
         if (document.cookie.split('vcsProfile').length > 1) {
             var cookieValue = document.cookie.split("vcsProfile=")[1].split(';')[0];
             $('#vcsProfile').val(cookieValue);
+        } else {
+            // set to default
+            $('#vcsProfile').val('trustbloc-ed25519signature2018-ed25519');
         }
+        document.getElementById('formSubmit').click();
+    });
+
+    // TODO - remove this code once we have a separate vaccination certificate demo page
+    $('#vaccinationCertificate').on('click', function() {
+        $('#vcsProfile').val("didkey-bbsblssignature2020-bls12381g2");
         document.getElementById('formSubmit').click();
     });
 
