@@ -71,6 +71,8 @@ services:
       - ARIESD_DATABASE_PREFIX=edgeagent_usragdb
       - ARIESD_DATABASE_TIMEOUT=60
       - ARIESD_DATABASE_URL=edgeagent:edgeagent-secret-pw@tcp(mysql:3306)/
+      # 3600 secs = 60 mins
+      - HTTP_SERVER_COOKIE_MAXAGE=3600
     ports:
       - 8092:8092
     volumes:
