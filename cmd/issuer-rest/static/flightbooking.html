@@ -38,7 +38,7 @@ SPDX-License-Identifier: Apache-2.0
 <div class="max-w mx-auto sm:px-6 lg:px-32 gradient">
     <div class="grid grid-cols-2 gap-4">
         <div class="flex items-center"> <img class="block lg:block h-48 w-auto" src="img/flight_logo.png">
-            <a href="/flightcheckin" class="text-white bold text-3xl"></a>
+            <a href="/flightbooking" class="text-white bold text-3xl"></a>
         </div>
         <div class="flex items-center">
         <nav class = "opacity-95">
@@ -47,7 +47,7 @@ SPDX-License-Identifier: Apache-2.0
                     <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
                         <div class="hidden sm:block sm:ml-6">
                             <div class="flex space-x-4">
-                                <a href="/flightcheckin" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Home</a>
+                                <a href="/flightbooking" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Home</a>
                             </div>
                         </div>
                         <div class="hidden sm:block sm:ml-6">
@@ -76,7 +76,7 @@ SPDX-License-Identifier: Apache-2.0
         </nav>
             <div class="flex items-center justify-end">
                 <i class="fa fa-user-circle mr-4 font-bold"></i>
-                <h2 class="text-white font-bold text-xl">Jacky Louis</h2>
+                <h2 class="text-white font-bold text-xl">Louis Pasteur</h2>
             </div>
         </div>
 
@@ -84,14 +84,14 @@ SPDX-License-Identifier: Apache-2.0
     </div>
 </div>
 
-<div class="row-span-8 col-span-3 px-48 py-12 text-center" id="homeContent" style="display: block">
+<div class="row-span-8 col-span-3 px-48 py-12 text-center" id="homeContent" style="display: none">
     <p class="text-gray-700 text-2xl text-leading">
-        Fly with Taylor Today! Anywhere within the </br>
+        Fly with Taylor Today! Anywhere within the
         Tri State Area for an affordable price
     </p>
 
     <p class="text-gray-700 text-3xl text-leading py-8">
-        Your Flight is booked, Jacky Louis
+        Your Flight is booked, Louis Pasteur
     </p>
 
     <p class="text-gray-700 bold text-3xl font-bold text-leading">
@@ -109,7 +109,7 @@ SPDX-License-Identifier: Apache-2.0
         </p>
 
         <p class="mt-2 text-xl font-bold text-gray-600 py-2">
-            Click <a class="underline text-blue-600" href="/flightcheckin">Here</a> to collect your Digital Booking Reference.
+            Click <a class="underline text-blue-600" href="/flightbooking">Here</a> to collect your Digital Booking Reference.
         </p>
 
         <input type="text" id="holder" class="hidden"/>
@@ -123,49 +123,47 @@ SPDX-License-Identifier: Apache-2.0
     </div>
 </div>
 
-<div class="row-span-8 col-span-3 px-12 py-10 text-center text-black" id="bookingRef" style="display: none">
+<div class="row-span-8 col-span-3 text-center text-black" id="bookingRef" style="display: block">
     <div class="flex font-sans justify-center items-center h-screen">
-        <div class="w-full max-w-sm mx-4 shadow-lg rounded-lg">
-            <div class="py-4 px-6 flex justify-between items-end bg-white rounded-lg rounded-b-none gradient">
-                <div>
+        <div class="w-full max-w-5xl shadow-lg rounded-lg">
+            <div class="px-6 bg-white rounded-lg rounded-b-none gradient">
+                <div class="flex justify-center items-center">
                     <img src="img/flight_logo.png" class="object-contain h-48 w-full">
                 </div>
+                <div class="flex justify-center items-center">
+                <span class="uppercase w-full font-bold text-blue-100  tracking-wide text-xl">Flight Booking Confirmation</span>
+                </div>
             </div>
-            <div>
-                <span class="uppercase font-bold text-grey-darkest py-2 tracking-wide text-xl">Boarding pass</span>
+            <div class="flex justify-center items-center px-4 py-4">
+            <div class="bg-green-100 max-w-md shadow-lg rounded-lg border-4 flex items-center rounded border-green-500 rounded-b text-green-900  px-4 py-3" role="alert">
+                <div class="flex">
+                    <div>
+                        <p class="text-sm text-left">Dear Louis Pasteur, </p>
+                        <p class="font-bold italic">  <i class="fa fa-plane"></i> Congratulations! Your flight booking is confirmed.</p>
+                        <p class="text-sm text-left"> Reference Number: <span id="bookingRefNum"></span> </p>
+                    </div>
+                </div>
+            </div>
+            </div>
+            <div class="font-bold text-left px-12">
+                <i class="fa fa-plane"></i> Depart
             </div>
 
-            <div class="flex bg-red justify-around items-center py-16 px-6 sm:px-12 bg-destination ">
-                <div class="flex-1 text-5xl font-bold text-black tracking-wide text-shadow-lg">SFO</div>
-                <div class="mx-8">
-                    <i class="fa fa-plane w-24" aria-hidden="true"></i>
-                </div>
-                <div class="flex-1 text-right text-5xl font-bold text-black tracking-wide text-shadow-lg">ETU</div>
-            </div>
-
-
-            <div class="flex gradient px-6 sm:px-12 py-4">
-                <div class="w-2/5">
-                    <span class="uppercase text-white block tracking-wide mb-1 font-thin text-xs">date</span>
-                    <span class="uppercase text-white block tracking-wide text-sm">3/28/2021</span>
-                </div>
-                <div class="w-1/5">
-                    <span class="uppercase text-white block tracking-wide mb-1 font-thin text-xs">gate</span>
-                    <span class="uppercase text-white block tracking-wide text-sm">51b</span>
-                </div>
-                <div class="w-2/5">
-                    <span class="uppercase text-white block tracking-wide mb-1 font-thin text-xs">boarding</span>
-                    <span class="uppercase text-white block tracking-wide text-sm">2.50 PM</span>
+            <div class="flex bg-gray-100 text-black px-6 sm:px-12 py-4">
+                <div class="w-full">
+                    <p class="text-xl font-bold text-left"> SAF <i class="fa fa-plane space-x-4"></i> ATL <a class="text-sm text-gray-500 px-4"> 28, March 2021</a>
+                        <a class="text-sm text-gray-500 px-4"> Your e-ticket will be emailed to you at louis.pasteur@test.com</a>
+                    </p>
                 </div>
             </div>
 
 
-            <div class="py-8 px-6 sm:px-12 bg-white bg-plane rounded-lg rounded-t-none">
+            <div class="py-8 px-6 sm:px-12 bg-white  text-left bg-plane rounded-lg rounded-t-none">
                 <div class="flex">
                     <div class="w-3/5">
                         <div class="mb-3">
                             <h4 class="text-xs uppercase tracking-wide text-grey-darker">Passenger</h4>
-                            <p class="font-semibold tracking-wide text-purple-400" class="passenger-name">Jacky Louis</p>
+                            <p class="font-semibold tracking-wide text-purple-400" class="passenger-name">Louis Pasteur</p>
                             <p><small></small></p>
                         </div>
                         <div class="mb-3">
@@ -183,8 +181,8 @@ SPDX-License-Identifier: Apache-2.0
                             <p class="font-semibold tracking-wide text-grey-darkest">Prime</p>
                         </div>
                         <div class="mb-3">
-                            <h4 class="text-xs uppercase tracking-wide text-grey-darker">Seat</h4>
-                            <p class="font-semibold tracking-wide text-grey-darkest">23A</p>
+                            <h4 class="text-xs uppercase tracking-wide text-grey-darker">Selected Seat</h4>
+                            <p class="font-semibold tracking-wide text-grey-darkest">2A</p>
                         </div>
                         <div class="">
                             <h4 class="text-xs uppercase tracking-wide text-grey-darker">Flight</h4>
@@ -192,15 +190,11 @@ SPDX-License-Identifier: Apache-2.0
                         </div>
                     </div>
                 </div>
-
-                <div class="mt-8 p-2 bg-white">
-                    <img src="img/barcode.jpg" alt="" class="h-16 w-full" />
-                </div>
             </div>
 
         </div>
     </div>
-    </div>
+</div>
     <span id="error"></span>
     <div class="py-12">
     </div>
@@ -288,6 +282,7 @@ SPDX-License-Identifier: Apache-2.0
         if (!result) {
             document.getElementById("error-board").innerText = "Failed to issue Boarding Pass. Retry";
         } else {
+            document.getElementById("bookingRefNum").innerHTML = document.getElementById("bookingNumber").innerHTML;
             document.getElementById("bookingRef").style.display = "block";
             document.getElementById("homeContent").style.display = "none";
         }
