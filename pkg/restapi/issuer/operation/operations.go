@@ -42,10 +42,12 @@ const (
 	callback             = "/callback"
 	generate             = "/generate"
 	revoke               = "/revoke"
+	didcommInit          = "/didcomm/init"
 	didcommToken         = "/didcomm/token"
 	didcommCallback      = "/didcomm/cb"
 	didcommCredential    = "/didcomm/data"
 	didcommAssuranceData = "/didcomm/assurance"
+	didcommUserEndpoint  = "/didcomm/uid"
 	oauth2GetRequestPath = "/oauth2/request"
 	oauth2CallbackPath   = "/oauth2/callback"
 	verifyDIDAuthPath    = "/verify/didauth"
@@ -59,11 +61,8 @@ const (
 	vcsUpdateStatusURLFormat = "%s/%s" + "/credentials/status"
 
 	vcsProfileCookie     = "vcsProfile"
-	demoTypeCookie       = "demoType"
 	adapterProfileCookie = "adapterProfile"
 	assuranceScopeCookie = "assuranceScope"
-	didCommDemo          = "DIDComm"
-	nonDIDCommDemo       = "nonDIDComm"
 
 	issueCredentialURLFormat = "%s/%s" + "/credentials/issue"
 
@@ -110,6 +109,8 @@ type Operation struct {
 	store            storage.Store
 	oidcClient       oidcClient
 	homePage         string
+	didcommScopes    map[string]struct{}
+	assuranceScopes  map[string]string
 }
 
 // Config defines configuration for issuer operations
@@ -131,6 +132,8 @@ type Config struct {
 	OIDCClientID     string
 	OIDCClientSecret string
 	OIDCCallbackURL  string
+	didcommScopes    map[string]struct{}
+	assuranceScopes  map[string]string
 }
 
 // vc struct used to return vc data to html
@@ -175,6 +178,16 @@ func New(config *Config) (*Operation, error) {
 		issuerAdapterURL: config.IssuerAdapterURL,
 		store:            store,
 		homePage:         config.OIDCCallbackURL,
+		didcommScopes:    map[string]struct{}{},
+		assuranceScopes:  map[string]string{},
+	}
+
+	if config.didcommScopes != nil {
+		svc.didcommScopes = config.didcommScopes
+	}
+
+	if config.assuranceScopes != nil {
+		svc.assuranceScopes = config.assuranceScopes
 	}
 
 	if config.OIDCProviderURL != "" {
@@ -214,6 +227,9 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(didcommCredential, http.MethodPost, c.didcommCredentialHandler),
 		support.NewHTTPHandler(didcommAssuranceData, http.MethodPost, c.didcommAssuraceHandler),
 
+		support.NewHTTPHandler(didcommInit, http.MethodGet, c.initiateDIDCommConnection),
+		support.NewHTTPHandler(didcommUserEndpoint, http.MethodGet, c.getIDHandler),
+
 		// oidc
 		support.NewHTTPHandler(oauth2GetRequestPath, http.MethodGet, c.createOIDCRequest),
 		support.NewHTTPHandler(oauth2CallbackPath, http.MethodGet, c.handleOIDCCallback),
@@ -224,98 +240,250 @@ func (c *Operation) registerHandler() {
 func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 	u := c.tokenIssuer.AuthCodeURL(w)
 
-	demo := nonDIDCommDemo
+	expire := time.Now().AddDate(0, 0, 1)
 
-	demoType := r.URL.Query()["demoType"]
-	if len(demoType) > 0 {
-		demo = demoType[0]
+	if len(r.URL.Query()["vcsProfile"]) == 0 {
+		logger.Errorf("vcs profile is empty")
+		c.writeErrorResponse(w, http.StatusBadRequest, "vcs profile is empty")
+
+		return
 	}
 
-	expire := time.Now().AddDate(0, 0, 1)
-	cookie := http.Cookie{Name: demoTypeCookie, Value: demo, Expires: expire}
+	scope := r.URL.Query()["scope"]
+	if len(scope) > 0 {
+		u += "&scope=" + scope[0]
+	}
+
+	cookie := http.Cookie{Name: vcsProfileCookie, Value: r.URL.Query()["vcsProfile"][0], Expires: expire}
 	http.SetCookie(w, &cookie)
 
-	if demo == nonDIDCommDemo { //nolint:nestif
-		if len(r.URL.Query()["vcsProfile"]) == 0 {
-			logger.Errorf("vcs profile is empty")
-			c.writeErrorResponse(w, http.StatusBadRequest, "vcs profile is empty")
+	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+}
 
-			return
-		}
+// initiateDIDCommConnection initiates a DIDComm connection from the issuer to the user's wallet
+func (c *Operation) initiateDIDCommConnection(w http.ResponseWriter, r *http.Request) {
+	issuerID := r.FormValue("adapterProfile")
+	if issuerID == "" {
+		logger.Errorf("missing adapterProfile")
+		c.writeErrorResponse(w, http.StatusBadRequest, "missing adapterProfile")
 
-		scope := r.URL.Query()["scope"]
-		if len(scope) > 0 {
-			u += "&scope=" + scope[0]
-		}
+		return
+	}
 
-		cookie = http.Cookie{Name: vcsProfileCookie, Value: r.URL.Query()["vcsProfile"][0], Expires: expire}
-		http.SetCookie(w, &cookie)
-	} else {
-		if len(r.URL.Query()["adapterProfile"]) == 0 {
-			logger.Errorf("adapterProfile profile is empty")
-			c.writeErrorResponse(w, http.StatusBadRequest, "adapterProfile profile is empty")
+	scope := r.FormValue("didCommScope")
+	if scope == "" {
+		logger.Errorf("missing didCommScope")
+		c.writeErrorResponse(w, http.StatusBadRequest, "missing didCommScope")
 
-			return
-		}
+		return
+	}
 
-		scope := r.URL.Query()["didCommScope"]
-		if len(scope) > 0 {
-			u += "&scope=" + scope[0]
-		}
+	assuranceScope := r.FormValue("assuranceScope")
 
-		cookie = http.Cookie{Name: adapterProfileCookie, Value: r.URL.Query()["adapterProfile"][0], Expires: expire}
-		http.SetCookie(w, &cookie)
+	c.didcommScopes[scope] = struct{}{}
 
-		if len(r.URL.Query()["assuranceScope"]) > 0 {
-			cookie = http.Cookie{Name: assuranceScopeCookie, Value: r.URL.Query()["assuranceScope"][0], Expires: expire}
-			http.SetCookie(w, &cookie)
+	if assuranceScope != "" {
+		c.assuranceScopes[scope] = assuranceScope
+	}
+
+	rURL := fmt.Sprintf("%s/%s/connect/wallet?cred=%s", c.issuerAdapterURL, issuerID, scope)
+	http.Redirect(w, r, rURL, http.StatusFound)
+}
+
+func (c *Operation) hasAccessToken(r *http.Request) bool {
+	authHeader := r.Header.Get("Authorization")
+	return strings.HasPrefix(authHeader, "Bearer ")
+}
+
+func (c *Operation) getTokenInfo(w http.ResponseWriter, r *http.Request) (*token.Introspection, *oauth2.Token, error) {
+	authHeader := r.Header.Get("Authorization")
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		logger.Infof("rejected request lacking Bearer token")
+		w.Header().Add("WWW-Authenticate", "Bearer")
+		w.WriteHeader(http.StatusUnauthorized)
+
+		return nil, nil, fmt.Errorf("missing bearer token")
+	}
+
+	accessToken := strings.TrimPrefix(authHeader, "Bearer ")
+
+	tk := oauth2.Token{AccessToken: accessToken}
+
+	info, err := c.tokenResolver.Resolve(accessToken)
+	if err != nil {
+		logger.Errorf("failed to get token info: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get token info: %s", err.Error()))
+
+		return nil, nil, fmt.Errorf("\"failed to get token info: %w", err)
+	}
+
+	if !info.Active {
+		logger.Infof("rejected request with invalid token")
+		c.writeErrorResponse(w, http.StatusUnauthorized, `Bearer error="invalid_token"`)
+
+		return nil, nil, fmt.Errorf("token is invalid")
+	}
+
+	return info, &tk, nil
+}
+
+func (c *Operation) getIDHandler(w http.ResponseWriter, r *http.Request) {
+	info, tk, err := c.getTokenInfo(w, r)
+	if err != nil {
+		return
+	}
+
+	user, err := c.getCMSUser(tk, "email="+info.Subject)
+	if err != nil {
+		logger.Errorf("failed to get cms user: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get cms user: %s", err.Error()))
+
+		return
+	}
+
+	resp := adapterTokenResp{
+		UserID: user.UserID,
+	}
+
+	respBytes, err := json.Marshal(resp)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to marshal userID response : %s", err.Error()))
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, respBytes)
+}
+
+func (c *Operation) getDIDCommScopes(scopes string) []string {
+	var out []string
+
+	for _, scope := range strings.Split(scopes, " ") {
+		if _, ok := c.didcommScopes[scope]; ok {
+			out = append(out, scope)
 		}
 	}
 
-	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+	return out
+}
+
+// getCredentialUsingAccessToken services offline credential requests using an Oauth2 Bearer access token
+func (c *Operation) getCredentialUsingAccessToken(w http.ResponseWriter, r *http.Request) {
+	info, tk, err := c.getTokenInfo(w, r)
+	if err != nil {
+		return
+	}
+
+	scopes := strings.Join(c.getDIDCommScopes(info.Scope), " ")
+	if scopes == "" {
+		logger.Errorf("no valid credential scope")
+		c.writeErrorResponse(w, http.StatusInternalServerError, "no valid credential scope")
+
+		return
+	}
+
+	_, subjectData, err := c.getCMSData(tk, "email="+info.Subject, scopes)
+	if err != nil {
+		logger.Errorf("failed to get cms data: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get cms data: %s", err.Error()))
+
+		return
+	}
+
+	subjectDataBytes, err := json.Marshal(subjectData)
+	if err != nil {
+		logger.Errorf("failed to marshal subject data: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to marshal subject data: %s", err.Error()))
+
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, subjectDataBytes)
+}
+
+// getAssuranceUsingAccessToken services offline assurance requests using an Oauth2 Bearer access token
+func (c *Operation) getAssuranceUsingAccessToken(w http.ResponseWriter, r *http.Request) {
+	info, tk, err := c.getTokenInfo(w, r)
+	if err != nil {
+		return
+	}
+
+	user, err := c.getCMSUser(tk, "email="+info.Subject)
+	if err != nil {
+		logger.Errorf("failed to get cms user: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get cms user: %s", err.Error()))
+
+		return
+	}
+
+	scopes := c.getDIDCommScopes(info.Scope)
+
+	assuranceScope := ""
+
+	for _, scope := range scopes {
+		if s, ok := c.assuranceScopes[scope]; ok {
+			assuranceScope = s
+			break
+		}
+	}
+
+	if assuranceScope == "" {
+		logger.Errorf("no assurance scope for credential scopes %v", scopes)
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("no assurance scope for credential scopes %v", scopes))
+
+		return
+	}
+
+	assuranceData, err := c.getCMSUserData(assuranceScope, user.UserID)
+	if err != nil {
+		logger.Errorf("failed to get assurance data : %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get assurance data : %s", err.Error()))
+
+		return
+	}
+
+	dataBytes, err := json.Marshal(assuranceData)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to marshal assurance data : %s", err.Error()))
+
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, dataBytes)
 }
 
 func (c *Operation) settings(w http.ResponseWriter, r *http.Request) {
 	u := c.homePage
 
-	demo := nonDIDCommDemo
-
-	demoType := r.URL.Query()["demoType"]
-	if len(demoType) > 0 {
-		demo = demoType[0]
-	}
-
 	expire := time.Now().AddDate(0, 0, 1)
 
-	if demo == nonDIDCommDemo {
-		if len(r.URL.Query()["vcsProfile"]) == 0 {
-			logger.Errorf("vcs profile is empty")
-			c.writeErrorResponse(w, http.StatusBadRequest, "vcs profile is empty")
+	if len(r.URL.Query()["vcsProfile"]) == 0 {
+		logger.Errorf("vcs profile is empty")
+		c.writeErrorResponse(w, http.StatusBadRequest, "vcs profile is empty")
 
-			return
-		}
-
-		cookie := http.Cookie{Name: vcsProfileCookie, Value: r.URL.Query()["vcsProfile"][0], Expires: expire}
-		http.SetCookie(w, &cookie)
+		return
 	}
+
+	cookie := http.Cookie{Name: vcsProfileCookie, Value: r.URL.Query()["vcsProfile"][0], Expires: expire}
+	http.SetCookie(w, &cookie)
 
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 }
 
 // callback for oauth2 login
-func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint: funlen,gocyclo
+func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint: funlen
 	if len(r.URL.Query()["error"]) != 0 {
 		if r.URL.Query()["error"][0] == "access_denied" {
 			http.Redirect(w, r, c.homePage, http.StatusTemporaryRedirect)
 		}
-	}
-
-	demoTypeCookie, err := r.Cookie(demoTypeCookie)
-	if err != nil && !errors.Is(err, http.ErrNoCookie) {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get demoType cookie: %s", err.Error()))
-
-		return
 	}
 
 	tk, err := c.tokenIssuer.Exchange(r)
@@ -337,17 +505,11 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 		return
 	}
 
-	userID, subject, err := c.getCMSData(tk, "email="+info.Subject, info.Scope)
+	_, subject, err := c.getCMSData(tk, "email="+info.Subject, info.Scope)
 	if err != nil {
 		logger.Errorf("failed to get cms data: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest,
 			fmt.Sprintf("failed to get cms data: %s", err.Error()))
-
-		return
-	}
-
-	if demoTypeCookie != nil && demoTypeCookie.Value == didCommDemo {
-		c.didcomm(w, r, userID, subject, "")
 
 		return
 	}
@@ -726,6 +888,7 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) { //nolint:
 	}
 }
 
+// didcomm redirects to the issuer-adapter so it connects to the wallet over DIDComm.
 func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request, userID string, subjectData map[string]interface{},
 	issuerID string) {
 	if issuerID == "" {
@@ -846,15 +1009,6 @@ func (c *Operation) didcommTokenHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (c *Operation) didcommCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	err := c.validateAdapterCallback(r.URL.RequestURI())
-	if err != nil {
-		logger.Errorf("failed to validate the adapter response: %s", err)
-		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to validate the adapter response: %s", err.Error()))
-
-		return
-	}
-
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	t, err := template.ParseFiles(c.didCommHTML)
@@ -868,13 +1022,18 @@ func (c *Operation) didcommCallbackHandler(w http.ResponseWriter, r *http.Reques
 
 	err = t.Execute(w, map[string]interface{}{})
 	if err != nil {
-		logger.Errorf(fmt.Sprintf("failed execute didcomm html template: %s", err.Error()))
+		logger.Errorf("failed execute didcomm html template: %s", err.Error())
+	} else {
+		logger.Infof("didcomm callback handler success")
 	}
-
-	logger.Infof("didcomm callback handler success")
 }
 
 func (c *Operation) didcommCredentialHandler(w http.ResponseWriter, r *http.Request) {
+	if c.hasAccessToken(r) {
+		c.getCredentialUsingAccessToken(w, r)
+		return
+	}
+
 	data := &adapterDataReq{}
 
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
@@ -907,6 +1066,11 @@ func (c *Operation) didcommCredentialHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (c *Operation) didcommAssuraceHandler(w http.ResponseWriter, r *http.Request) {
+	if c.hasAccessToken(r) {
+		c.getAssuranceUsingAccessToken(w, r)
+		return
+	}
+
 	data := &adapterDataReq{}
 
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {

@@ -81,7 +81,6 @@ $(document).ready(function () {
 
     $('#creditCard').on('click', function() {
         if (!$(this).data('clicked')) {
-            $('#demoType').val("DIDComm");
             $('#didCommScope').val("CreditCardStatement");
             $('#adapterProfile').val("tb-cc-issuer");
             $(this).data('clicked', true);
@@ -91,7 +90,6 @@ $(document).ready(function () {
 
     $('#drivingLicense').on('click', function() {
         if (!$(this).data('clicked')) {
-            $('#demoType').val("DIDComm");
             $('#didCommScope').val("mDL");
             $('#adapterProfile').val("tb-dl-issuer");
             $('#assuranceScope').val("mdlevidences");
@@ -102,7 +100,6 @@ $(document).ready(function () {
 
     $('#uploadDrivingLicense').on('click', function() {
         if (!$(this).data('clicked')) {
-            $('#demoType').val("DIDComm");
             $('#didCommScope').val("mDL");
             $('#adapterProfile').val("tb-dl-issuer");
             $('#assuranceScope').val("mdlevidences");
@@ -112,7 +109,6 @@ $(document).ready(function () {
 
     $('#creditScore').on('click', function() {
         if (!$(this).data('clicked')) {
-            $('#demoType').val("DIDComm");
             $('#didCommScope').val("CreditScore");
             $('#adapterProfile').val("tb-cr-issuer");
             $(this).data('clicked', true);
@@ -168,21 +164,14 @@ $(document).ready(function () {
     });
 
     $('#didCommDemo').submit(function () {
-
-        if($('#creditCard').data('clicked'))
-        {
-            $('#didCommDemo').attr('action', '/login?');
-
-        } else if ($("#drivingLicense").data('clicked'))
-        {
-            $('#didCommDemo').attr('action', '/login?');
-
-        } else if ($("#creditScore").data('clicked'))
-        {
-            $('#didCommDemo').attr('action', '/login?');
-        } else if ($("#uploadDrivingLicense").data('clicked'))
-        {
-            $('#didCommDemo').attr('action', '/login?');
+        if($('#creditCard').data('clicked')) {
+            $('#didCommDemo').attr('action', '/didcomm/init?');
+        } else if ($("#drivingLicense").data('clicked')) {
+            $('#didCommDemo').attr('action', '/didcomm/init?');
+        } else if ($("#creditScore").data('clicked')) {
+            $('#didCommDemo').attr('action', '/didcomm/init?');
+        } else if ($("#uploadDrivingLicense").data('clicked')) {
+            $('#didCommDemo').attr('action', '/didcomm/init?');
         }
     });
 });
