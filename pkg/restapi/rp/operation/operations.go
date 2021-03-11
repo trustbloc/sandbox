@@ -33,9 +33,10 @@ const (
 	httpContentTypeJSON = "application/json"
 
 	// api paths
-	verifyVPPath         = "/verifyPresentation"
-	oauth2GetRequestPath = "/oauth2/request"
-	oauth2CallbackPath   = "/oauth2/callback"
+	verifyVPPath           = "/verifyPresentation"
+	oauth2GetRequestPath   = "/oauth2/request"
+	oauth2CallbackPath     = "/oauth2/callback"
+	verifyPresentationPath = "/verify/presentation"
 
 	// api path params
 	scopeQueryParam = "scope"
@@ -141,6 +142,75 @@ func New(config *Config) (*Operation, error) {
 	return svc, nil
 }
 
+// registerHandler register handlers to be exposed from this service as REST API endpoints
+func (c *Operation) registerHandler() {
+	// Add more protocol endpoints here to expose them as controller API endpoints
+	c.handlers = []Handler{
+		support.NewHTTPHandler(verifyVPPath, http.MethodPost, c.verifyVP),
+		support.NewHTTPHandler(oauth2GetRequestPath, http.MethodGet, c.createOIDCRequest),
+		support.NewHTTPHandler(oauth2CallbackPath, http.MethodGet, c.handleOIDCCallback),
+
+		support.NewHTTPHandler(verifyPresentationPath, http.MethodPost, c.verifyPresentation),
+	}
+}
+
+// GetRESTHandlers get all controller API handler available for this service
+func (c *Operation) GetRESTHandlers() []Handler {
+	return c.handlers
+}
+
+func (c *Operation) verifyPresentation(w http.ResponseWriter, r *http.Request) {
+	req := &verifyPresentationRequest{}
+
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to decode request: %s", err.Error()))
+
+		return
+	}
+
+	vpReq := edgesvcops.VerifyPresentationRequest{
+		Presentation: req.VP,
+		Opts: &edgesvcops.VerifyPresentationOptions{
+			Checks:    req.Checks,
+			Challenge: req.Challenge,
+			Domain:    req.Domain,
+		},
+	}
+
+	resp, err := c.callVerifyPresentation(vpReq)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to verify vp: %s", err.Error()))
+
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		respBytes, respErr := ioutil.ReadAll(resp.Body)
+		if respErr != nil {
+			c.writeErrorResponse(w, http.StatusBadRequest,
+				fmt.Sprintf("failed to read verify presentation resp : %s", err.Error()))
+
+			return
+		}
+
+		defer func() {
+			e := resp.Body.Close()
+			if e != nil {
+				logger.Errorf("closing response body failed: %v", e)
+			}
+		}()
+
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to verify presentation: %s", string(respBytes)))
+
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, []byte(""))
+}
+
 // verifyVP
 func (c *Operation) verifyVP(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
@@ -164,9 +234,7 @@ func (c *Operation) verifyVP(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	verifyPresentationEndpoint := fmt.Sprintf(verifyPresentationURLFormat, verifierProfileID)
-
-	c.verify(verifyPresentationEndpoint, req, inputData, c.vpHTML, w, r)
+	c.verify(req, inputData, c.vpHTML, w, r)
 }
 
 func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) {
@@ -294,16 +362,8 @@ func (c *Operation) didcommDemoResult(w http.ResponseWriter, data, flowType stri
 }
 
 // verify function verifies the input data and parse the response to provided template
-func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, htmlTemplate string, //nolint:funlen
+func (c *Operation) verify(verifyReq interface{}, inputData, htmlTemplate string, //nolint:funlen
 	w http.ResponseWriter, r *http.Request) {
-	reqBytes, err := json.Marshal(verifyReq)
-	if err != nil {
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to unmarshal request : %s", err.Error()))
-
-		return
-	}
-
 	t, err := template.ParseFiles(htmlTemplate)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -312,8 +372,7 @@ func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, ht
 		return
 	}
 
-	resp, httpErr := c.sendHTTPRequest(http.MethodPost, c.vcsURL+endpoint, reqBytes, httpContentTypeJSON,
-		c.requestTokens[vcsVerifierRequestTokenName])
+	resp, httpErr := c.callVerifyPresentation(verifyReq)
 	if httpErr != nil {
 		c.writeErrorResponse(w, http.StatusBadRequest,
 			fmt.Sprintf("failed to verify: %s", httpErr.Error()))
@@ -358,6 +417,18 @@ func (c *Operation) verify(endpoint string, verifyReq interface{}, inputData, ht
 	}
 }
 
+func (c *Operation) callVerifyPresentation(verifyReq interface{}) (*http.Response, error) {
+	endpoint := fmt.Sprintf(verifyPresentationURLFormat, verifierProfileID)
+
+	reqBytes, err := json.Marshal(verifyReq)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal request : %w", err)
+	}
+
+	return c.sendHTTPRequest(http.MethodPost, c.vcsURL+endpoint, reqBytes, httpContentTypeJSON,
+		c.requestTokens[vcsVerifierRequestTokenName])
+}
+
 func checkVCStatus(failedMsg string, rw io.Writer, t *template.Template) bool {
 	isStatusRevoked := checkSubstrings(failedMsg, "Revoked")
 
@@ -384,6 +455,8 @@ func checkSubstrings(str string, subs ...string) bool {
 
 func (c *Operation) sendHTTPRequest(method, url string, body []byte, contentType,
 	token string) (*http.Response, error) {
+	logger.Infof("send http request : url=%s methdod=%s body=%s", url, method, string(body))
+
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http request: %w", err)
@@ -412,21 +485,15 @@ func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg s
 	}
 }
 
-// registerHandler register handlers to be exposed from this service as REST API endpoints
-func (c *Operation) registerHandler() {
-	// Add more protocol endpoints here to expose them as controller API endpoints
-	c.handlers = []Handler{
-		support.NewHTTPHandler(verifyVPPath, http.MethodPost, c.verifyVP),
-		support.NewHTTPHandler(oauth2GetRequestPath, http.MethodGet, c.createOIDCRequest),
-		support.NewHTTPHandler(oauth2CallbackPath, http.MethodGet, c.handleOIDCCallback),
-	}
-}
-
-// GetRESTHandlers get all controller API handler available for this service
-func (c *Operation) GetRESTHandlers() []Handler {
-	return c.handlers
-}
-
 func createStore(p storage.Provider) (storage.Store, error) {
 	return p.OpenStore(transientStoreName)
+}
+
+// writeResponse writes interface value to response
+func (c *Operation) writeResponse(rw http.ResponseWriter, status int, data []byte) {
+	rw.WriteHeader(status)
+
+	if _, err := rw.Write(data); err != nil {
+		logger.Errorf("Unable to send error message, %s", err)
+	}
 }

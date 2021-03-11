@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package operation
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -66,7 +67,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(config)
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 3, len(svc.GetRESTHandlers()))
+		require.Equal(t, 4, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error if oidc provider is invalid", func(t *testing.T) {
@@ -115,8 +116,8 @@ func TestVerifyVP(t *testing.T) {
 		m := make(map[string][]string)
 		m["vpDataInput"] = []string{"vp"}
 		svc.verifyVP(rr, &http.Request{Form: m})
-		require.Equal(t, http.StatusInternalServerError, rr.Code)
-		require.Contains(t, rr.Body.String(), "failed to unmarshal request")
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to verify: unmarshal request")
 	})
 
 	t.Run("test error due to invalid form data", func(t *testing.T) {
@@ -412,6 +413,103 @@ func TestHandleOIDCCallback(t *testing.T) {
 		o.handleOIDCCallback(result, newOIDCCallback(state, code))
 		require.Equal(t, http.StatusInternalServerError, result.Code)
 		require.Contains(t, result.Body.String(), "unable to load html")
+	})
+}
+
+func TestVerifyDIDAuthHandler(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+
+		svc, err := New(config)
+		require.NoError(t, err)
+
+		svc.client = &mockHTTPClient{postValue: &http.Response{
+			StatusCode: http.StatusOK, Body: nil,
+		}}
+
+		reqBytes, err := json.Marshal(&verifyPresentationRequest{
+			Checks:    []string{},
+			Domain:    uuid.NewString(),
+			Challenge: uuid.NewString(),
+			VP:        []byte(validVP),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, verifyPresentationPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.verifyPresentation(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("bad request", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+
+		svc, err := New(config)
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, verifyPresentationPath, strings.NewReader("invalid-json"))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.verifyPresentation(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to decode request")
+	})
+
+	t.Run("verification failure", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+
+		svc, err := New(config)
+		require.NoError(t, err)
+
+		svc.client = &mockHTTPClient{postErr: fmt.Errorf("post error")}
+
+		reqBytes, err := json.Marshal(&verifyPresentationRequest{
+			Checks:    []string{},
+			Domain:    uuid.NewString(),
+			Challenge: uuid.NewString(),
+			VP:        []byte(validVP),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, verifyPresentationPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.verifyPresentation(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to verify vp")
+
+		svc.client = &mockHTTPClient{postValue: &http.Response{
+			StatusCode: http.StatusBadRequest, Body: nil,
+		}}
+
+		rr = httptest.NewRecorder()
+
+		svc.verifyPresentation(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to decode request")
+
+		svc.client = &mockHTTPClient{postValue: &http.Response{
+			StatusCode: http.StatusBadRequest, Body: ioutil.NopCloser(strings.NewReader("invalid signature")),
+		}}
+
+		req, err = http.NewRequest(http.MethodPost, verifyPresentationPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr = httptest.NewRecorder()
+
+		svc.verifyPresentation(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to verify presentation")
 	})
 }
 
