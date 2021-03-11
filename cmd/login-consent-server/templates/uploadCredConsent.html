@@ -100,11 +100,11 @@ SPDX-License-Identifier: Apache-2.0
                         <div class="px-6 py-4 bg-gray-100 justify-center">
                             <p class="font-bold text-xl text-black mb-2">An application requests access to your data</p>
                             <form action="" method="POST">
-                                <p class="text-gray-700 text-base"><strong>{{.ClientID}}</strong> wants access resources on your behalf:</p>
+                                <p class="text-gray-700 text-base"><strong>{{.ClientName}}</strong> wants access resources on your behalf:</p>
                                 {{range $element := .Scope}}
                                 <label class="md:w-2/3 block text-gray-500 font-bold">
-                                    <input class="mr-2 leading-tight filled-in" type="checkbox" id="{{$element}}" value="{{$element}}" name="grant_scope" checked="checked" />
-                                    <span class="text-lg text-black" id="scopeName" for="{{$element}}">{{$element}}</span>
+                                    <input {{if eq $element "openid" "offline_access"}}type="hidden"{{end}} class="mr-2 leading-tight filled-in" type="checkbox" id="{{$element}}" value="{{$element}}" name="grant_scope" checked="checked" />
+                                    <span {{if eq $element "openid" "offline_access"}}hidden{{end}} class="text-lg text-black" id="{{$element}}-name" for="{{$element}}">{{$element}}</span>
                                     {{end}}
                                 </label>
                                 <br>
@@ -190,9 +190,9 @@ SPDX-License-Identifier: Apache-2.0
         return scopes[name];
     }
     $(document).ready(function () {
-        var name = document.getElementById("scopeName").innerText
-        var scopeName =  getScopeName(name);
-        document.getElementById("scopeName").innerText = scopeName;
+        {{range $element := .Scope}}
+        document.getElementById("{{$element}}-name").innerText = getScopeName("{{$element}}");
+        {{end}}
     });
 </script>
 </body>
