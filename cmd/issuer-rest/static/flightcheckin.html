@@ -1,0 +1,370 @@
+<!--
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ -->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta charset="utf-8">
+    <link rel="icon" type="images/x-icon" href="img/flight_logo.png" >
+    <title>Flight Check In</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="author" content="">
+
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss/dist/tailwind.min.css">
+
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <style>
+        .gradient {
+            background: linear-gradient(to right, #136a8a, #136a8a);
+        }
+    </style>
+</head>
+
+<body class="leading-normal tracking-normal text-white" style="font-family: 'Source Sans Pro', sans-serif;">
+<div class="max-w mx-auto sm:px-6 lg:px-32 gradient">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="flex items-center"> <img class="block lg:block h-48 w-auto" src="img/flight_logo.png">
+            <a href="/flightcheckin" class="text-white bold text-3xl"></a>
+        </div>
+        <div class="flex items-center">
+        <nav class = "opacity-95">
+            <div class="max-w-2xl mx-auto px-2 sm:px-6 lg:px-4">
+                <div class="relative flex items-center justify-between h-16">
+                    <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
+                        <div class="hidden sm:block sm:ml-6">
+                            <div class="flex space-x-4">
+                                <a href="/flightcheckin" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Home</a>
+                            </div>
+                        </div>
+                        <div class="hidden sm:block sm:ml-6">
+                            <div class="flex space-x-4">
+                                <a href="/" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Information</a>
+                            </div>
+                        </div>
+                        <div class="hidden sm:block sm:ml-6">
+                            <div class="flex space-x-4">
+                                <a href="/" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Services</a>
+                            </div>
+                        </div>
+                        <div class="hidden sm:block sm:ml-6">
+                            <div class="flex space-x-4">
+                                <a href="/" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Deals & Offers</a>
+                            </div>
+                        </div>
+                        <div class="hidden sm:block sm:ml-6">
+                            <div class="flex space-x-4">
+                                <a href="/" class="text-white bold hover:bg-gray-300 hover:text-black px-3 py-6 rounded-md text-lg"><i class="fa fa-phone" aria-hidden="true"></i>Call us</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+            <div class="flex items-center justify-end">
+                <i class="fa fa-user-circle mr-4 font-bold"></i>
+                <h2 class="text-white font-bold text-xl">Jacky Louis</h2>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<div class="row-span-8 col-span-3 px-48 py-12 text-center" id="homeContent" style="display: block">
+    <p class="text-gray-700 text-2xl text-leading">
+        Fly with Taylor Today! Anywhere within the </br>
+        Tri State Area for an affordable price
+    </p>
+
+    <p class="text-gray-700 text-3xl text-leading py-8">
+        Your Flight is booked, Jacky Louis
+    </p>
+
+    <p class="text-gray-700 bold text-3xl font-bold text-leading">
+        Booking Reference: <a  class="text-green-600 " id="bookingNumber"></a>
+    </p>
+
+    <div class="row-span-4 col-span-4 px-48 py-12 text-left">
+        <p class="mt-2 text-lg text-gray-600">
+            <a class=" text-2xl font-bold"> Digital Booking Reference </a> </br>
+            If you have a Digital Credential Wallet, you can save time and money by checking in with a Digital Booking Reference from
+            <a class="underline italic text-blue-600"> Taylor Chartered Flight</a>.
+        </p>
+        <p class="mt-2 text-xl font-bold text-gray-600 py-2">
+            <a class="underline text-blue-600" href="/">Learn More</a>
+        </p>
+
+        <p class="mt-2 text-xl font-bold text-gray-600 py-2">
+            Click <a class="underline text-blue-600" href="/flightcheckin">Here</a> to collect your Digital Booking Reference.
+        </p>
+
+        <input type="text" id="holder" class="hidden"/>
+    </div>
+
+    <h4 class="w-full p-4 text-2xl font-bold text-center text-red-500" id="error-board"></h4>
+    <div class="flex space-x-4 justify-center py-2">
+        <a class="w-64 bg-green-300 hover:bg-green-900 hover:shadow hover:text-white text-center text-gray-800 text-xl font-bold py-4 px-2 border border-blue-900 rounded shadow"
+                type="submit" id="linkWalletBtn"><i class="fa fa-link" aria-hidden="true"></i> Link Wallet </a>
+        <a class="w-64 bg-gray-300 text-center text-gray-800 text-xl font-bold py-4 px-2 border border-blue-900 rounded shadow" type="submit" id="bookingBtn"><i class="fa fa-id-badge" aria-hidden="true"></i>Collect Booking Ref</a>
+    </div>
+</div>
+
+<div class="row-span-8 col-span-3 px-12 py-10 text-center text-black" id="bookingRef" style="display: none">
+    <div class="flex font-sans justify-center items-center h-screen">
+        <div class="w-full max-w-sm mx-4 shadow-lg rounded-lg">
+            <div class="py-4 px-6 flex justify-between items-end bg-white rounded-lg rounded-b-none gradient">
+                <div>
+                    <img src="img/flight_logo.png" class="object-contain h-48 w-full">
+                </div>
+            </div>
+            <div>
+                <span class="uppercase font-bold text-grey-darkest py-2 tracking-wide text-xl">Boarding pass</span>
+            </div>
+
+            <div class="flex bg-red justify-around items-center py-16 px-6 sm:px-12 bg-destination ">
+                <div class="flex-1 text-5xl font-bold text-black tracking-wide text-shadow-lg">SFO</div>
+                <div class="mx-8">
+                    <i class="fa fa-plane w-24" aria-hidden="true"></i>
+                </div>
+                <div class="flex-1 text-right text-5xl font-bold text-black tracking-wide text-shadow-lg">ETU</div>
+            </div>
+
+
+            <div class="flex gradient px-6 sm:px-12 py-4">
+                <div class="w-2/5">
+                    <span class="uppercase text-white block tracking-wide mb-1 font-thin text-xs">date</span>
+                    <span class="uppercase text-white block tracking-wide text-sm">3/28/2021</span>
+                </div>
+                <div class="w-1/5">
+                    <span class="uppercase text-white block tracking-wide mb-1 font-thin text-xs">gate</span>
+                    <span class="uppercase text-white block tracking-wide text-sm">51b</span>
+                </div>
+                <div class="w-2/5">
+                    <span class="uppercase text-white block tracking-wide mb-1 font-thin text-xs">boarding</span>
+                    <span class="uppercase text-white block tracking-wide text-sm">2.50 PM</span>
+                </div>
+            </div>
+
+
+            <div class="py-8 px-6 sm:px-12 bg-white bg-plane rounded-lg rounded-t-none">
+                <div class="flex">
+                    <div class="w-3/5">
+                        <div class="mb-3">
+                            <h4 class="text-xs uppercase tracking-wide text-grey-darker">Passenger</h4>
+                            <p class="font-semibold tracking-wide text-purple-400" class="passenger-name">Jacky Louis</p>
+                            <p><small></small></p>
+                        </div>
+                        <div class="mb-3">
+                            <h4 class="text-xs uppercase tracking-wide text-grey-darker">Departure</h4>
+                            <p class="font-semibold tracking-wide text-grey-darkest">12:20</p>
+                        </div>
+                        <div class="">
+                            <h4 class="text-xs uppercase tracking-wide text-grey-darker">Estimate arrive</h4>
+                            <p class="font-semibold tracking-wide text-grey-darkest">17:23</p>
+                        </div>
+                    </div>
+                    <div class="small-3 columns">
+                        <div class="mb-3">
+                            <h4 class="text-xs uppercase tracking-wide text-grey-darker">Class</h4>
+                            <p class="font-semibold tracking-wide text-grey-darkest">Prime</p>
+                        </div>
+                        <div class="mb-3">
+                            <h4 class="text-xs uppercase tracking-wide text-grey-darker">Seat</h4>
+                            <p class="font-semibold tracking-wide text-grey-darkest">23A</p>
+                        </div>
+                        <div class="">
+                            <h4 class="text-xs uppercase tracking-wide text-grey-darker">Flight</h4>
+                            <p class="font-semibold tracking-wide text-grey-darkest">A3920</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 p-2 bg-white">
+                    <img src="img/barcode.jpg" alt="" class="h-16 w-full" />
+                </div>
+            </div>
+
+        </div>
+    </div>
+    </div>
+    <span id="error"></span>
+    <div class="py-12">
+    </div>
+<footer class="text-center gradient">
+    <section class="container mx-auto text-center">
+        <div class="text-sm text-white font py-6">
+            <img class="object-contain object-top-center h-32 w-full" src="img/flight_logo.png">
+            Copyright &copy; <a href="https://securekey.com/"  class="text-white hover:text-green-700" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+        </div>
+    </section>
+</footer>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    function ready(fn) {
+        if (document.readyState !== 'loading'){
+            fn();
+        } else {
+            document.addEventListener('DOMContentLoaded', fn);
+        }
+    }
+    ready(() => {
+        document.getElementById("bookingNumber").innerHTML = randomString();
+        document.getElementById('linkWalletBtn').addEventListener('click', performLinkWallet);
+    });
+
+    installHandler()
+        .catch(e => console.error('Error in installHandler:', e));
+
+    async function installHandler() {
+        console.log('Loading polyfill...');
+        try {
+            await credentialHandlerPolyfill.loadOnce();
+        } catch (e) {
+            console.error('Error in loadOnce:', e);
+        }
+    }
+    async function performCollectBookingRef(){
+        document.getElementById("error-board").innerText = "";
+        var holder = document.getElementById("holder").innerText;
+        if (holder === "") {
+            document.getElementById("error-board").innerText = "Wallet is not Linked.";
+            return;
+        }
+
+        let credentialRequest = {
+            "holder":holder,
+            "collection": "boardingpasses",
+            "scope": "BookingReferenceCredential",
+            "vcsProfile": "didkey-bbsblssignature2020-bls12381g2",
+            "userID" : "100"
+        };
+
+         axios.post('/credential',
+            credentialRequest
+        ).then(function (response) {
+             const bookingButton = document.getElementById('bookingBtn');
+             const linkWalletButton = document.getElementById("linkWalletBtn");
+             bookingButton.style.backgroundColor = "rgba(178,185,184,0.78)";
+             linkWalletButton.style.backgroundColor = "rgba(178,185,184,0.78)";
+              storeCredential(response.data);
+        }).catch(error => {
+            console.log(error);
+            document.getElementById("error-board").innerText = "Failed to Issue Boarding Pass";
+        });
+    }
+    async function storeCredential(credentialToStore) {
+        console.log('storing booking reference credential...', credentialToStore);
+        const vp = {
+            "@context": [
+                "https://www.w3.org/2018/credentials/v1"
+            ],
+            type: "VerifiablePresentation",
+            verifiableCredential: [
+                credentialToStore
+            ]
+        };
+
+        // Construct the WebCredential wrapper around the credential to be stored
+        const webCredentialWrapper = new WebCredential('VerifiablePresentation', vp);
+        // Use Credential Handler API to store
+        result = await navigator.credentials.store(webCredentialWrapper);
+        console.log('Result of receiving via store() request:', result);
+        if (!result) {
+            document.getElementById("error-board").innerText = "Failed to issue Boarding Pass. Retry";
+        } else {
+            document.getElementById("bookingRef").style.display = "block";
+            document.getElementById("homeContent").style.display = "none";
+        }
+    };
+
+    async function performLinkWallet() {
+        document.getElementById("error-board").innerText = "";
+
+        const challenge = uuidv4();
+        const domain = window.location.hostname;
+
+        const credentialQuery = {
+            web: {
+                VerifiablePresentation: {
+                    query: {type: "DIDAuth"},
+                    challenge: challenge,
+                    domain: domain
+                }
+            }
+        };
+
+        console.log("Sending credential query", credentialQuery);
+
+        const result = await navigator.credentials.get(credentialQuery);
+        console.log("DID Auth web credential response:", result.data);
+
+
+        if (!result || !result.data) {
+            console.log("Unable to get DID authorization, no response");
+            return;
+        }
+
+        if (!result.data.holder) {
+            console.log("invalid DID auth response, failed to get holder info from response", result.data);
+            document.getElementById("error-board").innerText = "Authentication failed, please try again.";
+            return;
+        }
+
+       let didAuthData = {
+            "holder":result.data.holder,
+            "domain" :domain,
+            "challenge": challenge,
+            "didAuthResp": result.data
+        };
+
+        axios.post('/verify/didauth',
+            didAuthData
+        ).then(function (response) {
+            const bookingButton = document.getElementById('bookingBtn');
+            const linkWalletButton = document.getElementById("linkWalletBtn");
+            bookingButton.addEventListener('click', performCollectBookingRef);
+            bookingButton.style.backgroundColor = "#1D976C";
+            linkWalletButton.addEventListener('click', null);
+            linkWalletButton.style.backgroundColor = "rgba(178,185,184,0.78)";
+            document.getElementById("holder").innerText = result.data.holder;
+            console.log("generate did auth response:", response);
+        }).catch(error => {
+            console.log(error);
+            document.getElementById("error-board").innerText = "Authentication failed, please try again.";
+        });
+    }
+
+    function randomString() {
+        var chars =  '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        var result = '';
+        for (var i = 6; i > 0; --i) result += chars[Math.round(Math.random() * (chars.length - 1))];
+        return result;
+    }
+
+    function uuidv4() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+</script>
+</body>
+</html>
+
+
