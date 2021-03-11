@@ -14,15 +14,15 @@ require (
 	github.com/go-openapi/strfmt v0.20.0
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
-	github.com/hyperledger/aries-framework-go v0.1.6
+	github.com/hyperledger/aries-framework-go v0.1.7-0.20210310014234-cfa8c6d6e2f4
 	github.com/hyperledger/aries-framework-go-ext/component/storage/couchdb v0.0.0-20210306194409-6e4c5d622fbc
 	github.com/hyperledger/aries-framework-go-ext/component/storage/mysql v0.0.0-20210306194409-6e4c5d622fbc
-	github.com/hyperledger/aries-framework-go/component/storageutil v0.0.0-20210306162754-1a1e0c4a378e
-	github.com/hyperledger/aries-framework-go/spi v0.0.0-20210306162754-1a1e0c4a378e
+	github.com/hyperledger/aries-framework-go/component/storageutil v0.0.0-20210310014234-cfa8c6d6e2f4
+	github.com/hyperledger/aries-framework-go/spi v0.0.0-20210310014234-cfa8c6d6e2f4
 	github.com/spf13/cobra v1.1.1
 	github.com/stretchr/testify v1.7.0
-	github.com/trustbloc/edge-core v0.1.6
-	github.com/trustbloc/edge-service v0.1.7-0.20210310144941-bcdb3f1e8cbd
-	github.com/trustbloc/edv v0.1.6
+	github.com/trustbloc/edge-core v0.1.7-0.20210310142750-7eb11997c4a9
+	github.com/trustbloc/edge-service v0.1.7-0.20210310202014-13c73a748961
+	github.com/trustbloc/edv v0.1.7-0.20210310153759-93231203a6e5
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 )
