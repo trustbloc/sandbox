@@ -11,6 +11,7 @@ echo "Create client"
 hydra clients create \
     --endpoint https://hydra.trustbloc.local:4445 \
     --id auth-code-client \
+    --name Share\ Your\ Credentials \
     --secret secret \
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \

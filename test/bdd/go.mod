@@ -15,8 +15,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.7.0
 	github.com/square/go-jose/v3 v3.0.0-20200630053402-0a67ce9b0693
-	github.com/trustbloc/edge-core v0.1.6
-	github.com/trustbloc/edge-service v0.1.6
+	github.com/trustbloc/edge-core v0.1.7-0.20210310142750-7eb11997c4a9
+	github.com/trustbloc/edge-service v0.1.7-0.20210310202014-13c73a748961
 	github.com/trustbloc/fabric-peer-test-common v0.1.6
 )
 
