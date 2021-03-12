@@ -9,6 +9,10 @@
         "url": "https://uniresolver.io/1.0/identifiers/$1"
       },
       {
+        "pattern": "^(did:web:.+)$",
+        "url": ""
+      },
+      {
         "pattern": "^(did:.+)$",
         "url": "https://uni-resolver-web.trustbloc.local/1.0/identifiers/$1"
       }
