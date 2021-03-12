@@ -76,7 +76,9 @@ SPDX-License-Identifier: Apache-2.0
             <form method="post" id="vpForm" action="/register" class="shadow-lg w-80 p-4 flex flex-col">
                 <div class="my-5 text-sm">
                     <label for="nationalID" class="block text-black">Social Security Number</label>
-                    <input type="text" class="rounded-sm  px-2 py-3 mt-4 focus:outline-none bg-gray-100 w-full" id="nationalID" name="nationalID" pattern="\d{3}-?\d{2}-?\d{4}" class="border" value="555-55-5555" oninvalid="setCustomValidity('Valid format is 123-45-6789')" />
+                    <input type="text" class="rounded-sm  px-2 py-3 mt-4 focus:outline-none bg-gray-100 w-full" id="nationalID" name="nationalID" pattern="\d{3}-?\d{3}-?\d{3}" class="border" value="555-555-555"
+                           oninput="setCustomValidity(''); checkValidity(); setCustomValidity(validity.valid ? '' :'Valid format is 123-456-789');"  />
+
                 </div>
                 <div class="my-5 text-sm">
                     <label for="username" class="block text-black">Email</label>

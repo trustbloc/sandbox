@@ -76,7 +76,7 @@ SPDX-License-Identifier: Apache-2.0
             </nav>
             <div class="flex items-center justify-end">
                 <i class="fa fa-user-circle mr-4 "></i>
-                <h2 class="text-white bold text-xl">Jacky Louis</h2>
+                <h2 class="text-white bold text-xl">Louis Pasteur</h2>
             </div>
         </div>
 
@@ -84,7 +84,7 @@ SPDX-License-Identifier: Apache-2.0
     </div>
 </div>
 
-<div class="row-span-8 col-span-3 px-48 py-12 text-center">
+<div class="row-span-8 col-span-3 px-48 py-12 text-center" id="verificationDiv" style="display: block">
     <p class="text-gray-700 text-3xl text-leading">
         Fly with Taylor Today! Anywhere within the
         Tri State Area for an affordable price
@@ -97,7 +97,7 @@ SPDX-License-Identifier: Apache-2.0
 
     <h1 class="w-full my-2 text-3xl text-center bg-red-100 text-red-500" id ="msg-board"></h1>
 
-    <div class=" grid flex flex-wrap content-center text-black shadow-md">
+    <div class=" grid flex flex-wrap content-center text-black shadow-md" >
         <div>
             <table class="grid text-xl px-18 text-gray-700 text-center ">
                 <tbody>
@@ -162,13 +162,121 @@ SPDX-License-Identifier: Apache-2.0
 
         </div>
     </div>
+</div>
 
-    <h4 class="w-full p-4 text-2xl font-bold text-center text-red-500" id="error-board"></h4>
+    <div class="row-span-8 col-span-3 px-48 py-12 text-center" id="successDivMsg" style="display: none" >
+        <p class="text-gray-700 text-3xl text-leading">
+            Fly with Taylor Today! Anywhere within the
+            Tri State Area for an affordable price
+        </p>
+    <div class=" grid flex flex-wrap content-center text-black">
+        <p class="text-green-600 text-3xl font-bold py-10 text-leading text-center">
+            Check-In Successful
+        </p>
+        <p class="text-black text-2xl py-2 text-leading text-center">
+            Your Information is collected by Taylor Airlines:
+        </p>
+        <h4 class="w-full p-4 text-2xl font-bold text-center text-red-500" id="error-board"></h4>
+    </div>
+    </div>
+<div class="container  mx-auto px-1 lg:w-1/3 sm:w-full shadow-lg" id="successDiv" style="display: none">
+    <table class="border-collapse w-full text-black text-left" id="bookRefData">
+        <thead class="border-b">
+        <tr>
+            <th class="p-3 text-2xl font-bold uppercase text-gray-600  lg:table-cell" id="bookRefHeader"> </th>
+        </tr>
+        </thead>
+    </table>
+    <table class="border-collapse w-full   text-black text-left" id="prData">
+        <thead class="border-b">
+        <tr>
+            <th class="p-3 text-2xl font-bold uppercase text-gray-600  lg:table-cell" id="prDataHeader"></th>
+        </tr>
+        </thead>
+    </table>
+    <table class="border-collapse w-full   text-black text-left" id="vaccinationData">
+        <thead class="border-b">
+        <tr>
+            <th class="p-3 text-2xl font-bold uppercase text-gray-600  lg:table-cell" id="vaccinationDataHeader"></th>
+        </tr>
+        </thead>
+    </table>
+    <div class="flex space-x-4 justify-center py-8">
+        <a class="w-64 bg-green-100 hover:bg-green-600 hover:shadow hover:text-white text-center text-gray-800 text-xl font-bold py-4 px-2 border border-blue-900 rounded shadow"
+           id="release" href="/boardingpass"> Get Your Boarding Pass </a>
+        <input type="button" class="w-64 bg-gray-100 hover:bg-blue-900 hover:shadow hover:text-white text-center text-gray-800 text-xl font-bold py-4 px-2 border border-blue-900 rounded shadow"
+               value="Choose your seat Selection" />
+    </div>
+</div>
+<div class="row-span-8 col-span-3 px-48 py-12 text-center" id="failureDivMsg" style="display: none" >
+    <p class="text-gray-700 text-3xl text-leading">
+        Fly with Taylor Today! Anywhere within the
+        Tri State Area for an affordable price
+    </p>
+    <div class=" grid flex flex-wrap content-center text-black">
+        <p class="text-red-600 text-3xl font-bold py-10 text-leading text-center">
+            Problem with Check-In
+        </p>
+        <p class="text-black text-2xl py-2 text-leading text-center">
+            Your Information is collected by Taylor Airlines:
+        </p>
+        <h4 class="w-full p-4 text-2xl font-bold text-center text-red-500" id="error-board"></h4>
+    </div>
+</div>
+<div class="container mx-auto px-1 lg:w-1/2 sm:w-full shadow-lg" id="failureDiv" style="display: none">
+    <table class="border-collapse w-full text-black text-left" >
+        <thead class="border-b">
+        <tr>
+            <th class="p-3 text-2xl font-bold uppercase text-gray-600 lg:table-cell"> Booking Reference: </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="flex flex-wrap justify-center ">
+            <th class="w-full lg:w-auto p-3 text-black text-lg block lg:table-cell relative lg:static"><i class="fa fa-times text-2xl text-red-600" aria-hidden="true"></i></th>
+            <th class="w-full lg:w-auto p-3 text-black text-lg lg:table-cell  relative lg:static">This is not valid Taylor Chartered Flights Booking Ref.</th>
+        </tr>
+        </tbody>
+    </table>
+    <table class="border-collapse w-full text-black text-left" >
+        <thead class="border-b">
+        <tr>
+            <th class="p-3 text-2xl font-bold uppercase text-gray-600 lg:table-cell"> Real ID: </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="flex flex-wrap justify-center ">
+            <th class="w-full lg:w-auto p-3 text-black text-lg block lg:table-cell relative lg:static"><i class="fa fa-times text-2xl text-red-600" aria-hidden="true"></i></th>
+            <th class="w-full lg:w-auto p-3 text-black text-lg lg:table-cell  relative lg:static">There was a problem with your digital Permanent Resident Card.</th>
+        </tr>
+        </tbody>
+    </table>
+    <table class="border-collapse w-full  text-black text-left">
+        <thead class="border-b">
+        <tr>
+            <th class="p-3 text-2xl font-bold uppercase text-gray-600 lg:table-cell">Vaccination Info:</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="flex flex-wrap justify-center ">
+            <th class="w-full lg:w-auto p-3 text-black  text-lg block lg:table-cell relative lg:static"><i class="fa fa-times text-2xl text-red-600" aria-hidden="true"></i></th>
+            <th class="w-full lg:w-auto p-3 text-black text-lg lg:table-cell  relative lg:static">COVID-19 Vaccination is not received.</th>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="flex flex-wrap justify-center py-8">
+        <p class="text-red-600 text-lg text-center">You will be administrated a Rapid Test on your arrival at the gate and it must become negative before you board the flight.</p>
+        <a class="w-64 bg-gray-100 hover:bg-gray-500 hover:shadow hover:text-white text-center text-gray-800 text-xl font-bold py-4 px-2 border border-blue-900 rounded shadow"
+           id="release" href="/flightverify"> Retry </a>
+    </div>
+
+
+</div>
 
     <span id="error"></span>
     <div class="py-12">
     </div>
-</div>
+
 <footer class="text-center gradient">
     <section class="container mx-auto text-center">
         <div class="text-sm text-white font py-6">
@@ -189,7 +297,6 @@ SPDX-License-Identifier: Apache-2.0
         }
     }
     ready(() => {
-
     });
 
     installHandler()
@@ -203,7 +310,7 @@ SPDX-License-Identifier: Apache-2.0
                         {
                             type: "QueryByExample",
                             credentialQuery: {
-                                reason: "Please present your booking reference.",
+                                reason: "Please present your booking reference to complete your check-in.",
                                 example: {
                                     "@context": [
                                         "https://www.w3.org/2018/credentials/v1",
@@ -216,7 +323,7 @@ SPDX-License-Identifier: Apache-2.0
                         {
                             type: "QueryByExample",
                             credentialQuery: {
-                                reason: "Please present your identity document.",
+                                reason: "Please present your identity document to complete your check-in.",
                                 example: {
                                     "@context": [
                                         "https://www.w3.org/2018/credentials/v1",
@@ -229,7 +336,7 @@ SPDX-License-Identifier: Apache-2.0
                         {
                             type: "QueryByFrame",
                             credentialQuery: {
-                                reason: "Please present your proof of vaccination.",
+                                reason: "Please present your proof of vaccination to complete your check-in.",
                                 frame: {
                                     "@context": [
                                         "https://www.w3.org/2018/credentials/v1",
@@ -319,15 +426,96 @@ SPDX-License-Identifier: Apache-2.0
         axios.post('/verify/presentation',
             presentationData
         ).then(function (response) {
-            //todo : handle the response in success page.
-            document.getElementById("msg-board").innerText = "success";
+            document.getElementById("verificationDiv").style.display = "none";
+            document.getElementById("successDiv").style.display = "block";
+            document.getElementById("successDivMsg").style.display ="block";
+            prettyTable(result.data);
             console.log("generate did auth response:", response);
         }).catch(error => {
-            console.log("what is error", error);
-            document.getElementById("error-board").innerText = "Authentication failed, please try again.";
+            console.log(error);
+            document.getElementById("failureDivMsg").style.display ="block";
+            document.getElementById("failureDiv").style.display ="block";
         });
     }
 
+    function prettyTable(presentationData){
+        console.log("verifiable presentation", presentationData);
+        flatten(presentationData);
+    }
+
+    function flatten(json) {
+        console.log("verifiable credential ",json["verifiableCredential"]);
+            for (var key in json['verifiableCredential']) {
+                replaceKeys(json['verifiableCredential'][key].credentialSubject);
+                for (finalKey in json["verifiableCredential"][key].type) {
+                    if (json["verifiableCredential"][key].type[finalKey] === "BookingReferenceCredential"){
+                        for (var subKey in json['verifiableCredential'][key].credentialSubject) {
+                            if (subKey !== "id") {
+                                var table = document.getElementById("bookRefData");
+                                document.getElementById("bookRefHeader").innerHTML= '<i class=\"fa fa-check text-green-600\" aria-hidden=\"true\"></i>Booking Reference:';
+                                createTable(table, subKey, json['verifiableCredential'][key].credentialSubject[subKey]);
+                            }
+                        }
+                    }
+                    if (json["verifiableCredential"][key].type[finalKey] === "PermanentResidentCard"){
+                        for (var subKey in json['verifiableCredential'][key].credentialSubject) {
+                            if (subKey !== "image" && subKey !== "id" && subKey !== "Type") {
+                                var table = document.getElementById("prData");
+                                document.getElementById("prDataHeader").innerHTML = '<i class=\"fa fa-check text-green-600\" aria-hidden=\"true\"></i>Real ID:';
+                                createTable(table, subKey, json['verifiableCredential'][key].credentialSubject[subKey]);
+                            }
+                        }
+                    }
+                    if (json["verifiableCredential"][key].type[finalKey] === "VaccinationCertificate"){
+                        for (var subKey in json['verifiableCredential'][key].credentialSubject) {
+                            if (subKey !== "https://w3id.org/vaccination#recipient" && subKey !== "id") {
+                                var table = document.getElementById("vaccinationData");
+                                document.getElementById("vaccinationDataHeader").innerHTML = '<i class=\"fa fa-check text-green-600\" aria-hidden=\"true\"></i>Vaccination Info:';
+                                createTable(table, subKey, json['verifiableCredential'][key].credentialSubject[subKey]);
+                            }
+                        }
+                    }
+
+                   }
+               }
+
+          }
+    function getFriendlyKeyName(name) {
+        var keys = {
+            "issuedBy": 'Issued By',
+            "referenceNumber": 'Booking Ref No.',
+            "lprNumber": 'USCIS #',
+            "birthCountry": 'Country of Birth',
+            "familyName" : 'Last Name',
+            "birthDate":   'Date of Birth',
+            "givenName": 'Given Name',
+            "type":     'Type',
+            "countryOfVaccination" :'Vaccination Location'
+        };
+        console.log("friendly key", keys[name]);
+        return keys[name];
+
+    }
+    function replaceKeys(json) {
+        for (var key in json) {
+            var friendlyKeyName =  getFriendlyKeyName(key);
+            console.log("fname", friendlyKeyName);
+            if (friendlyKeyName !== 'undefined'){
+                json[friendlyKeyName] = json[key];
+                delete json[key];
+            }
+        }
+    }
+    function  createTable(table, key, value){
+        if (key !== 'undefined') {
+      var tr = "<tr>";
+      tr +=
+          "  <td class=\"w-full lg:w-auto px-3 text-gray-800 text-left text-lg block lg:table-cell relative lg:static  \">" + key + "</td>" +
+          "  <td class=\"w-full lg:w-auto px-3 text-black text-center text-lg block lg:table-cell relative lg:static  \">" + value + "</td>" +
+          "  </tr>";
+      table.innerHTML += tr;
+        }
+    }
     async function getSelectiveDisclosure() {
         await getVP("selectiveDisclosure")
     }

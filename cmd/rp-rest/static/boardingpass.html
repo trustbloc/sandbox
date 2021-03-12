@@ -11,7 +11,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta charset="utf-8">
     <link rel="icon" type="images/x-icon" href="img/flight_logo.png" >
-    <title>Flight Check In</title>
+    <title>Boarding Pass</title>
     <meta name="description" content="">
     <meta name="keywords" content="">
     <meta name="author" content="">
@@ -84,70 +84,98 @@ SPDX-License-Identifier: Apache-2.0
     </div>
 </div>
 
-<div class="row-span-8 col-span-3 px-48 py-8 text-center">
-    <p class="text-gray-700 text-2xl text-leading">
+<div class="row-span-8 col-span-3 px-48 py-12 text-center" style="display: block">
+    <p class="text-gray-700 text-3xl text-leading">
         Fly with Taylor Today! Anywhere within the
         Tri State Area for an affordable price
     </p>
 
-    <p class="text-gray-700 text-4xl font-bold py-10 text-leading">
-        <i class="fa fa-plane"></i>   Flight Check-In
-    </p>
-
-    <div class="grid grid-cols-2 divide-x divide-black text-black">
-        <div>
-            <p class="w-1/2 text-4xl font-bold ">Digital Check-in</p>
-            <p class="py-4 px-16 text-lg"> Checking in with Digital Credentials and compatible <a class="text-blue-300 underline">Digital Wallet</a>
-                is fast and efficient.
-            <p>
-
-            <ul class="text-justify px-16 py-4 text-lg"> The Digital Credentials you will require are:
-                <li class="py-2"> <i class="fa fa-check-circle-o px-2" aria-hidden="true"></i>Taylor Charter Flights Booking </li>
-                <li class="py-2"> <i class="fa fa-check-circle-o px-2" aria-hidden="true"></i> TSA REAL ID </li>
-                <li class="py-2"> <i class="fa fa-check-circle-o px-2" aria-hidden="true"></i>Vaccination Proof</li>
-            </ul>
-            </p>
-            <div class="rounded px-16 pt-6 mb-4 flex flex-col">
-            <a class="w-48 bg-green-300 hover:bg-green-800 hover:shadow hover:text-white text-center text-gray-800 text-xl font-bold py-4 px-2 border border-blue-900 rounded shadow"
-               type="submit" href="/flightverify"><i class="fa fa-check" aria-hidden="true"></i> Check-In </a>
-            </div>
-        </div>
-        <div>
-            <p class="w-1/2 text-4xl font-bold ">Manual</p>
-            <p class="py-4 px-8 text-lg text-left">
-                If you dont have access to Digital Credentials, you may still check-in by entering your information.
-            </p>
-            <p class="py-4 px-8 text-lg text-left">   Because of the regulatory requirements your information must be passed to external systems for verification.
-                This will result in a <span class="font-bold text-xl">$25</span> charge.
-            </p>
-                <div class="rounded px-8 pt-6 mb-4 flex flex-col text-left">
-                    <div class="mb-4">
-                        <label class="block text-grey-darker text-sm font-bold mb-2" for="username">
-                            Booking Number:
-                        </label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker" id="username" type="text" placeholder="Booking Number">
+    <div class="row-span-8 col-span-3 px-12 py-10 text-center text-black" id="bookingRef">
+        <div class="flex font-sans justify-center items-center h-screen">
+            <div class="w-full max-w-sm mx-4 shadow-lg rounded-lg">
+                <div class="py-4 px-6 flex justify-between items-end bg-white rounded-lg rounded-b-none gradient">
+                    <div>
+                        <img src="img/flight_logo.png" class="object-contain h-48 w-full">
                     </div>
-                    <div class="mb-6">
-                        <label class="block text-grey-darker text-sm font-bold mb-2" for="password">
-                           Last Name:
-                        </label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker" id="username" type="text" placeholder="Last Name">
-                    </div>
-                    <p class="w-48 bg-gray-300 text-center text-gray-800 text-xl font-bold py-4 px-8 border border-blue-900 rounded shadow"
-                       type="submit"> Agree </p>
+                </div>
+                <div>
+                    <span class="uppercase font-bold text-grey-darkest py-2 tracking-wide text-xl">Boarding pass</span>
+                </div>
 
+                <div class="flex bg-red justify-around items-center py-16 px-6 sm:px-12 bg-destination ">
+                    <div class="flex-1 text-5xl font-bold text-black tracking-wide text-shadow-lg">SFO</div>
+                    <div class="mx-8">
+                        <i class="fa fa-plane w-24" aria-hidden="true"></i>
+                    </div>
+                    <div class="flex-1 text-right text-5xl font-bold text-black tracking-wide text-shadow-lg">ETU</div>
                 </div>
 
 
+                <div class="flex gradient px-6 sm:px-12 py-4">
+                    <div class="w-2/5">
+                        <span class="uppercase text-white block tracking-wide mb-1 font-thin text-xs">date</span>
+                        <span class="uppercase text-white block tracking-wide text-sm">3/28/2021</span>
+                    </div>
+                    <div class="w-1/5">
+                        <span class="uppercase text-white block tracking-wide mb-1 font-thin text-xs">gate</span>
+                        <span class="uppercase text-white block tracking-wide text-sm">51b</span>
+                    </div>
+                    <div class="w-2/5">
+                        <span class="uppercase text-white block tracking-wide mb-1 font-thin text-xs">boarding</span>
+                        <span class="uppercase text-white block tracking-wide text-sm">2.50 PM</span>
+                    </div>
+                </div>
+
+
+                <div class="py-8 px-6 sm:px-12 bg-white bg-plane rounded-lg rounded-t-none">
+                    <div class="flex">
+                        <div class="w-3/5">
+                            <div class="mb-3">
+                                <h4 class="text-xs uppercase tracking-wide text-grey-darker">Passenger</h4>
+                                <p class="font-semibold tracking-wide text-purple-400" class="passenger-name">Louis Pasteur</p>
+                                <p><small></small></p>
+                            </div>
+                            <div class="mb-3">
+                                <h4 class="text-xs uppercase tracking-wide text-grey-darker">Departure</h4>
+                                <p class="font-semibold tracking-wide text-grey-darkest">12:20</p>
+                            </div>
+                            <div class="">
+                                <h4 class="text-xs uppercase tracking-wide text-grey-darker">Estimate arrive</h4>
+                                <p class="font-semibold tracking-wide text-grey-darkest">17:23</p>
+                            </div>
+                        </div>
+                        <div class="small-3 columns">
+                            <div class="mb-3">
+                                <h4 class="text-xs uppercase tracking-wide text-grey-darker">Class</h4>
+                                <p class="font-semibold tracking-wide text-grey-darkest">Prime</p>
+                            </div>
+                            <div class="mb-3">
+                                <h4 class="text-xs uppercase tracking-wide text-grey-darker">Seat</h4>
+                                <p class="font-semibold tracking-wide text-grey-darkest">23A</p>
+                            </div>
+                            <div class="">
+                                <h4 class="text-xs uppercase tracking-wide text-grey-darker">Flight</h4>
+                                <p class="font-semibold tracking-wide text-grey-darkest">A3920</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 p-2 bg-white">
+                        <img src="img/barcode.jpg" alt="" class="h-16 w-full" />
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
-
-    <h4 class="w-full p-4 text-2xl font-bold text-center text-red-500" id="error-board"></h4>
-
-    <span id="error"></span>
-    <div class="py-12">
-    </div>
 </div>
+
+<h4 class="w-full p-4 text-2xl font-bold text-center text-red-500" id="error-board"></h4>
+
+<span id="error"></span>
+<div class="py-12">
+</div>
+
 <footer class="text-center gradient">
     <section class="container mx-auto text-center">
         <div class="text-sm text-white font py-6">
