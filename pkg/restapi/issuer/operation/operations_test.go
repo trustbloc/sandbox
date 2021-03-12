@@ -2173,10 +2173,11 @@ func TestCreateCredentialHandler(t *testing.T) {
 		require.NoError(t, err)
 
 		reqBytes, err := json.Marshal(&createCredentialReq{
-			Holder:     uuid.NewString(),
-			Scope:      uuid.NewString(),
-			VCSProfile: uuid.NewString(),
-			UserID:     uuid.NewString(),
+			Holder:            uuid.NewString(),
+			Scope:             uuid.NewString(),
+			VCSProfile:        uuid.NewString(),
+			UserID:            uuid.NewString(),
+			CustomSubjectData: map[string]interface{}{"name": "test123"},
 		})
 		require.NoError(t, err)
 
