@@ -29,11 +29,6 @@
       "image": "uport/uni-resolver-driver-did-uport",
       "imagePort": "8081",
       "tag": "latest"
-    },
-    {
-      "pattern": "^(did:key:.+)$",
-      "image": "universalresolver/driver-did-key",
-      "tag": "latest"
     }
   ]
 }
