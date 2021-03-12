@@ -28,7 +28,7 @@ SPDX-License-Identifier: Apache-2.0
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <style>
         .gradient {
-            background: linear-gradient(to right, #302b63, #302b63, #302b63
+            background: linear-gradient(to right, #203A43, #2c5364,#203A43
             );
         }
     </style>
@@ -50,7 +50,7 @@ SPDX-License-Identifier: Apache-2.0
 
         <div class="flex items-center justify-end">
             <i class="fa fa-user-circle mr-4 "></i>
-            <h2 class="text-white bold text-xl">Jacky Labat</h2>
+            <h2 class="text-white bold text-xl">Jeff Molson</h2>
         </div>
     </div>
 </div>
@@ -76,7 +76,7 @@ SPDX-License-Identifier: Apache-2.0
             <div class="bg-white rounded my-6">
                 <table class="overflow-x-auto border-b w-full table-fixed text-black py-16" id="extractTable">
                     <thead>
-                    <tr class="border text-xl text-center text-white shadow-lg" style="background-color: #302b63">
+                    <tr class="border text-xl text-center text-white shadow-lg" style="background-color: #2c5364">
                         <th class="w-1/4">Application Name</th>
                         <th class="w-1/4">Submitted Time</th>
                         <th class="w-1/4"></th>
@@ -170,7 +170,7 @@ SPDX-License-Identifier: Apache-2.0
             var tr = "<tr class=\" text-lg text-black  text-left\">";
             tr += "<td class=\"  py-1 \">" + data["userDetails"][key].nationalID + "</td>" +
                 "<td class=\"  py-1 \"> " + data["userDetails"][key].name + "</td>" +
-                "<td class=\"  py-1 \"> " + data["userDetails"][key].did + "</td>" +
+                "<td class=\"  py-1  overflow-x-auto\"> " + data["userDetails"][key].did + "</td>" +
                 "</tr>";
             table.innerHTML += tr;
         }
