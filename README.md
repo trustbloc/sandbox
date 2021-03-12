@@ -30,7 +30,8 @@ Refer [Build](docs/demo/build.md) for more detailed information.
 - [Anonymous Comparator and Extractor - Relying Party (ACE-RP)](docs/ace-rp/README.md)
 
 ## Demo
-- [TrustBloc VCS](docs/demo/sandbox_vcs_playground.md) : CHAPI + VC Services
+- [TrustBloc VCS](docs/demo/sandbox_vcs_playground.md) : CHAPI + VC Services + Selective Disclosure
+  - [Flight Boarding use case](docs/demo/flight-boarding-usecase.md)
 - [TrustBloc Adapter](docs/demo/sandbox_adapter_playground.md) : CHAPI + DIDComm
   - [New Bank Account use case](docs/demo/new-bank-account-usecase.md)
   - [Register property use case](docs/demo/register-property-usecase.md)
