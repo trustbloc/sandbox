@@ -651,7 +651,18 @@ func (c *Operation) createCredentialHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// TODO support for dynamically adding subject data
+	// support for dynamically adding subject data
+	if len(req.CustomSubjectData) > 0 {
+		if s, ok := userData["vccredentialsubject"]; ok && len(req.CustomSubjectData) > 0 {
+			if subject, ok := s.(map[string]interface{}); ok {
+				for k, v := range req.CustomSubjectData {
+					subject[k] = v
+				}
+			}
+		} else {
+			userData["vccredentialsubject"] = req.CustomSubjectData
+		}
+	}
 
 	// create credential
 	cred, err := c.prepareCredential(userData, req.Scope, req.VCSProfile)

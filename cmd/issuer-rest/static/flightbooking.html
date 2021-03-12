@@ -241,12 +241,17 @@ SPDX-License-Identifier: Apache-2.0
             return;
         }
 
+        var bookingNumber = document.getElementById("bookingNumber").innerText;
+
         let credentialRequest = {
             "holder":holder,
             "collection": "boardingpasses",
             "scope": "BookingReferenceCredential",
             "vcsProfile": "didkey-bbsblssignature2020-bls12381g2",
-            "userID" : "100"
+            "userID" : "100",
+            "customSubjectData" : {
+                "referenceNumber" : bookingNumber
+            }
         };
 
          axios.post('/credential',
