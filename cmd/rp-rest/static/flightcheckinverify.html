@@ -83,6 +83,11 @@ SPDX-License-Identifier: Apache-2.0
 
     </div>
 </div>
+<div class="w-full h-full fixed top-0 left-0 bg-black opacity-75 z-50" id="loading-screen" style="display:none">
+        <span class="text-green-500 opacity-75 top-1/2 my-0 mx-auto block relative w-0 h-0" style="top: 50%;">
+         <i class="fa fa-spinner fa-spin fa-5x"></i>
+       </span>
+</div>
 
 <div class="row-span-8 col-span-3 px-48 py-12 text-center" id="verificationDiv" style="display: block">
     <p class="text-gray-700 text-3xl text-leading">
@@ -421,20 +426,23 @@ SPDX-License-Identifier: Apache-2.0
             "challenge": challenge,
             "vp": result.data
         };
-        console.log("what is presentation data", presentationData);
 
+        document.getElementById("loading-screen").style.display = "block";
         axios.post('/verify/presentation',
             presentationData
         ).then(function (response) {
             document.getElementById("verificationDiv").style.display = "none";
             document.getElementById("successDiv").style.display = "block";
             document.getElementById("successDivMsg").style.display ="block";
+            document.getElementById("loading-screen").style.display = "none";
             prettyTable(result.data);
             console.log("generate did auth response:", response);
         }).catch(error => {
             console.log(error);
+            document.getElementById("verificationDiv").style.display = "none";
             document.getElementById("failureDivMsg").style.display ="block";
             document.getElementById("failureDiv").style.display ="block";
+            document.getElementById("loading-screen").style.display = "none";
         });
     }
 
