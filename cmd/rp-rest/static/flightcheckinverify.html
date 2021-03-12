@@ -1,0 +1,340 @@
+<!--
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ -->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta charset="utf-8">
+    <link rel="icon" type="images/x-icon" href="img/flight_logo.png" >
+    <title>Flight Check In Verification</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="author" content="">
+
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss/dist/tailwind.min.css">
+
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <style>
+        .gradient {
+            background: linear-gradient(to right, #136a8a, #136a8a);
+        }
+    </style>
+</head>
+
+<body class="leading-normal tracking-normal text-white" style="font-family: 'Source Sans Pro', sans-serif;">
+<div class="max-w mx-auto sm:px-6 lg:px-32 gradient">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="flex items-center"> <img class="block lg:block h-48 w-auto" src="img/flight_logo.png">
+            <a href="/flightcheckin" class="text-white bold text-3xl"></a>
+        </div>
+        <div class="flex items-center">
+            <nav class = "opacity-95">
+                <div class="max-w-2xl mx-auto px-2 sm:px-6 lg:px-4">
+                    <div class="relative flex items-center justify-between h-16">
+                        <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
+                            <div class="hidden sm:block sm:ml-6">
+                                <div class="flex space-x-4">
+                                    <a href="/flightcheckin" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Home</a>
+                                </div>
+                            </div>
+                            <div class="hidden sm:block sm:ml-6">
+                                <div class="flex space-x-4">
+                                    <a href="/" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Information</a>
+                                </div>
+                            </div>
+                            <div class="hidden sm:block sm:ml-6">
+                                <div class="flex space-x-4">
+                                    <a href="/" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Services</a>
+                                </div>
+                            </div>
+                            <div class="hidden sm:block sm:ml-6">
+                                <div class="flex space-x-4">
+                                    <a href="/" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Deals & Offers</a>
+                                </div>
+                            </div>
+                            <div class="hidden sm:block sm:ml-6">
+                                <div class="flex space-x-4">
+                                    <a href="/" class="text-white bold hover:bg-gray-300 hover:text-black px-3 py-6 rounded-md text-lg"><i class="fa fa-phone" aria-hidden="true"></i>Call us</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <div class="flex items-center justify-end">
+                <i class="fa fa-user-circle mr-4 "></i>
+                <h2 class="text-white bold text-xl">Jacky Louis</h2>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<div class="row-span-8 col-span-3 px-48 py-12 text-center">
+    <p class="text-gray-700 text-3xl text-leading">
+        Fly with Taylor Today! Anywhere within the
+        Tri State Area for an affordable price
+    </p>
+
+    <p class="text-gray-700 text-3xl font-bold py-10 text-leading">
+        Flight Check-In: Digital ID Verification and Proof of Vaccination.
+    </p>
+    <p class="text-2xl px-16 pb-4 leading-text text-gray-700 text-center font-bold text-blue-800"> We will be asking for the Digital Credentials for the following:</p>
+
+    <h1 class="w-full my-2 text-3xl text-center bg-red-100 text-red-500" id ="msg-board"></h1>
+
+    <div class=" grid flex flex-wrap content-center text-black shadow-md">
+        <div>
+            <table class="grid text-xl px-18 text-gray-700 text-center ">
+                <tbody>
+                <tr class="bg-white  flex lg:table-row flex-row lg:flex-row flex-wrap lg:flex-no-wrap mb-10 lg:mb-0 text-center">
+                    <td class="w-full lg:w-auto p-3 text-gray-800 text-left block lg:table-cell relative lg:static font-bold">
+                        Taylor Charter Flights Booking Reference
+                    </td>
+                    <td class="w-full lg:w-auto p-3 text-gray-800 text-left  block lg:table-cell relative lg:static ">
+                        Your booking reference obtained when you purchase your ticket
+                    </td>
+                </tr>
+                <tr class="bg-white flex lg:table-row flex-row lg:flex-row flex-wrap lg:flex-no-wrap mb-10 lg:mb-0">
+                    <td class="w-full lg:w-auto p-3 text-gray-800 text-left block lg:table-cell relative lg:static font-bold">
+                        TSA REAL ID
+                    </td>
+                    <td class="w-full lg:w-auto p-3 text-gray-800 text-left block lg:table-cell relative lg:static">
+                        <ul> A TSA Real ID compliant identity credential, including:</ul>
+                        <li><i class="fa fa-check-circle-o"></i>
+                            Passport
+                        </li>
+                        <li><i class="fa fa-check-circle-o" ></i>
+                            US Permanent Resident Card
+                        </li>
+                    </td>
+                </tr>
+                <tr class="bg-white  flex lg:table-row flex-row lg:flex-row flex-wrap lg:flex-no-wrap mb-10 lg:mb-0">
+                    <td class="w-full lg:w-auto p-3 text-gray-800 text-left block lg:table-cell relative lg:static font-bold ">
+                        Vaccination Proof
+                    </td>
+                    <td class="w-full lg:w-auto p-3 text-gray-800 text-left  block lg:table-cell relative lg:static">
+                        For the safety of our crew and fellow guests, we require a proof of vaccination against COVID-19.<br/>  We only require the date of the vaccination
+                        not the full certificate.<a class="underline text-blue-600" href="fda.gov/emergency-preparedness-and-response/coronavirus-disease-2019-covid-19/covid-19-vaccines"> See the list of approved Issuers</a>
+                    </td>
+                </tr>
+                <tr class="bg-white flex lg:table-row flex-row lg:flex-row flex-wrap lg:flex-no-wrap mb-10 lg:mb-0">
+                    <td class="w-full lg:w-auto p-3 text-gray-800 text-left block lg:table-cell relative lg:static ">
+                        <span class="font-bold">Browser-Linked Wallet </span>
+                        <p class="text-lgl">
+                         If your <a class="underline text-blue-600">Digital Wallet Service provider</a> is linked to your browser, <br/> use this option to continue in browser
+                        </p>
+                    </td>
+                    <td class="w-full lg:w-auto p-3 text-gray-800 text-left  block lg:table-cell relative lg:static">
+                        <a class="w-64 bg-green-300 hover:bg-green-700 hover:shadow hover:text-white text-center text-gray-800 text-xl font-bold py-4 px-2 border border-blue-900 rounded shadow"
+                           type="submit" id="selectiveDisclosure" onclick="getSelectiveDisclosure()"><i class="fa fa-check" aria-hidden="true"></i> Proceed in Browser </a>
+                    </td>
+                </tr>
+            <tr class="bg-white  flex lg:table-row flex-row lg:flex-row flex-wrap lg:flex-no-wrap mb-10 lg:mb-0">
+                <td class="w-full lg:w-auto p-3 text-gray-800 text-left block lg:table-cell relative lg:static ">
+                    <span class="font-bold">Mobile Wallet</span>
+
+                    <p class="text-lg">
+                        If your <a class="underline text-blue-600">Digital Wallet Service provider</a>  <br/> is linked to your browser, use this option to continue in browser.
+                    </p>
+                </td>
+                <td class="max-w lg:w-auto p-3 text-gray-800 text-left  block lg:table-cell relative lg:static">
+                        <img src="img/barcode_verify.jpeg" alt="" class="h-24 max-w-4xl" />
+
+                </td>
+            </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <h4 class="w-full p-4 text-2xl font-bold text-center text-red-500" id="error-board"></h4>
+
+    <span id="error"></span>
+    <div class="py-12">
+    </div>
+</div>
+<footer class="text-center gradient">
+    <section class="container mx-auto text-center">
+        <div class="text-sm text-white font py-6">
+            <img class="object-contain object-top-center h-32 w-full" src="img/flight_logo.png">
+            Copyright &copy; <a href="https://securekey.com/"  class="text-white hover:text-green-700" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+        </div>
+    </section>
+</footer>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    function ready(fn) {
+        if (document.readyState !== 'loading'){
+            fn();
+        } else {
+            document.addEventListener('DOMContentLoaded', fn);
+        }
+    }
+    ready(() => {
+
+    });
+
+    installHandler()
+        .catch(e => console.error('Error in installHandler:', e));
+
+    const webQueryOpts = {
+        selectiveDisclosure : {
+            web: {
+                VerifiablePresentation: {
+                    query: [
+                        {
+                            type: "QueryByExample",
+                            credentialQuery: {
+                                reason: "Please present your booking reference.",
+                                example: {
+                                    "@context": [
+                                        "https://www.w3.org/2018/credentials/v1",
+                                        "https://trustbloc.github.io/context/vc/examples/booking-ref-v1.jsonld"
+                                    ],
+                                    type: ["BookingReferenceCredential"]
+                                }
+                            }
+                        },
+                        {
+                            type: "QueryByExample",
+                            credentialQuery: {
+                                reason: "Please present your identity document.",
+                                example: {
+                                    "@context": [
+                                        "https://www.w3.org/2018/credentials/v1",
+                                        "https://w3id.org/citizenship/v1"
+                                    ],
+                                    type: ["PermanentResidentCard"]
+                                }
+                            }
+                        },
+                        {
+                            type: "QueryByFrame",
+                            credentialQuery: {
+                                reason: "Please present your proof of vaccination.",
+                                frame: {
+                                    "@context": [
+                                        "https://www.w3.org/2018/credentials/v1",
+                                        "https://w3id.org/vaccination/v1",
+                                        "https://w3id.org/vc-revocation-list-2020/v1",
+                                        "https://w3id.org/security/bbs/v1"
+                                    ],
+                                    "type": [
+                                        "VerifiableCredential",
+                                        "VaccinationCertificate"
+                                    ],
+                                    "@explicit": true,
+                                    "issuer": {},
+                                    "issuanceDate": {},
+                                    "credentialSubject": {
+                                        "@explicit": true,
+                                        "type": "VaccinationEvent",
+                                        "countryOfVaccination": {},
+                                        "recipient": {
+                                            "@explicit": true,
+                                            "type": "VaccineRecipient",
+                                            "givenName": {},
+                                            "familyName": {}
+                                        }
+                                    }
+                                } ,
+                                example: {
+                                    "@context": [
+                                        "https://www.w3.org/2018/credentials/v1",
+                                        "https://w3id.org/vaccination/v1",
+                                        "https://w3id.org/vc-revocation-list-2020/v1",
+                                        "https://w3id.org/security/bbs/v1"
+                                    ],
+                                    type: ["VaccinationCertificate"]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    };
+
+    async function installHandler() {
+        console.log('Loading polyfill...');
+        try {
+            await credentialHandlerPolyfill.loadOnce();
+        } catch (e) {
+            console.error('Error in loadOnce:', e);
+        }
+    }
+
+    function uuidv4() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    async function getVP(value){
+        const challenge = uuidv4()
+        const domain = window.location.hostname
+
+        const credentialQuery = webQueryOpts[value];
+        credentialQuery.web.VerifiablePresentation.domain = domain
+        credentialQuery.web.VerifiablePresentation.challenge = challenge
+
+        console.log("Sending webcredential query = ", JSON.stringify(credentialQuery))
+        const result = await navigator.credentials.get(credentialQuery);
+
+        if (!result || !result.data || !result.data.type) {
+            console.log("Received invalid presentation from wallet", result.data)
+            document.getElementById("msg-board").innerText = "Failed to get presentation from wallet, please try again."
+            return;
+        }
+
+        console.log("WebCredential response:", result.data);
+
+        let presentationData = {
+            "checks": ["proof"],
+            "domain" :domain,
+            "challenge": challenge,
+            "vp": result.data
+        };
+        console.log("what is presentation data", presentationData);
+
+        axios.post('/verify/presentation',
+            presentationData
+        ).then(function (response) {
+            //todo : handle the response in success page.
+            document.getElementById("msg-board").innerText = "success";
+            console.log("generate did auth response:", response);
+        }).catch(error => {
+            console.log("what is error", error);
+            document.getElementById("error-board").innerText = "Authentication failed, please try again.";
+        });
+    }
+
+    async function getSelectiveDisclosure() {
+        await getVP("selectiveDisclosure")
+    }
+
+</script>
+</body>
+</html>
+
+
+

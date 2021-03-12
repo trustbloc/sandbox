@@ -1,0 +1,163 @@
+<!--
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ -->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta charset="utf-8">
+    <link rel="icon" type="images/x-icon" href="img/flight_logo.png" >
+    <title>Flight Check In</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="author" content="">
+
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss/dist/tailwind.min.css">
+
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <style>
+        .gradient {
+            background: linear-gradient(to right, #136a8a, #136a8a);
+        }
+    </style>
+</head>
+
+<body class="leading-normal tracking-normal text-white" style="font-family: 'Source Sans Pro', sans-serif;">
+<div class="max-w mx-auto sm:px-6 lg:px-32 gradient">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="flex items-center"> <img class="block lg:block h-48 w-auto" src="img/flight_logo.png">
+            <a href="/flightcheckin" class="text-white bold text-3xl"></a>
+        </div>
+        <div class="flex items-center">
+            <nav class = "opacity-95">
+                <div class="max-w-2xl mx-auto px-2 sm:px-6 lg:px-4">
+                    <div class="relative flex items-center justify-between h-16">
+                        <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
+                            <div class="hidden sm:block sm:ml-6">
+                                <div class="flex space-x-4">
+                                    <a href="/flightcheckin" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Home</a>
+                                </div>
+                            </div>
+                            <div class="hidden sm:block sm:ml-6">
+                                <div class="flex space-x-4">
+                                    <a href="/" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Information</a>
+                                </div>
+                            </div>
+                            <div class="hidden sm:block sm:ml-6">
+                                <div class="flex space-x-4">
+                                    <a href="/" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Services</a>
+                                </div>
+                            </div>
+                            <div class="hidden sm:block sm:ml-6">
+                                <div class="flex space-x-4">
+                                    <a href="/" class="text-white bold hover:bg-gray-300 hover:text-black  px-3 py-6 rounded-md text-lg">Deals & Offers</a>
+                                </div>
+                            </div>
+                            <div class="hidden sm:block sm:ml-6">
+                                <div class="flex space-x-4">
+                                    <a href="/" class="text-white bold hover:bg-gray-300 hover:text-black px-3 py-6 rounded-md text-lg"><i class="fa fa-phone" aria-hidden="true"></i>Call us</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <div class="flex items-center justify-end">
+                <i class="fa fa-user-circle mr-4 "></i>
+                <h2 class="text-white bold text-xl">Jacky Louis</h2>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<div class="row-span-8 col-span-3 px-48 py-8 text-center">
+    <p class="text-gray-700 text-2xl text-leading">
+        Fly with Taylor Today! Anywhere within the
+        Tri State Area for an affordable price
+    </p>
+
+    <p class="text-gray-700 text-4xl font-bold py-10 text-leading">
+        <i class="fa fa-plane"></i>   Flight Check-In
+    </p>
+
+    <div class="grid grid-cols-2 divide-x divide-black text-black">
+        <div>
+            <p class="w-1/2 text-4xl font-bold ">Digital Check-in</p>
+            <p class="py-4 px-16 text-lg"> Checking in with Digital Credentials and compatible <a class="text-blue-300 underline">Digital Wallet</a>
+                is fast and efficient.
+            <p>
+
+            <ul class="text-justify px-16 py-4 text-lg"> The Digital Credentials you will require are:
+                <li class="py-2"> <i class="fa fa-check-circle-o px-2" aria-hidden="true"></i>Taylor Charter Flights Booking </li>
+                <li class="py-2"> <i class="fa fa-check-circle-o px-2" aria-hidden="true"></i> TSA REAL ID </li>
+                <li class="py-2"> <i class="fa fa-check-circle-o px-2" aria-hidden="true"></i>Vaccination Proof</li>
+            </ul>
+            </p>
+            <div class="rounded px-16 pt-6 mb-4 flex flex-col">
+            <a class="w-48 bg-green-300 hover:bg-green-800 hover:shadow hover:text-white text-center text-gray-800 text-xl font-bold py-4 px-2 border border-blue-900 rounded shadow"
+               type="submit" href="/flightverify"><i class="fa fa-check" aria-hidden="true"></i> Check-In </a>
+            </div>
+        </div>
+        <div>
+            <p class="w-1/2 text-4xl font-bold ">Manual</p>
+            <p class="py-4 px-8 text-lg text-left">
+                If you dont have access to Digital Credentials, you may still check-in by entering your information.
+            </p>
+            <p class="py-4 px-8 text-lg text-left">   Because of the regulatory requirements your information must be passed to external systems for verification.
+                This will result in a <span class="font-bold text-xl">$25</span> charge.
+            </p>
+                <div class="rounded px-8 pt-6 mb-4 flex flex-col text-left">
+                    <div class="mb-4">
+                        <label class="block text-grey-darker text-sm font-bold mb-2" for="username">
+                            Booking Number:
+                        </label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker" id="username" type="text" placeholder="Booking Number">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-grey-darker text-sm font-bold mb-2" for="password">
+                           Last Name:
+                        </label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker" id="username" type="text" placeholder="Last Name">
+                    </div>
+                    <p class="w-48 bg-gray-300 text-center text-gray-800 text-xl font-bold py-4 px-8 border border-blue-900 rounded shadow"
+                       type="submit"> Agree </p>
+
+                </div>
+
+
+        </div>
+    </div>
+
+    <h4 class="w-full p-4 text-2xl font-bold text-center text-red-500" id="error-board"></h4>
+
+    <span id="error"></span>
+    <div class="py-12">
+    </div>
+</div>
+<footer class="text-center gradient">
+    <section class="container mx-auto text-center">
+        <div class="text-sm text-white font py-6">
+            <img class="object-contain object-top-center h-32 w-full" src="img/flight_logo.png">
+            Copyright &copy; <a href="https://securekey.com/"  class="text-white hover:text-green-700" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+        </div>
+    </section>
+</footer>
+</body>
+</html>
+
+
+

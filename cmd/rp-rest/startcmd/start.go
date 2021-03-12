@@ -368,6 +368,12 @@ func pathPrefix() *mux.Router {
 	router.PathPrefix("/success").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/success.html")
 	})
+	router.PathPrefix("/flightcheckin").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/flightcheckin.html")
+	})
+	router.PathPrefix("/flightverify").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/flightcheckinverify.html")
+	})
 	router.PathPrefix("/creditsuccess").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/creditsuccess.html")
 	})
