@@ -3,6 +3,9 @@
 **Use Case**: As a user, I should be able to board a flight by showing my Permanent Resident Card, Flight Booking 
 Reference and selectively disclose few attributes from Vaccination Certificate.
 
+## References
+- [Demo Recording](https://youtu.be/bKUu_uK-FlM)
+
 ## Components
 | Component                                            | Cloud URL (Sandbox)                                                     | Cloud URL (Dev)                                                     | Local URL*                                                 |
 |------------------------------------------------------|-------------------------------------------------------------------------|---------------------------------------------------------------------|------------------------------------------------------------|
