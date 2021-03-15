@@ -1,5 +1,54 @@
 # TrustBloc Adapter Components
 
+## v0.1.6
+### Architecture Diagram 
+![Adapter Architecture diagram v0.1.6](../images/adapter_component_diagram_v0.1.6.svg)
+
+### Component Details
+#### Core
+| Component                   | Source URL                                                                 | Sample Docker Configuration                                                                                          |
+|-----------------------------|----------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| Router                      | [Source](https://github.com/trustbloc/hub-router)                          | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-wallet.yml)          |
+| EDV                         | [Source](https://github.com/trustbloc/edv)                                 | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-edv.yml)             |
+| EDV Oathkeeper              | [Source](https://github.com/ory/oathkeeper)                                | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-edv.yml)             |
+| Ops KMS                     | [Source](https://github.com/trustbloc/hub-kms)                             | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-kms.yml)             |
+| Ops KMS Oathkeeper          | [Source](https://github.com/ory/oathkeeper )                               | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-kms.yml)             |
+| Authz KMS                   | [Source](https://github.com/trustbloc/hub-kms)                             | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-kms.yml)             |
+| Authz KMS Oathkeeper        | [Source](https://github.com/ory/oathkeeper )                               | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-kms.yml)             |
+| TrustBloc SignIn (Hub-Auth) | [Source](https://github.com/trustbloc/hub-auth)                            | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-auth.yml)            |
+| TrustBloc SignIn (Hydra)    | [Source](https://github.com/ory/hydra)                                     | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-auth.yml)            |
+| DID Resolver                | [Source](https://github.com/trustbloc/edge-service/tree/main/cmd/did-rest) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-resolver.yml)        |
+| TrustBloc DID Method        | [Source](https://github.com/trustbloc/trustbloc-did-method)                | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-did-method.yml)      |
+| Sidetree Fabric             | [Source](https://github.com/trustbloc/sidetree-fabric)                     | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-sidetree-fabric.yml) |
+
+#### Wallet
+| Component     | Source URL                                        | Sample Docker Configuration                                                                                 |
+|---------------|---------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| Wallet Web    | [Source](https://github.com/trustbloc/edge-agent) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-wallet.yml) |
+| Wallet Server | [Source](https://github.com/trustbloc/edge-agent) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-wallet.yml) |
+
+### Governance
+| Component          | Source URL                                           | Sample Docker Configuration                                                                             |
+|--------------------|------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
+| Governance Service | [Source]( https://github.com/trustbloc/edge-service) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-vcs.yml)|
+
+### Services
+| Component        | Source URL                                          | Sample Docker Configuration                                                                                  |
+|------------------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| Issuer Adapter   | [Source](https://github.com/trustbloc/edge-adapter) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-adapter.yml) |
+| RP Adapter       | [Source](https://github.com/trustbloc/edge-adapter) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-adapter.yml) |
+| RP Adapter Hydra | [Source](https://github.com/ory/hydra)              | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-adapter.yml) |
+
+#### Demo
+| Component         | Source URL                                     | Sample Docker Configuration                                                                                            |
+|-------------------|------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| Issuer            | [Source](https://github.com/trustbloc/sandbox) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-demo-applications.yml) |
+| RP/Verifier       | [Source](https://github.com/trustbloc/sandbox) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-demo-applications.yml) |
+| ORY Hydra         | [Source](https://github.com/ory/hydra)         | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-auth.yml)              |
+| Login and Consent | [Source](https://github.com/trustbloc/sandbox) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-auth.yml)              |
+| ORY Oathkeeper    | [Source](https://github.com/ory/oathkeeper)    | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-cms.yml)               |
+| Strapi            | [Source](https://github.com/strapi/strapi)     | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-cms.yml)               |
+
 ## v0.1.5
 ### Architecture Diagram 
 ![Adapter Architecture diagram v0.1.5](../images/adapter_component_diagram_v0.1.5.svg)
