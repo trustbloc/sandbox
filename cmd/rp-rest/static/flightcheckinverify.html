@@ -35,7 +35,39 @@ SPDX-License-Identifier: Apache-2.0
 </head>
 
 <body class="leading-normal tracking-normal text-white" style="font-family: 'Source Sans Pro', sans-serif;">
+
+
 <div class="max-w mx-auto sm:px-6 lg:px-32 gradient">
+
+
+    <div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden lg:block mt-2 lg:mt-0 bg-white lg:bg-transparent p-4 lg:p-0 z-20" id="nav-content">
+       <span class="animate-pulse  justify-end" id="rp-settings" style="display: none; padding-left: 85%">
+            <span class="inline-block shadow rounded-md p-6  place-items-center ring-4 ring-blue-500 ring-opacity-20 " style="position: absolute;">
+                   <div>
+                        <label class="inline-flex items-center p-3 text-lg">
+                            <input type="checkbox" class="form-checkbox h-5 w-5" id="show-recipient-info" checked>
+                            <span class="ml-2 text-black font-semibold">Show Recipient Info</span>
+                        </label>
+                   </div>
+                   <div>
+                       <button class="ml-12 bg-green-500 hover:bg-green-700 bg-opacity-50 p-3 self-center" onclick="rpSettings(false)">
+                                Save Settings
+                        </button>
+                   </div>
+                    </span>
+       </span>
+        <ul class="list-reset lg:flex justify-end flex-1 items-center">
+            <li class="mr-3">
+
+                <a id='profileSettings' value ="Profile Settings" href="javascript:void(0)"  onclick="rpSettings(true)" class="inline-block text-gray-400 no-underline hover:text-green hover:text-underline py-2 px-4"><i class="fa fa-cog"></i></a>
+            </li>
+        </ul>
+
+    </div>
+
+
+
+
     <div class="grid grid-cols-2 gap-4">
         <div class="flex items-center"> <img class="block lg:block h-48 w-auto" src="img/flight_logo.png">
             <a href="/flightcheckin" class="text-white bold text-3xl"></a>
@@ -308,7 +340,7 @@ SPDX-License-Identifier: Apache-2.0
         .catch(e => console.error('Error in installHandler:', e));
 
     const webQueryOpts = {
-        selectiveDisclosure : {
+        query1 : {
             web: {
                 VerifiablePresentation: {
                     query: [
@@ -380,6 +412,75 @@ SPDX-License-Identifier: Apache-2.0
                     ]
                 }
             }
+        },
+        query2 : {
+            web: {
+                VerifiablePresentation: {
+                    query: [
+                        {
+                            type: "QueryByExample",
+                            credentialQuery: {
+                                reason: "Please present your booking reference to complete your check-in.",
+                                example: {
+                                    "@context": [
+                                        "https://www.w3.org/2018/credentials/v1",
+                                        "https://trustbloc.github.io/context/vc/examples/booking-ref-v1.jsonld"
+                                    ],
+                                    type: ["BookingReferenceCredential"]
+                                }
+                            }
+                        },
+                        {
+                            type: "QueryByExample",
+                            credentialQuery: {
+                                reason: "Please present your identity document to complete your check-in.",
+                                example: {
+                                    "@context": [
+                                        "https://www.w3.org/2018/credentials/v1",
+                                        "https://w3id.org/citizenship/v1"
+                                    ],
+                                    type: ["PermanentResidentCard"]
+                                }
+                            }
+                        },
+                        {
+                            type: "QueryByFrame",
+                            credentialQuery: {
+                                reason: "Please present your proof of vaccination to complete your check-in.",
+                                frame: {
+                                    "@context": [
+                                        "https://www.w3.org/2018/credentials/v1",
+                                        "https://w3id.org/vaccination/v1",
+                                        "https://w3id.org/security/bbs/v1"
+                                    ],
+                                    "type": [
+                                        "VerifiableCredential",
+                                        "VaccinationCertificate"
+                                    ],
+                                    "@explicit": true,
+                                    "issuer": {},
+                                    "issuanceDate": {},
+                                    "credentialSubject": {
+                                        "@explicit": true,
+                                        "type": "VaccinationEvent",
+                                        "countryOfVaccination": {},
+                                        "dateOfVaccination": {},
+                                        "administeringCentre": {},
+                                    }
+                                } ,
+                                example: {
+                                    "@context": [
+                                        "https://www.w3.org/2018/credentials/v1",
+                                        "https://w3id.org/vaccination/v1",
+                                        "https://w3id.org/security/bbs/v1"
+                                    ],
+                                    type: ["VaccinationCertificate"]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
         }
     };
 
@@ -403,7 +504,7 @@ SPDX-License-Identifier: Apache-2.0
         const challenge = uuidv4()
         const domain = window.location.hostname
 
-        const credentialQuery = webQueryOpts[value];
+        const credentialQuery = document.getElementById("show-recipient-info").checked ?  webQueryOpts["query1"] :  webQueryOpts["query2"];
         credentialQuery.web.VerifiablePresentation.domain = domain
         credentialQuery.web.VerifiablePresentation.challenge = challenge
 
@@ -523,7 +624,16 @@ SPDX-License-Identifier: Apache-2.0
         }
     }
     async function getSelectiveDisclosure() {
-        await getVP("selectiveDisclosure")
+        await getVP()
+    }
+
+
+    function rpSettings(expand) {
+        if (expand){
+            document.getElementById("rp-settings").style.display = '';
+        } else {
+            document.getElementById("rp-settings").style.display = 'none';
+        }
     }
 
 </script>
