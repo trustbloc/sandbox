@@ -1,15 +1,16 @@
 {
   "credit_card_stmt:remote": {
-    "schema": {
-      "uri": ["https://trustbloc.github.io/context/vc/authorization-credential-v1.jsonld"],
-      "name": "Bank Account Information",
-      "purpose": "We need your consent to access your bank and account information."
-    },
+    "name": "Bank Account Information",
+    "purpose": "We need your consent to access your bank and account information.",
+    "schema": [{
+      "uri": "https://trustbloc.github.io/context/vc/authorization-credential-v1.jsonld"
+    }],
     "constraints": {
       "fields": [
         {
           "path": ["$.credentialSubject.scope[*].schema.uri"],
           "filter": {
+            "type": "string",
             "const": "https://trustbloc.github.io/context/vc/examples/credit-card-v1.jsonld"
           }
         }
@@ -17,23 +18,24 @@
     }
   },
   "driver_license:local": {
-    "schema": {
-      "uri": ["https://trustbloc.github.io/context/vc/examples/mdl-v1.jsonld"],
-      "name": "Driver's license.",
-      "purpose": "Verify your identity."
-    }
+    "name": "Driver's license.",
+    "purpose": "Verify your identity.",
+    "schema": [{
+      "uri": "https://trustbloc.github.io/context/vc/examples/mdl-v1.jsonld"
+    }]
   },
   "driver_license_evidence:remote": {
-    "schema": {
-      "uri": ["https://trustbloc.github.io/context/vc/authorization-credential-v1.jsonld"],
-      "name": "Authorization to verify your driver's license.",
-      "purpose": "We need your consent to verify issuance of your driver's license."
-    },
+    "name": "Authorization to verify your driver's license.",
+    "purpose": "We need your consent to verify issuance of your driver's license.",
+    "schema": [{
+      "uri": "https://trustbloc.github.io/context/vc/authorization-credential-v1.jsonld"
+    }],
     "constraints": {
       "fields": [
         {
           "path": ["$.credentialSubject.scope[*].schema.uri"],
           "filter": {
+            "type": "string",
             "const": "https://trustbloc.github.io/context/vc/examples/driver-license-evidence-v1.jsonld"
           }
         }
@@ -41,16 +43,17 @@
     }
   },
   "credit_score:remote": {
-    "schema": {
-      "uri": ["https://trustbloc.github.io/context/vc/authorization-credential-v1.jsonld"],
-      "name": "Authorization to access your credit score.",
-      "purpose": "Determine eligibility for the service."
-    },
+    "name": "Authorization to access your credit score.",
+    "purpose": "Determine eligibility for the service.",
+    "schema": [{
+      "uri": "https://trustbloc.github.io/context/vc/authorization-credential-v1.jsonld"
+    }],
     "constraints": {
       "fields": [
         {
           "path": ["$.credentialSubject.scope[*].schema.uri"],
           "filter": {
+            "type": "string",
             "const": "https://trustbloc.github.io/context/vc/examples/credit-score-v1.jsonld"
           }
         }
