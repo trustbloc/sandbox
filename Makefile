@@ -22,6 +22,8 @@ ACE_RP_REST_IMAGE_NAME       ?= trustbloc/sandbox-ace-rp
 LOGIN_CONSENT_SEVER_IMAGE_NAME   ?= trustbloc/sandbox-login-consent-server
 # ELEMENT API SIDETREE REQUEST URL
 DID_ELEMENT_SIDETREE_REQUEST_URL ?= https://element-did.com/api/v1/sidetree/requests
+# Namespace for the sandbox cli image
+SANDBOX_CLI_IMAGE_NAME       ?= trustbloc/sandbox-cli
 
 # Tool commands (overridable)
 ALPINE_VER ?= 3.12
@@ -57,6 +59,13 @@ unit-test:
 .PHONY: demo-start
 demo-start: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker sandbox-ace-rp-docker trustbloc-local-setup demo-cli
 	@scripts/sandbox_start.sh
+
+.PHONY: sandbox-cli-docker
+sandbox-cli-docker:
+	@echo "Building sandbox-cli docker image"
+	@docker build -f ./images/sandbox-cli/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(SANDBOX_CLI_IMAGE_NAME):latest \
+	--build-arg GO_VER=$(GO_VER) \
+	--build-arg ALPINE_VER=$(ALPINE_VER) .
 
 .PHONY: demo-cli
 demo-cli:
