@@ -57,7 +57,7 @@ unit-test:
 	@scripts/check_unit.sh
 
 .PHONY: demo-start
-demo-start: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker sandbox-ace-rp-docker trustbloc-local-setup demo-cli
+demo-start: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker sandbox-ace-rp-docker trustbloc-local-setup sandbox-cli-docker
 	@scripts/sandbox_start.sh
 
 .PHONY: sandbox-cli-docker
@@ -75,7 +75,7 @@ demo-cli:
 
 .PHONY: demo-start-with-sidetree-fabric
 demo-start-with-sidetree-fabric: export START_SIDETREE_FABRIC=true
-demo-start-with-sidetree-fabric: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker sandbox-ace-rp-docker trustbloc-local-setup populate-fixtures fabric-cli demo-cli
+demo-start-with-sidetree-fabric: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker sandbox-ace-rp-docker trustbloc-local-setup populate-fixtures fabric-cli sandbox-cli-docker
 	@scripts/sandbox_start.sh
 
 .PHONY: demo-stop

@@ -58,7 +58,7 @@ jobs:
           git lfs pull
           source ci/version_var.sh
           echo $DOCKER_PASSWORD | docker login ghcr.io --username $DOCKER_USER --password-stdin
-          make sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker login-consent-server-docker
+          make sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker login-consent-server-docker sandbox-cli-docker
           docker tag ghcr.io/trustbloc/sandbox-issuer:latest ${ISSUER_REST_PKG}:${EDGE_SANDBOX_TAG}
           docker push ${ISSUER_REST_PKG}:${EDGE_SANDBOX_TAG}
           docker tag ghcr.io/trustbloc/sandbox-rp:latest ${RP_REST_PKG}:${EDGE_SANDBOX_TAG}
