@@ -52,6 +52,7 @@ const (
 	oauth2CallbackPath   = "/oauth2/callback"
 	verifyDIDAuthPath    = "/verify/didauth"
 	createCredentialPath = "/credential"
+	auth                 = "/auth"
 
 	// http query params
 	stateQueryParam = "state"
@@ -63,6 +64,7 @@ const (
 	vcsProfileCookie     = "vcsProfile"
 	adapterProfileCookie = "adapterProfile"
 	assuranceScopeCookie = "assuranceScope"
+	callbackURLCookie    = "callbackURL"
 
 	issueCredentialURLFormat = "%s/%s" + "/credentials/issue"
 
@@ -214,6 +216,9 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(settings, http.MethodGet, c.settings),
 		support.NewHTTPHandler(getCreditScore, http.MethodGet, c.getCreditScore),
 		support.NewHTTPHandler(callback, http.MethodGet, c.callback),
+
+		// issuer rest apis (html decoupled)
+		support.NewHTTPHandler(auth, http.MethodGet, c.auth),
 		support.NewHTTPHandler(verifyDIDAuthPath, http.MethodPost, c.verifyDIDAuthHandler),
 		support.NewHTTPHandler(createCredentialPath, http.MethodPost, c.createCredentialHandler),
 
@@ -255,6 +260,37 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie := http.Cookie{Name: vcsProfileCookie, Value: r.URL.Query()["vcsProfile"][0], Expires: expire}
+	http.SetCookie(w, &cookie)
+
+	http.SetCookie(w, &http.Cookie{Name: callbackURLCookie, Value: "", Expires: expire})
+
+	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+}
+
+func (c *Operation) auth(w http.ResponseWriter, r *http.Request) {
+	scope := r.URL.Query()["scope"]
+	if len(scope) == 0 {
+		c.writeErrorResponse(w, http.StatusBadRequest, "scope is mandatory")
+
+		return
+	}
+
+	callBackURL := r.URL.Query()["callbackURL"]
+
+	if len(callBackURL) == 0 {
+		c.writeErrorResponse(w, http.StatusBadRequest, "callbackURL is mandatory")
+
+		return
+	}
+
+	u := c.tokenIssuer.AuthCodeURL(w)
+	u += "&scope=" + scope[0]
+
+	cookie := http.Cookie{
+		Name:    callbackURLCookie,
+		Value:   callBackURL[0],
+		Expires: time.Now().AddDate(0, 0, 1),
+	}
 	http.SetCookie(w, &cookie)
 
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
@@ -479,7 +515,7 @@ func (c *Operation) settings(w http.ResponseWriter, r *http.Request) {
 }
 
 // callback for oauth2 login
-func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint: funlen
+func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint: funlen,gocyclo
 	if len(r.URL.Query()["error"]) != 0 {
 		if r.URL.Query()["error"][0] == "access_denied" {
 			http.Redirect(w, r, c.homePage, http.StatusTemporaryRedirect)
@@ -510,6 +546,20 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 		logger.Errorf("failed to get cms data: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest,
 			fmt.Sprintf("failed to get cms data: %s", err.Error()))
+
+		return
+	}
+
+	callbackURLCookie, err := r.Cookie(callbackURLCookie)
+	if err != nil && !errors.Is(err, http.ErrNoCookie) {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get authMode cookie: %s", err.Error()))
+
+		return
+	}
+
+	if callbackURLCookie != nil && callbackURLCookie.Value != "" {
+		http.Redirect(w, r, callbackURLCookie.Value, http.StatusTemporaryRedirect)
 
 		return
 	}

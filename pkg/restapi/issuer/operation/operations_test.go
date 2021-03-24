@@ -225,6 +225,58 @@ func TestOperation_Login(t *testing.T) {
 	require.Equal(t, http.StatusTemporaryRedirect, status)
 }
 
+func TestAuth(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		svc, err := New(&Config{
+			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, auth+"?scope=test&callbackURL=/abc", nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.auth(rr, req)
+		require.Equal(t, http.StatusTemporaryRedirect, rr.Code)
+	})
+
+	t.Run("missing scope", func(t *testing.T) {
+		svc, err := New(&Config{
+			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, auth, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.auth(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "scope is mandatory")
+	})
+
+	t.Run("missing callbackURL", func(t *testing.T) {
+		svc, err := New(&Config{
+			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, auth+"?scope=test", nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.auth(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "callbackURL is mandatory")
+	})
+}
+
 func TestOperation_settings(t *testing.T) {
 	cfg := &Config{
 		TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
@@ -852,6 +904,31 @@ func TestOperation_Callback(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, http.StatusBadRequest, status)
 		require.Contains(t, body.String(), "failed to get cms data")
+	})
+
+	t.Run("with callbackURL cookie", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "[%s]", foo)
+			fmt.Fprintln(w)
+		}))
+		defer cms.Close()
+
+		svc, err := New(&Config{
+			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			StoreProvider: memstore.NewProvider(),
+			CMSURL:        cms.URL,
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, callback, nil)
+		require.NoError(t, err)
+
+		req.AddCookie(&http.Cookie{Name: callbackURLCookie, Value: "/abc"})
+
+		rr := httptest.NewRecorder()
+
+		svc.callback(rr, req)
+		require.Equal(t, http.StatusTemporaryRedirect, rr.Code)
 	})
 }
 
