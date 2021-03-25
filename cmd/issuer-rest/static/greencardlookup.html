@@ -11,7 +11,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta charset="utf-8">
     <link rel="icon" type="images/x-icon" href="img/immigration_logo.jpg" >
-    <title>How to Apply Green Card</title>
+    <title>Digital Green Card Application Lookup</title>
     <meta name="description" content="">
     <meta name="keywords" content="">
     <meta name="author" content="">
@@ -43,28 +43,29 @@ SPDX-License-Identifier: Apache-2.0
 
 <div class="flex flex-wrap py-2 shadow-lg bg-white">
     <div class="w-full px-4">
-            <nav class="container px-4 mx-auto flex flex-wrap items-center justify-between">
-                <div class="w-full relative flex justify-between lg:w-auto px-4 lg:static lg:block lg:justify-start">
-                    <img class="block lg:block h-36 w-auto" src="img/immigration_nav_logo.png">
-                </div>
-                <div class="flex lg:flex-grow items-center">
-                    <ul class="flex flex-col lg:flex-row list-none ml-auto">
-                        <li class="nav-item">
-                            <div class="shadow flex">
-                                <input class="w-full rounded p-2 text-lg" type="text" placeholder="Search our Site">
-                                <button class="bg-white w-64 flex justify-end items-center text-blue-800 p-2 hover:text-blue-400">
-                                    <i class="fa fa-search" aria-hidden="true"></i>
-                                </button>
-                            </div>
-                        </li>
-                        <li class="nav-item lg:py-2">
-                            <a href="/auth?scope=PermanentResidentCard&callbackURL=/greencardlookup" class="text-blue-800 bg-blue-100 border shadow-md font-semibold font-sans lg:text-xl sm:text-lg hover:shadow-lg hover:bg-gray-100 px-4 m-5 py-2 rounded-md text-center font-bold">
-                                Sign-In</a>
-                        </li>
-                    </ul>
-                </div>
-           </nav>
- </div>
+        <nav class="container px-4 mx-auto flex flex-wrap items-center justify-between">
+            <div class="w-full relative flex justify-between lg:w-auto px-4 lg:static lg:block lg:justify-start">
+                <img class="block lg:block h-36 w-auto" src="img/immigration_nav_logo.png">
+            </div>
+            <div class="flex lg:flex-grow items-center">
+                <ul class="flex flex-col lg:flex-row list-none ml-auto">
+                    <li class="nav-item">
+                        <div class="shadow flex">
+                            <input class="w-full rounded p-2 text-lg" type="text" placeholder="Search our Site">
+                            <button class="bg-white w-64 flex justify-end items-center text-blue-800 p-2 hover:text-blue-400">
+                                <i class="fa fa-search" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </li>
+                    <li class="nav-item lg:py-2">
+                        <!--todo integrate with issuer auth api -->
+                        <a href="/" class="text-blue-800 bg-blue-100 border shadow-md font-semibold font-sans lg:text-xl sm:text-lg hover:shadow-lg hover:bg-gray-100 px-4 m-5 py-2 rounded-md text-center font-bold">
+                            Sign-In</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
     <div class="flex-1 flex lg:justify-end sm:items-stretch sm:justify-start text-blue-800 font-semibold text-xl">
         <div class="sm:block sm:ml-6">
             <div class="flex space-x-4">
@@ -117,13 +118,13 @@ SPDX-License-Identifier: Apache-2.0
                 </a>
             </li>
             <li class="mr-3 flex-1">
-                <a href="/" class="block py-1 md:py-3 pl-1 align-middle border-l-4 border-blue-900 gradient text-black border-gray-800 md:border-gray-900">
-                    <span class="pb-1 md:pb-0 text-xs md:text-base font-bold block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>How to Apply for a Digital Green Card</span>
+                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>How to Apply for Digital Green Card </span>
                 </a>
             </li>
             <li class="mr-3 flex-1">
-                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
-                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Digital Green Card Application Lookup</span>
+                <a href="/" class="block py-1 md:py-3 pl-1 align-middle border-l-4 border-blue-900 gradient text-black border-gray-800 md:border-gray-900">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base font-bold block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Digital Green Card Application Lookup</span>
                 </a>
             </li>
             <li class="mr-3 flex-1">
@@ -149,47 +150,47 @@ SPDX-License-Identifier: Apache-2.0
         </ul>
     </div>
     <div class="row-span-3 col-span-2 px-2 py-8">
-        <h2 class="bold text-5xl px-2">Apply Digital Green Card </h2>
-        <p class="text-xl font-bold text-blue-900 py-4 px-2">
-            Step 1
+        <h2 class="bold text-5xl px-2">Digital Green Card Application Lookup</h2>
+        <p class="text-xl font-sans text-gray-800 px-2 py-8">
+            Before you can receive a digital green card, we need to verify your eligibility.
         </p>
         <p class="text-lg font-sans text-gray-800 px-2">
-            Before starting the application process, there are three questions you should answer first: <br>
+            In order to do that, please provide your Application Invitation Identifier (AIID)*.
         </p>
+        <form class="pt-6 pb-2 px-2 my-2">
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2" for="email">
+                   Your UCIS Number is:
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker select-none" id="email" type="text" placeholder="000-345-677">
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-bold mb-2" for="password">
+                    Application Invitation Identifier   <a data-tip="Your AIID can be found on the mailer insert in the envelope containing your physical green card">
+                        <i class="fa fa-question-circle" aria-hidden="true"></i>
+                    </a>
+                </label>
 
-        <p class="text-lg font-sans text-gray-800 px-2 py-4 antialiased">
-           <strong class="py-8">1. Are you eligible to apply? </strong> <br>
-              &nbsp; * You need a valid paper based Green Card <br>
-             &nbsp;  * You will need a sign-in account in UCIS <br>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mb-3" id="text" type="text" placeholder="AIID">
+            </div>
+            <div class="block md:flex items-center justify-between">
+                <div>
+                    <button class="bg-green-800 hover:bg-green-dark text-white font-bold py-2 px-4 rounded shadow-lg " type="button">
+                        Submit
+                    </button>
+                </div>
 
-        </p>
-        <p class="text-lg font-sans text-gray-800 px-2 py-4 antialiased">
-            <strong class="py-8">2. Do you have an invitation? </strong> <br>
-            &nbsp;  * At this time, you need an invitation to apply for a digital green card <br>
-            &nbsp;  * Your invitation contains a unique code you will need for the application <br>
-
-        </p>
-        <p class="text-lg font-sans text-gray-800 px-2 py-4 antialiased">
-            <strong class="py-8">3. Do you have a Digital Wallet to Store your Digital Green Card? </strong> <br>
-            &nbsp;  * The Digital Green Card will be stored in your Digital Wallet. <br>
-            &nbsp; * The Digital Wallet must meet USG security, privacy & interoperability requirements <br>
-            &nbsp; &nbsp;   - Approved CHAPI Wallet A <br>
-            &nbsp;  &nbsp; - Approved CHAPI Wallet B  <br>
-            &nbsp;   &nbsp;  - Approved OIDC Credential Provider Wallet C
-        </p>
-        <p class="text-lg font-sans text-gray-800 px-2 py-4">
-            If the answer to all three questions is <strong>YES</strong>:
-        </p>
-        <p class="text-lg font-sans text-gray-800 px-2 py-4">
-        </p>
-        <a class=" w-64 py-2 bg-green-500 hover:bg-green-700 hover:shadow hover:text-white  text-xl text-center text-gray-800 font-bold py-4 px-4 border rounded shadow-lg"
-           href="/auth?scope=PermanentResidentCard&callbackURL=/greencardlookup">
-            Apply for your Digital Green Card
-        </a>
-
+                <div class="mt-4 md:mt-0">
+                    <button class="bg-red-400 hover:bg-green-dark text-white font-bold py-2 px-4 rounded shadow-lg " type="button">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
-<div class="py-8">
+
+<div class="py-12">
 </div>
 <footer class="text-center bg-white">
     <section class="container mx-auto text-center">
@@ -200,6 +201,54 @@ SPDX-License-Identifier: Apache-2.0
     </section>
 </footer>
 </body>
+<style>
+    [data-tip] {
+        position:relative;
+
+    }
+    [data-tip]:before {
+        content:'';
+        /* hides the tooltip when not hovered */
+        display:none;
+        content:'';
+        border-top: 5px solid #0f0c29;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+        position:absolute;
+        top:30px;
+        left:35px;
+        z-index:8;
+        font-size:0;
+        line-height:0;
+        width:0;
+        height:0;
+    }
+    [data-tip]:after {
+        display:none;
+        content:attr(data-tip);
+        position:absolute;
+        top:35px;
+        left:0px;
+        padding:5px 8px;
+        background:#ffffff;
+        color:darkblue;
+        z-index:9;
+        font-size: 14px;
+        height:24px;
+        line-height:18px;
+        -webkit-border-radius: 3px;
+        -moz-border-radius: 3px;
+        border-radius: 3px;
+        white-space:nowrap;
+        word-wrap:normal;
+    }
+    [data-tip]:hover:before,
+    [data-tip]:hover:after {
+        display:block;
+    }
+</style>
 </html>
+
 
 
