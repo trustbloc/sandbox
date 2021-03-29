@@ -1,0 +1,248 @@
+<!--
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ -->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta charset="utf-8">
+    <link rel="icon" type="images/x-icon" href="img/immigration_logo.jpg" >
+    <title>Store Digital Green Card</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="author" content="">
+
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss/dist/tailwind.min.css">
+    <!--Replace with your tailwind.css once created-->
+
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <style>
+        .gradient {
+            background: linear-gradient(to right, #f0f2f0, #ffffff);
+        }
+    </style>
+</head>
+<body class="leading-normal tracking-normal bg-gray-100">
+<div class="bg-red-800 border border-red-400 text-white text-center rounded flex items-center justify-center" role="alert">
+    <p class="lg:text-xl md:text-lg sm:text-sm">This is not government site. Do not use real data.</p>
+</div>
+
+
+<div class="flex flex-wrap py-2 shadow-lg bg-white">
+    <div class="w-full px-4">
+        <nav class="container px-4 mx-auto flex flex-wrap items-center justify-between">
+            <div class="w-full relative flex justify-between lg:w-auto px-4 lg:static lg:block lg:justify-start">
+                <img class="block lg:block h-36 w-auto" src="img/immigration_nav_logo.png">
+            </div>
+            <div class="flex lg:flex-grow items-center">
+                <ul class="flex flex-col lg:flex-row list-none ml-auto">
+                    <li class="nav-item">
+                        <div class="shadow flex">
+                            <input class="w-full rounded p-2 text-lg" type="text" placeholder="Search our Site">
+                            <button class="bg-white w-64 flex justify-end items-center text-blue-800 p-2 hover:text-blue-400">
+                                <i class="fa fa-search" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </li>
+                    <li class="nav-item lg:py-2">
+                        <!--todo integrate with issuer auth api -->
+                        <a href="/" class="text-blue-800 bg-blue-100 border shadow-md font-semibold font-sans lg:text-xl sm:text-lg hover:shadow-lg hover:bg-gray-100 px-4 m-5 py-2 rounded-md text-center font-bold">
+                            Sign-In</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+    <div class="flex-1 flex lg:justify-end sm:items-stretch sm:justify-start text-blue-800 font-semibold text-xl">
+        <div class="sm:block sm:ml-6">
+            <div class="flex space-x-4">
+                <a href="/" class=" hover:shadow-lg  px-3 py-6 rounded-md ">Forms</a>
+            </div>
+        </div>
+        <div class="sm:block sm:ml-6">
+            <div class="flex space-x-4">
+                <a href="/" class=" hover:shadow-lg  px-3 py-6 rounded-md">News</a>
+            </div>
+        </div>
+        <div class="sm:block sm:ml-6">
+            <div class="flex space-x-4">
+                <a href="/" class="hover:shadow-lg  py-6 rounded-md">Citizenship</a>
+            </div>
+        </div>
+        <div class=" sm:block sm:ml-6">
+            <div class="flex space-x-4">
+                <a href="/" class=" hover:shadow-lg  px-3 py-6 rounded-md">Green Card</a>
+            </div>
+        </div>
+        <div class=" sm:block sm:ml-6">
+            <div class="flex space-x-4">
+                <a href="/" class="hover:shadow-lg  px-3 py-6 rounded-md">Laws</a>
+            </div>
+        </div>
+        <div class="sm:block sm:ml-6">
+            <div class="flex space-x-4 pr-48">
+                <a href="/" class="hover:shadow-lg  px-3 py-6 rounded-md">Tools</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="grid grid-rows-3 grid-flow-col gap-4 pt-8 px-48">
+    <!--Sidebar-->
+    <div class="row-span-3 text-blue-900 bg-white">
+        <h1 class="leading-tight px-4 py-4 text-black font-bold gradient border-l-4 border-blue-900"><i class="fa fa-id-card px-4 text-blue-900" aria-hidden="true"></i>
+            Green Card</h1>
+        <ul class="list-reset flex flex-row md:flex-col text-center md:text-left px-8">
+            <li class="mr-3 flex-1">
+                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800 hover:text-green-400 border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Green Card Eligibility</span>
+                </a>
+            </li>
+            <li class="mr-3 flex-1">
+                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Digital Green Card Application Lookup</span>
+                </a>
+            </li>
+            <li class="mr-3 flex-1">
+                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>How to Apply for Digital Green Card </span>
+                </a>
+            </li>
+            <li class="mr-3 flex-1">
+                <a href="/" class="block py-1 md:py-3 pl-1 align-middle border-l-4 border-blue-900 gradient text-black border-gray-800 md:border-gray-900">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base font-bold block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>How to Apply for a Green Card </span>
+                </a>
+            </li>
+            <li class="mr-3 flex-1">
+                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Green Card Processes and Procedures </span>
+                </a>
+            </li>
+            <li class="mr-3 flex-1">
+                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Green Card Status with USCIS</span>
+                </a>
+            </li>
+            <li class="mr-3 flex-1">
+                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>After Receiving a Decision </span>
+                </a>
+            </li>
+            <li class="mr-3 flex-1">
+                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>After We grant Your Green Card </span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="row-span-3 col-span-2 px-2 py-8" style="display:block" id="addToWalletDiv">
+        <h2 class="bold text-5xl px-2">Digital Permanent Resident Card</h2>
+        <p class="text-xl font-sans font-bold text-blue-800 px-2 py-8">
+            Step 3
+        </p>
+        <div class="grid grid-cols-2 bg-white border max-w-3xl border-gray-300 py-4">
+            <div class="py-8 px-8">
+                <label class="block text-xl text-gray-800 font-bold mb-2" for="email">
+                    Permanent Resident Card
+                </label>
+                <label class="block text-sm font-sans text-gray-600 mb-2 py-4" for="email">
+                    You can click on Add to wallet button, or scan the QR Code to store the resident card.
+                </label>
+                <a class="bg-blue-800 py-2 px-4 border border-gray-800 hover:bg-green-dark text-white font-bold rounded shadow-lg" type="button" href="/">
+                    Add to Wallet
+                </a>
+                <span class="block text-sm py-2 text-gray-400">Or scan QR code in mobile wallet</span>
+            </div>
+            <div class="px-16">
+                <img class="block h-64 w-auto flex" src="img/qrscan.png">
+            </div>
+        </div>
+    </div>
+    <div class="row-span-3 col-span-2 px-12 py-24" style="display: none" id="successDiv">
+        <div class="grid grid-cols-1 bg-white border max-w-3xl border-gray-300 py-4">
+            <div class="text-center">
+                <i class="fa fa-check-circle fa-5x text-green-800" aria-hidden="true"></i>
+                <label class="block text-lg font-sans text-gray-600 mb-2 py-4 " for="email">
+                    Your Digital Permanent Resident Card has been stored successfully.
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="py-16">
+</div>
+<footer class="text-center bg-white">
+    <section class="container mx-auto text-center">
+        <div class="text-sm text-blue-800 font py-6">
+            <img class="object-contain object-top-center h-32 w-full" src="img/immigration_nav_logo.png">
+            Copyright &copy; <a href="https://securekey.com/"  class="text-blue-900 hover:text-green-700" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+        </div>
+    </section>
+</footer>
+</body>
+<style>
+    [data-tip] {
+        position:relative;
+
+    }
+    [data-tip]:before {
+        content:'';
+        /* hides the tooltip when not hovered */
+        display:none;
+        content:'';
+        border-top: 5px solid #0f0c29;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+        position:absolute;
+        top:30px;
+        left:35px;
+        z-index:8;
+        font-size:0;
+        line-height:0;
+        width:0;
+        height:0;
+    }
+    [data-tip]:after {
+        display:none;
+        content:attr(data-tip);
+        position:absolute;
+        top:35px;
+        left:0px;
+        padding:5px 8px;
+        background:#ffffff;
+        color:darkblue;
+        z-index:9;
+        font-size: 14px;
+        height:24px;
+        line-height:18px;
+        -webkit-border-radius: 3px;
+        -moz-border-radius: 3px;
+        border-radius: 3px;
+        white-space:nowrap;
+        word-wrap:normal;
+    }
+    [data-tip]:hover:before,
+    [data-tip]:hover:after {
+        display:block;
+    }
+</style>
+</html>
+
+
+
