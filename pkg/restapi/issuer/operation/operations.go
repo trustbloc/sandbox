@@ -52,7 +52,8 @@ const (
 	oauth2CallbackPath   = "/oauth2/callback"
 	verifyDIDAuthPath    = "/verify/didauth"
 	createCredentialPath = "/credential"
-	auth                 = "/auth"
+	authPath             = "/auth"
+	searchPath           = "/search"
 
 	// http query params
 	stateQueryParam = "state"
@@ -218,7 +219,8 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(callback, http.MethodGet, c.callback),
 
 		// issuer rest apis (html decoupled)
-		support.NewHTTPHandler(auth, http.MethodGet, c.auth),
+		support.NewHTTPHandler(authPath, http.MethodGet, c.auth),
+		support.NewHTTPHandler(searchPath, http.MethodGet, c.search),
 		support.NewHTTPHandler(verifyDIDAuthPath, http.MethodPost, c.verifyDIDAuthHandler),
 		support.NewHTTPHandler(createCredentialPath, http.MethodPost, c.createCredentialHandler),
 
@@ -294,6 +296,62 @@ func (c *Operation) auth(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &cookie)
 
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+}
+
+func (c *Operation) search(w http.ResponseWriter, r *http.Request) {
+	txnID := r.URL.Query()["txnID"]
+	if len(txnID) == 0 {
+		c.writeErrorResponse(w, http.StatusBadRequest, "txnID is mandatory")
+
+		return
+	}
+
+	dataBytes, err := c.store.Get(txnID[0])
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to get txn data: %s", err.Error()))
+
+		return
+	}
+
+	logger.Infof("preview : sessionData=%s", string(dataBytes))
+
+	var data *txnData
+
+	err = json.Unmarshal(dataBytes, &data)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("unmarshal session data: %s", err.Error()))
+
+		return
+	}
+
+	// TODO enhance the api to support dynamic search
+	userData, err := c.getCMSUserData(strings.ToLower(data.Scope)+"s", data.UserID, data.Token)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get user data : %s", err.Error()))
+
+		return
+	}
+
+	userDatabytes, err := json.Marshal(userData)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to marshal user data : %s", err.Error()))
+
+		return
+	}
+
+	keyID := uuid.NewString()
+
+	err = c.store.Put(keyID, userDatabytes)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get assurance data : %s", err.Error()))
+
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, []byte(fmt.Sprintf("{id : '%s'}", keyID)))
 }
 
 // initiateDIDCommConnection initiates a DIDComm connection from the issuer to the user's wallet
@@ -476,7 +534,7 @@ func (c *Operation) getAssuranceUsingAccessToken(w http.ResponseWriter, r *http.
 		return
 	}
 
-	assuranceData, err := c.getCMSUserData(assuranceScope, user.UserID)
+	assuranceData, err := c.getCMSUserData(assuranceScope, user.UserID, "")
 	if err != nil {
 		logger.Errorf("failed to get assurance data : %s", err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -541,7 +599,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 		return
 	}
 
-	_, subject, err := c.getCMSData(tk, "email="+info.Subject, info.Scope)
+	userID, subject, err := c.getCMSData(tk, "email="+info.Subject, info.Scope)
 	if err != nil {
 		logger.Errorf("failed to get cms data: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest,
@@ -559,7 +617,29 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 	}
 
 	if callbackURLCookie != nil && callbackURLCookie.Value != "" {
-		http.Redirect(w, r, callbackURLCookie.Value, http.StatusTemporaryRedirect)
+		txnID := uuid.NewString()
+		data := txnData{
+			UserID: userID,
+			Scope:  info.Scope,
+			Token:  tk.AccessToken,
+		}
+
+		dataBytes, mErr := json.Marshal(data)
+		if mErr != nil {
+			c.writeErrorResponse(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed to marshal txn data: %s", mErr.Error()))
+			return
+		}
+
+		err = c.store.Put(txnID, dataBytes)
+		if err != nil {
+			c.writeErrorResponse(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed to save txn data: %s", err.Error()))
+
+			return
+		}
+
+		http.Redirect(w, r, callbackURLCookie.Value+"?txnID="+txnID, http.StatusTemporaryRedirect)
 
 		return
 	}
@@ -693,7 +773,7 @@ func (c *Operation) createCredentialHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	// get data from cms
-	userData, err := c.getCMSUserData(req.Collection, req.UserID)
+	userData, err := c.getCMSUserData(req.Collection, req.UserID, "")
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get cms user data : %s", err.Error()))
@@ -1161,7 +1241,7 @@ func (c *Operation) didcommAssuraceHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	assuranceData, err := c.getCMSUserData(userData.AssuranceScope, userData.ID)
+	assuranceData, err := c.getCMSUserData(userData.AssuranceScope, userData.ID, "")
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get assurance data : %s", err.Error()))
@@ -1182,15 +1262,17 @@ func (c *Operation) didcommAssuraceHandler(w http.ResponseWriter, r *http.Reques
 	c.writeResponse(w, http.StatusOK, dataBytes)
 }
 
-func (c *Operation) getCMSUserData(scope, userID string) (map[string]interface{}, error) {
+func (c *Operation) getCMSUserData(scope, userID, tkn string) (map[string]interface{}, error) {
 	u := c.cmsURL + "/" + scope + "?userid=" + userID
+
+	logger.Infof("url = %s", u)
 
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	subjectBytes, err := sendHTTPRequest(req, c.httpClient, http.StatusOK, "")
+	subjectBytes, err := sendHTTPRequest(req, c.httpClient, http.StatusOK, tkn)
 	if err != nil {
 		return nil, err
 	}

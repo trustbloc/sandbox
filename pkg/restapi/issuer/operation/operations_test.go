@@ -233,7 +233,7 @@ func TestAuth(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodGet, auth+"?scope=test&callbackURL=/abc", nil)
+		req, err := http.NewRequest(http.MethodGet, authPath+"?scope=test&callbackURL=/abc", nil)
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
@@ -249,7 +249,7 @@ func TestAuth(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodGet, auth, nil)
+		req, err := http.NewRequest(http.MethodGet, authPath, nil)
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
@@ -266,7 +266,7 @@ func TestAuth(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodGet, auth+"?scope=test", nil)
+		req, err := http.NewRequest(http.MethodGet, authPath+"?scope=test", nil)
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
@@ -274,6 +274,97 @@ func TestAuth(t *testing.T) {
 		svc.auth(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "callbackURL is mandatory")
+	})
+}
+
+func TestSearch(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "[%s]", assuranceData)
+			fmt.Fprintln(w)
+		}))
+		defer cms.Close()
+
+		svc, err := New(&Config{
+			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			StoreProvider: memstore.NewProvider(),
+			CMSURL:        cms.URL,
+		})
+		require.NoError(t, err)
+
+		txnID := uuid.NewString()
+
+		dataBytes, err := json.Marshal(&txnData{})
+		require.NoError(t, err)
+
+		err = svc.store.Put(txnID, dataBytes)
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, searchPath+"?txnID="+txnID, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.search(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("missing txnID", func(t *testing.T) {
+		svc, err := New(&Config{
+			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, searchPath, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.search(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "txnID is mandatory")
+	})
+
+	t.Run("no txn data", func(t *testing.T) {
+		svc, err := New(&Config{
+			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		req, err := http.NewRequest(http.MethodGet, searchPath+"?txnID="+uuid.NewString(), nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.search(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get txn data")
+	})
+
+	t.Run("no user data", func(t *testing.T) {
+		svc, err := New(&Config{
+			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		txnID := uuid.NewString()
+
+		dataBytes, err := json.Marshal(&txnData{})
+		require.NoError(t, err)
+
+		err = svc.store.Put(txnID, dataBytes)
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, searchPath+"?txnID="+txnID, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.search(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get user data")
 	})
 }
 
@@ -929,6 +1020,34 @@ func TestOperation_Callback(t *testing.T) {
 
 		svc.callback(rr, req)
 		require.Equal(t, http.StatusTemporaryRedirect, rr.Code)
+	})
+
+	t.Run("with callbackURL cookie - save txn data error", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "[%s]", foo)
+			fmt.Fprintln(w)
+		}))
+		defer cms.Close()
+
+		svc, err := New(&Config{
+			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			StoreProvider: &mockstorage.Provider{OpenStoreReturn: &mockstorage.Store{
+				ErrPut: errors.New("save error"),
+			}},
+			CMSURL: cms.URL,
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, callback, nil)
+		require.NoError(t, err)
+
+		req.AddCookie(&http.Cookie{Name: callbackURLCookie, Value: "/abc"})
+
+		rr := httptest.NewRecorder()
+
+		svc.callback(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to save txn data")
 	})
 }
 
