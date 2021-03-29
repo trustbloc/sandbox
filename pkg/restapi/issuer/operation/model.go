@@ -25,3 +25,9 @@ type createCredentialReq struct {
 	UserID            string                 `json:"userID"`
 	CustomSubjectData map[string]interface{} `json:"customSubjectData"`
 }
+
+type txnData struct {
+	UserID string `json:"userID"`
+	Scope  string `json:"scope"`
+	Token  string `json:"token"`
+}
