@@ -31,3 +31,14 @@ type txnData struct {
 	Scope  string `json:"scope"`
 	Token  string `json:"token"`
 }
+
+type searchData struct {
+	Scope    string                 `json:"scope"`
+	UserData map[string]interface{} `json:"userData"`
+}
+
+type generateCredentialReq struct {
+	ID         string `json:"id"`
+	Holder     string `json:"holder"`
+	VCSProfile string `json:"vcsProfile"`
+}
