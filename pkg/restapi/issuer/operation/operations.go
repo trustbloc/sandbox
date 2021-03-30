@@ -36,24 +36,25 @@ import (
 )
 
 const (
-	login                = "/login"
-	settings             = "/settings"
-	getCreditScore       = "/getCreditScore"
-	callback             = "/callback"
-	generate             = "/generate"
-	revoke               = "/revoke"
-	didcommInit          = "/didcomm/init"
-	didcommToken         = "/didcomm/token"
-	didcommCallback      = "/didcomm/cb"
-	didcommCredential    = "/didcomm/data"
-	didcommAssuranceData = "/didcomm/assurance"
-	didcommUserEndpoint  = "/didcomm/uid"
-	oauth2GetRequestPath = "/oauth2/request"
-	oauth2CallbackPath   = "/oauth2/callback"
-	verifyDIDAuthPath    = "/verify/didauth"
-	createCredentialPath = "/credential"
-	authPath             = "/auth"
-	searchPath           = "/search"
+	login                  = "/login"
+	settings               = "/settings"
+	getCreditScore         = "/getCreditScore"
+	callback               = "/callback"
+	generate               = "/generate"
+	revoke                 = "/revoke"
+	didcommInit            = "/didcomm/init"
+	didcommToken           = "/didcomm/token"
+	didcommCallback        = "/didcomm/cb"
+	didcommCredential      = "/didcomm/data"
+	didcommAssuranceData   = "/didcomm/assurance"
+	didcommUserEndpoint    = "/didcomm/uid"
+	oauth2GetRequestPath   = "/oauth2/request"
+	oauth2CallbackPath     = "/oauth2/callback"
+	verifyDIDAuthPath      = "/verify/didauth"
+	createCredentialPath   = "/credential"
+	authPath               = "/auth"
+	searchPath             = "/search"
+	generateCredentialPath = createCredentialPath + "/generate"
 
 	// http query params
 	stateQueryParam = "state"
@@ -223,6 +224,7 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(searchPath, http.MethodGet, c.search),
 		support.NewHTTPHandler(verifyDIDAuthPath, http.MethodPost, c.verifyDIDAuthHandler),
 		support.NewHTTPHandler(createCredentialPath, http.MethodPost, c.createCredentialHandler),
+		support.NewHTTPHandler(generateCredentialPath, http.MethodGet, c.generateCredentialHandler),
 
 		// chapi
 		support.NewHTTPHandler(revoke, http.MethodPost, c.revokeVC),
@@ -333,7 +335,10 @@ func (c *Operation) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userDatabytes, err := json.Marshal(userData)
+	userDatabytes, err := json.Marshal(&searchData{
+		Scope:    data.Scope,
+		UserData: userData,
+	})
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to marshal user data : %s", err.Error()))
@@ -796,6 +801,55 @@ func (c *Operation) createCredentialHandler(w http.ResponseWriter, r *http.Reque
 
 	// create credential
 	cred, err := c.prepareCredential(userData, req.Scope, req.VCSProfile)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create credential: %s", err.Error()))
+
+		return
+	}
+
+	signedVC, err := c.issueCredential(req.VCSProfile, req.Holder, cred)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to sign credential: %s", err.Error()))
+
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, signedVC)
+}
+
+func (c *Operation) generateCredentialHandler(w http.ResponseWriter, r *http.Request) {
+	req := &generateCredentialReq{}
+
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to decode request: %s", err.Error()))
+
+		return
+	}
+
+	dataBytes, err := c.store.Get(req.ID)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get user data using id '%s' : %s", req.ID, err.Error()))
+
+		return
+	}
+
+	var sData *searchData
+
+	err = json.Unmarshal(dataBytes, &sData)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to unmarshal user data : %s", err.Error()))
+
+		return
+	}
+
+	// create credential
+	cred, err := c.prepareCredential(sData.UserData, sData.Scope, req.VCSProfile)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to create credential: %s", err.Error()))

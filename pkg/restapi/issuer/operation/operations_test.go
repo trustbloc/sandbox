@@ -2481,3 +2481,242 @@ func TestCreateCredentialHandler(t *testing.T) {
 		require.Contains(t, rr.Body.String(), "failed to create credential")
 	})
 }
+
+func TestGenerateCredentialHandler(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		vcsRouter := mux.NewRouter()
+		vcsRouter.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusOK)
+			_, err := writer.Write([]byte(profileData))
+			if err != nil {
+				panic(err)
+			}
+		})
+		vcsRouter.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusCreated)
+			_, err := writer.Write([]byte(testCredentialRequest))
+			if err != nil {
+				panic(err)
+			}
+		})
+
+		vcs := httptest.NewServer(vcsRouter)
+
+		defer vcs.Close()
+
+		cfg := &Config{
+			StoreProvider: memstore.NewProvider(),
+			VCSURL:        vcs.URL,
+		}
+
+		svc, err := New(cfg)
+		require.NoError(t, err)
+
+		id := uuid.NewString()
+
+		b, err := json.Marshal(searchData{
+			UserData: map[string]interface{}{},
+		})
+		require.NoError(t, err)
+
+		err = svc.store.Put(id, b)
+		require.NoError(t, err)
+
+		reqBytes, err := json.Marshal(&generateCredentialReq{
+			ID:         id,
+			Holder:     uuid.NewString(),
+			VCSProfile: uuid.NewString(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, generateCredentialPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.generateCredentialHandler(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("bad request", func(t *testing.T) {
+		cms := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "[%s]", assuranceData)
+			fmt.Fprintln(w)
+		}))
+		defer cms.Close()
+
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, generateCredentialPath, strings.NewReader("invalid-json"))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.generateCredentialHandler(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to decode request")
+	})
+
+	t.Run("user data error", func(t *testing.T) {
+		cfg := &Config{
+			StoreProvider: memstore.NewProvider(),
+		}
+
+		svc, err := New(cfg)
+		require.NoError(t, err)
+
+		reqBytes, err := json.Marshal(&generateCredentialReq{
+			ID:         uuid.NewString(),
+			Holder:     uuid.NewString(),
+			VCSProfile: uuid.NewString(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, generateCredentialPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.generateCredentialHandler(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get user data using id")
+	})
+
+	t.Run("invalid data", func(t *testing.T) {
+		cfg := &Config{
+			StoreProvider: memstore.NewProvider(),
+		}
+
+		svc, err := New(cfg)
+		require.NoError(t, err)
+
+		id := uuid.NewString()
+
+		err = svc.store.Put(id, []byte("invalid-data"))
+		require.NoError(t, err)
+
+		reqBytes, err := json.Marshal(&generateCredentialReq{
+			ID:         id,
+			Holder:     uuid.NewString(),
+			VCSProfile: uuid.NewString(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, generateCredentialPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.generateCredentialHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to unmarshal user data")
+	})
+
+	t.Run("profile error", func(t *testing.T) {
+		vcsRouter := mux.NewRouter()
+		vcsRouter.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusInternalServerError)
+			_, err := writer.Write([]byte(profileData))
+			if err != nil {
+				panic(err)
+			}
+		})
+
+		vcs := httptest.NewServer(vcsRouter)
+
+		defer vcs.Close()
+
+		cfg := &Config{
+			StoreProvider: memstore.NewProvider(),
+			VCSURL:        vcs.URL,
+		}
+
+		svc, err := New(cfg)
+		require.NoError(t, err)
+
+		id := uuid.NewString()
+
+		b, err := json.Marshal(searchData{
+			UserData: map[string]interface{}{},
+		})
+		require.NoError(t, err)
+
+		err = svc.store.Put(id, b)
+		require.NoError(t, err)
+
+		reqBytes, err := json.Marshal(&generateCredentialReq{
+			ID:         id,
+			Holder:     uuid.NewString(),
+			VCSProfile: uuid.NewString(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, generateCredentialPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.generateCredentialHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to create credential")
+	})
+
+	t.Run("issue cred profile error", func(t *testing.T) {
+		vcsRouter := mux.NewRouter()
+		vcsRouter.HandleFunc("/profile/{id}", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusOK)
+			_, err := writer.Write([]byte(profileData))
+			if err != nil {
+				panic(err)
+			}
+		})
+		vcsRouter.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusInternalServerError)
+			_, err := writer.Write([]byte(testCredentialRequest))
+			if err != nil {
+				panic(err)
+			}
+		})
+
+		vcs := httptest.NewServer(vcsRouter)
+
+		defer vcs.Close()
+
+		cfg := &Config{
+			StoreProvider: memstore.NewProvider(),
+			VCSURL:        vcs.URL,
+		}
+
+		svc, err := New(cfg)
+		require.NoError(t, err)
+
+		id := uuid.NewString()
+
+		b, err := json.Marshal(searchData{
+			UserData: map[string]interface{}{},
+		})
+		require.NoError(t, err)
+
+		err = svc.store.Put(id, b)
+		require.NoError(t, err)
+
+		reqBytes, err := json.Marshal(&generateCredentialReq{
+			ID:         id,
+			Holder:     uuid.NewString(),
+			VCSProfile: uuid.NewString(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, generateCredentialPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.generateCredentialHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to sign credential")
+	})
+}
