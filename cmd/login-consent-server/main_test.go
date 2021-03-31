@@ -129,7 +129,7 @@ func TestConsent_buildConsentServer(t *testing.T) {
 	}
 }
 
-func TestConsentServer_Login(t *testing.T) {
+func TestConsentServer_Login(t *testing.T) { // nolint: gocyclo
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		if req.RequestURI == "/oauth2/auth/requests/login/accept" {
 			fmt.Fprint(res, `{"redirect_to":"sampleURL"}`)
@@ -152,6 +152,7 @@ func TestConsentServer_Login(t *testing.T) {
 		loginTemplate    htmlTemplate
 		bankTemplate     htmlTemplate
 		dlUploadTemplate htmlTemplate
+		ucisTemplate     htmlTemplate
 		err              string
 	}{
 		{
@@ -217,6 +218,25 @@ func TestConsentServer_Login(t *testing.T) {
 			referer:          dlUpload,
 		},
 		{
+			name:           "/prc login GET SUCCESS",
+			adminURL:       testServer.URL,
+			method:         http.MethodGet,
+			url:            "?login_challenge=12345",
+			responseHTML:   []string{"Sign In to your My UCIS account to proceed"},
+			responseStatus: http.StatusOK,
+			referer:        prc,
+		},
+		{
+			name:           "/prc login GET FAILURE (template error)",
+			adminURL:       testServer.URL,
+			method:         http.MethodGet,
+			url:            "?login_challenge=12345",
+			responseStatus: http.StatusOK,
+			err:            "template error",
+			ucisTemplate:   &mockTemplate{executeErr: fmt.Errorf("template error")},
+			referer:        prc,
+		},
+		{
 			name:           "/login POST FAILURE (missing form body)",
 			adminURL:       testServer.URL,
 			method:         http.MethodPost,
@@ -276,6 +296,10 @@ func TestConsentServer_Login(t *testing.T) {
 
 			if tc.dlUploadTemplate != nil {
 				server.dlUploadTemplate = tc.dlUploadTemplate
+			}
+
+			if tc.ucisTemplate != nil {
+				server.ucisLoginTemplate = tc.ucisTemplate
 			}
 
 			req, err := http.NewRequest(tc.method, tc.url, nil)

@@ -55,6 +55,7 @@ const (
 	authPath               = "/auth"
 	searchPath             = "/search"
 	generateCredentialPath = createCredentialPath + "/generate"
+	oidcRedirectPath       = "/oidc/redirect" + "/{id}"
 
 	// http query params
 	stateQueryParam = "state"
@@ -218,6 +219,7 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(settings, http.MethodGet, c.settings),
 		support.NewHTTPHandler(getCreditScore, http.MethodGet, c.getCreditScore),
 		support.NewHTTPHandler(callback, http.MethodGet, c.callback),
+		support.NewHTTPHandler(oidcRedirectPath, http.MethodGet, c.oidcRedirect),
 
 		// issuer rest apis (html decoupled)
 		support.NewHTTPHandler(authPath, http.MethodGet, c.auth),
@@ -287,6 +289,14 @@ func (c *Operation) auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	referrer := r.URL.Query()["referrer"]
+
+	if len(referrer) == 0 {
+		c.writeErrorResponse(w, http.StatusBadRequest, "referrer is mandatory")
+
+		return
+	}
+
 	u := c.tokenIssuer.AuthCodeURL(w)
 	u += "&scope=" + scope[0]
 
@@ -297,7 +307,28 @@ func (c *Operation) auth(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &cookie)
 
-	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/oidc/redirect/"+referrer[0]+"?url="+url.QueryEscape(u), http.StatusTemporaryRedirect)
+}
+
+func (c *Operation) oidcRedirect(w http.ResponseWriter, r *http.Request) {
+	u := r.URL.Query()["url"]
+	if len(u) == 0 {
+		c.writeErrorResponse(w, http.StatusBadRequest, "url is mandatory")
+
+		return
+	}
+
+	const redirectHTML = `
+	<!DOCTYPE html>
+	<html>
+	<head>
+	  <meta name="referrer" content="no-referrer-when-downgrade"/>
+	  <meta http-equiv="refresh" content="0; url='%s'" />
+	</head>
+	</html>`
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	fmt.Fprintf(w, redirectHTML, u[0])
 }
 
 func (c *Operation) search(w http.ResponseWriter, r *http.Request) {
@@ -356,7 +387,7 @@ func (c *Operation) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.writeResponse(w, http.StatusOK, []byte(fmt.Sprintf("{id : '%s'}", keyID)))
+	c.writeResponse(w, http.StatusOK, []byte(fmt.Sprintf(`{"id" : "%s"}`, keyID)))
 }
 
 // initiateDIDCommConnection initiates a DIDComm connection from the issuer to the user's wallet

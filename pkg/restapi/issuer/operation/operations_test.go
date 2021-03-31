@@ -233,7 +233,7 @@ func TestAuth(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodGet, authPath+"?scope=test&callbackURL=/abc", nil)
+		req, err := http.NewRequest(http.MethodGet, authPath+"?scope=test&callbackURL=/abc&referrer=prc", nil)
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
@@ -274,6 +274,56 @@ func TestAuth(t *testing.T) {
 		svc.auth(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "callbackURL is mandatory")
+	})
+
+	t.Run("missing referrer", func(t *testing.T) {
+		svc, err := New(&Config{
+			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, authPath+"?scope=test&callbackURL=/abc", nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.auth(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "referrer is mandatory")
+	})
+}
+
+func TestOIDCRedirect(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, "?url=http://abc", nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.oidcRedirect(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("missing url", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, authPath, nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.oidcRedirect(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "url is mandatory")
 	})
 }
 
