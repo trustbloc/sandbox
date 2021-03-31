@@ -38,9 +38,11 @@ const (
 	bankconsentHTML     = "./templates/bankconsent.html"
 	dlUploadHTML        = "./templates/uploadCred.html"
 	dlUploadConsentHTML = "./templates/uploadCredConsent.html"
+	ucisloginHTML       = "./templates/ucislogin.html"
 
 	bankLogin = "selectProvider"
 	dlUpload  = "uploaddrivinglicense"
+	prc       = "prc"
 
 	bankFlow     = "bank"
 	dlUploadFlow = "dlUpload"
@@ -141,6 +143,11 @@ func newConsentServer(adminURL string, tlsSystemCertPool bool, tlsCACerts []stri
 		return nil, err
 	}
 
+	ucisLoginTemplate, err := template.ParseFiles(ucisloginHTML)
+	if err != nil {
+		return nil, err
+	}
+
 	rootCAs, err := tlsutils.GetCertPool(tlsSystemCertPool, tlsCACerts)
 	if err != nil {
 		return nil, err
@@ -155,6 +162,7 @@ func newConsentServer(adminURL string, tlsSystemCertPool bool, tlsCACerts []stri
 		bankConsentTemplate:     bankConsentTemplate,
 		dlUploadTemplate:        dlUploadTemplate,
 		dlUploadConsentTemplate: dlUploadConsentTemplate,
+		ucisLoginTemplate:       ucisLoginTemplate,
 		httpClient: &http.Client{Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{RootCAs: rootCAs, MinVersion: tls.VersionTLS12}}},
 	}, nil
@@ -169,10 +177,11 @@ type consentServer struct {
 	bankConsentTemplate     htmlTemplate
 	dlUploadTemplate        htmlTemplate
 	dlUploadConsentTemplate htmlTemplate
+	ucisLoginTemplate       htmlTemplate
 	httpClient              *http.Client
 }
 
-func (c *consentServer) login(w http.ResponseWriter, req *http.Request) {
+func (c *consentServer) login(w http.ResponseWriter, req *http.Request) { // nolint:funlen,gocyclo
 	switch req.Method {
 	case http.MethodGet:
 		challenge := req.URL.Query().Get("login_challenge")
@@ -199,6 +208,18 @@ func (c *consentServer) login(w http.ResponseWriter, req *http.Request) {
 			http.SetCookie(w, &cookie)
 
 			err := c.dlUploadTemplate.Execute(w, fullData)
+			if err != nil {
+				fmt.Fprint(w, err.Error())
+				w.WriteHeader(http.StatusInternalServerError)
+
+				return
+			}
+		case strings.Contains(req.Referer(), prc):
+			expire := time.Now().AddDate(0, 0, 1)
+			cookie := http.Cookie{Name: loginTypeCookie, Value: prc, Expires: expire}
+			http.SetCookie(w, &cookie)
+
+			err := c.ucisLoginTemplate.Execute(w, fullData)
 			if err != nil {
 				fmt.Fprint(w, err.Error())
 				w.WriteHeader(http.StatusInternalServerError)
@@ -313,7 +334,7 @@ func (c *consentServer) acceptLoginRequest(w http.ResponseWriter, req *http.Requ
 	http.Redirect(w, req, loginOKResponse.Payload.RedirectTo, http.StatusFound)
 }
 
-func (c *consentServer) showConsentPage(w http.ResponseWriter, req *http.Request) { // nolint: gocyclo
+func (c *consentServer) showConsentPage(w http.ResponseWriter, req *http.Request) { // nolint: gocyclo,funlen
 	// get the consent request
 	consentRqstParams := admin.NewGetConsentRequestParamsWithHTTPClient(c.httpClient)
 	consentRqstParams.SetTimeout(timeout)
@@ -359,6 +380,19 @@ func (c *consentServer) showConsentPage(w http.ResponseWriter, req *http.Request
 			fmt.Fprint(w, err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 		}
+	case prc:
+		// don't show consent screen for PRC demo
+		form := url.Values{}
+		form.Add("grant_scope", consentRequest.Payload.RequestedScope[0])
+
+		req.PostForm = form
+
+		ok := parseRequestForm(w, req)
+		if !ok {
+			return
+		}
+
+		c.acceptConsentRequest(w, req)
 	default:
 		err = c.consentTemplate.Execute(w, fullData)
 		if err != nil {

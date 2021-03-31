@@ -70,12 +70,12 @@ SPDX-License-Identifier: Apache-2.0
             </p>
         </div>
         <div class="space-y-4 flex justify-center">
-            <form method="post" id="vpForm" action="/login{{.QueryParam}}" class="shadow-lg w-80 p-4 flex flex-col">
+            <form method="post" id="vpForm" action="/login" class="shadow-lg w-80 p-4 flex flex-col">
                 <div class="my-5 text-sm">
-                    <label for="username" class="block text-black">Email</label>
+                    <label for="email" class="block text-black">Email</label>
                     <i class="fa fa-info-circle cursor-pointer px-2 tooltip"></i>
                     <span class="toolTipText italic text-pink-400">Use the email registered with UCIS.</span>
-                    <input type="email" autofocus id="username" name="username" class="rounded-sm px-2 py-3 mt-4 focus:outline-none bg-gray-100 w-full text-left" placeholder="Username"
+                    <input type="email" autofocus id="email" name="email" class="rounded-sm px-2 py-3 mt-4 focus:outline-none bg-gray-100 w-full text-left" placeholder="Username"
                            inputmode="email"
                            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" maxlength="30" class="border" value="john.smith@example.com" oninvalid="setCustomValidity('Invalid email')"/>
                 </div>
@@ -83,6 +83,7 @@ SPDX-License-Identifier: Apache-2.0
                     <label for="password" class="block text-black">Password</label>
                     <input type="password" class="rounded-sm  px-2 py-3 mt-4 focus:outline-none bg-gray-100 w-full" id="password" name="password" value="f00B@r!23" />
                 </div>
+                <input type="hidden" name="challenge" value="{{.login_challenge}}">
                 <input class="block text-center text-white bg-gray-800 p-3 duration-300 rounded-sm hover:bg-black w-full" type="submit" value="Submit">
             </form>
         </div>
