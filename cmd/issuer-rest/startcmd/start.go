@@ -476,6 +476,10 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen
 	router.PathPrefix("/greencardlookup").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/greencardlookup.html")
 	})
+	router.PathPrefix("/connectwallet").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/storeprc.html")
+	})
+
 	router.PathPrefix("/uploaddrivinglicense").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/uploaddrivinglicense.html")
 	})

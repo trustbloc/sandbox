@@ -226,7 +226,7 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(searchPath, http.MethodGet, c.search),
 		support.NewHTTPHandler(verifyDIDAuthPath, http.MethodPost, c.verifyDIDAuthHandler),
 		support.NewHTTPHandler(createCredentialPath, http.MethodPost, c.createCredentialHandler),
-		support.NewHTTPHandler(generateCredentialPath, http.MethodGet, c.generateCredentialHandler),
+		support.NewHTTPHandler(generateCredentialPath, http.MethodPost, c.generateCredentialHandler),
 
 		// chapi
 		support.NewHTTPHandler(revoke, http.MethodPost, c.revokeVC),

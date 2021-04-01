@@ -35,7 +35,7 @@ SPDX-License-Identifier: Apache-2.0
         }
     </style>
 </head>
-<body class="leading-normal tracking-normal bg-gray-100">
+<body class="leading-normal tracking-normal bg-gray-100" onload="getTxnID()">
 <div class="bg-red-800 border border-red-400 text-white text-center rounded flex items-center justify-center" role="alert">
     <p class="lg:text-xl md:text-lg sm:text-sm">This is not government site. Do not use real data.</p>
 </div>
@@ -157,6 +157,8 @@ SPDX-License-Identifier: Apache-2.0
         <p class="text-lg font-sans text-gray-800 px-2">
             In order to do that, please provide your Application Invitation Identifier (AIID)*.
         </p>
+        <p class="text-2xl font-light text-center leading-relaxed text-red-700 py-8 px-2 hidden"
+           id="errMsg" style="display: none"> No Records Found</p>
         <form class="pt-6 pb-2 px-2 my-2">
             <div class="mb-4">
                 <label class="block text-sm font-bold mb-2" for="email">
@@ -165,25 +167,26 @@ SPDX-License-Identifier: Apache-2.0
                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker select-none" id="email" type="text" placeholder="000-345-677">
             </div>
             <div class="mb-6">
-                <label class="block text-sm font-bold mb-2" for="password">
+                <label class="block text-sm font-bold mb-2">
                     Application Invitation Identifier   <a data-tip="Your AIID can be found on the mailer insert in the envelope containing your physical green card">
                         <i class="fa fa-question-circle" aria-hidden="true"></i>
                     </a>
                 </label>
-
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mb-3" id="text" type="text" placeholder="AIID">
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 mb-3" id="text" type="text" value="456-765-898">
             </div>
             <div class="block md:flex items-center justify-between">
+                <input class=" hidden" id="hiddenTxnID" type="text"/>
                 <div>
-                    <button class="bg-green-800 hover:bg-green-dark text-white font-bold py-2 px-4 rounded shadow-lg " type="button">
+                    <a class="bg-green-800 hover:bg-green-dark text-white font-bold py-2 px-4 rounded shadow-lg cursor-pointer" type="button" id="lookupSubmit"
+                        onclick="searchAIID()">
                         Submit
-                    </button>
+                    </a>
                 </div>
 
                 <div class="mt-4 md:mt-0">
-                    <button class="bg-red-400 hover:bg-green-dark text-white font-bold py-2 px-4 rounded shadow-lg " type="button">
+                    <a class="bg-red-400 hover:bg-green-dark text-white font-bold py-2 px-4 rounded shadow-lg cursor-pointer" type="button" href="/applygreencard">
                         Cancel
-                    </button>
+                    </a>
                 </div>
             </div>
         </form>
@@ -201,6 +204,29 @@ SPDX-License-Identifier: Apache-2.0
     </section>
 </footer>
 </body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    let generatedTxnID = document.getElementById("hiddenTxnID").innerHTML;
+
+    function getTxnID(){
+        const params = new URLSearchParams(window.location.search);
+        generatedTxnID = params.get('txnID');
+        console.log("what is txnIID",generatedTxnID);
+    }
+
+    function searchAIID(){
+            axios.get('/search', { params: { txnID: generatedTxnID }}).then(
+            response => {
+                console.log("search response :", response.data);
+                let url = "/connectwallet?id=";
+                url += response.data.id;
+                window.location.replace(url);
+                console.log("the replaced url", url);
+        }).catch(error => document.getElementById("errMsg").style.display = "block");
+    }
+</script>
 <style>
     [data-tip] {
         position:relative;
