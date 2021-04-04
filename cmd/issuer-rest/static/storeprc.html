@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
     <div class="w-full px-4">
         <nav class="container px-4 mx-auto flex flex-wrap items-center justify-between">
             <div class="w-full relative flex justify-between lg:w-auto px-4 lg:static lg:block lg:justify-start">
-                <img class="block lg:block h-36 w-auto" src="img/immigration_nav_logo.png">
+                <a href="/applygreencard"><img class="block lg:block h-36 w-auto" src="img/immigration_nav_logo.png"></a>
             </div>
             <div class="flex lg:flex-grow items-center">
                 <ul class="flex flex-col lg:flex-row list-none ml-auto">
@@ -202,16 +202,12 @@ SPDX-License-Identifier: Apache-2.0
                 </div>
             </div>
             <div class="py-8 px-8">
+                <h2 class="bold text-xl text-center py-4">User Resident Card Details</h2>
                 <table class="border-collapse w-full text-black text-left">
-                    <thead>
-                    <tr>
-                        <td class="w-1/2 px-4 py-2 font-bold" >Details</td>
-                    </tr>
-                    </thead>
                     <tbody id="credential">
                     </tbody>
                 </table>
-                <p id="vcDataTextArea" class="hidden"></p>
+                <textarea id="vcDataTextArea" class="hidden"></textarea>
                 <div class="flex-none mt-auto rounded-b rounded-t-none overflow-hidden p-6">
                     <div class="flex items-center justify-center">
                         <a class=" flex items-center justify-center cardgradient py-2 px-4 rounded-full border text-white font-bold rounded shadow-lg cursor-pointer"
@@ -257,7 +253,6 @@ SPDX-License-Identifier: Apache-2.0
     function getSearchID(){
         const params = new URLSearchParams(window.location.search);
         searchID = params.get('id');
-        console.log("what is search ID", searchID);
     }
     function ready(fn) {
         if (document.readyState !== 'loading') {
@@ -323,13 +318,12 @@ SPDX-License-Identifier: Apache-2.0
             "didAuthResp": result.data
         };
 
-        document.getElementById("loading-screen").style.display = "block";
-
         axios.post('/verify/didauth',
             didAuthData
         ).then(function (response) {
             document.getElementById("holder").innerText = result.data.holder;
             document.getElementById("connectToWallet").style.display ="none";
+            document.getElementById("loading-screen").style.display = "block";
             generateCredential();
             console.log("generate did auth response:", response);
         }).catch(error => {
@@ -355,10 +349,9 @@ SPDX-License-Identifier: Apache-2.0
          axios.post('/credential/generate',
              generateCredData
          ).then(function (response) {
-             document.getElementById("connectToWallet").style.display ="none";
              document.getElementById("previewDataDiv").style.display ="block";
              console.log("generate credential response:", response);
-             document.getElementById("vcDataTextArea").innerHTML = response.data;
+             document.getElementById("vcDataTextArea").value = JSON.stringify(response.data);
              prettyTable(response.data);
              document.getElementById("loading-screen").style.display = "none";
          }).catch(error => {
@@ -383,30 +376,60 @@ SPDX-License-Identifier: Apache-2.0
     function prettyTable(credentialData){
         let flattened = {};
         flatten(credentialData, flattened);
+        replaceKeys(flattened);
         for (var key in flattened){
-            if (key !== "image" && key !== "verificationMethod" && key !== "jws" && key!=="proofPurpose"
-                && key!=="revocationListCredential" && key!=="id" &&key!=="revocationListIndex"){
+            if (key !== 'undefined'){
                 var tbody = document.getElementById('credential');
                 var tr = "<tr>";
                 if (isNaN(key)){
-                    tr += "<td class=\"  w-full lg:w-auto px-3 text-gray-800 text-left text-lg block lg:table-cell relative lg:static\">" + key +
-                        "</td>" + "<td class=\" w-full lg:w-auto px-3 text-gray-800 text-left text-lg block lg:table-cell relative lg:static overflow-auto \">" + flattened[key] + "</td></tr>";
+                    tr += "<td class=\"  w-full lg:w-auto px-3 text-gray-800 text-left text-sm block lg:table-cell relative lg:static\">" + key +
+                        "</td>" + "<td class=\" w-full lg:w-auto px-1 text-gray-800 text-left text-lg block lg:table-cell relative lg:static overflow-auto \">" + flattened[key] + "</td></tr>";
                     tbody.innerHTML += tr;
                 }
             }
 
         }
     }
+
+    function getFriendlyKeyName(name) {
+        var keys = {
+            "type": 'Signature Type',
+            "referenceNumber": 'Booking Ref No.',
+            "lprNumber": 'LPR Number',
+            "birthCountry": 'Country of Birth',
+            "familyName" : 'Last Name',
+            "birthDate":   'Date of Birth',
+            "givenName": 'Given Name',
+            "gender":     'Gender',
+            "lprCategory" :'LPR Category',
+            "residentSince" :'Resident Since',
+            "description" :'Description',
+            "issuanceDate" :'Date of Issue',
+            "name" :'Card',
+            "created" :'Date of Creation'
+        };
+        return keys[name];
+    }
+    function replaceKeys(json) {
+        for (var key in json) {
+            var friendlyKeyName =  getFriendlyKeyName(key);
+            if (friendlyKeyName !== 'undefined'){
+                json[friendlyKeyName] = json[key];
+                delete json[key];
+            }
+        }
+    }
     async function storeCredential() {
-       let credentialToStore = document.getElementById("vcDataTextArea").innerHTML;
-        console.log('storing prc credential...', credentialToStore);
+       let credentialToStore = document.getElementById("vcDataTextArea").value;
+       let credentialObject = JSON.parse(credentialToStore);
+        console.log('storing prc credential', credentialObject);
         const vp = {
             "@context": [
                 "https://www.w3.org/2018/credentials/v1"
             ],
             type: "VerifiablePresentation",
             verifiableCredential: [
-                credentialToStore
+                credentialObject
             ]
         };
 
