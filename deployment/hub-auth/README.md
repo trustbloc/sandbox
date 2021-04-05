@@ -3,25 +3,8 @@
 
 ## pre-requisits
 * [Minikube](https://minikube.sigs.k8s.io/docs/start/) with ingress addon.
-* Docker config file with github token under `kustomize/hub-auth/base/registry/.dockerconfigjson`
 * GNU sed
 * (Optional: Gets installed by make) [kustomize](https://kubectl.docs.kubernetes.io/installation/kustomize/).
-
-Example:
-
-		{
-			"auths": {
-				"docker.pkg.github.com": {
-					"auth": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-				},
-				"ghcr.io": {
-					"auth": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-				}
-			},
-			"HttpHeaders": {
-				"User-Agent": "Docker-Client/19.03.13 (linux)"
-			}
-		}
 
 ## Quick Run
 * `make all`

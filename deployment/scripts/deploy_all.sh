@@ -128,11 +128,6 @@ fi
 
 for component in ${DEPLOY_LIST[@]}; do
     echo "${AQUA} === component: $component ${NONE}"
-    if ! [[ "$component" == "cms" || "$component" == "registrar" ]]
-    then
-      mkdir -p $component/kustomize/$component/base/registry
-      cp ~/.docker/config.json $component/kustomize/$component/base/registry/.dockerconfigjson
-    fi
     pushd $component
         make setup-no-certs
         mkdir -p kustomize/$component/overlays/${DEPLOYMENT_ENV}/certs

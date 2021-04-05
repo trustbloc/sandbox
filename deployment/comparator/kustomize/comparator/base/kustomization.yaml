@@ -23,10 +23,6 @@ secretGenerator:
 - envs:
   - comparator/secret.env
   name: comparator-env-secret
-- files:
-  - registry/.dockerconfigjson
-  name: comparator-github-regcred
-  type: kubernetes.io/dockerconfigjson
 
 resources:
 - comparator/deployment.yml
