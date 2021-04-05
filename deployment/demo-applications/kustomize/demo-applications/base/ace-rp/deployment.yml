@@ -1,0 +1,36 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: ace-rp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ace-rp
+  template:
+    metadata:
+      labels:
+        app: ace-rp
+    spec:
+      imagePullSecrets:
+      - name: ace-rp-github-regcred
+      containers:
+      - name: ace-rp
+        envFrom:
+          - configMapRef:
+              name: ace-rp-env
+          - secretRef:
+              name: ace-rp-env-secret
+        image: sandbox-ace-rp:latest
+        args: ["start", "--host-url", "0.0.0.0:8081"]
+        ports:
+          - containerPort: 8081
+            protocol: TCP
+            name: http-port

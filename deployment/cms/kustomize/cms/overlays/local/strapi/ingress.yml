@@ -1,0 +1,29 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: strapi
+  labels:
+    app: strapi
+spec:
+  tls:
+  - hosts:
+      - cms.||DOMAIN||
+    secretName: $(INGRESS_TLS_SECRET)
+  rules:
+  - host: cms.||DOMAIN||
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: strapi
+            port:
+              name: http

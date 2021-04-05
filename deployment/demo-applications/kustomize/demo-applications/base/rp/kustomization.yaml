@@ -1,0 +1,50 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+# Labels to add to all resources and selectors.
+#commonLabels:
+#  someName: someValue
+
+# Annotations to add to all resources
+#commonAnnotations:
+#  someName: someValue
+
+commonLabels:
+  component: rp
+
+vars:
+- fieldref:
+    fieldPath: metadata.name
+  name: RP_SERVICE_NAME
+  objref:
+    apiVersion: v1
+    kind: Service
+    name: verifier
+
+configMapGenerator:
+- envs:
+  - config.env
+  name: rp-env
+
+secretGenerator:
+- files:
+  - ../registry/.dockerconfigjson
+  name: rp-github-regcred
+  type: kubernetes.io/dockerconfigjson
+- envs:
+  - secret.env
+  name: rp-env-secret
+
+resources:
+- deployment.yml
+- service.yml
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: sandbox-rp
+  newName: ghcr.io/trustbloc-cicd/sandbox-rp
+  newTag: 0.1.7-snapshot-dc141e4

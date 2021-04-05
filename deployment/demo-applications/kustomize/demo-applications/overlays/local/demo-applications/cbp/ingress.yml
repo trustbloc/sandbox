@@ -1,0 +1,29 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cbp-ace-rp
+  labels:
+    app: cbp-ace-rp
+spec:
+  tls:
+  - hosts:
+      - $(CBP_RP_SERVICE_NAME).||DOMAIN||
+    secretName: $(INGRESS_TLS_SECRET)
+  rules:
+  - host: $(CBP_RP_SERVICE_NAME).||DOMAIN||
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: cbp-rp
+            port:
+              name: http

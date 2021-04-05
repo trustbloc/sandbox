@@ -1,0 +1,36 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: issuer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: issuer
+  template:
+    metadata:
+      labels:
+        app: issuer
+    spec:
+      imagePullSecrets:
+      - name: issuer-github-regcred
+      containers:
+      - name: issuer
+        envFrom:
+          - configMapRef:
+              name: issuer-env
+          - secretRef:
+              name: issuer-env-secret
+        image: sandbox-issuer:latest
+        args: ["start"]
+        ports:
+          - containerPort: 8081
+            protocol: TCP
+            name: http-port

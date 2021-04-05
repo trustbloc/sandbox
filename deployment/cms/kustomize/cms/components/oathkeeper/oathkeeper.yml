@@ -1,0 +1,88 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oathkeeper-api
+  labels:
+    app: oathkeeper
+spec:
+  ports:
+    - port: 80
+      targetPort: http-api
+      protocol: TCP
+      name: http
+  selector:
+    app: oathkeeper
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oathkeeper-proxy
+  labels:
+    app: oathkeeper
+spec:
+  ports:
+    - port: 80
+      targetPort: http-proxy
+      protocol: TCP
+      name: http
+  selector:
+    app: oathkeeper
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oathkeeper
+  labels:
+    app: oathkeeper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oathkeeper
+  template:
+    metadata:
+      labels:
+        app: oathkeeper
+    spec:
+      volumes:
+        - name: config
+          configMap:
+            name: oathkeeper-config
+        - name: rules
+          configMap:
+            name: oathkeeper-rules
+      containers:
+        - name: oathkeeper
+          image: "oathkeeper:latest"
+          command: [ "oathkeeper", "serve", "--config", "/etc/config/config.yml" ]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/config
+              readOnly: true
+            - name: rules
+              mountPath: /etc/rules
+              readOnly: true
+          ports:
+            - name: http-api
+              containerPort: 4456
+              protocol: TCP
+            - name: http-proxy
+              containerPort: 4455
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health/alive
+              port: http-api
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http-api
+          resources:
+            {}

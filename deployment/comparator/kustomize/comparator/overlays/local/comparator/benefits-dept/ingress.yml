@@ -1,0 +1,29 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: benefits-dept-comparator
+  labels:
+    app: benefits-dept-comparator
+spec:
+  tls:
+  - hosts:
+      - $(BENEFITS_DEPT_SERVICE_NAME).||DOMAIN||
+    secretName: $(INGRESS_TLS_SECRET)
+  rules:
+  - host: $(BENEFITS_DEPT_SERVICE_NAME).||DOMAIN||
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: benefits-dept-comparator
+            port:
+              name: http

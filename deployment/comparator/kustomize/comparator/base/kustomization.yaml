@@ -1,0 +1,41 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# Labels to add to all resources and selectors.
+#commonLabels:
+#  someName: someValue
+
+# Annotations to add to all resources
+#commonAnnotations:
+#  someName: someValue
+
+generatorOptions: {}
+
+configMapGenerator:
+- envs:
+  - comparator/config.env
+  name: comparator-env
+
+secretGenerator:
+- envs:
+  - comparator/secret.env
+  name: comparator-env-secret
+- files:
+  - registry/.dockerconfigjson
+  name: comparator-github-regcred
+  type: kubernetes.io/dockerconfigjson
+
+resources:
+- comparator/deployment.yml
+- comparator/service.yml
+
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: comparator-server
+  newName: ghcr.io/trustbloc-cicd/comparator-server
+  newTag: 0.1.7-snapshot-7874fc2

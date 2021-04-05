@@ -1,0 +1,84 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# Adds namespace to all resources.
+#namespace: edge-sandbox-system
+
+# Value of this field is prepended to the
+# names of all resources, e.g. a deployment named
+# "wordpress" becomes "alices-wordpress".
+# Note that it should also match with the prefix (text before '-') of the namespace
+# field above.
+commonLabels:
+  group: services
+  instance: local
+  project: trustbloc
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+vars:
+- fieldref:
+    fieldPath: metadata.name
+  name: INGRESS_TLS_SECRET
+  objref:
+    apiVersion: v1
+    kind: Secret
+    name: comparator-wildcard-cert
+
+configMapGenerator:
+- behavior: merge
+  envs:
+  - ucis/config.env
+  name: ucis-comparator-env
+- behavior: merge
+  envs:
+  - cbp/config.env
+  name: cbp-comparator-env
+- behavior: merge
+  envs:
+  - benefits-dept/config.env
+  name: benefits-dept-comparator-env
+- files:
+  - ../certs/ca.crt
+  name: comparator-ca-cert
+
+
+secretGenerator:
+- behavior: merge
+  envs:
+  - ucis/secret.env
+  name: ucis-comparator-env-secret
+- behavior: merge
+  envs:
+  - cbp/secret.env
+  name: cbp-comparator-env-secret
+- behavior: merge
+  envs:
+  - benefits-dept/secret.env
+  name: benefits-dept-comparator-env-secret
+- files:
+  - ../certs/tls.crt
+  - ../certs/tls.key
+  name: comparator-wildcard-cert
+  type: kubernetes.io/tls
+
+resources:
+- ../../ucis
+- ../../cbp
+- ../../benefits-dept
+- ucis/ingress.yml
+- cbp/ingress.yml
+- benefits-dept/ingress.yml
+
+transformers:
+- sedtransform.yml
+- sedb64transform.yml
+
+patchesStrategicMerge:
+- ucis/add-ca.yml
+- cbp/add-ca.yml
+- benefits-dept/add-ca.yml

@@ -1,0 +1,87 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+# Adds namespace to all resources.
+#namespace: edge-sandbox-system
+
+# Value of this field is prepended to the
+# names of all resources, e.g. a deployment named
+# "wordpress" becomes "alices-wordpress".
+# Note that it should also match with the prefix (text before '-') of the namespace
+# field above.
+namePrefix: hub-
+commonLabels:
+  component: hub-auth
+  group: core
+  instance: local
+  project: trustbloc
+
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+vars:
+- fieldref:
+    fieldPath: metadata.name
+  name: INGRESS_TLS_SECRET
+  objref:
+    apiVersion: v1
+    kind: Secret
+    name: auth-wildcard-cert
+
+secretGenerator:
+- behavior: merge
+  envs:
+  - hydra/hydra-secret.env
+  name: hydra-secret
+- behavior: merge
+  envs:
+  - auth-secret.env
+  name: auth-env-secret
+- files:
+  - ../certs/tls.crt
+  - ../certs/tls.key
+  name: auth-wildcard-cert
+  type: kubernetes.io/tls
+- behavior: replace
+  files:
+  - ../keys/auth.key
+  - ../keys/enc.key
+  name: auth-keys
+
+configMapGenerator:
+- behavior: merge
+  envs:
+  - auth.env
+  name: auth-env
+- behavior: replace
+  files:
+  - providers.yml=auth-config.yml
+  name: auth-config
+- behavior: merge
+  envs:
+  - hydra/hydra-env.env
+  name: hydra-env
+- files:
+  - ../certs/ca.crt
+  name: auth-ca-cert
+
+
+
+resources:
+- ../../../base
+- ingress.yml
+- hydra/hydra-create-client.yml
+
+transformers:
+- sedtransform.yml
+- sedb64transform.yml
+
+components:
+- ../../../components/hydra
+
+patchesStrategicMerge:
+- add-ca.yml

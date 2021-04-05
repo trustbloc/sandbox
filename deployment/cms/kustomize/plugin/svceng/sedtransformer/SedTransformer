@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# https://github.com/kubernetes-sigs/kustomize/blob/master/plugin/someteam.example.com/v1/sedtransformer/SedTransformer
+# Skip the config file name argument.
+shift
+args=()
+for arg in "$@"; do
+  env_expanded=${arg@P}
+  args+=(-e "$env_expanded")
+done
+
+sed "${args[@]}"

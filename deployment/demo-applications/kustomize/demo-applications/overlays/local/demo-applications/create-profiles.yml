@@ -1,0 +1,68 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+---
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: ace-rp-profiles
+spec:
+  template:
+    spec:
+      volumes:
+        - name: script
+          configMap:
+            name: ace-rp-profiles-script
+      restartPolicy: Never
+      initContainers:
+        - name: ace-rp-ready
+          image: fedora
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh"]
+          args:
+            - "-c"
+            - |
+              ENDPOINTS=(BENEFITS_DEPT_RP_SERVICE_HOST CBP_RP_SERVICE_HOST UCIS_RP_SERVICE_HOST);
+              for endpoint in "${ENDPOINTS[@]}";
+              do while [[ "$(curl -o /dev/null -s -w '%{http_code}' --insecure --connect-timeout 5 http://${!endpoint})" != "200" ]];
+              do echo "waiting for ${endpoint} endopint";
+              sleep 5;
+              done;
+              done;
+        - name: comparator-ready
+          image: fedora
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh"]
+          args:
+            - "-c"
+            - |
+              ENDPOINTS=(benefits-dept-comparator cbp-comparator ucis-comparator);
+              for endpoint in "${ENDPOINTS[@]}";
+              do while [[ "$(curl -o /dev/null -s -w '%{http_code}' --insecure --connect-timeout 5 https://${endpoint}.||DOMAIN||/healthcheck)" != "200" ]];
+              do echo "waiting for ${endpoint} endopint";
+              sleep 5;
+              done;
+              done;
+        - name: issuer-vcs-ready
+          image: fedora
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh"]
+          args:
+            - "-c"
+            - |
+              while [[ "$(curl -o /dev/null -s -w '%{http_code}' --insecure --connect-timeout 5 https://issuer-vcs.||DOMAIN||/healthcheck)" != "200" ]];
+              do echo "waiting for issuer-vcs endopint";
+              sleep 5;
+              done;
+      containers:
+      - name: ace-rp-profiles
+        image: "sandbox-cli:latest"
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh"]
+        args: ["/opt/ace_rp_configure.sh"]
+        volumeMounts:
+          - name: script
+            mountPath: /opt

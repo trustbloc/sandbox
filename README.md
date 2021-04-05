@@ -24,6 +24,14 @@ The sandbox example can be run with the following modes.
 
 Refer [Build](docs/demo/build.md) for more detailed information.
 
+## Deployment
+Run following target to run the components locally.
+```
+make setup-and-deploy
+```
+
+For pre-requisites, please refer [TrustBloc k8s deployments](./deployment/README.md).
+
 ## Sample Applications
 - [Issuer](docs/issuer/README.md)
 - [Relying Party/Verifier](docs/rp/README.md)

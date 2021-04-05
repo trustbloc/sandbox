@@ -1,0 +1,56 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+serve:
+  proxy:
+    port: 4455
+  api:
+    port: 4456
+
+access_rules:
+  repositories:
+    - file:///etc/rules/access-rules.json
+
+# Global configuration file oathkeeper.yml
+authenticators:
+  oauth2_introspection:
+    # Set enabled to true if the authenticator should be enabled and false to disable the authenticator. Defaults to false.
+    enabled: true
+    config:
+      # will access hydra admin through container directly because nginx-proxy doesn't support multiple ports per virtual host
+      introspection_url: https://hydra-admin.||DOMAIN||/oauth2/introspect
+      scope_strategy: exact
+      required_scope:
+        - StudentCard
+        - TravelCard
+        - PermanentResidentCard
+        - VaccinationCertificate
+        - CertifiedMillTestReport
+        - CrudeProductCredential
+        - UniversityDegreeCredential
+        - CreditCardStatement
+        - mDL
+        - CreditScore
+  noop:
+    enabled: true
+
+authorizers:
+  allow:
+    # Set enabled to true if the authenticator should be enabled and false to disable the authenticator. Defaults to false.
+    enabled: true
+
+mutators:
+  header:
+    enabled: true
+    config:
+      headers:
+        X-User: "{{ print .Subject }}"
+        Authentication: "Bearer ABC"
+        # You could add some other headers, for example with data from the
+        # session.
+        # X-Some-Arbitrary-Data: "{{ print .Extra.some.arbitrary.data }}"
+  noop:
+    enabled: true

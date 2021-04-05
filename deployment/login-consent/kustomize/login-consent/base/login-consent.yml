@@ -1,0 +1,49 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: login-consent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: login-consent
+  template:
+    metadata:
+      labels:
+        app: login-consent
+    spec:
+      imagePullSecrets:
+      - name: login-consent-github-regcred
+      containers:
+      - name: login-consent
+        envFrom:
+          - configMapRef:
+              name: login-consent-env
+        image: login-consent-server:latest
+        ports:
+          - containerPort: 8081
+            protocol: TCP
+            name: http-port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: login-consent
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http-port
+  selector:
+    app: login-consent
+status:
+  loadBalancer: {}

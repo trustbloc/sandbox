@@ -1,0 +1,98 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hydra-admin
+  labels:
+    app: hydra
+spec:
+  ports:
+    - port: 80
+      targetPort: http-admin
+      protocol: TCP
+      name: http
+  selector:
+    app: hydra
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hydra
+  labels:
+    app: hydra
+spec:
+  ports:
+    - port: 80
+      targetPort: http-public
+      protocol: TCP
+      name: http
+  selector:
+    app: hydra
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hydra
+  labels:
+    app: hydra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hydra
+  template:
+    metadata:
+      labels:
+        app: hydra
+    spec:
+      initContainers:
+        - name: hydra-automigrate
+          image: "hydra:latest"
+          imagePullPolicy: IfNotPresent
+          command: ["hydra"]
+          args: ["migrate", "sql", "-e", "--yes"]
+          env:
+            - name: DSN
+              valueFrom:
+                secretKeyRef:
+                  name: hydra-secret
+                  key: DSN
+      containers:
+        - name: hydra
+          image: "hydra:latest"
+          imagePullPolicy: IfNotPresent
+          command: ["hydra"]
+          args: ["serve", "all"]
+          envFrom:
+            - configMapRef:
+                name: hydra-env
+            - secretRef:
+                name: hydra-secret
+          ports:
+            - name: http-public
+              containerPort: 4444
+              protocol: TCP
+            - name: http-admin
+              containerPort: 4445
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health/alive
+              port: http-admin
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http-admin
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 5
+          resources: {}

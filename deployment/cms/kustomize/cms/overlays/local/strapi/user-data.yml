@@ -1,0 +1,44 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: user-data
+spec:
+  template:
+    spec:
+      volumes:
+        - name: script
+          configMap:
+            name: strapi-user-data-script
+      restartPolicy: Never
+      initContainers:
+        - name: wait
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          command: ["sh"]
+          args: ["-c", "sleep 90"]
+        - name: healthcheck-ready
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh"]
+          args:
+            - "-c"
+            - |
+              while [ "$(wget http://${STRAPI_SERVICE_HOST}/admin -O- -S >/dev/null 2>&1; echo $?)" -ne 0 ];
+              do echo "waiting for strapi/admin endpoint";
+              done
+      containers:
+      - name: user-data
+        image: "alpine:latest"
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh"]
+        args: ["/opt/user_data.sh"]
+        volumeMounts:
+          - name: script
+            mountPath: /opt
