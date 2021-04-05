@@ -1,8 +1,8 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 # Labels to add to all resources and selectors.
 #commonLabels:
@@ -23,10 +23,6 @@ secretGenerator:
 - envs:
   - secret.env
   name: ace-rp-env-secret
-- files:
-  - ../registry/.dockerconfigjson
-  name: ace-rp-github-regcred
-  type: kubernetes.io/dockerconfigjson
 
 resources:
 - deployment.yml

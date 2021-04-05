@@ -1,8 +1,8 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 # Labels to add to all resources and selectors.
 #commonLabels:
@@ -32,10 +32,6 @@ configMapGenerator:
   name: auth-config
 
 secretGenerator:
-- files:
-  - registry/.dockerconfigjson
-  name: auth-github-regcred
-  type: kubernetes.io/dockerconfigjson
 - literals:
   - auth.key=5QWpW+aj7WTNzEdZmTcOXXlWP78Z49CmcS9T9Bn4nx0=
   - enc.key=ccKjwMDwhXzanvKJUVSMHPGYQ9OdBqAb3Ywg7hv58qY=

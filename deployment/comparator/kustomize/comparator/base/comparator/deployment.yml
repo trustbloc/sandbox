@@ -19,8 +19,6 @@ spec:
       labels:
         app: comparator
     spec:
-      imagePullSecrets:
-      - name: comparator-github-regcred
       containers:
       - name: comparator
         envFrom:

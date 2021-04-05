@@ -60,10 +60,7 @@ deploy: prechecks kustomize set-images set-labels deploy-comparator
 
 .PHONY: prechecks
 prechecks:
-ifeq (, $(shell stat ${REGISTRY_DIRECTORY}/.dockerconfigjson 2>/dev/null))
-	@echo "docker registry config not found: ${REGISTRY_DIRECTORY}/.dockerconfigjson"
-	@exit 1
-else ifeq (, $(shell stat ${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} 2>/dev/null))
+ifeq (, $(shell stat ${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} 2>/dev/null))
 	@echo "Environment not found ${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}"
 	@exit 1
 endif
