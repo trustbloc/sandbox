@@ -1,0 +1,29 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ucis-ace-rp
+  labels:
+    app: ucis-ace-rp
+spec:
+  tls:
+  - hosts:
+      - $(UCIS_RP_SERVICE_NAME).||DOMAIN||
+    secretName: $(INGRESS_TLS_SECRET)
+  rules:
+  - host: $(UCIS_RP_SERVICE_NAME).||DOMAIN||
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: ucis-rp
+            port:
+              name: http

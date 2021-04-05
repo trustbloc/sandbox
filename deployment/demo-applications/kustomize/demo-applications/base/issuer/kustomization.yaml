@@ -1,0 +1,51 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+# Labels to add to all resources and selectors.
+#commonLabels:
+#  someName: someValue
+
+# Annotations to add to all resources
+#commonAnnotations:
+#  someName: someValue
+
+commonLabels:
+  component: issuer
+
+vars:
+- fieldref:
+    fieldPath: metadata.name
+  name: ISSUER_SERVICE_NAME
+  objref:
+    apiVersion: v1
+    kind: Service
+    name: issuer
+
+configMapGenerator:
+- envs:
+  - config.env
+  name: issuer-env
+
+secretGenerator:
+- files:
+  - ../registry/.dockerconfigjson
+  name: issuer-github-regcred
+  type: kubernetes.io/dockerconfigjson
+- envs:
+  - secret.env
+  name: issuer-env-secret
+
+resources:
+- deployment.yml
+- service.yml
+
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: sandbox-issuer
+  newName: ghcr.io/trustbloc-cicd/sandbox-issuer
+  newTag: 0.1.7-snapshot-dc141e4

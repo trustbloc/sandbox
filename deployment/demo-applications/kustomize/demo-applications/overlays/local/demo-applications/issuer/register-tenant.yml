@@ -1,0 +1,40 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+---
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: issuer-register-tenant
+spec:
+  template:
+    spec:
+      volumes:
+        - name: script
+          configMap:
+            name: issuer-register-tenant-script
+      restartPolicy: Never
+#      serviceAccountName: oathkeeper
+      initContainers:
+        - name: wait
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          command: ["sh"]
+          args: ["-c", "sleep 90"]
+        - name: healthcheck-ready
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          command: ["wget"]
+          args: ["-S", "http://$(ISSUER_SERVICE_NAME)", "-O-"]
+      containers:
+      - name: register-tenant
+        image: "alpine:latest"
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh"]
+        args: ["/opt/register-tenant.sh"]
+        volumeMounts:
+          - name: script
+            mountPath: /opt

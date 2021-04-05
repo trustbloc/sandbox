@@ -1,0 +1,22 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ucis-comparator
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ca-cert
+          configMap:
+            name: comparator-ca-cert
+      containers:
+        - name: comparator
+          volumeMounts:
+            - name: ca-cert
+              mountPath: /etc/comparator/tls

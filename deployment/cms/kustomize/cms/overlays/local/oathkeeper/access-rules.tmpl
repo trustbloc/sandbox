@@ -1,0 +1,456 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+[
+  {
+    "id": "users-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.||DOMAIN||/users<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "noop"
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  },
+  {
+    "id": "studentcards-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.||DOMAIN||/studentcards<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "StudentCard"
+          ]
+        }
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  },
+  {
+    "id": "travelcards-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.||DOMAIN||/travelcards<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "TravelCard"
+          ]
+        }
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  },
+  {
+    "id": "permanentresidentcards-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.||DOMAIN||/permanentresidentcards<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "PermanentResidentCard"
+          ]
+        }
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  },
+  {
+    "id": "vaccinationcertificates-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.||DOMAIN||/vaccinationcertificates<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "VaccinationCertificate"
+          ]
+        }
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  },
+  {
+    "id": "certifiedmilltestreports-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.||DOMAIN||/certifiedmilltestreports<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "CertifiedMillTestReport"
+          ]
+        }
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  },
+  {
+    "id": "crudeproductcredential-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.||DOMAIN||/crudeproductcredentials<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "CrudeProductCredential"
+          ]
+        }
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  },
+  {
+    "id": "universitydegreecredential-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.||DOMAIN||/universitydegreecredentials<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "UniversityDegreeCredential"
+          ]
+        }
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  },
+  {
+    "id": "creditcardstatement-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.||DOMAIN||/creditcardstatements<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "CreditCardStatement"
+          ]
+        }
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  },
+  {
+    "id": "drivinglicense-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.||DOMAIN||/mdls<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "mDL"
+          ]
+        }
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  },
+  {
+    "id": "creditscore-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.||DOMAIN||/creditscores<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "noop"
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  },
+  {
+    "id": "evidences-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.||DOMAIN||/mdlevidences<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "noop"
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  },
+  {
+    "id": "boardingpass-resource-server-rule",
+    "upstream": {
+      "url": "http://strapi"
+    },
+    "match": {
+      "url": "http://oathkeeper-proxy.||DOMAIN||/boardingpasses<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "noop"
+      }
+    ],
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}",
+            "Authorization": "Bearer {TOKEN}"
+          }
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    }
+  }
+]

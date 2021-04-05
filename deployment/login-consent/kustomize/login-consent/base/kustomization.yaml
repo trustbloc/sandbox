@@ -1,0 +1,45 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+# Labels to add to all resources and selectors.
+#commonLabels:
+#  someName: someValue
+
+# Annotations to add to all resources
+#commonAnnotations:
+#  someName: someValue
+
+generatorOptions: {}
+
+vars:
+- fieldref:
+    fieldPath: metadata.name
+  name: LOGIN_CONSENT_SERVICE_NAME
+  objref:
+    apiVersion: v1
+    kind: Service
+    name: login-consent
+
+configMapGenerator:
+- envs:
+  - login-consent.env
+  name: login-consent-env
+
+secretGenerator:
+- files:
+  - registry/.dockerconfigjson
+  name: login-consent-github-regcred
+  type: kubernetes.io/dockerconfigjson
+
+resources:
+- login-consent.yml
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: login-consent-server
+  newName: ghcr.io/trustbloc-cicd/sandbox-login-consent-server
+  newTag: 0.1.7-snapshot-73cbf76

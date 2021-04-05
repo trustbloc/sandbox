@@ -1,0 +1,29 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rp
+  labels:
+    app: rp
+spec:
+  tls:
+  - hosts:
+      - rp.||DOMAIN||
+    secretName: $(INGRESS_TLS_SECRET)
+  rules:
+  - host: rp.||DOMAIN||
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: verifier
+            port:
+              name: http

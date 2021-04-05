@@ -1,0 +1,36 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: comparator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: comparator
+  template:
+    metadata:
+      labels:
+        app: comparator
+    spec:
+      imagePullSecrets:
+      - name: comparator-github-regcred
+      containers:
+      - name: comparator
+        envFrom:
+          - configMapRef:
+              name: comparator-env
+          - secretRef:
+              name: comparator-env-secret
+        image: comparator-server:latest
+        args: ["start"]
+        ports:
+          - containerPort: 8081
+            protocol: TCP
+            name: http-port

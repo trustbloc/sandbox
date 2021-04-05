@@ -1,0 +1,54 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: couchdb
+  name: couchdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: couchdb
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: couchdb
+    spec:
+      volumes:
+        - name: couchdb-config
+          configMap:
+            name: couchdb-config
+      hostname: couchdb
+      containers:
+      - image: couchdb:latest
+        ports:
+          - name: couchdb-port
+            protocol: TCP
+            containerPort: 5984
+        securityContext:
+          runAsUser: 5984
+          runAsGroup: 5984
+        name: couchdb
+        env:
+        - name: DB_URL
+          value: 'http://localhost:5984/member_db'
+        - name: COUCHDB_USER
+          value: 'cdbadmin'
+        - name: COUCHDB_PASSWORD
+          value: 'secret'
+        volumeMounts:
+          - name: couchdb-config
+            mountPath: /opt/couchdb/etc/local.d/config.ini
+            subPath: config.ini
+        resources: {}
+status: {}
