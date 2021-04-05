@@ -30,7 +30,7 @@ Run following target to run the components locally.
 make setup-and-deploy
 ```
 
-For pre-requisites, please refer [TrustBloc k8s deployments](./deployment/README.md).
+For pre-requisites, please refer [TrustBloc k8s deployments](https://github.com/trustbloc/deployment/blob/main/README.md).
 
 ## Sample Applications
 - [Issuer](docs/issuer/README.md)
