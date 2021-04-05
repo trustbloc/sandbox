@@ -7,7 +7,9 @@
 | Issuer      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)     | [Click Here](https://demo-issuer.dev.trustbloc.dev)     | [Click Here](https://issuer.trustbloc.local)            |
 | RP/Verifier | [Click Here](https://demo-verifier.sandbox.trustbloc.dev)   | [Click Here](https://demo-verifier.dev.trustbloc.dev)   | [Click Here](https://rp.trustbloc.local)                |
 
-*: Refer [here](./build.md) to run the demo locally.
+*: Refer [here](./../../README.md#deployment) to run the local k8s demo.
+
+**: Refer [here](./build.md) to run the demo locally.
 
 ## Steps
 1. Login to Wallet : Go to [Wallet](#components) and click on `Allow` when a pop-up asks for the permission. This 
