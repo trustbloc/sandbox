@@ -1,8 +1,8 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 ---
 healthcheck:
@@ -67,7 +67,7 @@ healthcheck:
     uri: https://router-api.trustbloc.dev/healthcheck
     code: 200
   - name: wallet
-    uri: https://myagent.trustbloc.dev/login
+    uri: https://wallet.trustbloc.dev/login
     code: 200
   - name: rp-adapter
     uri: https://adapter-rp.trustbloc.dev/healthcheck

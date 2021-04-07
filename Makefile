@@ -25,7 +25,7 @@ DID_ELEMENT_SIDETREE_REQUEST_URL ?= https://element-did.com/api/v1/sidetree/requ
 # Namespace for the sandbox cli image
 SANDBOX_CLI_IMAGE_NAME       ?= trustbloc/sandbox-cli
 
-TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=47e9c3d54653a088e0c8f3b3b0c246871312c9d7
+TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=cac81b38f9af9087e01215f4cea21fea7d082f4d
 
 # Tool commands (overridable)
 ALPINE_VER ?= 3.12

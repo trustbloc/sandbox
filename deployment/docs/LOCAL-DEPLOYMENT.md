@@ -36,8 +36,8 @@
         MINIKUBE_IP ucis-rp.trustbloc.dev
         MINIKUBE_IP holder-vcs.trustbloc.dev
         MINIKUBE_IP governance-vcs.trustbloc.dev
-        MINIKUBE_IP myagent.trustbloc.dev
-        MINIKUBE_IP myagent-support.trustbloc.dev
+        MINIKUBE_IP wallet.trustbloc.dev
+        MINIKUBE_IP wallet-support.trustbloc.dev
         MINIKUBE_IP router.trustbloc.dev
         MINIKUBE_IP router-ws.trustbloc.dev
         MINIKUBE_IP router-api.trustbloc.dev
@@ -92,8 +92,8 @@
             MINIKUBE_IP rp-vcs.trustbloc.dev
             MINIKUBE_IP holder-vcs.trustbloc.dev
             MINIKUBE_IP governance-vcs.trustbloc.dev
-            MINIKUBE_IP myagent.trustbloc.dev
-            MINIKUBE_IP myagent-support.trustbloc.dev
+            MINIKUBE_IP wallet.trustbloc.dev
+            MINIKUBE_IP wallet-support.trustbloc.dev
             MINIKUBE_IP router.trustbloc.dev
             MINIKUBE_IP router-ws.trustbloc.dev
             MINIKUBE_IP router-api.trustbloc.dev
