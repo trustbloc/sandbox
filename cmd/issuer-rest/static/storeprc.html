@@ -189,13 +189,13 @@ SPDX-License-Identifier: Apache-2.0
         <h2 class="bold text-4xl py-4">Digital Permanent Resident Card</h2>
         <div class="grid grid-cols-1 bg-white border max-w-xl border-gray-300">
             <div class="grid grid-cols-2 cardgradient shadow-lg rounded bg-white border max-w-xl border-gray-300">
-            <div class="px-8 py-4">
-                <img class="h-48 rounded-lg " src="img/borat.png">
+            <div class="px-4 py-4">
+                <canvas id="canvas" class="h-48"></canvas>
             </div>
                 <div class="px-4 flex items-center grid grid-rows-1 py-8 ">
                     <div class="flex items-center justify-start">
-                        <img class="h-16 px-1 rounded-full text-center" src="img/immigration_logo.jpg">
-                        <label class="block text-lg text-white font-bold mb-2" for="email">
+                        <img class="h-16 rounded-full text-center" src="img/immigration_logo.jpg">
+                        <label class="block px-2 text-xl text-white font-bold mb-2" for="email">
                             Utopia Permanent Resident Card
                         </label>
                     </div>
@@ -361,6 +361,15 @@ SPDX-License-Identifier: Apache-2.0
          });
      }
 
+     function loadUserImage(base64ImageData){
+         let ctx = document.getElementById('canvas').getContext('2d');
+         let image = new Image();
+         image.onload = function() {
+             ctx.drawImage(image, 0, 0, 140, 150);
+         };
+         image.src = base64ImageData;
+     }
+
     function flatten(json, flattened) {
         for (var key in json) {
             if (json.hasOwnProperty(key)) {
@@ -376,6 +385,8 @@ SPDX-License-Identifier: Apache-2.0
     function prettyTable(credentialData){
         let flattened = {};
         flatten(credentialData, flattened);
+        console.log("what is image", flattened.image, flattened);
+        loadUserImage(flattened.image);
         replaceKeys(flattened);
         for (var key in flattened){
             if (key !== 'undefined'){
