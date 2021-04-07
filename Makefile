@@ -25,7 +25,7 @@ DID_ELEMENT_SIDETREE_REQUEST_URL ?= https://element-did.com/api/v1/sidetree/requ
 # Namespace for the sandbox cli image
 SANDBOX_CLI_IMAGE_NAME       ?= trustbloc/sandbox-cli
 
-TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=42a426552cc925a131e131b680c41463b2689b4d
+TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=47e9c3d54653a088e0c8f3b3b0c246871312c9d7
 
 # Tool commands (overridable)
 ALPINE_VER ?= 3.12
@@ -213,6 +213,10 @@ deploy-all:
 .PHONY: pull-core-deployment
 pull-core-deployment:
 	@make pull-core-deployment -C ./deployment
+
+.PHONY: deploy-components
+deploy-components:
+       @COMPONENTS="$(COMPONENTS)" make deploy-components -C ./deployment
 
 .PHONY: clean-build
 clean-build:

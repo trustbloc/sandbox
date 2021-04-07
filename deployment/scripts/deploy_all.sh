@@ -14,7 +14,7 @@ set -e
 : ${DOMAIN:=trustbloc.dev}
 : ${DEPLOYMENT_ENV:=local}
 ## Should be deployed in the listed order
-: ${COMPONENTS=cms comparator login-consent hub-auth demo-applications}
+: ${COMPONENTS=cms comparator login-consent demo-applications}
 DEPLOY_LIST=( $COMPONENTS )
 
 ## Map: component --> healthcheck(s)
