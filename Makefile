@@ -200,23 +200,23 @@ generate-config-hash: did-method-cli
 
 .PHONY: clean
 clean: clean-build
-	@make clean -C ./deployment
+	@make clean -C ./k8s
 
 .PHONY: setup-and-deploy
 setup-and-deploy:
-	@TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=$(TRUSTBLOC_CORE_DEPLOYMENT_COMMIT) make setup-and-deploy -C ./deployment
+	@TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=$(TRUSTBLOC_CORE_DEPLOYMENT_COMMIT) make setup-and-deploy -C ./k8s
 
 .PHONY: deploy-all
 deploy-all:
-	@make deploy-all -C ./deployment
+	@make deploy-all -C ./k8s
 
 .PHONY: pull-core-deployment
 pull-core-deployment:
-	@make pull-core-deployment -C ./deployment
+	@make pull-core-deployment -C ./k8s
 
 .PHONY: deploy-components
 deploy-components:
-       @COMPONENTS="$(COMPONENTS)" make deploy-components -C ./deployment
+       @COMPONENTS="$(COMPONENTS)" make deploy-components -C ./k8s
 
 .PHONY: clean-build
 clean-build:
