@@ -27,6 +27,7 @@ spec:
           - secretRef:
               name: rp-env-secret
         image: sandbox-rp:latest
+        imagePullPolicy: IfNotPresent
         args: ["start"]
         ports:
           - containerPort: 8081

@@ -27,7 +27,14 @@ Refer [Build](docs/demo/build.md) for more detailed information.
 ## Deployment
 Run following target to run the components locally.
 ```
-make setup-and-deploy
+# builds the sandbox images, creates k8s cluster and deploys the trustbloc components
+make build-setup-deploy
+
+# pulls the sandbox images from remote registry, creates k8s cluster and deploys the trustbloc components 
+make setup-deploy
+
+# stops the k8s cluster
+make minikube-down
 ```
 
 For pre-requisites, please refer [TrustBloc k8s deployments](https://github.com/trustbloc/k8s/blob/main/README.md).

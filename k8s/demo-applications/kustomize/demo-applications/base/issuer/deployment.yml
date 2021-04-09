@@ -27,6 +27,7 @@ spec:
           - secretRef:
               name: issuer-env-secret
         image: sandbox-issuer:latest
+        imagePullPolicy: IfNotPresent
         args: ["start"]
         ports:
           - containerPort: 8081
