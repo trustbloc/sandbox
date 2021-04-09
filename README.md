@@ -17,14 +17,9 @@ by the [TrustBloc](https://github.com/trustbloc) projects.
 - [DIF Sidetree](https://identity.foundation/sidetree/spec/)
 - [TrustBloc DID Method](https://github.com/trustbloc/trustbloc-did-method/blob/main/docs/spec/trustbloc-did-method.md) 
 
-## Build
-The sandbox example can be run with the following modes.
-- Sidetree with mock ledger
-- Sidetree with Hyperledger Fabric
+## Build and Deployment
+For pre-requisites, please refer [TrustBloc k8s deployments](https://github.com/trustbloc/k8s/blob/main/README.md).
 
-Refer [Build](docs/demo/build.md) for more detailed information.
-
-## Deployment
 Run following target to run the components locally.
 ```
 # builds the sandbox images, creates k8s cluster and deploys the trustbloc components
@@ -36,8 +31,6 @@ make setup-deploy
 # stops the k8s cluster
 make minikube-down
 ```
-
-For pre-requisites, please refer [TrustBloc k8s deployments](https://github.com/trustbloc/k8s/blob/main/README.md).
 
 ## Sample Applications
 - [Issuer](docs/issuer/README.md)
