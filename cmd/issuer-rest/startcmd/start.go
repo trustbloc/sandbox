@@ -21,6 +21,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/sandbox/cmd/common"
+	"github.com/trustbloc/sandbox/pkg/restapi/healthcheck"
 	"github.com/trustbloc/sandbox/pkg/restapi/issuer"
 	"github.com/trustbloc/sandbox/pkg/restapi/issuer/operation"
 	tokenIssuer "github.com/trustbloc/sandbox/pkg/token/issuer"
@@ -489,6 +490,14 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen
 	}
 
 	for _, handler := range logspec.New().GetOperations() {
+		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
+	}
+
+	// add health check endpoint
+	healthCheckService := healthcheck.New()
+
+	healthCheckHandlers := healthCheckService.GetOperations()
+	for _, handler := range healthCheckHandlers {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
 	}
 

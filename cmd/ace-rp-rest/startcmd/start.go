@@ -27,6 +27,7 @@ import (
 	"github.com/trustbloc/sandbox/cmd/common"
 	"github.com/trustbloc/sandbox/pkg/restapi/acerp"
 	"github.com/trustbloc/sandbox/pkg/restapi/acerp/operation"
+	"github.com/trustbloc/sandbox/pkg/restapi/healthcheck"
 )
 
 const (
@@ -333,7 +334,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
 }
 
-func startRP(parameters *rpParameters) error {
+func startRP(parameters *rpParameters) error { // nolint: funlen
 	if parameters.logLevel != "" {
 		common.SetDefaultLogLevel(logger, parameters.logLevel)
 	}
@@ -390,6 +391,14 @@ func startRP(parameters *rpParameters) error {
 	}
 
 	for _, handler := range logspec.New().GetOperations() {
+		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
+	}
+
+	// add health check endpoint
+	healthCheckService := healthcheck.New()
+
+	healthCheckHandlers := healthCheckService.GetOperations()
+	for _, handler := range healthCheckHandlers {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
 	}
 
