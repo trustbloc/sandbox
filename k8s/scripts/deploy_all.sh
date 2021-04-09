@@ -31,11 +31,11 @@ declare -A HEALTHCHECK_CODE=(
     [https://ucis-comparator.$DOMAIN/healthcheck]=200
     [https://cbp-comparator.$DOMAIN/healthcheck]=200
     [https://benefits-dept-comparator.$DOMAIN/healthcheck]=200
-    [https://rp.$DOMAIN/bankaccount]=200
-    [https://issuer.$DOMAIN/drivinglicense]=200
-    [https://ucis-rp.$DOMAIN]=200
-    [https://cbp-rp.$DOMAIN]=200
-    [https://benefits-dept-rp.$DOMAIN]=200
+    [https://rp.$DOMAIN/healthcheck]=200
+    [https://issuer.$DOMAIN/healthcheck]=200
+    [https://ucis-rp.$DOMAIN/healthcheck]=200
+    [https://cbp-rp.$DOMAIN/healthcheck]=200
+    [https://benefits-dept-rp.$DOMAIN/healthcheck]=200
     [https://cms.$DOMAIN/]=200
 )
 

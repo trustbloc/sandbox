@@ -204,7 +204,9 @@ clean: clean-build
 
 .PHONY: build-setup-deploy
 build-setup-deploy: sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker sandbox-cli-docker login-consent-server-docker
-	@TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=$(TRUSTBLOC_CORE_DEPLOYMENT_COMMIT) make local-setup-deploy -C ./k8s
+	@TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=$(TRUSTBLOC_CORE_DEPLOYMENT_COMMIT) \
+		CURRENT_TIME=$(shell date +"%Y%m%dT%H%M%S%z") \
+		make local-setup-deploy -C ./k8s
 
 .PHONY: setup-deploy
 setup-deploy:
