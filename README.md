@@ -32,6 +32,10 @@ make setup-deploy
 make minikube-down
 ```
 
+The SSL CA cert located inside `~/.trustbloc-k8s/local/certs/` need to be imported to system cert chain.
+
+Refer [build](./docs/demo/build.md) for more information
+
 ## Sample Applications
 - [Issuer](docs/issuer/README.md)
 - [Relying Party/Verifier](docs/rp/README.md)

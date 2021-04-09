@@ -25,19 +25,4 @@ vendor
 
 coverage.out
 
-
-test/bdd/fixtures/keys/
-
-test/bdd/fixtures/oathkeeper/rules/resource-server.json
-
-
 .build
-test/bdd/fixtures/fabric/crypto-config/
-test/bdd/fixtures/demo/docker.log
-test/bdd/fixtures/fabric/channel/
-.fabriccli
-test/bdd/fixtures/discovery-config/genesis-configs/*
-test/bdd/fixtures/discovery-config/sidetree-mock/config
-test/bdd/fixtures/discovery-config/sidetree-mock/temp
-test/bdd/fixtures/discovery-config/sidetree-fabric/config
-test/bdd/fixtures/discovery-config/sidetree-fabric/config-data-generated
