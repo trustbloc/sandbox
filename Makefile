@@ -7,9 +7,8 @@ ARCH             = $(shell go env GOARCH)
 ISSUER_REST_PATH = cmd/issuer-rest
 RP_REST_PATH     = cmd/rp-rest
 ACE_RP_REST_PATH   = cmd/ace-rp-rest
-STRAPI_DEMO_PATH = cmd/strapi-demo
 LOGIN_CONSENT_PATH = cmd/login-consent-server
-DEMO_CLI_PATH       = test/bdd/cmd/demo
+DEMO_CLI_PATH       = test/cmd/demo
 
 DOCKER_OUTPUT_NS         ?= ghcr.io
 # Namespace for the issuer image
@@ -31,15 +30,6 @@ TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=cac81b38f9af9087e01215f4cea21fea7d082f4d
 ALPINE_VER ?= 3.12
 GO_VER     ?= 1.15
 
-# Fabric tools docker image (overridable)
-FABRIC_TOOLS_IMAGE   ?= hyperledger/fabric-tools
-FABRIC_TOOLS_VERSION ?= 2.0.0-alpha
-FABRIC_TOOLS_TAG     ?= $(ARCH)-$(FABRIC_TOOLS_VERSION)
-
-# This can be a commit hash or a tag (or any git ref)
-export FABRIC_CLI_EXT_VERSION ?= v0.1.6
-export TRUSTBLOC_DID_METHOD ?= v0.1.6
-
 .PHONY: all
 all: checks unit-test
 
@@ -58,10 +48,6 @@ license:
 unit-test:
 	@scripts/check_unit.sh
 
-.PHONY: demo-start
-demo-start: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker sandbox-ace-rp-docker trustbloc-local-setup sandbox-cli-docker
-	@scripts/sandbox_start.sh
-
 .PHONY: sandbox-cli-docker
 sandbox-cli-docker:
 	@echo "Building sandbox-cli docker image"
@@ -73,28 +59,7 @@ sandbox-cli-docker:
 demo-cli:
 	@echo "Building demo-cli"
 	@mkdir -p ./.build/bin
-	@cd ${DEMO_CLI_PATH} && go build -o ../../../../.build/bin/demo main.go
-
-.PHONY: demo-start-with-sidetree-fabric
-demo-start-with-sidetree-fabric: export START_SIDETREE_FABRIC=true
-demo-start-with-sidetree-fabric: clean did-method-cli sandbox-issuer-docker sandbox-rp-docker login-consent-server-docker sandbox-ace-rp-docker trustbloc-local-setup populate-fixtures fabric-cli sandbox-cli-docker
-	@scripts/sandbox_start.sh
-
-.PHONY: demo-stop
-demo-stop:
-	@scripts/sandbox_stop.sh
-
-# trustbloc-local targets enable the sandbox hosts to be accessed by friendly names.
-# trustbloc-local-setup: Creates a TLS CA into ~/.trustbloc-local/sandbox/trustbloc-dev-ca.crt
-#                        Creates hosts entries into ~/.trustbloc-local/sandbox/hosts.
-#                        These fixtures can be manually imported into the cert chain and /etc/hosts.
-.PHONY: trustbloc-local-setup
-trustbloc-local-setup: trustbloc-local-remove generate-test-keys
-	@scripts/trustbloc_local_setup.sh
-
-.PHONY: trustbloc-local-remove
-trustbloc-local-remove:
-	rm -Rf ~/.trustbloc-local/
+	@cd ${DEMO_CLI_PATH} && go build -o ../../../.build/bin/demo main.go
 
 .PHONY: issuer-rest
 issuer-rest:
@@ -152,64 +117,23 @@ login-consent-server-docker:
 	--build-arg GO_VER=$(GO_VER) \
 	--build-arg ALPINE_VER=$(ALPINE_VER) .
 
-.PHONY: generate-test-keys
-generate-test-keys: clean
-	@mkdir -p test/bdd/fixtures/keys/tls
-	@cp ~/.trustbloc-local/sandbox/certs/trustbloc-dev-ca.* test/bdd/fixtures/keys/tls 2>/dev/null || :
-	@docker run -i --rm \
-		-v $(abspath .):/opt/workspace/sandbox \
-		--entrypoint "/opt/workspace/sandbox/scripts/generate_test_keys.sh" \
-		frapsoft/openssl
-
-.PHONY: crypto-gen
-crypto-gen:
-	@echo "Generating crypto directory ..."
-	@docker run -i \
-		-v /$(abspath .):/opt/workspace/sandbox -u $(shell id -u):$(shell id -g) \
-		$(FABRIC_TOOLS_IMAGE):$(FABRIC_TOOLS_TAG) \
-		//bin/bash -c "FABRIC_VERSION_DIR=fabric /opt/workspace/sandbox/scripts/generate_crypto.sh"
-
-.PHONY: channel-config-gen
-channel-config-gen:
-	@echo "Generating test channel configuration transactions and blocks ..."
-	@docker run -i \
-		-v /$(abspath .):/opt/workspace/sandbox -u $(shell id -u):$(shell id -g) \
-		$(FABRIC_TOOLS_IMAGE):$(FABRIC_TOOLS_TAG) \
-		//bin/bash -c "FABRIC_VERSION_DIR=fabric/ /opt/workspace/sandbox/scripts/generate_channeltx.sh"
-
-.PHONY: populate-fixtures
-populate-fixtures: clean
-	@scripts/populate-fixtures.sh -f
-
-fabric-cli:
-	@scripts/build_fabric_cli.sh
-
 create-element-did: clean
 	@mkdir -p .build
 	@cp scripts/create-element-did.js .build/
 	@REQUEST_URL=$(DID_ELEMENT_SIDETREE_REQUEST_URL) scripts/create_element_did.sh
-
-.PHONY: did-method-cli
-did-method-cli: clean
-	@scripts/build-did-method-cli.sh
-
-.PHONY: generate-config-hash
-generate-config-hash: did-method-cli
-	@echo "Generate config hash"
-	@scripts/generate_config_hash.sh
 
 .PHONY: clean
 clean: clean-build
 	@make clean -C ./k8s
 
 .PHONY: build-setup-deploy
-build-setup-deploy: sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker sandbox-cli-docker login-consent-server-docker
+build-setup-deploy: clean sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker sandbox-cli-docker login-consent-server-docker
 	@TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=$(TRUSTBLOC_CORE_DEPLOYMENT_COMMIT) \
 		CURRENT_TIME=$(shell date +"%Y%m%dT%H%M%S%z") \
 		make local-setup-deploy -C ./k8s
 
 .PHONY: setup-deploy
-setup-deploy:
+setup-deploy: clean
 	@TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=$(TRUSTBLOC_CORE_DEPLOYMENT_COMMIT) make setup-deploy -C ./k8s
 
 .PHONY: deploy-all
@@ -232,11 +156,3 @@ minikube-down:
 clean-build:
 	@rm -Rf ./.build
 	@rm -Rf ./coverage.out
-	@rm -Rf ./test/bdd/fixtures/oathkeeper/rules/resource-server.json
-	@rm -Rf ./test/bdd/fixtures/fabric/channel
-	@rm -Rf ./test/bdd/fixtures/fabric/crypto-config
-	@rm -Rf ./test/bdd/fixtures/discovery-config/genesis-configs/*
-	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-mock/config
-	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-mock/temp
-	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-fabric/config
-	@rm -Rf ./test/bdd/fixtures/discovery-config/sidetree-fabric/config-data-generated

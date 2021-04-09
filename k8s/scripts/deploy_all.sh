@@ -21,9 +21,8 @@ DEPLOY_LIST=( $COMPONENTS )
 declare -A HEALTCHECK_URL=(
     [cms]=""
     [comparator]="https://ucis-comparator.$DOMAIN/healthcheck https://cbp-comparator.$DOMAIN/healthcheck https://benefits-dept-comparator.$DOMAIN/healthcheck"
-    [demo-applications]="https://issuer.$DOMAIN/drivinglicense https://rp.$DOMAIN/bankaccount https://ucis-rp.$DOMAIN https://cbp-rp.$DOMAIN https://benefits-dept-rp.$DOMAIN"
+    [demo-applications]="https://issuer.$DOMAIN/healthcheck https://rp.$DOMAIN/healthcheck https://ucis-rp.$DOMAIN/healthcheck https://cbp-rp.$DOMAIN/healthcheck https://benefits-dept-rp.$DOMAIN/healthcheck"
     [login-consent]=""
-    [fabric]=""
     [LATE]="https://cms.$DOMAIN/"
 )
 ## Map: healthckeck --> http-code
