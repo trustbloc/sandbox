@@ -20,6 +20,7 @@ import (
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 
 	"github.com/trustbloc/sandbox/cmd/common"
+	"github.com/trustbloc/sandbox/pkg/restapi/healthcheck"
 	"github.com/trustbloc/sandbox/pkg/restapi/rp"
 	"github.com/trustbloc/sandbox/pkg/restapi/rp/operation"
 )
@@ -349,6 +350,14 @@ func startRP(parameters *rpParameters) error {
 	}
 
 	for _, handler := range logspec.New().GetOperations() {
+		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
+	}
+
+	// add health check endpoint
+	healthCheckService := healthcheck.New()
+
+	healthCheckHandlers := healthCheckService.GetOperations()
+	for _, handler := range healthCheckHandlers {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
 	}
 
