@@ -27,6 +27,7 @@ spec:
           - secretRef:
               name: ace-rp-env-secret
         image: sandbox-ace-rp:latest
+        imagePullPolicy: IfNotPresent
         args: ["start", "--host-url", "0.0.0.0:8081"]
         ports:
           - containerPort: 8081

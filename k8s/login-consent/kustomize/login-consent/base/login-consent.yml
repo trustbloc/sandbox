@@ -25,6 +25,7 @@ spec:
           - configMapRef:
               name: login-consent-env
         image: login-consent-server:latest
+        imagePullPolicy: IfNotPresent
         ports:
           - containerPort: 8081
             protocol: TCP

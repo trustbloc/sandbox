@@ -202,9 +202,13 @@ generate-config-hash: did-method-cli
 clean: clean-build
 	@make clean -C ./k8s
 
-.PHONY: setup-and-deploy
-setup-and-deploy:
-	@TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=$(TRUSTBLOC_CORE_DEPLOYMENT_COMMIT) make setup-and-deploy -C ./k8s
+.PHONY: build-setup-deploy
+build-setup-deploy: sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker sandbox-cli-docker login-consent-server-docker
+	@TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=$(TRUSTBLOC_CORE_DEPLOYMENT_COMMIT) make local-setup-deploy -C ./k8s
+
+.PHONY: setup-deploy
+setup-deploy:
+	@TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=$(TRUSTBLOC_CORE_DEPLOYMENT_COMMIT) make setup-deploy -C ./k8s
 
 .PHONY: deploy-all
 deploy-all:
@@ -217,6 +221,10 @@ pull-core-deployment:
 .PHONY: deploy-components
 deploy-components:
        @COMPONENTS="$(COMPONENTS)" make deploy-components -C ./k8s
+
+.PHONY: minikube-down
+minikube-down:
+	@make minikube-down -C ./k8s
 
 .PHONY: clean-build
 clean-build:

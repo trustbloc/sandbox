@@ -4,11 +4,17 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-export DOMAIN      				?= trustbloc.dev
 export DEPLOYMENT_ENV			?= local
+export DOMAIN      				?= ${DEPLOYMENT_ENV}.trustbloc.dev
+export BLOC_DOMAIN				?= testnet.${DOMAIN}
 COMPONENTS         	 			?=
+ISSUER_IMG_LOCAL         	 	?= ghcr.io/trustbloc/sandbox-issuer:latest
+RP_IMG_LOCAL         	 		?= ghcr.io/trustbloc/sandbox-rp:latest
+ACE_RP_IMG_LOCAL         	 	?= ghcr.io/trustbloc/sandbox-ace-rp:latest
+LOGIN_CONSENT_IMG_LOCAL         ?= ghcr.io/trustbloc/sandbox-login-consent-server:latest
+CLI_IMG_LOCAL         	 		?= ghcr.io/trustbloc/sandbox-cli:latest
 
-.PHONY: deploy-all deploy-components setup-and-deploy minikube-setup minikube-down
+.PHONY: deploy-all deploy-components setup-deploy local-setup-deploy minikube-up minikube-down minikube-image-load
 
 deploy-all: deploy-core
 	./scripts/deploy_all.sh
@@ -16,14 +22,24 @@ deploy-all: deploy-core
 deploy-components:
 	COMPONENTS="$(COMPONENTS)" ./scripts/deploy_all.sh
 
-setup-and-deploy: minikube-down pull-core-deployment
+setup-deploy: minikube-down minikube-up deploy-core deploy-all
+
+local-setup-deploy: minikube-down minikube-up minikube-image-load deploy-core
+	ISSUER_IMG=$(ISSUER_IMG_LOCAL) RP_IMG=$(RP_IMG_LOCAL) ACE_RP_IMG=$(ACE_RP_IMG_LOCAL) \
+		LOGIN_CONSENT_IMG=$(LOGIN_CONSENT_IMG_LOCAL) CLI_IMG=$(CLI_IMG_LOCAL) \
+		./scripts/deploy_all.sh
+
+minikube-image-load:
+	@eval $(shell minikube docker-env)
+	@minikube image load $(ISSUER_IMG_LOCAL)
+	@minikube image load $(RP_IMG_LOCAL)
+	@minikube image load $(ACE_RP_IMG_LOCAL)
+	@minikube image load $(LOGIN_CONSENT_IMG_LOCAL)
+	@minikube image load $(CLI_IMG_LOCAL)
+
+minikube-up: pull-core-deployment
 	cd scripts && ./minikube_setup.sh
 	@echo "Apply/verify the required changes to /etc/hosts. Once done, press ENTER" && read L
-	make deploy-all -C ./.core
-	./scripts/deploy_all.sh
-
-minikube-setup: pull-core-deployment
-	cd scripts && ./minikube_setup.sh
 
 minikube-down:
 	cd scripts && minikube delete ;
