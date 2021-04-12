@@ -20,10 +20,10 @@ OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
-ACE_RP_IMG				?= ghcr.io/trustbloc-cicd/sandbox-ace-rp:0.1.7-snapshot-dc141e4
-RP_IMG					?= ghcr.io/trustbloc-cicd/sandbox-rp:0.1.7-snapshot-dc141e4
-ISSUER_IMG			?= ghcr.io/trustbloc-cicd/sandbox-issuer:0.1.7-snapshot-dc141e4
-CLI_IMG				?= ghcr.io/trustbloc-cicd/sandbox-cli:0.1.7-snapshot-dc141e4
+ACE_RP_IMG				?= ghcr.io/trustbloc-cicd/sandbox-ace-rp:0.1.7-snapshot-bd2a67c
+RP_IMG					?= ghcr.io/trustbloc-cicd/sandbox-rp:0.1.7-snapshot-bd2a67c
+ISSUER_IMG			?= ghcr.io/trustbloc-cicd/sandbox-issuer:0.1.7-snapshot-bd2a67c
+CLI_IMG				?= ghcr.io/trustbloc-cicd/sandbox-cli:0.1.7-snapshot-bd2a67c
 # do not modify
 KUSTOMIZE_DIR       	= kustomize/demo-applications
 CERTS_OUTPUT_DIR      	 	= ${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/certs
