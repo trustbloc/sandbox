@@ -1,0 +1,68 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# Adds namespace to all resources.
+#namespace: edge-sandbox-system
+
+# Value of this field is prepended to the
+# names of all resources, e.g. a deployment named
+# "wordpress" becomes "alices-wordpress".
+# Note that it should also match with the prefix (text before '-') of the namespace
+# field above.
+commonLabels:
+  group: demo
+  instance: local
+  project: trustbloc
+
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+vars:
+- fieldref:
+    fieldPath: metadata.name
+  name: INGRESS_TLS_SECRET
+  objref:
+    apiVersion: v1
+    kind: Secret
+    name: demo-applications-wildcard-cert
+
+configMapGenerator:
+- behavior: merge
+  envs:
+  - config.env
+  name: rp-env
+- files:
+  - register-tenant.sh
+  name: rp-register-tenant-script
+- files:
+  - ../certs/ca.crt
+  name: demo-ca-cert
+
+secretGenerator:
+- behavior: merge
+  envs:
+  - secret.env
+  name: rp-env-secret
+- files:
+  - ../certs/tls.crt
+  - ../certs/tls.key
+  name: demo-applications-wildcard-cert
+  type: kubernetes.io/tls
+
+resources:
+- ../../../base
+- ingress.yml
+- role.yml
+- rolebinding.yml
+- register-tenant.yml
+
+transformers:
+- sedtransform.yml
+- sedb64transform.yml
+
+patchesStrategicMerge:
+- add-ca.yml
