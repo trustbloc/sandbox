@@ -48,7 +48,7 @@ The [TrustBloc k8s repo](https://github.com/trustbloc/k8s) contains the scripts 
 - wallet
 
 The k8s scripts for following demo deployments can be found [here](../../k8s). 
-- ace (Anonymous Comparator and Extractor)
+- ace-rp (Anonymous Comparator and Extractor)
 - cms (Content Management System)
 - comparator
 - demo-dbs
