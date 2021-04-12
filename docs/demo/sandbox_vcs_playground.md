@@ -1,15 +1,13 @@
 # TrustBloc Sandbox - VCS/Non-DIDComm Demo Playground
 
 ## Components
-| Component   | Cloud URL (Sandbox)                                         | Cloud URL (Dev)                                            | Local k8s URL*                                     | Local URL**                                             |
-|-------------|-------------------------------------------------------------|------------------------------------------------------------|----------------------------------------------------|---------------------------------------------------------|
-| Wallet      | [Click Here](https://agent.sandbox.trustbloc.dev/dashboard) | [Click Here](https://agent-ui.dev.trustbloc.dev/dashboard) | [Click Here] ( https://wallet.local.trustbloc.dev) | [Click Here](https://myagent.trustbloc.local/dashboard) |
-| Issuer      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)     | [Click Here](https://demo-issuer.dev.trustbloc.dev)        | [Click Here](https://issuer.local.trustbloc.dev)   | [Click Here](https://issuer.trustbloc.local)            |
-| RP/Verifier | [Click Here](https://demo-verifier.sandbox.trustbloc.dev)   | [Click Here](https://demo-verifier.dev.trustbloc.dev)      | [Click Here](https://rp.local.trustbloc.dev)       | [Click Here](https://rp.trustbloc.local)                |
+| Component   | Cloud URL (Sandbox)                                         | Cloud URL (Dev)                                            | Local k8s URL*                                     |
+|-------------|-------------------------------------------------------------|------------------------------------------------------------|----------------------------------------------------|
+| Wallet      | [Click Here](https://agent.sandbox.trustbloc.dev/dashboard) | [Click Here](https://agent-ui.dev.trustbloc.dev/dashboard) | [Click Here] ( https://wallet.local.trustbloc.dev) |
+| Issuer      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)     | [Click Here](https://demo-issuer.dev.trustbloc.dev)        | [Click Here](https://issuer.local.trustbloc.dev)   |
+| RP/Verifier | [Click Here](https://demo-verifier.sandbox.trustbloc.dev)   | [Click Here](https://demo-verifier.dev.trustbloc.dev)      | [Click Here](https://rp.local.trustbloc.dev)       |
 
 *: Refer [here](./../../README.md#deployment) to run the local k8s demo.
-
-**: Refer [here](./build.md) to run the demo locally.
 
 ## Steps
 1. Login to Wallet : Go to [Wallet](#components) and click on `Allow` when a pop-up asks for the permission. This 

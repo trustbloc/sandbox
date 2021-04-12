@@ -11,16 +11,14 @@ drivers license, digital drivers license assurance/evidence and digital credit r
 
 ## Components
 
-| Component                          | Cloud URL (Sandbox)                                                    | Cloud URL (Dev)                                                    | Local k8s URL*                                                  | Local URL**                                                 |
-|------------------------------------|------------------------------------------------------------------------|--------------------------------------------------------------------|-----------------------------------------------------------------|-------------------------------------------------------------|
-| User Wallet                        | [Click Here](https://agent.sandbox.trustbloc.dev)                      | [Click Here](https://agent-ui.dev.trustbloc.dev)                   | [Click Here](https://wallet.local.trustbloc.dev)                | [Click Here](https://myagent.trustbloc.local)               |
-| Bank                               | [Click Here](https://demo-verifier.sandbox.trustbloc.dev/bankaccount)  | [Click Here](https://demo-verifier.dev.trustbloc.dev/bankaccount)  | [Click Here](https://rp.local.trustbloc.dev/bankaccount)        | [Click Here](https://rp.trustbloc.local/bankaccount)        |
-| Drivers License + Assurance Issuer | [Click Here](https://demo-issuer.sandbox.trustbloc.dev/drivinglicense) | [Click Here](https://demo-issuer.dev.trustbloc.dev/drivinglicense) | [Click Here](https://issuer.local.trustbloc.dev/drivinglicense) | [Click Here](https://issuer.trustbloc.local/drivinglicense) |
-| Credit Report Issuer               | [Click Here](https://demo-issuer.sandbox.trustbloc.dev/creditscore)    | [Click Here](https://demo-issuer.dev.trustbloc.dev/creditscore)    | [Click Here](https://issuer.local.trustbloc.dev/creditscore)    | [Click Here](https://issuer.trustbloc.local/creditscore)    |
+| Component                          | Cloud URL (Sandbox)                                                    | Cloud URL (Dev)                                                    | Local k8s URL*                                                  |
+|------------------------------------|------------------------------------------------------------------------|--------------------------------------------------------------------|-----------------------------------------------------------------|
+| User Wallet                        | [Click Here](https://agent.sandbox.trustbloc.dev)                      | [Click Here](https://agent-ui.dev.trustbloc.dev)                   | [Click Here](https://wallet.local.trustbloc.dev)                |
+| Bank                               | [Click Here](https://demo-verifier.sandbox.trustbloc.dev/bankaccount)  | [Click Here](https://demo-verifier.dev.trustbloc.dev/bankaccount)  | [Click Here](https://rp.local.trustbloc.dev/bankaccount)        |
+| Drivers License + Assurance Issuer | [Click Here](https://demo-issuer.sandbox.trustbloc.dev/drivinglicense) | [Click Here](https://demo-issuer.dev.trustbloc.dev/drivinglicense) | [Click Here](https://issuer.local.trustbloc.dev/drivinglicense) |
+| Credit Report Issuer               | [Click Here](https://demo-issuer.sandbox.trustbloc.dev/creditscore)    | [Click Here](https://demo-issuer.dev.trustbloc.dev/creditscore)    | [Click Here](https://issuer.local.trustbloc.dev/creditscore)    |
 
 *: Refer [here](./../../README.md#deployment) to run the local k8s demo.
-
-**: Refer [here](./build.md) to run the demo locally.
 
 ## Flow details
 1. Login to Wallet:
