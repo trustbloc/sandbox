@@ -1,8 +1,8 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 # Adds namespace to all resources.
 #namespace: edge-sandbox-system
@@ -13,7 +13,7 @@
 # Note that it should also match with the prefix (text before '-') of the namespace
 # field above.
 commonLabels:
-  component: dbs
+  component: demo-dbs
   group: third-party
   instance: local
   project: trustbloc

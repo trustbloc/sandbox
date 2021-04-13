@@ -68,7 +68,7 @@ healthCheck() {
 }
 
 ## deploy the DBs dependency first
-pushd dbs
+pushd demo-dbs
     make
 popd
 ### TODO: set up proper mysql, couchDB healthchecks

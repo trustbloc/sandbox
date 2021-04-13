@@ -16,7 +16,7 @@ export DOMAIN      		?= trustbloc.dev
 export BLOC_DOMAIN      		?= testnet.trustbloc.dev
 
 export DATABASE_CLIENT				?= mysql
-export DATABASE_HOST					?= mysql
+export DATABASE_HOST					?= mysql-demo
 export DATABASE_PORT					?= 3306
 export DATABASE_NAME					?= strapi
 export DATABASE_USERNAME			?= user
