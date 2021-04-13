@@ -1,15 +1,15 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   creationTimestamp: null
-  name: couchdb
+  name: couchdb-demo
 spec:
   ports:
   - name: couchdb-port
@@ -17,6 +17,6 @@ spec:
     protocol: TCP
     targetPort: couchdb-port
   selector:
-    app: couchdb
+    app: couchdb-demo
 status:
   loadBalancer: {}

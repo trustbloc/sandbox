@@ -14,13 +14,13 @@ export DEPLOYMENT_ENV	?= local
 # space delimited of Key:Value pairs
 COMMON_LABELS		:= instance:${DEPLOYMENT_ENV}
 export DOMAIN      		?= trustbloc.dev
-export HYDRA_MYSQL_DSN								?= mysql://root:secret@tcp(mysql:3306)/mysql?max_conns=20&max_idle_conns=4
+export HYDRA_MYSQL_DSN								?= mysql://root:secret@tcp(mysql-demo:3306)/mysql?max_conns=20&max_idle_conns=4
 
 OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
-LOGIN_CONSENT_IMG				?= ghcr.io/trustbloc-cicd/sandbox-login-consent-server:0.1.7-snapshot-bd2a67c
+LOGIN_CONSENT_IMG				?= ghcr.io/trustbloc-cicd/sandbox-login-consent-server:0.1.7-snapshot-db092c3
 HYDRA_IMG			?= oryd/hydra:v1.3.2-alpine
 
 # do not modify

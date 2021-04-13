@@ -14,13 +14,13 @@ export DEPLOYMENT_ENV	?= local
 # space delimited of Key:Value pairs
 COMMON_LABELS		:= instance:${DEPLOYMENT_ENV}
 export DOMAIN      		?= trustbloc.dev
-export COUCHDB_URL								?= couchdb://cdbadmin:secret@couchdb:5984
+export COUCHDB_URL								?= couchdb://cdbadmin:secret@couchdb-demo:5984
 
 OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
-RP_IMG					?= ghcr.io/trustbloc-cicd/sandbox-rp:0.1.7-snapshot-bd2a67c
+RP_IMG					?= ghcr.io/trustbloc-cicd/sandbox-rp:0.1.7-snapshot-db092c3
 
 # do not modify
 KUSTOMIZE_DIR       	= kustomize/rp

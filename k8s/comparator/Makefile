@@ -15,7 +15,7 @@ export DEPLOYMENT_ENV	?= local
 COMMON_LABELS		:= instance:${DEPLOYMENT_ENV}
 export DOMAIN      		?= trustbloc.dev
 export BLOC_DOMAIN		?= testnet.trustbloc.dev
-export COUCHDB_DSN								?= couchdb://cdbadmin:secret@couchdb:5984
+export COUCHDB_DSN								?= couchdb://cdbadmin:secret@couchdb-demo:5984
 
 OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')

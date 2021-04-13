@@ -1,8 +1,8 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 ---
 apiVersion: apps/v1
@@ -10,25 +10,25 @@ kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
-    app: couchdb
-  name: couchdb
+    app: couchdb-demo
+  name: couchdb-demo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: couchdb
+      app: couchdb-demo
   strategy: {}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: couchdb
+        app: couchdb-demo
     spec:
       volumes:
         - name: couchdb-config
           configMap:
             name: couchdb-config
-      hostname: couchdb
+      hostname: couchdb-demo
       containers:
       - image: couchdb:latest
         ports:

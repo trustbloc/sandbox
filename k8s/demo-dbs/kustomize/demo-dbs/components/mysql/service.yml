@@ -1,15 +1,15 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   creationTimestamp: null
-  name: mysql
+  name: mysql-demo
 spec:
   ports:
   - name: mysql-port
@@ -17,6 +17,6 @@ spec:
     protocol: TCP
     targetPort: mysql-port
   selector:
-    app: mysql
+    app: mysql-demo
 status:
   loadBalancer: {}

@@ -1,8 +1,8 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 ---
 apiVersion: apps/v1
@@ -10,23 +10,23 @@ kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
-    app: mysql
-  name: mysql
+    app: mysql-demo
+  name: mysql-demo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mysql
+      app: mysql-demo
   strategy: {}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: mysql
+        app: mysql-demo
     spec:
       containers:
       - image: mysql:latest
-        name: mysql
+        name: mysql-demo
         env:
           - name: MYSQL_ROOT_PASSWORD
             value: secret

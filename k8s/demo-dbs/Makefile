@@ -1,8 +1,8 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 
 CONTAINER_CMD         	 	?= docker
@@ -21,7 +21,7 @@ ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 MYSQL_IMG		?= docker.io/mysql:8.0.20
 COUCH_IMG		?= docker.io/couchdb:3.1
 # do not modify
-KUSTOMIZE_DIR       	= kustomize/dbs
+KUSTOMIZE_DIR       	= kustomize/demo-dbs
 PREFIX							?=
 #KUSTOMIZE_BUILD_OPTS			?= --load-restrictor LoadRestrictionsNone --enable-alpha-plugins
 #export KUSTOMIZE_PLUGIN_HOME						= $(abspath .)/kustomize/plugin
@@ -30,7 +30,7 @@ PREFIX							?=
 all: deploy
 
 .PHONY: deploy
-deploy: prechecks kustomize set-images set-labels deploy-dbs
+deploy: prechecks kustomize set-images set-labels deploy-demo-dbs
 
 .PHONY: prechecks
 prechecks:
@@ -54,16 +54,16 @@ set-images: kustomize
 	${KUSTOMIZE} edit set image mysql=${MYSQL_IMG} &&\
 	popd
 
-.PHONY: deploy-dbs
-deploy-dbs: prechecks kustomize
+.PHONY: deploy-demo-dbs
+deploy-demo-dbs: prechecks kustomize
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
 	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} | kubectl apply -f -
 
 .PHONY: undeploy
-undeploy: prechecks kustomize set-images set-labels undeploy-dbs
+undeploy: prechecks kustomize set-images set-labels undeploy-demo-dbs
 
-.PHONY: undeploy-dbs
-undeploy-dbs: prechecks kustomize
+.PHONY: undeploy-demo-dbs
+undeploy-demo-dbs: prechecks kustomize
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
 	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} | kubectl delete -f -
 
