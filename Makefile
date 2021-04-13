@@ -24,7 +24,8 @@ DID_ELEMENT_SIDETREE_REQUEST_URL ?= https://element-did.com/api/v1/sidetree/requ
 # Namespace for the sandbox cli image
 SANDBOX_CLI_IMAGE_NAME       ?= trustbloc/sandbox-cli
 
-TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=cac81b38f9af9087e01215f4cea21fea7d082f4d
+# TrustBloc core k8s deployment scripts https://github.com/trustbloc/k8s
+TRUSTBLOC_CORE_K8S_COMMIT=b2a245641385ead38bf30414fb87310a6096c7e0
 
 # Tool commands (overridable)
 ALPINE_VER ?= 3.12
@@ -128,13 +129,13 @@ clean: clean-build
 
 .PHONY: build-setup-deploy
 build-setup-deploy: clean sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker sandbox-cli-docker login-consent-server-docker
-	@TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=$(TRUSTBLOC_CORE_DEPLOYMENT_COMMIT) \
+	@TRUSTBLOC_CORE_K8S_COMMIT=$(TRUSTBLOC_CORE_K8S_COMMIT) \
 		CURRENT_TIME=$(shell date +"%Y%m%dT%H%M%S%z") \
 		make local-setup-deploy -C ./k8s
 
 .PHONY: setup-deploy
 setup-deploy: clean
-	@TRUSTBLOC_CORE_DEPLOYMENT_COMMIT=$(TRUSTBLOC_CORE_DEPLOYMENT_COMMIT) make setup-deploy -C ./k8s
+	@TRUSTBLOC_CORE_K8S_COMMIT=$(TRUSTBLOC_CORE_K8S_COMMIT) make setup-deploy -C ./k8s
 
 .PHONY: deploy-all
 deploy-all:
