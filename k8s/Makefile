@@ -55,7 +55,7 @@ deploy-core:
 	make deploy-all -C ./.core
 
 pull-core-deployment:
-	TRUSTBLOC_CORE_DEPLOYMENT_COMMIT="$(TRUSTBLOC_CORE_DEPLOYMENT_COMMIT)" ./scripts/core_deployment.sh
+	TRUSTBLOC_CORE_K8S_COMMIT="$(TRUSTBLOC_CORE_K8S_COMMIT)" ./scripts/core_deployment.sh
 
 clean:
 	@rm -rf ./.core/

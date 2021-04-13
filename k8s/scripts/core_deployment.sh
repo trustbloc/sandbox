@@ -15,7 +15,7 @@ mkdir -p $core_dir
 cd $core_dir
 
 git clone -b main https://github.com/trustbloc/k8s $core_dir
-git checkout ${TRUSTBLOC_CORE_DEPLOYMENT_COMMIT}
+git checkout ${TRUSTBLOC_CORE_K8S_COMMIT}
 
 cd $root
 
