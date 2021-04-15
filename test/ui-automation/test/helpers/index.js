@@ -18,9 +18,3 @@ api.chapi = chapi;
 api.wallet = wallet;
 api.issuer = issuer;
 api.verifier = verifier;
-
-// TODO - get the values from environmental variables
-api.WALLET_NAME = 'wallet.local.trustbloc.dev'
-api.WALLET_URL = 'https://wallet.local.trustbloc.dev'
-api.ISSUER_URL = 'https://issuer.local.trustbloc.dev'
-api.VERIFIER_URL = 'https://rp.local.trustbloc.dev'

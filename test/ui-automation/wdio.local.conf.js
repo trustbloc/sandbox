@@ -8,7 +8,12 @@ SPDX-License-Identifier: Apache-2.0
 
 const {config} = require('./wdio.shared.conf');
 
-/* eslint-disable max-len */
+const domain = ".local.trustbloc.dev"
+
 exports.config = {
-  ...config
+    ...config,
+    "walletName": "wallet" + domain,
+    "walletURL": "https://wallet" + domain,
+    "issuerURL": "https://issuer" + domain,
+    "verifierURL": "https://rp" + domain,
 };
