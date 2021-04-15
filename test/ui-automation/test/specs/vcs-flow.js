@@ -10,7 +10,7 @@ SPDX-License-Identifier: Apache-2.0
 
 'use strict';
 
-const {chapi, wallet, issuer, verifier, WALLET_NAME, WALLET_URL, ISSUER_URL, VERIFIER_URL} = require('../helpers');
+const {chapi, wallet, issuer, verifier} = require('../helpers');
 const path = require('path');
 const uuid = require('uuid-random');
 
@@ -66,8 +66,7 @@ describe("TrustBloc VCS flow", () => {
         this.timeout(300000);
 
         // 1. Navigate to Wallet Website
-        const url = WALLET_URL
-        await browser.navigateTo(url);
+        await browser.navigateTo(browser.config.walletURL);
 
         // 2. Initialize Wallet (register/sign-up/etc.)
         await wallet.init(ctx);
@@ -78,13 +77,12 @@ describe("TrustBloc VCS flow", () => {
         describe(value.description, () => {
             it('issues a credential ' + key, async () => {
                 // 1. Navigate to Issuer Website
-                const url = ISSUER_URL
-                await browser.newWindow(url);
+                await browser.newWindow(browser.config.issuerURL);
 
                 // 2. Authenticate at Issuer Website with Wallet
                 await issuer.authenticate({credential: key, profile: value.profile});
                 await chapi.chooseWallet({
-                    name: WALLET_NAME,
+                    name: browser.config.walletName,
                 });
                 await wallet.authenticate(ctx);
                 await browser.switchToFrame(null);
@@ -94,7 +92,7 @@ describe("TrustBloc VCS flow", () => {
 
                 // 4. Store credential with Wallet
                 await chapi.chooseWallet({
-                    name: WALLET_NAME,
+                    name: browser.config.walletName,
                 });
                 await wallet.storeCredentials(ctx);
                 await browser.switchToFrame(null);
@@ -110,13 +108,12 @@ describe("TrustBloc VCS flow", () => {
 
             it('verifies a credential ' + key, async () => {
                 // 1. Navigate to Verifier Website
-                const url = VERIFIER_URL
-                await browser.newWindow(url);
+                await browser.newWindow(browser.config.verifierURL);
 
                 // 2. Verify credentials at Verifier Website with Wallet
                 await verifier.verify({credential: key, skipStatusCheck: value.skipStatusCheck});
                 await chapi.chooseWallet({
-                    name: WALLET_NAME,
+                    name: browser.config.walletName,
                 });
                 await wallet.presentCredentials(ctx);
                 await browser.switchToFrame(null);
