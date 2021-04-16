@@ -45,6 +45,16 @@ exports.presentCredentials = async ({did}) => {
   await _sendCredentials({method: did});
 };
 
+exports.didConnect = async () => {
+  const didConnectBtn = await $('#didconnect');
+  await didConnectBtn.waitForExist();
+  await didConnectBtn.waitForClickable();
+  await didConnectBtn.click();
+
+  const successMsg = await $('div*=CONGRATULATIONS ');
+  await successMsg.waitForExist();
+};
+
 /*************************** Helper functions ******************************/
 
 async function _didAuth({method='trustbloc'} = {}) {

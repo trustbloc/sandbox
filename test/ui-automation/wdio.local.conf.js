@@ -16,4 +16,7 @@ exports.config = {
     "walletURL": "https://wallet" + domain,
     "issuerURL": "https://issuer" + domain,
     "verifierURL": "https://rp" + domain,
+    "driversLicenseURL": "https://issuer" + domain + "/drivinglicense",
+    "creditReportURL": "https://issuer" + domain+ "/creditscore",
+    "bankURL": "https://rp" + domain+ "/bankaccount",
 };

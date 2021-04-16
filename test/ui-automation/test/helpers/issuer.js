@@ -59,6 +59,21 @@ exports.authenticate = async ({credential, profile}) => {
     await authenticateBtn.click();
 };
 
+exports.loginConsent = async (btnID) => {
+    // issue cred
+    const issueButton = await $(btnID);
+    await issueButton.waitForClickable();
+    await issueButton.click();
+
+    // login
+    const loginButton = await $('#accept');
+    await loginButton.click();
+
+    // consent
+    const consentButton = await $('#accept');
+    await consentButton.click();
+};
+
 exports.issue = async () => {
     const storeBtn = await $('#storeVCBtn');
     await storeBtn.waitForClickable();
