@@ -3,7 +3,7 @@
 ## Components
 | Component   | Cloud URL (Sandbox)                                         | Cloud URL (Dev)                                            | Local k8s URL*                                     |
 |-------------|-------------------------------------------------------------|------------------------------------------------------------|----------------------------------------------------|
-| Wallet      | [Click Here](https://agent.sandbox.trustbloc.dev/dashboard) | [Click Here](https://agent-ui.dev.trustbloc.dev/dashboard) | [Click Here] ( https://wallet.local.trustbloc.dev) |
+| Wallet      | [Click Here](https://agent.sandbox.trustbloc.dev/dashboard) | [Click Here](https://agent-ui.dev.trustbloc.dev/dashboard) | [Click Here](https://wallet.local.trustbloc.dev)   |
 | Issuer      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)     | [Click Here](https://demo-issuer.dev.trustbloc.dev)        | [Click Here](https://issuer.local.trustbloc.dev)   |
 | RP/Verifier | [Click Here](https://demo-verifier.sandbox.trustbloc.dev)   | [Click Here](https://demo-verifier.dev.trustbloc.dev)      | [Click Here](https://rp.local.trustbloc.dev)       |
 

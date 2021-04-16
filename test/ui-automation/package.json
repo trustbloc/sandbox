@@ -7,6 +7,7 @@
   "scripts": {
     "test": "rm -rf reports && wdio wdio.local.conf.js",
     "test:local": "rm -rf reports && wdio wdio.local.conf.js",
+    "test:dev": "rm -rf reports && wdio wdio.dev.conf.js",
     "report": "cd reports && xunit-viewer -r . && marge wdio-ma-merged.json --inline -f index.html --reportTitle 'TrustBloc UI Automation Test Results'"
   },
   "repository": {
