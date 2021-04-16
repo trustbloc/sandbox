@@ -17,6 +17,24 @@ by the [TrustBloc](https://github.com/trustbloc) projects.
 - [DIF Sidetree](https://identity.foundation/sidetree/spec/)
 - [TrustBloc DID Method](https://github.com/trustbloc/trustbloc-did-method/blob/main/docs/spec/trustbloc-did-method.md) 
 
+## Sample Applications
+- [Issuer](docs/issuer/README.md)
+- [Relying Party/Verifier](docs/rp/README.md)
+- [Anonymous Comparator and Extractor - Relying Party (ACE-RP)](docs/ace-rp/README.md)
+
+## Demo
+- [TrustBloc VCS](docs/demo/sandbox_vcs_playground.md) : CHAPI + VC Services + Selective Disclosure
+  - [Flight Boarding use case](docs/demo/flight-boarding-usecase.md)
+- [TrustBloc Adapter](docs/demo/sandbox_adapter_playground.md) : CHAPI + DIDComm
+  - [New Bank Account use case](docs/demo/new-bank-account-usecase.md)
+  - [Register property use case](docs/demo/register-property-usecase.md)
+- [TrustBloc Anonymous Comparator and Extractor(ACE)](docs/demo/sandbox_ace_playground.md)
+
+## Components
+- [TrustBloc VCS](docs/components/vcs_components.md)
+- [TrustBloc Adapter](docs/components/adapter_components.md)
+- [TrustBloc Anonymous Comparator and Extractor(ACE)](docs/components/ace_components.md)
+
 ## Build and Deployment
 For pre-requisites, please refer [TrustBloc k8s deployments](https://github.com/trustbloc/k8s/blob/main/README.md).
 
@@ -36,23 +54,20 @@ The SSL CA cert located inside `~/.trustbloc-k8s/local/certs/` need to be import
 
 Refer [Build and Deployment](./docs/demo/build.md) for more information
 
-## Sample Applications
-- [Issuer](docs/issuer/README.md)
-- [Relying Party/Verifier](docs/rp/README.md)
-- [Anonymous Comparator and Extractor - Relying Party (ACE-RP)](docs/ace-rp/README.md)
+## Automated testing
+Use following targets to run the automation tests built using [WebDriverIO](https://webdriver.io). To run 
+this, [npm](https://www.npmjs.com) need to be installed in the system.
 
-## Demo
-- [TrustBloc VCS](docs/demo/sandbox_vcs_playground.md) : CHAPI + VC Services + Selective Disclosure
-  - [Flight Boarding use case](docs/demo/flight-boarding-usecase.md)
-- [TrustBloc Adapter](docs/demo/sandbox_adapter_playground.md) : CHAPI + DIDComm
-  - [New Bank Account use case](docs/demo/new-bank-account-usecase.md)
-  - [Register property use case](docs/demo/register-property-usecase.md)
-- [TrustBloc Anonymous Comparator and Extractor(ACE)](docs/demo/sandbox_ace_playground.md)
+```
+# runs tests against locally deployed k8s cluster
+make automation-test-local
 
-## Components
-- [TrustBloc VCS](docs/components/vcs_components.md)
-- [TrustBloc Adapter](docs/components/adapter_components.md)
-- [TrustBloc Anonymous Comparator and Extractor(ACE)](docs/components/ace_components.md)
+# runs tests against cloud deployed dev k8s cluster 
+make automation-test-dev
+
+# stops the k8s cluster
+make minikube-down
+```
 
 ## Contributing
 Thank you for your interest in contributing. Please see our [community contribution guidelines](https://github.com/trustbloc/community/blob/main/CONTRIBUTING.md) for more information.
