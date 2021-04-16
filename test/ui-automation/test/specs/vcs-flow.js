@@ -48,7 +48,7 @@ flows.set('CertifiedMillTestReport', {
     skipStatusCheck: true
 });
 
-describe("TrustBloc VCS flow", () => {
+describe("TrustBloc - Verifiable Credential Service (VCS) flows", () => {
     const ctx = {
         email: `${uuid()}@example.com`,
     };

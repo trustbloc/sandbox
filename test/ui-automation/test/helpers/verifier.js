@@ -48,3 +48,17 @@ exports.finish = async () => {
 
     console.log('verified credential successfully !!')
 };
+
+exports.adapterCredentials = async (btnID) => {
+    const getCredentialButton = await $(btnID);
+    await getCredentialButton.waitForClickable();
+    await getCredentialButton.click();
+
+    const selectBrowserButton = await $('button*=Browser Wallet');
+    await selectBrowserButton.waitForClickable();
+    await selectBrowserButton.click();
+
+    const proceedButton = await $('button*=Proceed');
+    await proceedButton.waitForClickable();
+    await proceedButton.click();
+};
