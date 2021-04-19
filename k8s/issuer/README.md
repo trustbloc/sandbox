@@ -15,7 +15,7 @@
 * `make clean`
 
 ## options and features
-* By default dns domain is `trustboc.dev`. To run with different domain (See next), run with: `make DOMAIN=ali.trustbloc.dev`
+* By default dns domain is `local.trustboc.dev`. To run with different domain (See next), run with: `make DOMAIN=ali.trustbloc.dev`
 * Will create an Ingress for external access. When running with unregistered dns domains, create records (/etc/hosts) for:
 	- `issuer.DOMAIN`
 * Will deploy Sandbox Demo Applications, pointing to an already provisioned COUCHDB specified with `COUCHDB_URL`

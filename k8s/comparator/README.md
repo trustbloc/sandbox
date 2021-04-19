@@ -15,8 +15,8 @@
 * `make clean`
 
 ## options and features
-* By default dns domain is `trustboc.dev`. To run with different domain (See next), run with: `make DOMAIN=ali.trustbloc.dev`
-* By default Bloc domain is `testnet.trustboc.dev`. To run with different domain (See next), run with: `make BLOC_DOMAIN=testnet.ali.trustbloc.dev`
+* By default dns domain is `local.trustboc.dev`. To run with different domain (See next), run with: `make DOMAIN=ali.trustbloc.dev`
+* By default Bloc domain is `testnet.local.trustboc.dev`. To run with different domain (See next), run with: `make BLOC_DOMAIN=testnet.ali.trustbloc.dev`
 * Will create an Ingress for external access. When running with unregistered dns domains, create records (/etc/hosts) for:
 	- `benefits-dept-comparator.DOMAIN`
 	- `cbp-comparator.DOMAIN`
