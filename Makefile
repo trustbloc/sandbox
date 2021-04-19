@@ -155,7 +155,7 @@ minikube-down:
 
 .PHONY: automation-test-local
 automation-test-local:
-	@cd ./test/ui-automation && npm run test && npm run report
+	@cd ./test/ui-automation && npm run test:local && npm run report
 
 .PHONY: automation-test-dev
 automation-test-dev:

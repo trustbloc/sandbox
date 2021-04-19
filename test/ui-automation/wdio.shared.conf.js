@@ -33,6 +33,7 @@ exports.config = {
     //
     specs: [
         './test/specs/new-bank-account.js',
+        './test/specs/ace.js',
         './test/specs/vcs-flow.js'
     ],
     // Patterns to exclude.

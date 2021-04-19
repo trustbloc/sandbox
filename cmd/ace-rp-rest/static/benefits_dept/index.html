@@ -147,15 +147,17 @@ SPDX-License-Identifier: Apache-2.0
 
     <!-- Dynamically create the table based on the list of the submissions.-->
     function createExtractTable(data){
+        var htmlIDSuffix = 0
         for(key in data["extractData"]){
             var table = document.getElementById('extractTable');
             var tr = "<tr class=\"text-lg text-black  text-center\">";
-            tr += "<td class=\"  py-1 hidden nr\">" + data["extractData"][key].id + "</td><td class=\"  py-1 \">" + data["extractData"][key].source + "</td>" +
+            tr += "<td id=ext-data-"+htmlIDSuffix+" class=\"  py-1 hidden nr\">" + data["extractData"][key].id + "</td><td class=\"  py-1 \">" + data["extractData"][key].source + "</td>" +
                 "<td class=\"  py-1 \"> " + data["extractData"][key].submittedTime + "</td>" +
-                "<td><button class=\"processingBtn w-24 bg-gray-100 hover:bg-blue-900 " +
+                "<td><button id=view-btn-"+htmlIDSuffix+" class=\"processingBtn w-24 bg-gray-100 hover:bg-blue-900 " +
                 "hover:shadow hover:text-white text-center text-gray-800 text-xl font-bold py-2 px-2 border border-green-600 " +
                 "rounded shadow-lg\"'>View</button></td></tr>";
             table.innerHTML += tr;
+            htmlIDSuffix++
         }
 
         $(".processingBtn").click(function () {
@@ -165,14 +167,16 @@ SPDX-License-Identifier: Apache-2.0
     }
     <!-- Dynamically create the view table -->
     function createViewTable(data){
+        var htmlIDSuffix = 0
         for(key in data["userDetails"]){
             var table = document.getElementById('viewTable');
-            var tr = "<tr class=\" text-lg text-black  text-left\">";
-            tr += "<td class=\"  py-1 \">" + data["userDetails"][key].nationalID + "</td>" +
-                "<td class=\"  py-1 \"> " + data["userDetails"][key].name + "</td>" +
-                "<td class=\"  py-1  overflow-x-auto\"> " + data["userDetails"][key].did + "</td>" +
+            var tr = "<tr id=user-data-"+htmlIDSuffix+" class=\" text-lg text-black  text-left\">";
+            tr += "<td id=user-nationalID-"+htmlIDSuffix+" class=\"  py-1 \">" + data["userDetails"][key].nationalID + "</td>" +
+                "<td id=user-name-"+htmlIDSuffix+" class=\"  py-1 \"> " + data["userDetails"][key].name + "</td>" +
+                "<td id=user-did-"+htmlIDSuffix+"  class=\"  py-1  overflow-x-auto\"> " + data["userDetails"][key].did + "</td>" +
                 "</tr>";
             table.innerHTML += tr;
+            htmlIDSuffix++
         }
     }
     <!-- Dynamically populate the Processing view-->
