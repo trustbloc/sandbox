@@ -13,14 +13,14 @@ CONTAINER_CMD_RUN_OPTS         ?= $(if $(findstring docker,$(CONTAINER_CMD)),$(D
 export DEPLOYMENT_ENV	?= local
 # space delimited of Key:Value pairs
 COMMON_LABELS		:= instance:${DEPLOYMENT_ENV}
-export DOMAIN      		?= trustbloc.dev
+export DOMAIN      		?= ${DEPLOYMENT_ENV}.trustbloc.dev
 export COUCHDB_URL								?= couchdb://cdbadmin:secret@couchdb-demo:5984
 
 OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
-RP_IMG					?= ghcr.io/trustbloc-cicd/sandbox-rp:0.1.7-snapshot-db092c3
+RP_IMG					?= ghcr.io/trustbloc-cicd/sandbox-rp:0.1.7-snapshot-1b60e86
 
 # do not modify
 KUSTOMIZE_DIR       	= kustomize/rp
