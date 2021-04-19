@@ -173,13 +173,15 @@ SPDX-License-Identifier: Apache-2.0
 
     <!-- Dynamically create the table based on the list of the tables.-->
     function createUserTable(data){
+        var htmlIDSuffix = 0
         for(key in data["users"]){
             var table = document.getElementById('allUserTable');
             var tr = "<tr class=\"text-lg text-black  text-left\">";
             var  maskedUser = createMaskedUsername(data["users"][key].userName);
-            tr += "<td><input type=\"checkbox\" />     </td><td class=\"  py-1 \">" + data["users"][key].id + "</td><td class=\"  py-1 \"> " +
+            tr += "<td id=td-user-"+htmlIDSuffix+"><input id=cb-user-"+htmlIDSuffix+" type=\"checkbox\" />     </td><td class=\"  py-1 \">" + data["users"][key].id + "</td><td class=\"  py-1 \"> " +
                 maskedUser + "</td><td class=\"  py-1 \"> " + data["users"][key].vaultID + "</td></tr>";
             table.innerHTML += tr;
+            htmlIDSuffix++
         }
     }
     <!-- Masking the stored username  -->

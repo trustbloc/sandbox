@@ -115,7 +115,7 @@ async function _getLoginAndAccept() {
     let emailInput = await $('#email');
     await emailInput.waitForExist();
     expect(emailInput).toHaveValue('john.smith@example.com');
-    await emailInput.setValue(`john.${new Date().getTime()}@test.com`);
+    await emailInput.setValue(`ui-aut-${new Date().getTime()}@test.com`);
     return true;
   });
 

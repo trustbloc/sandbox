@@ -60,6 +60,8 @@ exports.authenticate = async ({credential, profile}) => {
 };
 
 exports.loginConsent = async (btnID) => {
+    await browser.pause(1000)
+
     // issue cred
     const issueButton = await $(btnID);
     await issueButton.waitForClickable();
@@ -72,6 +74,19 @@ exports.loginConsent = async (btnID) => {
     // consent
     const consentButton = await $('#accept');
     await consentButton.click();
+};
+
+exports.selectBrowserWalletType = async () => {
+    const selectBrowserButton = await $('button*=Browser Wallet');
+    const displayed = await selectBrowserButton.isDisplayed()
+    if (displayed) {
+        await selectBrowserButton.waitForClickable();
+        await selectBrowserButton.click();
+
+        const proceedButton = await $('button*=Proceed');
+        await proceedButton.waitForClickable();
+        await proceedButton.click();
+    }
 };
 
 exports.issue = async () => {

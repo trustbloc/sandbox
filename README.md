@@ -64,9 +64,6 @@ make automation-test-local
 
 # runs tests against cloud deployed dev k8s cluster 
 make automation-test-dev
-
-# stops the k8s cluster
-make minikube-down
 ```
 
 ## Contributing

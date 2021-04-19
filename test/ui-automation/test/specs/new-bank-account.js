@@ -41,8 +41,8 @@ describe("TrustBloc - New Bank Account", () => {
         // 2. Issuer login and consent
         await issuer.loginConsent('#drivingLicense')
 
-        // 3. add cookie to select browser as default (TODO: find a way to do this without modifying cookies)
-        browser.addCookie({'pref.wallet.type.100': 'broswer'})
+        // 3. select browser as default
+        await issuer.selectBrowserWalletType()
 
         // 4. choose wallet
         await chapi.chooseWallet({
@@ -64,8 +64,8 @@ describe("TrustBloc - New Bank Account", () => {
         // 2. Issuer login and consent
         await issuer.loginConsent('#creditScore')
 
-        // 3. add cookie to select browser as default (TODO: find a way to do this without modifying cookies)
-        browser.addCookie({'pref.wallet.type.100': 'broswer'})
+        // 3. select browser as default
+        await issuer.selectBrowserWalletType()
 
         // 4. choose wallet
         await chapi.chooseWallet({
@@ -95,7 +95,7 @@ describe("TrustBloc - New Bank Account", () => {
         const successMsg1 = await $('div*=Drivers License');
         await successMsg1.waitForExist();
 
-        // TODO select the vc and submit
+        // TODO https://github.com/trustbloc/sandbox/issues/990 select the vc and submit
     })
 })
 
