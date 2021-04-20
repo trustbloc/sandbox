@@ -50,7 +50,7 @@ flows.set('CertifiedMillTestReport', {
 
 describe("TrustBloc - Verifiable Credential Service (VCS) flows", () => {
     const ctx = {
-        email: `${uuid()}@example.com`,
+        email: `ui-aut-${new Date().getTime()}@test.com`,
     };
 
     // runs once before the first test in this block
@@ -62,7 +62,7 @@ describe("TrustBloc - Verifiable Credential Service (VCS) flows", () => {
     beforeEach(function () {
     });
 
-    it('Register a Wallet', async function () {
+    it(`Register a Wallet (${ctx.email})`, async function () {
         this.timeout(300000);
 
         // 1. Navigate to Wallet Website

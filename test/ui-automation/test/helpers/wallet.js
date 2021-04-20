@@ -14,10 +14,10 @@ const timeout = 60000;
 
 /*************************** Public API ******************************/
 
-exports.init = async ({did}) => {
+exports.init = async ({did, email}) => {
   // login and consent
   await _getLogin();
-  await _getLoginAndAccept();
+  await _getLoginAndAccept(email);
 
   // register chapi
   await allow()
@@ -110,12 +110,12 @@ async function _getLogin() {
   await selectProvider.click();
 }
 
-async function _getLoginAndAccept() {
+async function _getLoginAndAccept(email) {
   await browser.waitUntil(async () => {
     let emailInput = await $('#email');
     await emailInput.waitForExist();
     expect(emailInput).toHaveValue('john.smith@example.com');
-    await emailInput.setValue(`ui-aut-${new Date().getTime()}@test.com`);
+    await emailInput.setValue(email);
     return true;
   });
 
