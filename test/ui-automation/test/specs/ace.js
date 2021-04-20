@@ -6,10 +6,6 @@ SPDX-License-Identifier: Apache-2.0
 
 'use strict';
 
-const {chapi, wallet, issuer, verifier} = require('../helpers');
-const path = require('path');
-const uuid = require('uuid-random');
-
 describe("TrustBloc - Anonymous Comparator and Extractor (ACE)", () => {
     // runs once before the first test in this block
     before(async () => {

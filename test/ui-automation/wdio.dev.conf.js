@@ -23,6 +23,9 @@ exports.config = {
     "cbpURL": "https://cbp-rp" + domain,
     "ucisInternalURL": "https://ucis-rp" + domain + "/internal",
     "fedSettlementURL": "https://benefits-dept-rp" + domain,
+    "prcURL": "https://issuer" + domain + "/applygreencard",
+    "flightBookingURL": "https://issuer" + domain + "/flightbooking",
+    "flightBoardingURL": "https://rp" + domain + "/flightcheckin",
 
     capabilities: [{
         maxInstances: 5,

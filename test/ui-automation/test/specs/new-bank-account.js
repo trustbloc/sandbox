@@ -7,12 +7,11 @@ SPDX-License-Identifier: Apache-2.0
 'use strict';
 
 const {chapi, wallet, issuer, verifier} = require('../helpers');
-const path = require('path');
 const uuid = require('uuid-random');
 
 describe("TrustBloc - New Bank Account", () => {
     const ctx = {
-        email: `${uuid()}@example.com`,
+        email: `ui-aut-${new Date().getTime()}@test.com`,
     };
 
     // runs once before the first test in this block
@@ -24,7 +23,7 @@ describe("TrustBloc - New Bank Account", () => {
     beforeEach(function () {
     });
 
-    it('Register a Wallet', async function () {
+    it(`Register a Wallet (${ctx.email})`, async function () {
         this.timeout(300000);
 
         // 1. Navigate to Wallet Website
