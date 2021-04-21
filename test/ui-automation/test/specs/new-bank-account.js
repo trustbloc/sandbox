@@ -91,10 +91,33 @@ describe("TrustBloc - New Bank Account", () => {
             name: browser.config.walletName,
         });
 
-        const successMsg1 = await $('div*=Drivers License');
-        await successMsg1.waitForExist();
+        // 4. select VCs
+        const driversLicenseVC = await $('span*=Drivers License');
+        await driversLicenseVC.waitForClickable();
+        await driversLicenseVC.click()
 
-        // TODO https://github.com/trustbloc/sandbox/issues/990 select the vc and submit
+        const creditReportVC = await $('span*=TrustBloc - Credit Report Issuer');
+        await creditReportVC.waitForClickable();
+        await creditReportVC.click()
+
+        const assuranceIssuerVC = await $('span*=TrustBloc - Driving License + Assurance Issuer');
+        await assuranceIssuerVC.waitForClickable();
+        await assuranceIssuerVC.click()
+
+        const shareCredBtn = await $('#share-credentials');
+        await shareCredBtn.waitForClickable();
+        await shareCredBtn.click();
+
+        // 5. validate success msg
+        const verifySuccessMsg = await $('div*=Successfully Verified');
+        await verifySuccessMsg.waitForExist();
+
+        const proceedBtn = await $('#proceedClick');
+        await proceedBtn.waitForClickable();
+        await proceedBtn.click();
+
+        const successMsg = await $('div*=Your Bank Account Is Successfully Opened');
+        await successMsg.waitForExist();
     })
 })
 
