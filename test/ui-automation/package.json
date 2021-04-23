@@ -31,7 +31,7 @@
     "@wdio/local-runner": "^7.5.0",
     "@wdio/mocha-framework": "^7.4.6",
     "@wdio/spec-reporter": "^7.4.3",
-    "mochawesome-report-generator": "^5.2.0",
+    "mochawesome-report-generator": "^3.1.5",
     "wdio-mochawesome-reporter": "^4.0.0",
     "xunit-viewer": "^7.1.1"
   },
