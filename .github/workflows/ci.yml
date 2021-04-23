@@ -1,0 +1,103 @@
+name: "sandbox ci"
+
+env:
+  GO_VERSION: 1.15
+  MINIKUBE_VERSION: v1.18.1
+  KUBERNETES_VERSION: v1.19.6
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  Checks:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    - name: Run checks
+      run: |
+        echo $PATH
+        go env
+        echo ${{ github.workspace }}
+        make checks
+
+  UnitTest:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    - name: Run unit test
+      run: make unit-test
+    - name: Upload coverage to Codecov
+      run: |
+        bash <(curl https://codecov.io/bash)
+      env:
+        CODECOV_UPLOAD_TOKEN: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
+
+  Publish:
+    needs: [Checks, UnitTest]
+    runs-on: ubuntu-20.04
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - run: |
+        function logout {
+          docker logout
+        }
+        trap logout EXIT
+        git lfs install
+        git lfs pull
+        source ci/version_var.sh
+        echo $DOCKER_PASSWORD | docker login ghcr.io --username $DOCKER_USER --password-stdin
+        make sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker login-consent-server-docker sandbox-cli-docker
+        docker tag ghcr.io/trustbloc/sandbox-issuer:latest ${ISSUER_REST_PKG}:${EDGE_SANDBOX_TAG}
+        docker push ${ISSUER_REST_PKG}:${EDGE_SANDBOX_TAG}
+        docker tag ghcr.io/trustbloc/sandbox-rp:latest ${RP_REST_PKG}:${EDGE_SANDBOX_TAG}
+        docker push ${RP_REST_PKG}:${EDGE_SANDBOX_TAG}
+        docker tag ghcr.io/trustbloc/sandbox-ace-rp:latest ${ACE_RP_REST_PKG}:${EDGE_SANDBOX_TAG}
+        docker push ${ACE_RP_REST_PKG}:${EDGE_SANDBOX_TAG}
+        docker tag ghcr.io/trustbloc/sandbox-login-consent-server:latest ${LOGIN_PKG}:${EDGE_SANDBOX_TAG}
+        docker push ${LOGIN_PKG}:${EDGE_SANDBOX_TAG}
+        docker tag ghcr.io/trustbloc/sandbox-cli:latest ${CLI_PKG}:${EDGE_SANDBOX_TAG}
+        ocker push ${CLI_PKG}:${EDGE_SANDBOX_TAG}
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_USER }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+  Minikube:
+    name: Start Minikube
+    needs: [Publish]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.3.1
+        with:
+          minikube version: '${{ env.MINIKUBE_VERSION }}'
+          kubernetes version: '${{ env.KUBERNETES_VERSION }}'
+          start args: '--addons=ingress'
+      - name: Deploy Trustbloc
+        run: |
+          minikube ip
+          kubectl get nodes
+          make ci-setup-deploy
+      - name: Run UI-test
+        run: |
+          make automation-test-local
