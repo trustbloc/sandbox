@@ -26,22 +26,4 @@ exports.config = {
     "prcURL": "https://issuer" + domain + "/applygreencard",
     "flightBookingURL": "https://issuer" + domain + "/flightbooking",
     "flightBoardingURL": "https://rp" + domain + "/flightcheckin",
-
-    capabilities: [{
-        maxInstances: 5,
-        browserName: 'chrome',
-        // TODO enable headless chrome options - currently some cases are failing in headless mode
-        // 'goog:chromeOptions': {
-        //     // to run chrome headless the following flags are required
-        //     // (see https://developers.google.com/web/updates/2017/04/headless-chrome)
-        //     args: [
-        //         '--headless',
-        //         '--no-sandbox',
-        //         '--disable-gpu',
-        //         '--disable-dev-shm-usage',
-        //         '--window-size 1920,1080',
-        //     ],
-        // }
-    }],
-    logLevel: 'warn',
 };
