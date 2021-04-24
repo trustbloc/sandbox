@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/hyperledger/aries-framework-go-ext/component/vdr/trustbloc"
+	"github.com/hyperledger/aries-framework-go-ext/component/vdr/orb"
 	vdrapi "github.com/hyperledger/aries-framework-go/pkg/framework/aries/api/vdr"
 	vdrpkg "github.com/hyperledger/aries-framework-go/pkg/vdr"
 	"github.com/hyperledger/aries-framework-go/pkg/vdr/httpbinding"
@@ -454,9 +454,8 @@ func createVDRI(didResolverURL string, tlsConfig *tls.Config) (vdrapi.Registry, 
 		return nil, fmt.Errorf("failed to create new universal resolver vdr: %w", err)
 	}
 
-	blocVDR, err := trustbloc.New(nil,
-		trustbloc.WithResolverURL(didResolverURL),
-		trustbloc.WithTLSConfig(tlsConfig),
+	blocVDR, err := orb.New(nil,
+		orb.WithTLSConfig(tlsConfig),
 	)
 	if err != nil {
 		return nil, err
