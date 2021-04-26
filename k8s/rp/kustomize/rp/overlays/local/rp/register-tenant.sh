@@ -13,7 +13,7 @@ curl -qL https://storage.googleapis.com/kubernetes-release/release/v1.20.0/bin/l
 chmod +x /usr/local/bin/kubectl
 
 rpAdapterURL=https://adapter-rp.||DOMAIN||/relyingparties
-callbackURL=https://rp.||DOMAIN||/oauth2/callback
+callbackURL=https://demo-rp.||DOMAIN||/oauth2/callback
 
 registerRPTenant() {
     n=0
@@ -26,7 +26,7 @@ registerRPTenant() {
         response=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" \
         --header "Content-Type: application/json" \
         --request POST \
-        --data '{"label": "rp.||DOMAIN||", "callback": "'$callbackURL'", "scopes": ["credit_card_stmt:remote","driver_license:local","credit_score:remote","driver_license_evidence:remote"], "requiresBlindedRoute": true}' \
+        --data '{"label": "demo-rp.||DOMAIN||", "callback": "'$callbackURL'", "scopes": ["credit_card_stmt:remote","driver_license:local","credit_score:remote","driver_license_evidence:remote"], "requiresBlindedRoute": true}' \
         --insecure $rpAdapterURL)
 
         code=${response//*RESPONSE_CODE=/}
