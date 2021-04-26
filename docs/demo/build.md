@@ -43,7 +43,7 @@ The [TrustBloc k8s repo](https://github.com/trustbloc/k8s) contains the scripts 
 - kms (Key Management Server)
 - registrar
 - resolver
-- sidetree-mock
+- orb
 - vault
 - wallet
 
