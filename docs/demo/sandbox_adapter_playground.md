@@ -4,8 +4,8 @@
 | Component   | Cloud URL (Sandbox)                                       | Cloud URL (Dev)                                       | Local k8s URL*                                   |
 |-------------|-----------------------------------------------------------|-------------------------------------------------------|--------------------------------------------------|
 | Wallet      | [Click Here](https://agent.sandbox.trustbloc.dev)         | [Click Here](https://agent-ui.dev.trustbloc.dev)      | [Click Here](https://wallet.local.trustbloc.dev) |
-| Issuer      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)   | [Click Here](https://demo-issuer.dev.trustbloc.dev)   | [Click Here](https://issuer.local.trustbloc.dev) |
-| RP/Verifier | [Click Here](https://demo-verifier.sandbox.trustbloc.dev) | [Click Here](https://demo-verifier.dev.trustbloc.dev) | [Click Here](https://rp.local.trustbloc.dev)     |
+| Issuer      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)   | [Click Here](https://demo-issuer.dev.trustbloc.dev)   | [Click Here](https://demo-issuer.local.trustbloc.dev) |
+| RP/Verifier | [Click Here](https://demo-verifier.sandbox.trustbloc.dev) | [Click Here](https://demo-verifier.dev.trustbloc.dev) | [Click Here](https://demo-rp.local.trustbloc.dev)     |
 
 *: Refer [here](./../../README.md#deployment) to run the local k8s demo.
 

@@ -1,8 +1,8 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -14,10 +14,10 @@ metadata:
 spec:
   tls:
   - hosts:
-      - rp.||DOMAIN||
+      - demo-rp.||DOMAIN||
     secretName: $(INGRESS_TLS_SECRET)
   rules:
-  - host: rp.||DOMAIN||
+  - host: demo-rp.||DOMAIN||
     http:
       paths:
       - pathType: Prefix

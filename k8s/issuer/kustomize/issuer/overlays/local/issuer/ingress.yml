@@ -1,23 +1,23 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: issuer
+  name: demo-issuer
   labels:
     app: issuer
 spec:
   tls:
   - hosts:
-      - $(ISSUER_SERVICE_NAME).||DOMAIN||
+      - demo-$(ISSUER_SERVICE_NAME).||DOMAIN||
     secretName: $(INGRESS_TLS_SECRET)
   rules:
-  - host: $(ISSUER_SERVICE_NAME).||DOMAIN||
+  - host: demo-$(ISSUER_SERVICE_NAME).||DOMAIN||
     http:
       paths:
       - pathType: Prefix
