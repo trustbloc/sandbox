@@ -32,8 +32,7 @@ router-api
 router
 router-ws
 rp
-sidetree-mock
-stakeholder-one
+orb
 testnet
 ucis-comparator
 ucis-rp

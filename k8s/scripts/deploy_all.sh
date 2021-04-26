@@ -87,8 +87,8 @@ echo "$root"
 
 ## generate certificate for all components, skip if already exists
 if ! [[ -d ~/.trustbloc-k8s/${DEPLOYMENT_ENV}/certs ]]; then
-pushd ./.core/sidetree-mock
-    cp -r kustomize/sidetree-mock/overlays/${DEPLOYMENT_ENV}/certs ~/.trustbloc-k8s/${DEPLOYMENT_ENV}/
+pushd ./.core/orb
+    cp -r kustomize/orb/overlays/${DEPLOYMENT_ENV}/certs ~/.trustbloc-k8s/${DEPLOYMENT_ENV}/
 popd
 fi
 
