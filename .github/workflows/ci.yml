@@ -77,8 +77,8 @@ jobs:
         docker tag ghcr.io/trustbloc/sandbox-cli:latest ${CLI_PKG}:${EDGE_SANDBOX_TAG}
         ocker push ${CLI_PKG}:${EDGE_SANDBOX_TAG}
       env:
-        DOCKER_USER: ${{ secrets.DOCKER_USER }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        DOCKER_USER: ${{ secrets.CR_USER }}
+        DOCKER_PASSWORD: ${{ secrets.CR_PAT }}
 
   Minikube:
     name: Start Minikube
