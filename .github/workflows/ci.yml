@@ -75,7 +75,7 @@ jobs:
         docker tag ghcr.io/trustbloc/sandbox-login-consent-server:latest ${LOGIN_PKG}:${EDGE_SANDBOX_TAG}
         docker push ${LOGIN_PKG}:${EDGE_SANDBOX_TAG}
         docker tag ghcr.io/trustbloc/sandbox-cli:latest ${CLI_PKG}:${EDGE_SANDBOX_TAG}
-        ocker push ${CLI_PKG}:${EDGE_SANDBOX_TAG}
+        docker push ${CLI_PKG}:${EDGE_SANDBOX_TAG}
       env:
         DOCKER_USER: ${{ secrets.CR_USER }}
         DOCKER_PASSWORD: ${{ secrets.CR_PAT }}
