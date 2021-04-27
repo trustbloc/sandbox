@@ -161,6 +161,10 @@ automation-test-local:
 automation-test-dev:
 	@cd ./test/ui-automation && npm run test:dev && npm run report
 
+.PHONY: automation-test
+automation-test:
+	@cd ./test/ui-automation && npm run test && npm run report
+
 .PHONY: clean-build
 clean-build:
 	@rm -Rf ./.build

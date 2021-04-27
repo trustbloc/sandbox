@@ -59,6 +59,9 @@ Use following targets to run the automation tests built using [WebDriverIO](http
 this, [npm](https://www.npmjs.com) need to be installed in the system.
 
 ```
+# runs tests for configurations in ./test/ui-automation/wdio.conf.js (by default, it runs against local deployment)
+make automation-test
+
 # runs tests against locally deployed k8s cluster
 make automation-test-local
 
