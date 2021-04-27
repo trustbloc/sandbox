@@ -69,7 +69,7 @@ healthCheck() {
 
 ## deploy the DBs dependency first
 pushd demo-dbs
-    make
+    make SHELL=/bin/bash
 popd
 ### TODO: set up proper mysql, couchDB healthchecks
 echo wait for DBs to start up
@@ -95,10 +95,10 @@ fi
 for component in ${DEPLOY_LIST[@]}; do
     echo "${AQUA} === component: $component ${NONE}"
     pushd $component
-        make setup-no-certs
+        make SHELL=/bin/bash setup-no-certs
         mkdir -p kustomize/$component/overlays/${DEPLOYMENT_ENV}/certs
         cp ~/.trustbloc-k8s/${DEPLOYMENT_ENV}/certs/* kustomize/$component/overlays/${DEPLOYMENT_ENV}/certs
-        make deploy
+        make SHELL=/bin/bash deploy
     popd
     ## run all health checks for a given component
     for url in ${HEALTCHECK_URL[$component]}; do

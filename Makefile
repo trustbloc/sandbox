@@ -137,6 +137,10 @@ build-setup-deploy: clean sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp
 setup-deploy: clean
 	@TRUSTBLOC_CORE_K8S_COMMIT=$(TRUSTBLOC_CORE_K8S_COMMIT) make setup-deploy -C ./k8s
 
+.PHONY: ci-setup-deploy
+ci-setup-deploy: clean
+	@TRUSTBLOC_CORE_K8S_COMMIT=$(TRUSTBLOC_CORE_K8S_COMMIT) make ci-setup-deploy -C ./k8s
+
 .PHONY: deploy-all
 deploy-all:
 	@make deploy-all -C ./k8s
