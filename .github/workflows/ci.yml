@@ -82,7 +82,7 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.CR_PAT }}
 
   Minikube:
-    name: Start Minikube
+    name: Deploy Sandbox and Run UI Automation
     needs: [Publish]
     runs-on: ubuntu-latest
     steps:
