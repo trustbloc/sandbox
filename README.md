@@ -36,7 +36,11 @@ by the [TrustBloc](https://github.com/trustbloc) projects.
 - [TrustBloc Anonymous Comparator and Extractor(ACE)](docs/components/ace_components.md)
 
 ## Build and Deployment
-For pre-requisites, please refer [TrustBloc k8s deployments](https://github.com/trustbloc/k8s/blob/main/README.md).
+For pre-requisites, please refer [TrustBloc k8s deployments](https://github.com/trustbloc/k8s/blob/main/README.md). 
+
+The sandbox k8s is dependent on [TrustBloc k8s](https://github.com/trustbloc/k8s). Use TRUSTBLOC_CORE_K8S_COMMIT 
+variable in [Makefile](Makefile) point to the TrustBloc k8s deployment version. Alternatively, uncomment the 
+[symlink command](./k8s/scripts/core_deployment.sh) to point it to the cloned TrustBloc k8s repo.
 
 Run following target to run the components locally.
 ```
@@ -48,6 +52,12 @@ make setup-deploy
 
 # stops the k8s cluster
 make minikube-down
+
+# undeploys all the components without bringing down minikube
+make undeploy-all
+
+# deploys all the components provided minikube is up
+make deploy-all
 ```
 
 The SSL CA cert located inside `~/.trustbloc-k8s/local/certs/` need to be imported to system cert chain.

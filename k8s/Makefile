@@ -17,6 +17,11 @@ CLI_IMG_LOCAL         	 		?= ghcr.io/trustbloc/sandbox-cli:${CURRENT_TIME}
 
 .PHONY: deploy-all deploy-components setup-deploy ci-deploy-all ci-deploy-core ci-setup-deploy ci-minikube-setup local-setup-deploy minikube-up minikube-down minikube-image-load
 
+undeploy-all:
+	# TODO instead of delete all, run undeploy target on each component
+	@kubectl delete all --all -n default
+	echo "removed all components"
+
 deploy-all: deploy-core
 	./scripts/deploy_all.sh
 
