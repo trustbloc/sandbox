@@ -25,7 +25,7 @@ DID_ELEMENT_SIDETREE_REQUEST_URL ?= https://element-did.com/api/v1/sidetree/requ
 SANDBOX_CLI_IMAGE_NAME       ?= trustbloc/sandbox-cli
 
 # TrustBloc core k8s deployment scripts https://github.com/trustbloc/k8s
-TRUSTBLOC_CORE_K8S_COMMIT=63272bba9d53516ec4be892fe9962c7168109d63
+TRUSTBLOC_CORE_K8S_COMMIT=c978b5759bdb90f8c68a125616f635b26eae82a4
 
 # Tool commands (overridable)
 ALPINE_VER ?= 3.12
@@ -140,6 +140,10 @@ setup-deploy: clean
 .PHONY: ci-setup-deploy
 ci-setup-deploy: clean
 	@TRUSTBLOC_CORE_K8S_COMMIT=$(TRUSTBLOC_CORE_K8S_COMMIT) make ci-setup-deploy -C ./k8s
+
+.PHONY: undeploy-all
+undeploy-all:
+	@make undeploy-all -C ./k8s
 
 .PHONY: deploy-all
 deploy-all:
