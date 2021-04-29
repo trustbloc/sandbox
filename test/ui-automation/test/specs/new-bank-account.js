@@ -52,7 +52,7 @@ describe("TrustBloc - New Bank Account", () => {
         await wallet.didConnect()
 
         browser.executeAsync((done) => {
-            setTimeout(done, 10000)
+            setTimeout(done, 5000)
         })
     })
 
@@ -75,7 +75,7 @@ describe("TrustBloc - New Bank Account", () => {
         await wallet.didConnect()
 
         browser.executeAsync((done) => {
-            setTimeout(done, 10000)
+            setTimeout(done, 5000)
         })
     })
 
