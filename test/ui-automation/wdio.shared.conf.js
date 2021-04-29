@@ -87,6 +87,7 @@ exports.config = {
                 '--disable-dev-shm-usage',
                 '--window-size=1920,1080',
                 '--disable-web-security',
+                '--ignore-certificate-errors',
             ],
         }
     }],
@@ -124,7 +125,7 @@ exports.config = {
     baseUrl: 'http://localhost',
     //
     // Default timeout for all waitFor* commands.
-    waitforTimeout: 60000,
+    waitforTimeout: 45000,
     //
     // Default timeout in milliseconds for request
     // if browser driver or grid doesn't send response

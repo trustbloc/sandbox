@@ -102,7 +102,7 @@ describe("TrustBloc - Verifiable Credential Service (VCS) flows", () => {
 
                 // wait for any async operations to complete
                 browser.executeAsync((done) => {
-                    setTimeout(done, 10000)
+                    setTimeout(done, 5000)
                 })
             })
 
