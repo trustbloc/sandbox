@@ -111,7 +111,7 @@ jobs:
   BuildDeployTest-PR:
     name: Build-Deploy-Test-PR
     needs: [UnitTest]
-    if: github.event_name == 'pull_request' && (github.repository == 'trustbloc/sandbox' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'pull_request' && github.repository == 'trustbloc/sandbox'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
