@@ -98,11 +98,13 @@ jobs:
         run: |
           minikube ip
           kubectl get nodes
+          source ci/version_var.sh
           export ISSUER_IMG=${ISSUER_REST_PKG}:${EDGE_SANDBOX_TAG}
           export RP_IMG=${RP_REST_PKG}:${EDGE_SANDBOX_TAG}
           export ACE_RP_IMG=${ACE_RP_REST_PKG}:${EDGE_SANDBOX_TAG}
           export LOGIN_CONSENT_IMG=${LOGIN_PKG}:${EDGE_SANDBOX_TAG}
           export CLI_IMG=${CLI_PKG}:${EDGE_SANDBOX_TAG}
+          echo $ISSUER_IMG $RP_IMG $ACE_RP_IMG $LOGIN_CONSENT_IMG $CLI_IMG
           make ci-setup-deploy
       - name: Run UI-test
         run: |
@@ -134,6 +136,7 @@ jobs:
           export ACE_RP_IMG=ghcr.io/trustbloc/sandbox-ace-rp:latest
           export LOGIN_CONSENT_IMG=ghcr.io/trustbloc/sandbox-login-consent-server:latest
           export CLI_IMG=ghcr.io/trustbloc/sandbox-cli:latest
+          echo $ISSUER_IMG $RP_IMG $ACE_RP_IMG $LOGIN_CONSENT_IMG $CLI_IMG
           make ci-setup-deploy
       - name: Run UI-test
         run: |
