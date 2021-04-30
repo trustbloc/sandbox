@@ -44,7 +44,7 @@ flows.set('TravelCard', {
 });
 flows.set('CertifiedMillTestReport', {
     description: "Order Shipment for Raw Material using Certified Mill Test Report",
-    profile: "elem-ed25519signature2018-ed25519",
+    profile: "trustbloc-ed25519signature2018-ed25519",
     skipStatusCheck: true
 });
 

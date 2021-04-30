@@ -23,6 +23,8 @@ describe("TrustBloc - Anonymous Comparator and Extractor (ACE)", () => {
     it('Create a UCIS account', async function () {
         this.timeout(300000);
 
+        await browser.pause(3000)
+
         await browser.navigateTo(browser.config.ucisURL);
 
         const showRegBtn = await $('#showRegister');
@@ -41,11 +43,15 @@ describe("TrustBloc - Anonymous Comparator and Extractor (ACE)", () => {
         await registerBtn.waitForClickable();
         await registerBtn.click();
 
+        await browser.pause(1000)
+
         const dashboardMsg = await $('div*=Profile Complete');
         await dashboardMsg.waitForExist();
     });
 
     it('Create a CBP account and Link to UCIS', async function () {
+        await browser.pause(3000)
+
         await browser.navigateTo(browser.config.cbpURL);
 
         const nationalIDInput = await $('#nationalID');
@@ -55,6 +61,8 @@ describe("TrustBloc - Anonymous Comparator and Extractor (ACE)", () => {
         const registerBtn = await $('#register');
         await registerBtn.waitForClickable();
         await registerBtn.click();
+
+        await browser.pause(1000)
 
         const dashboardMsg = await $('div*=Application Complete!');
         await dashboardMsg.waitForExist();
@@ -80,6 +88,8 @@ describe("TrustBloc - Anonymous Comparator and Extractor (ACE)", () => {
     })
 
     it('Authorize Data release by UCIS Admin', async function () {
+        await browser.pause(3000)
+
         await browser.navigateTo(browser.config.ucisInternalURL);
 
         const registerBtn = await $('#cb-user-0');
@@ -95,6 +105,8 @@ describe("TrustBloc - Anonymous Comparator and Extractor (ACE)", () => {
     })
 
     it('Validate the data in Federal Settlement payroll extract', async function () {
+        await browser.pause(3000)
+
         await browser.navigateTo(browser.config.fedSettlementURL);
 
         const registerBtn = await $('#view-btn-0');
