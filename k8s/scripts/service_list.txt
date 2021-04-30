@@ -29,7 +29,12 @@ issuer-vcs
 login-consent
 oathkeeper-proxy
 ops-oathkeeper-proxy
-orb
+orb-1
+orb-1-kms
+vct-1
+orb-2
+vct-2
+orb-2-kms
 router
 router-api
 router-ws
