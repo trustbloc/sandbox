@@ -28,7 +28,7 @@ spec:
           image: busybox
           imagePullPolicy: IfNotPresent
           command: ["wget"]
-          args: ["-S", "http://demo-$(ISSUER_SERVICE_NAME)", "-O-"]
+          args: ["-S", "http://$(ISSUER_SERVICE_NAME)", "-O-"]
       containers:
       - name: register-tenant
         image: "alpine:latest"
