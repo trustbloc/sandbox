@@ -33,12 +33,14 @@ describe("TrustBloc - New Bank Account", () => {
         await wallet.init(ctx);
     });
 
-    it('Get Drivers License and Connect to Assurance Issuer', async function () {
-        // 1. Navigate to Drivers license + Assurance issuer
-        await browser.newWindow(browser.config.driversLicenseURL);
+    it('Connect to Credit Report Issuer', async function () {
+        await browser.pause(3000)
+
+        // 1. Navigate to Credit report issuer
+        await browser.newWindow(browser.config.creditReportURL);
 
         // 2. Issuer login and consent
-        await issuer.loginConsent('#drivingLicense')
+        await issuer.loginConsent('#creditScore')
 
         // 3. select browser as default
         await issuer.selectBrowserWalletType()
@@ -56,12 +58,14 @@ describe("TrustBloc - New Bank Account", () => {
         })
     })
 
-    it('Connect to Credit Report Issuer', async function () {
-        // 1. Navigate to Credit report issuer
-        await browser.newWindow(browser.config.creditReportURL);
+    it('Get Drivers License and Connect to Assurance Issuer', async function () {
+        await browser.pause(3000)
+
+        // 1. Navigate to Drivers license + Assurance issuer
+        await browser.newWindow(browser.config.driversLicenseURL);
 
         // 2. Issuer login and consent
-        await issuer.loginConsent('#creditScore')
+        await issuer.loginConsent('#drivingLicense')
 
         // 3. select browser as default
         await issuer.selectBrowserWalletType()

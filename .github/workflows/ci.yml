@@ -126,7 +126,7 @@ jobs:
         with:
           minikube version: '${{ env.MINIKUBE_VERSION }}'
           kubernetes version: '${{ env.KUBERNETES_VERSION }}'
-          start args: '--addons=ingress'
+          start args: '--addons=ingress --memory=5g'
       - name: Deploy Trustbloc
         run: |
           minikube ip
