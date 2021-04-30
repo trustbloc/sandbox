@@ -161,31 +161,31 @@ func (c *Client) HandleOIDCCallback(reqContext context.Context, code string) ([]
 		),
 		code)
 	if err != nil {
-		return nil, fmt.Errorf("failed to exchange oauth2 code for token : %s", err)
+		return nil, fmt.Errorf("failed to exchange oauth2 code for token : %w", err)
 	}
 
 	rawIDToken, ok := oauthToken.Extra("id_token").(string)
 	if !ok {
-		return nil, fmt.Errorf("missing id_token : %s", err)
+		return nil, fmt.Errorf("missing id_token : %w", err)
 	}
 
 	oidcToken, err := c.oidcProvider.Verifier(&oidc.Config{
 		ClientID: c.oidcClientID,
 	}).Verify(reqContext, rawIDToken)
 	if err != nil {
-		return nil, fmt.Errorf("failed to verify id_token : %s", err)
+		return nil, fmt.Errorf("failed to verify id_token : %w", err)
 	}
 
 	userData := make(map[string]interface{})
 
 	err = oidcToken.Claims(&userData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to extract user data from id_token : %s", err)
+		return nil, fmt.Errorf("failed to extract user data from id_token : %w", err)
 	}
 
 	bits, err := json.Marshal(userData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal user data : %s", err)
+		return nil, fmt.Errorf("failed to marshal user data : %w", err)
 	}
 
 	return bits, nil

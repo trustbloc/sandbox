@@ -181,7 +181,7 @@ type consentServer struct {
 	httpClient              *http.Client
 }
 
-func (c *consentServer) login(w http.ResponseWriter, req *http.Request) { // nolint:funlen,gocyclo
+func (c *consentServer) login(w http.ResponseWriter, req *http.Request) { // nolint:funlen
 	switch req.Method {
 	case http.MethodGet:
 		challenge := req.URL.Query().Get("login_challenge")

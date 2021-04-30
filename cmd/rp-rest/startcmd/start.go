@@ -58,7 +58,7 @@ const (
 	tlsCACertsEnvKey = "RP_TLS_CACERTS"
 
 	requestTokensFlagName  = "request-tokens"
-	requestTokensEnvKey    = "RP_REQUEST_TOKENS" //nolint:gosec
+	requestTokensEnvKey    = "RP_REQUEST_TOKENS"
 	requestTokensFlagUsage = "Tokens used for http request " +
 		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
 

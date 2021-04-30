@@ -15,9 +15,23 @@ if [ ! $(command -v ${DOCKER_CMD}) ]; then
     exit 0
 fi
 
-${DOCKER_CMD} run --rm -e GOPROXY=${GOPROXY} -v $(pwd):/opt/workspace -w /opt/workspace golangci/golangci-lint:v1.31 golangci-lint run
-${DOCKER_CMD} run --rm -e GOPROXY=${GOPROXY} -v $(pwd):/opt/workspace -w /opt/workspace/cmd/issuer-rest golangci/golangci-lint:v1.31 golangci-lint run -c ../../.golangci.yml
-${DOCKER_CMD} run --rm -e GOPROXY=${GOPROXY} -v $(pwd):/opt/workspace -w /opt/workspace/cmd/rp-rest golangci/golangci-lint:v1.31 golangci-lint run -c ../../.golangci.yml
-${DOCKER_CMD} run --rm -e GOPROXY=${GOPROXY} -v $(pwd):/opt/workspace -w /opt/workspace/cmd/ace-rp-rest golangci/golangci-lint:v1.31 golangci-lint run -c ../../.golangci.yml
-${DOCKER_CMD} run --rm -e GOPROXY=${GOPROXY} -v $(pwd):/opt/workspace -w /opt/workspace/cmd/login-consent-server golangci/golangci-lint:v1.31 golangci-lint run -c ../../.golangci.yml
-${DOCKER_CMD} run --rm -e GOPROXY=${GOPROXY} -v $(pwd):/opt/workspace -w /opt/workspace/test/cmd golangci/golangci-lint:v1.31 golangci-lint run -c ../../.golangci.yml
+
+golangci_image="golangci/golangci-lint:v1.39"
+
+# these are useful for adjusting the linter's root directory, to allow linting while using local replaces
+root_dir=$(pwd)
+# root_dir=$(pwd)/../../
+internal_root_dir="."
+# internal_root_dir="trustbloc/edge-sandbox"
+
+shopt -s globstar
+for i in **/*.mod; do
+  mod_dir=$(dirname ${i})
+
+  echo "linting ${mod_dir}"
+
+  ${DOCKER_CMD} run --rm -e GOPROXY=${GOPROXY} -v ${root_dir}:/opt/workspace -w /opt/workspace/${internal_root_dir}/${mod_dir} ${golangci_image} golangci-lint run -c /opt/workspace/${internal_root_dir}/.golangci.yml --path-prefix "${mod_dir}"
+done
+
+# this isn't covered by the loop, as there's no go.mod file in test/cmd
+${DOCKER_CMD} run --rm -e GOPROXY=${GOPROXY} -v $(pwd):/opt/workspace -w /opt/workspace/test/cmd ${golangci_image} golangci-lint run -c ../../.golangci.yml

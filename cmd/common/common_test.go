@@ -157,6 +157,8 @@ func resetLoggingLevels() {
 }
 
 func setEnv(t *testing.T, values *DBParameters) {
+	t.Helper()
+
 	err := os.Setenv(DatabaseURLEnvKey, values.URL)
 	require.NoError(t, err)
 
@@ -168,6 +170,8 @@ func setEnv(t *testing.T, values *DBParameters) {
 }
 
 func unsetEnv(t *testing.T) {
+	t.Helper()
+
 	err := os.Unsetenv(DatabaseURLEnvKey)
 	require.NoError(t, err)
 

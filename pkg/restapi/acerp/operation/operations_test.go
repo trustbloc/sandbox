@@ -2573,6 +2573,8 @@ func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 
 func mockHTTPResponse(t *testing.T, vcResp,
 	authResp *mockHTTPResponseData) func(req *http.Request) (*http.Response, error) {
+	t.Helper()
+
 	return func(req *http.Request) (*http.Response, error) {
 		status := http.StatusCreated
 		respByes := []byte("")

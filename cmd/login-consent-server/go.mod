@@ -4,7 +4,7 @@
 
 module github.com/trustbloc/sandbox/cmd/login-consent-server
 
-go 1.15
+go 1.16
 
 require (
 	github.com/go-openapi/strfmt v0.19.5

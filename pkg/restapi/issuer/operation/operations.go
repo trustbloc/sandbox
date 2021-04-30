@@ -959,7 +959,6 @@ func (c *Operation) didcommDemoResult(w http.ResponseWriter, data string) {
 }
 
 // generateVC for creates VC
-//nolint: funlen
 func (c *Operation) generateVC(w http.ResponseWriter, r *http.Request) {
 	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
 	if err != nil {
@@ -1368,7 +1367,7 @@ func (c *Operation) getCMSUserData(scope, userID, tkn string) (map[string]interf
 func (c *Operation) validateAdapterCallback(redirectURL string) error {
 	u, err := url.Parse(redirectURL)
 	if err != nil {
-		return fmt.Errorf("didcomm callback - error parsing the request url: %s", err)
+		return fmt.Errorf("didcomm callback - error parsing the request url: %w", err)
 	}
 
 	state := u.Query().Get(stateQueryParam)
@@ -1378,7 +1377,7 @@ func (c *Operation) validateAdapterCallback(redirectURL string) error {
 
 	_, err = c.store.Get(state)
 	if err != nil {
-		return fmt.Errorf("invalid state : %s", err)
+		return fmt.Errorf("invalid state : %w", err)
 	}
 
 	// TODO https://github.com/trustbloc/sandbox/issues/493 validate token existence for the state
@@ -1468,7 +1467,7 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, scope, vcs
 
 	profileResponse, err := c.retrieveProfile(vcsProfile)
 	if err != nil {
-		return nil, fmt.Errorf("retrieve profile - name=%s err=%s", vcsProfile, err)
+		return nil, fmt.Errorf("retrieve profile - name=%s err=%w", vcsProfile, err)
 	}
 
 	cred := &verifiable.Credential{}
@@ -1570,7 +1569,7 @@ func (c *Operation) issueCredential(profileID, holder string, cred []byte) ([]by
 }
 
 // validateAuthResp validates did auth response against given domain and challenge
-func (c *Operation) validateAuthResp(authResp []byte, holder, domain, challenge string) error {
+func (c *Operation) validateAuthResp(authResp []byte, holder, domain, challenge string) error { // nolint:gocyclo
 	vp, err := verifiable.ParsePresentation(authResp, verifiable.WithPresDisabledProofCheck())
 	if err != nil {
 		return err
@@ -1584,18 +1583,26 @@ func (c *Operation) validateAuthResp(authResp []byte, holder, domain, challenge 
 
 	var proofChallenge, proofDomain string
 
-	if c, ok := proofOfInterest["challenge"]; ok && c != nil {
-		//nolint: errcheck
-		proofChallenge = c.(string)
-	} else {
-		return fmt.Errorf("invalid auth response proof, missing challenge")
+	{
+		d, ok := proofOfInterest["challenge"]
+		if ok && d != nil {
+			proofChallenge, ok = d.(string)
+		}
+
+		if !ok {
+			return fmt.Errorf("invalid auth response proof, missing challenge")
+		}
 	}
 
-	if d, ok := proofOfInterest["domain"]; ok && d != nil {
-		//nolint: errcheck
-		proofDomain = d.(string)
-	} else {
-		return fmt.Errorf("invalid auth response proof, missing domain")
+	{
+		d, ok := proofOfInterest["domain"]
+		if ok && d != nil {
+			proofDomain, ok = d.(string)
+		}
+
+		if !ok {
+			return fmt.Errorf("invalid auth response proof, missing domain")
+		}
 	}
 
 	if proofChallenge != challenge || proofDomain != domain {

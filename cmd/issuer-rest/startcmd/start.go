@@ -103,7 +103,7 @@ const (
 	tlsCACertsEnvKey = "ISSUER_TLS_CACERTS"
 
 	requestTokensFlagName  = "request-tokens"
-	requestTokensEnvKey    = "ISSUER_REQUEST_TOKENS" //nolint:gosec
+	requestTokensEnvKey    = "ISSUER_REQUEST_TOKENS"
 	requestTokensFlagUsage = "Tokens used for http request " +
 		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
 
