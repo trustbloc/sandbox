@@ -362,7 +362,7 @@ func (c *Operation) didcommDemoResult(w http.ResponseWriter, data, flowType stri
 }
 
 // verify function verifies the input data and parse the response to provided template
-func (c *Operation) verify(verifyReq interface{}, inputData, htmlTemplate string, //nolint:funlen
+func (c *Operation) verify(verifyReq interface{}, inputData, htmlTemplate string,
 	w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles(htmlTemplate)
 	if err != nil {
@@ -385,7 +385,7 @@ func (c *Operation) verify(verifyReq interface{}, inputData, htmlTemplate string
 	}
 
 	if resp.StatusCode != http.StatusOK { //nolint:nestif
-		failedMsg := ""
+		var failedMsg string
 
 		respBytes, respErr := ioutil.ReadAll(resp.Body)
 		if respErr != nil {

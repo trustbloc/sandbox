@@ -39,7 +39,7 @@ func handleRequestWithCookie(handler Handler, headers map[string]string, path st
 	return handleRequestWithCookies(handler, headers, path, []*http.Cookie{cookie})
 }
 
-func handleRequestWithCookies(handler Handler, headers map[string]string, path string, cookies []*http.Cookie) (*bytes.Buffer, int, error) { //nolint:lll,unparam
+func handleRequestWithCookies(handler Handler, headers map[string]string, path string, cookies []*http.Cookie) (*bytes.Buffer, int, error) { //nolint:lll
 	req, err := http.NewRequest(handler.Method(), path, bytes.NewBuffer([]byte("")))
 	if err != nil {
 		return nil, 0, err
@@ -66,6 +66,8 @@ func handleRequestWithCookies(handler Handler, headers map[string]string, path s
 }
 
 func getHandlerWithOps(t *testing.T, lookup string, cfg *Config) (*Operation, Handler) {
+	t.Helper()
+
 	svc, err := New(cfg)
 	require.NotNil(t, svc)
 	require.NoError(t, err)
@@ -74,6 +76,8 @@ func getHandlerWithOps(t *testing.T, lookup string, cfg *Config) (*Operation, Ha
 }
 
 func getHandlerWithConfig(t *testing.T, lookup string, cfg *Config) Handler {
+	t.Helper()
+
 	svc, err := New(cfg)
 	require.NotNil(t, svc)
 	require.NoError(t, err)
@@ -82,6 +86,8 @@ func getHandlerWithConfig(t *testing.T, lookup string, cfg *Config) Handler {
 }
 
 func handlerLookup(t *testing.T, op *Operation, lookup string) Handler {
+	t.Helper()
+
 	handlers := op.GetRESTHandlers()
 	require.NotEmpty(t, handlers)
 
@@ -97,6 +103,8 @@ func handlerLookup(t *testing.T, op *Operation, lookup string) Handler {
 }
 
 func serveHTTP(t *testing.T, handler http.HandlerFunc, method, path string, req []byte) *httptest.ResponseRecorder { // nolint: unparam,lll
+	t.Helper()
+
 	httpReq, err := http.NewRequest(
 		method,
 		path,

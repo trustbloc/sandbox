@@ -29,7 +29,7 @@ TRUSTBLOC_CORE_K8S_COMMIT=2c571e488eeaf7d6699c280a97b3afffb1003011
 
 # Tool commands (overridable)
 ALPINE_VER ?= 3.12
-GO_VER     ?= 1.15
+GO_VER     ?= 1.16
 
 .PHONY: all
 all: checks unit-test

@@ -1553,7 +1553,7 @@ func TestOperation_CreateCredential_Errors(t *testing.T) {
 		StoreProvider: &mockstorage.Provider{},
 	}
 
-	var subject map[string]interface{} = make(map[string]interface{})
+	var subject = make(map[string]interface{})
 	subject["id"] = "1"
 
 	t.Run("unsupported protocol scheme", func(t *testing.T) {

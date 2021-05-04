@@ -108,6 +108,8 @@ func TestStartCmdValidArgsEnvVar(t *testing.T) {
 }
 
 func checkFlagPropertiesCorrect(t *testing.T, cmd *cobra.Command, flagName, flagShorthand, flagUsage string) {
+	t.Helper()
+
 	flag := cmd.Flag(flagName)
 
 	require.NotNil(t, flag)
@@ -301,6 +303,8 @@ func TestTStaticPaths(t *testing.T) {
 }
 
 func setEnvVars(t *testing.T) {
+	t.Helper()
+
 	err := os.Setenv(hostURLEnvKey, "localhost:8080")
 	require.Nil(t, err)
 
@@ -342,6 +346,8 @@ func setEnvVars(t *testing.T) {
 }
 
 func unsetEnvVars(t *testing.T) {
+	t.Helper()
+
 	err := os.Unsetenv(hostURLEnvKey)
 	require.Nil(t, err)
 

@@ -528,6 +528,8 @@ func newOIDCCallback(state, code string) (req *http.Request) {
 }
 
 func tmpFile(t *testing.T) (string, func()) {
+	t.Helper()
+
 	file, err := ioutil.TempFile("", "*.html")
 	require.NoError(t, err)
 
@@ -549,6 +551,8 @@ func (m *mockOIDCClient) HandleOIDCCallback(reqContext context.Context, code str
 }
 
 func config(t *testing.T) (*Config, func()) {
+	t.Helper()
+
 	path, oidcCleanup := newTestOIDCProvider()
 	file, fileCleanup := tmpFile(t)
 

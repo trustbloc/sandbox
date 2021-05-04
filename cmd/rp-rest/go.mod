@@ -9,10 +9,10 @@ replace github.com/trustbloc/sandbox => ../..
 require (
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
-	github.com/spf13/cobra v1.1.1
+	github.com/spf13/cobra v1.1.3
 	github.com/stretchr/testify v1.7.0
-	github.com/trustbloc/edge-core v0.1.7-0.20210310142750-7eb11997c4a9
+	github.com/trustbloc/edge-core v0.1.7-0.20210426154540-f9c761ec6943
 	github.com/trustbloc/sandbox v0.0.0
 )
 
-go 1.15
+go 1.16

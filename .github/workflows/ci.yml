@@ -1,7 +1,7 @@
 name: "sandbox ci"
 
 env:
-  GO_VERSION: 1.15
+  GO_VERSION: 1.16
   MINIKUBE_VERSION: v1.18.1
   KUBERNETES_VERSION: v1.19.6
 
