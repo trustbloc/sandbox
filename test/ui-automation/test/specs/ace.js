@@ -43,7 +43,7 @@ describe("TrustBloc - Anonymous Comparator and Extractor (ACE)", () => {
         await registerBtn.waitForClickable();
         await registerBtn.click();
 
-        await browser.pause(1000)
+        await browser.pause(3000)
 
         const dashboardMsg = await $('div*=Profile Complete');
         await dashboardMsg.waitForExist();
@@ -62,7 +62,7 @@ describe("TrustBloc - Anonymous Comparator and Extractor (ACE)", () => {
         await registerBtn.waitForClickable();
         await registerBtn.click();
 
-        await browser.pause(1000)
+        await browser.pause(3000)
 
         const dashboardMsg = await $('div*=Application Complete!');
         await dashboardMsg.waitForExist();
@@ -83,6 +83,8 @@ describe("TrustBloc - Anonymous Comparator and Extractor (ACE)", () => {
         await consentBtn.waitForClickable();
         await consentBtn.click();
 
+        await browser.pause(3000)
+
         const successMsg = await $('div*=Account Linked Successfully');
         await successMsg.waitForExist();
     })
@@ -100,6 +102,8 @@ describe("TrustBloc - Anonymous Comparator and Extractor (ACE)", () => {
         await releaseBtn.waitForClickable();
         await releaseBtn.click();
 
+        await browser.pause(3000)
+
         const successMsg = await $('div*=Federal Benefits SSN Release Authorization');
         await successMsg.waitForExist();
     })
@@ -112,6 +116,8 @@ describe("TrustBloc - Anonymous Comparator and Extractor (ACE)", () => {
         const registerBtn = await $('#view-btn-0');
         await registerBtn.waitForClickable();
         await registerBtn.click();
+
+        await browser.pause(3000)
 
         const emailIDSuccess = await $('div*=' + emailID);
         await emailIDSuccess.waitForExist();
