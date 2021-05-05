@@ -35,6 +35,9 @@ vct-1
 orb-2
 vct-2
 orb-2-kms
+orb-3
+vct-3
+orb-3-kms
 router
 router-api
 router-ws
