@@ -24,6 +24,7 @@ import (
 	"github.com/hyperledger/aries-framework-go/component/storageutil/mem"
 	mockstorage "github.com/hyperledger/aries-framework-go/component/storageutil/mock"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/did"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/jsonld"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	vdrmock "github.com/hyperledger/aries-framework-go/pkg/mock/vdr"
@@ -76,11 +77,12 @@ func TestRegister(t *testing.T) {
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
 
 		svc, err := New(&Config{
-			StoreProvider: mem.NewProvider(),
-			DashboardHTML: file.Name(),
-			RequestTokens: map[string]string{vcsIssuerRequestTokenName: "test"},
-			ComparatorURL: "http://comp.example.com",
-			VDRI:          &vdrmock.MockVDRegistry{ResolveValue: &did.Doc{}},
+			StoreProvider:  mem.NewProvider(),
+			DashboardHTML:  file.Name(),
+			RequestTokens:  map[string]string{vcsIssuerRequestTokenName: "test"},
+			ComparatorURL:  "http://comp.example.com",
+			VDRI:           &vdrmock.MockVDRegistry{ResolveValue: &did.Doc{}},
+			DocumentLoader: createTestDocumentLoader(t),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -136,8 +138,9 @@ func TestRegister(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{
 				OpenStoreReturn: &mockstorage.Store{ErrPut: errors.New("save error")},
 			},
-			ComparatorURL: "http://comp.example.com",
-			VDRI:          &vdrmock.MockVDRegistry{ResolveValue: &did.Doc{}},
+			ComparatorURL:  "http://comp.example.com",
+			VDRI:           &vdrmock.MockVDRegistry{ResolveValue: &did.Doc{}},
+			DocumentLoader: createTestDocumentLoader(t),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -181,9 +184,10 @@ func TestRegister(t *testing.T) {
 
 	t.Run("html error", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: mem.NewProvider(),
-			ComparatorURL: "http://comp.example.com",
-			VDRI:          &vdrmock.MockVDRegistry{ResolveValue: &did.Doc{}},
+			StoreProvider:  mem.NewProvider(),
+			ComparatorURL:  "http://comp.example.com",
+			VDRI:           &vdrmock.MockVDRegistry{ResolveValue: &did.Doc{}},
+			DocumentLoader: createTestDocumentLoader(t),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -290,10 +294,11 @@ func TestRegister(t *testing.T) {
 
 	t.Run("failed to save doc", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: mem.NewProvider(),
-			RequestTokens: map[string]string{vcsIssuerRequestTokenName: "test"},
-			ComparatorURL: "http://comp.example.com",
-			VDRI:          &vdrmock.MockVDRegistry{ResolveValue: &did.Doc{}},
+			StoreProvider:  mem.NewProvider(),
+			RequestTokens:  map[string]string{vcsIssuerRequestTokenName: "test"},
+			ComparatorURL:  "http://comp.example.com",
+			VDRI:           &vdrmock.MockVDRegistry{ResolveValue: &did.Doc{}},
+			DocumentLoader: createTestDocumentLoader(t),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
@@ -2551,6 +2556,15 @@ func TestGetUserExtract(t *testing.T) {
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "invalid content; expected string type")
 	})
+}
+
+func createTestDocumentLoader(t *testing.T) *jsonld.DocumentLoader {
+	t.Helper()
+
+	loader, err := jsonld.NewDocumentLoader(mem.NewProvider())
+	require.NoError(t, err)
+
+	return loader
 }
 
 type mockHTTPClient struct {

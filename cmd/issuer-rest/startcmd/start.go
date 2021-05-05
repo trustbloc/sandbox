@@ -21,6 +21,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/sandbox/cmd/common"
+	"github.com/trustbloc/sandbox/pkg/jsonld"
 	"github.com/trustbloc/sandbox/pkg/restapi/healthcheck"
 	"github.com/trustbloc/sandbox/pkg/restapi/issuer"
 	"github.com/trustbloc/sandbox/pkg/restapi/issuer/operation"
@@ -422,9 +423,15 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen
 		return err
 	}
 
+	documentLoader, err := jsonld.DocumentLoader(storeProvider)
+	if err != nil {
+		return err
+	}
+
 	cfg := &operation.Config{
 		TokenIssuer:      tokenIssuer.New(parameters.oauth2Config, tokenIssuer.WithTLSConfig(tlsConfig)),
 		TokenResolver:    tokenResolver.New(parameters.tokenIntrospectionURL, tokenResolver.WithTLSConfig(tlsConfig)),
+		DocumentLoader:   documentLoader,
 		CMSURL:           parameters.cmsURL,
 		VCSURL:           parameters.vcsURL,
 		DIDAuthHTML:      "static/didAuth.html",

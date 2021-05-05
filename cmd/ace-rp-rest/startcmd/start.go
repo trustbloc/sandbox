@@ -25,6 +25,7 @@ import (
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 
 	"github.com/trustbloc/sandbox/cmd/common"
+	"github.com/trustbloc/sandbox/pkg/jsonld"
 	"github.com/trustbloc/sandbox/pkg/restapi/acerp"
 	"github.com/trustbloc/sandbox/pkg/restapi/acerp/operation"
 	"github.com/trustbloc/sandbox/pkg/restapi/healthcheck"
@@ -359,6 +360,11 @@ func startRP(parameters *rpParameters) error { // nolint: funlen
 		return err
 	}
 
+	documentLoader, err := jsonld.DocumentLoader(storeProvider)
+	if err != nil {
+		return err
+	}
+
 	cfg := &operation.Config{
 		StoreProvider:        storeProvider,
 		HomePageHTML:         basePath + "/index.html",
@@ -377,6 +383,7 @@ func startRP(parameters *rpParameters) error { // nolint: funlen
 		RequestTokens:        parameters.requestTokens,
 		SvcName:              parameters.modeConf.svcName,
 		VDRI:                 vdri,
+		DocumentLoader:       documentLoader,
 	}
 
 	aceRpService, err := acerp.New(cfg)
