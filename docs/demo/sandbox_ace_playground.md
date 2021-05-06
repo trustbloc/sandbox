@@ -1,14 +1,15 @@
 # TrustBloc Sandbox - Anonymous Comparator and Extractor (ACE) Demo Playground
 
 ## Components
-| Component                                                                     | Cloud URL (Sandbox)                                            | Cloud URL (Dev)                                            | Local k8s URL*                                             | 
-|-------------------------------------------------------------------------------|----------------------------------------------------------------|------------------------------------------------------------|------------------------------------------------------------|
-| Utopia Citizenship and Immigration Services (UCIS)                            | [Click Here](https://demo-ucis.sandbox.trustbloc.dev)          | [Click Here](https://demo-ucis.dev.trustbloc.dev)          | [Click Here](https://ucis-rp.local.trustbloc.dev)          | 
-| Utopia Customs and Border Protection (CBP)                                    | [Click Here](https://demo-cbp.sandbox.trustbloc.dev)           | [Click Here](https://demo-cbp.dev.trustbloc.dev)           | [Click Here](https://cbp-rp.local.trustbloc.dev)           | 
-| Utopia Citizenship and Immigration Services (UCIS) Internal Management Portal | [Click Here](https://demo-ucis.sandbox.trustbloc.dev/internal) | [Click Here](https://demo-ucis.dev.trustbloc.dev/internal) | [Click Here](https://ucis-rp.local.trustbloc.dev/internal) | 
-| Utopia Federal Benefits Settlement Department                                 | [Click Here](https://demo-benefits-dept.sandbox.trustbloc.dev) | [Click Here](https://demo-benefits-dept.dev.trustbloc.dev) | [Click Here](https://benefits-dept-rp.local.trustbloc.dev) | 
+| Component                                                                     | Cloud URL (Sandbox)**                                          | Cloud URL (Staging)                                          | Cloud URL (Devel)                                          | Local k8s URL*                                             |
+|-------------------------------------------------------------------------------|----------------------------------------------------------------|--------------------------------------------------------------|------------------------------------------------------------|------------------------------------------------------------|
+| Utopia Citizenship and Immigration Services (UCIS)                            | [Click Here](https://demo-ucis.sandbox.trustbloc.dev)          | [Click Here](https://ucis-rp.staging.trustbloc.dev)          | [Click Here](https://ucis-rp.devel.trustbloc.dev)          | [Click Here](https://ucis-rp.local.trustbloc.dev)          |
+| Utopia Customs and Border Protection (CBP)                                    | [Click Here](https://demo-cbp.sandbox.trustbloc.dev)           | [Click Here](https://cbp-rp.staging.trustbloc.dev)           | [Click Here](https://cbp-rp.devel.trustbloc.dev)           | [Click Here](https://cbp-rp.local.trustbloc.dev)           |
+| Utopia Citizenship and Immigration Services (UCIS) Internal Management Portal | [Click Here](https://demo-ucis.sandbox.trustbloc.dev/internal) | [Click Here](https://ucis-rp.staging.trustbloc.dev/internal) | [Click Here](https://ucis-rp.devel.trustbloc.dev/internal) | [Click Here](https://ucis-rp.local.trustbloc.dev/internal) |
+| Utopia Federal Benefits Settlement Department                                 | [Click Here](https://demo-benefits-dept.sandbox.trustbloc.dev) | [Click Here](https://benefits-dept-rp.staging.trustbloc.dev) | [Click Here](https://benefits-dept-rp.devel.trustbloc.dev) | [Click Here](https://benefits-dept-rp.local.trustbloc.dev) |
 
 *: Refer [here](./../../README.md#deployment) to run the local k8s demo.
+**: Soon to be deprecated - pre k8s deployment environment
 
 ## References
 - [Comparator Demo Recording](https://www.youtube.com/watch?v=SqDqHSNdGpc)

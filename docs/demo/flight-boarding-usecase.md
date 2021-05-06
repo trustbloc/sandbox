@@ -7,15 +7,16 @@ Reference and selectively disclose few attributes from Vaccination Certificate.
 - [Demo Recording](https://youtu.be/bKUu_uK-FlM)
 
 ## Components
-| Component                                            | Cloud URL (Sandbox)                                                     | Cloud URL (Dev)                                                     | Local k8s URL*                                                 |
-|------------------------------------------------------|-------------------------------------------------------------------------|---------------------------------------------------------------------|----------------------------------------------------------------|
-| User Wallet                                          | [Click Here](https://agent.sandbox.trustbloc.dev)                       | [Click Here](https://agent-ui.dev.trustbloc.dev)                    | [Click Here](https://wallet.local.trustbloc.dev)               |
-| Permanent Residence Card Issuer                      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)                 | [Click Here](https://demo-issuer.dev.trustbloc.dev)                 | [Click Here](https://demo-issuer.local.trustbloc.dev)               |
-| Vaccination Certificate Card Issuer                  | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)                 | [Click Here](https://demo-issuer.dev.trustbloc.dev)                 | [Click Here](https://demo-issuer.local.trustbloc.dev)               |
-| Taylor Chartered Flight- Booking (Issuer)            | [Click Here](https://demo-issuer.sandbox.trustbloc.dev/flightbooking)   | [Click Here](https://demo-issuer.dev.trustbloc.dev/flightbooking)   | [Click Here](https://demo-issuer.local.trustbloc.dev/flightbooking) |
-| Taylor Chartered Flight- Checkin/Boarding (Verifier) | [Click Here](https://demo-verifier.sandbox.trustbloc.dev/flightcheckin) | [Click Here](https://demo-verifier.dev.trustbloc.dev/flightcheckin) | [Click Here](https://demo-rp.local.trustbloc.dev/flightcheckin)     |
+| Component                                            | Cloud URL (Sandbox)**                                                   | Cloud URL (Staging)                                                   | Cloud URL (Devel)                                                   | Local k8s URL*                                                      |
+|------------------------------------------------------|-------------------------------------------------------------------------|-----------------------------------------------------------------------|---------------------------------------------------------------------|---------------------------------------------------------------------|
+| User Wallet                                          | [Click Here](https://agent.sandbox.trustbloc.dev)                       | [Click Here](https://wallet.staging.trustbloc.dev)                    | [Click Here](https://wallet.devel.trustbloc.dev)                    | [Click Here](https://wallet.local.trustbloc.dev)                    |
+| Permanent Residence Card Issuer                      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)                 | [Click Here](https://demo-issuer.staging.trustbloc.dev)               | [Click Here](https://demo-issuer.devel.trustbloc.dev)               | [Click Here](https://demo-issuer.local.trustbloc.dev)               |
+| Vaccination Certificate Card Issuer                  | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)                 | [Click Here](https://demo-issuer.staging.trustbloc.dev)               | [Click Here](https://demo-issuer.devel.trustbloc.dev)               | [Click Here](https://demo-issuer.local.trustbloc.dev)               |
+| Taylor Chartered Flight- Booking (Issuer)            | [Click Here](https://demo-issuer.sandbox.trustbloc.dev/flightbooking)   | [Click Here](https://demo-issuer.staging.trustbloc.dev/flightbooking) | [Click Here](https://demo-issuer.devel.trustbloc.dev/flightbooking) | [Click Here](https://demo-issuer.local.trustbloc.dev/flightbooking) |
+| Taylor Chartered Flight- Checkin/Boarding (Verifier) | [Click Here](https://demo-verifier.sandbox.trustbloc.dev/flightcheckin) | [Click Here](https://demo-rp.staging.trustbloc.dev/flightcheckin)     | [Click Here](https://demo-rp.devel.trustbloc.dev/flightcheckin)     | [Click Here](https://demo-rp.local.trustbloc.dev/flightcheckin)     |
 
 *: Refer [here](./../../README.md#deployment) to run the local k8s demo.
+**: Soon to be deprecated - pre k8s deployment environment
 
 ## Flow details
 1. Login to Wallet:
