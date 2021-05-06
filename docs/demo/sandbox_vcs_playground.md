@@ -1,7 +1,7 @@
 # TrustBloc Sandbox - VCS/Non-DIDComm Demo Playground
 
 ## Components
-| Component   | Cloud URL (Sandbox)**                                       | Cloud URL (Devel)                                       | Cloud URL (Devel)                                     | Local k8s URL*                                        |
+| Component   | Cloud URL (Sandbox)**                                       | Cloud URL (Staging)                                     | Cloud URL (Devel)                                     | Local k8s URL*                                        |
 |-------------|-------------------------------------------------------------|---------------------------------------------------------|-------------------------------------------------------|-------------------------------------------------------|
 | Wallet      | [Click Here](https://agent.sandbox.trustbloc.dev/dashboard) | [Click Here](https://wallet.staging.trustbloc.dev)      | [Click Here](https://wallet.devel.trustbloc.dev)      | [Click Here](https://wallet.local.trustbloc.dev)      |
 | Issuer      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)     | [Click Here](https://demo-issuer.staging.trustbloc.dev) | [Click Here](https://demo-issuer.devel.trustbloc.dev) | [Click Here](https://demo-issuer.local.trustbloc.dev) |
