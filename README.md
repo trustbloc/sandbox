@@ -37,6 +37,7 @@ by the [TrustBloc](https://github.com/trustbloc) projects.
 
 ## Build and Deployment
 For pre-requisites, please refer [TrustBloc k8s deployments](https://github.com/trustbloc/k8s/blob/main/README.md). 
+Also, [refer](./docs/dev_steps.md) for detailed steps to update components in sandbox.
 
 The sandbox k8s is dependent on [TrustBloc k8s](https://github.com/trustbloc/k8s). Use TRUSTBLOC_CORE_K8S_COMMIT 
 variable in [Makefile](Makefile) point to the TrustBloc k8s deployment version. Alternatively, uncomment the 
