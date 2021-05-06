@@ -43,7 +43,7 @@ describe("TrustBloc - Anonymous Comparator and Extractor (ACE)", () => {
         await registerBtn.waitForClickable();
         await registerBtn.click();
 
-        await browser.pause(3000)
+        await browser.pause(10000)
 
         const dashboardMsg = await $('div*=Profile Complete');
         await dashboardMsg.waitForExist();
