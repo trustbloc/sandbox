@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+SHELL                       := /bin/bash
 CONTAINER_CMD         	 	?= docker
 USER_ID                          = $(shell id -u)
 DOCKER_CMD_RUN_OPTS            ?= -u $(USER_ID)
