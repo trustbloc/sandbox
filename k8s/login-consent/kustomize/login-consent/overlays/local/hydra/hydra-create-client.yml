@@ -22,7 +22,7 @@ spec:
             - "-c"
             - |
               while [[ "$(wget -T 5 -S --spider http://${HYDRA_ADMIN_SERVICE_HOST}/health/ready 2>&1 | grep '200 OK')" == "" ]];
-              do echo "waiting for endopint";
+              do echo "waiting for endpoint";
               sleep 5;
               done;
       containers:
