@@ -7,13 +7,12 @@ export DEPLOYMENT_ENV			?= local
 export DOMAIN      				?= ${DEPLOYMENT_ENV}.trustbloc.dev
 export BLOC_DOMAIN				?= testnet.${DOMAIN}
 export TERM								?= xterm-256color
-CURRENT_TIME					?= $(shell date +"%Y%m%dT%H%M%S%z")
 COMPONENTS         	 			?=
-ISSUER_IMG_LOCAL         	 	?= ghcr.io/trustbloc/sandbox-issuer:${CURRENT_TIME}
-RP_IMG_LOCAL         	 		?= ghcr.io/trustbloc/sandbox-rp:${CURRENT_TIME}
-ACE_RP_IMG_LOCAL         	 	?= ghcr.io/trustbloc/sandbox-ace-rp:${CURRENT_TIME}
-LOGIN_CONSENT_IMG_LOCAL         ?= ghcr.io/trustbloc/sandbox-login-consent-server:${CURRENT_TIME}
-CLI_IMG_LOCAL         	 		?= ghcr.io/trustbloc/sandbox-cli:${CURRENT_TIME}
+ISSUER_IMG_LOCAL         	 	?= ghcr.io/trustbloc/sandbox-issuer:latest
+RP_IMG_LOCAL         	 		?= ghcr.io/trustbloc/sandbox-rp:latest
+ACE_RP_IMG_LOCAL         	 	?= ghcr.io/trustbloc/sandbox-ace-rp:latest
+LOGIN_CONSENT_IMG_LOCAL         ?= ghcr.io/trustbloc/sandbox-login-consent-server:latest
+CLI_IMG_LOCAL         	 		?= ghcr.io/trustbloc/sandbox-cli:latest
 
 .PHONY: deploy-all deploy-components setup-deploy ci-deploy-all ci-deploy-core ci-setup-deploy ci-minikube-setup local-setup-deploy minikube-up minikube-down minikube-image-load
 
@@ -43,11 +42,11 @@ local-setup-deploy: minikube-down minikube-up minikube-image-load deploy-core
 minikube-image-load:
 	@echo "loading local images to minikube"
 	@eval $(shell minikube docker-env)
-	@docker tag ghcr.io/trustbloc/sandbox-issuer:latest $(ISSUER_IMG_LOCAL)
-	@docker tag ghcr.io/trustbloc/sandbox-rp:latest $(RP_IMG_LOCAL)
-	@docker tag ghcr.io/trustbloc/sandbox-ace-rp:latest $(ACE_RP_IMG_LOCAL)
-	@docker tag ghcr.io/trustbloc/sandbox-login-consent-server:latest $(LOGIN_CONSENT_IMG_LOCAL)
-	@docker tag ghcr.io/trustbloc/sandbox-cli:latest $(CLI_IMG_LOCAL)
+	@minikube image rm $(ISSUER_IMG_LOCAL)
+	@minikube image rm $(RP_IMG_LOCAL)
+	@minikube image rm $(ACE_RP_IMG_LOCAL)
+	@minikube image rm $(LOGIN_CONSENT_IMG_LOCAL)
+	@minikube image rm $(CLI_IMG_LOCAL)
 	@minikube image load $(ISSUER_IMG_LOCAL)
 	@minikube image load $(RP_IMG_LOCAL)
 	@minikube image load $(ACE_RP_IMG_LOCAL)
