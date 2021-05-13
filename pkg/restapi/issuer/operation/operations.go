@@ -24,6 +24,7 @@ import (
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/hyperledger/aries-framework-go/spi/storage"
+	"github.com/piprate/json-gold/ld"
 	"github.com/trustbloc/edge-core/pkg/log"
 	vcprofile "github.com/trustbloc/edge-service/pkg/doc/vc/profile"
 	"github.com/trustbloc/edge-service/pkg/doc/vc/status/csl"
@@ -101,6 +102,7 @@ type Operation struct {
 	handlers         []Handler
 	tokenIssuer      tokenIssuer
 	tokenResolver    tokenResolver
+	documentLoader   ld.DocumentLoader
 	cmsURL           string
 	vcsURL           string
 	receiveVCHTML    string
@@ -122,6 +124,7 @@ type Operation struct {
 type Config struct {
 	TokenIssuer      tokenIssuer
 	TokenResolver    tokenResolver
+	DocumentLoader   ld.DocumentLoader
 	CMSURL           string
 	VCSURL           string
 	ReceiveVCHTML    string
@@ -171,6 +174,7 @@ func New(config *Config) (*Operation, error) {
 	svc := &Operation{
 		tokenIssuer:      config.TokenIssuer,
 		tokenResolver:    config.TokenResolver,
+		documentLoader:   config.DocumentLoader,
 		cmsURL:           config.CMSURL,
 		vcsURL:           config.VCSURL,
 		didAuthHTML:      config.DIDAuthHTML,
@@ -1031,7 +1035,8 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) { //nolint:
 	}
 
 	vp, err := verifiable.ParsePresentation([]byte(r.Form.Get("vcDataInput")),
-		verifiable.WithPresDisabledProofCheck())
+		verifiable.WithPresDisabledProofCheck(),
+		verifiable.WithPresJSONLDDocumentLoader(c.documentLoader))
 	if err != nil {
 		logger.Errorf("failed to parse presentation: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -1058,7 +1063,8 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) { //nolint:
 			return
 		}
 
-		vc, errParse := verifiable.ParseCredential(credBytes, verifiable.WithDisabledProofCheck())
+		vc, errParse := verifiable.ParseCredential(credBytes, verifiable.WithDisabledProofCheck(),
+			verifiable.WithJSONLDDocumentLoader(c.documentLoader))
 		if errParse != nil {
 			logger.Errorf("failed to parse credentials: %s", errParse.Error())
 			c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -1535,7 +1541,8 @@ func (c *Operation) createCredential(cred, authResp, holder, domain, challenge, 
 }
 
 func (c *Operation) issueCredential(profileID, holder string, cred []byte) ([]byte, error) {
-	credential, err := verifiable.ParseCredential(cred, verifiable.WithDisabledProofCheck())
+	credential, err := verifiable.ParseCredential(cred, verifiable.WithDisabledProofCheck(),
+		verifiable.WithJSONLDDocumentLoader(c.documentLoader))
 	if err != nil {
 		return nil, fmt.Errorf("invalid credential: %w", err)
 	}
@@ -1570,7 +1577,8 @@ func (c *Operation) issueCredential(profileID, holder string, cred []byte) ([]by
 
 // validateAuthResp validates did auth response against given domain and challenge
 func (c *Operation) validateAuthResp(authResp []byte, holder, domain, challenge string) error { // nolint:gocyclo
-	vp, err := verifiable.ParsePresentation(authResp, verifiable.WithPresDisabledProofCheck())
+	vp, err := verifiable.ParsePresentation(authResp, verifiable.WithPresDisabledProofCheck(),
+		verifiable.WithPresJSONLDDocumentLoader(c.documentLoader))
 	if err != nil {
 		return err
 	}

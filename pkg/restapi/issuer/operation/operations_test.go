@@ -8,6 +8,7 @@ package operation
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 	"github.com/gorilla/mux"
 	memstore "github.com/hyperledger/aries-framework-go/component/storageutil/mem"
 	mockstorage "github.com/hyperledger/aries-framework-go/component/storageutil/mock"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/jsonld"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
@@ -184,6 +186,9 @@ const validVP = `{
 		}],
 		"holder": "did:example:ebfeb1f712ebc6f1c276e12ec21"
 	}`
+
+//go:embed testdata/examples-ext-v1.jsonld
+var examplesExtV1Context []byte //nolint:gochecknoglobals // embedded test context
 
 func TestController_New(t *testing.T) {
 	t.Run("test new - success", func(t *testing.T) {
@@ -1141,7 +1146,8 @@ func TestOperation_GenerateVC(t *testing.T) {
 		cfg := &Config{
 			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(),
-			StoreProvider: &mockstorage.Provider{},
+			StoreProvider:  &mockstorage.Provider{},
+			DocumentLoader: createTestDocumentLoader(t),
 		}
 
 		svc, err := New(cfg)
@@ -1165,7 +1171,7 @@ func TestOperation_GenerateVC(t *testing.T) {
 	})
 
 	t.Run("generate VC - validations", func(t *testing.T) {
-		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
+		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}, DocumentLoader: createTestDocumentLoader(t)})
 		require.NotNil(t, svc)
 		require.NoError(t, err)
 
@@ -1258,7 +1264,7 @@ func TestOperation_GenerateVC(t *testing.T) {
 	})
 
 	t.Run("Validate Auth Resp - validations", func(t *testing.T) {
-		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
+		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}, DocumentLoader: createTestDocumentLoader(t)})
 		require.NotNil(t, svc)
 		require.NoError(t, err)
 
@@ -1310,7 +1316,8 @@ func TestOperation_GenerateVC(t *testing.T) {
 		cfg := &Config{
 			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 			CMSURL: cms.URL, VCSURL: vcs.URL, ReceiveVCHTML: file.Name(),
-			StoreProvider: &mockstorage.Provider{},
+			StoreProvider:  &mockstorage.Provider{},
+			DocumentLoader: createTestDocumentLoader(t),
 		}
 
 		svc, err := New(cfg)
@@ -1368,7 +1375,8 @@ func TestOperation_GenerateVC(t *testing.T) {
 		cfg := &Config{
 			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
 			CMSURL: cms.URL, VCSURL: vcs.URL,
-			StoreProvider: &mockstorage.Provider{},
+			StoreProvider:  &mockstorage.Provider{},
+			DocumentLoader: createTestDocumentLoader(t),
 		}
 
 		svc, err := New(cfg)
@@ -1391,6 +1399,22 @@ func TestOperation_GenerateVC(t *testing.T) {
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "unable to load html")
 	})
+}
+
+func createTestDocumentLoader(t *testing.T) *jsonld.DocumentLoader {
+	t.Helper()
+
+	loader, err := jsonld.NewDocumentLoader(memstore.NewProvider(),
+		jsonld.WithExtraContexts(
+			jsonld.ContextDocument{
+				URL:     "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld",
+				Content: examplesExtV1Context,
+			},
+		),
+	)
+	require.NoError(t, err)
+
+	return loader
 }
 
 func TestOperation_Callback_ExchangeCodeError(t *testing.T) {
@@ -1550,7 +1574,8 @@ func TestOperation_GetCMSData_InvalidHTTPRequest(t *testing.T) {
 func TestOperation_CreateCredential_Errors(t *testing.T) {
 	cfg := &Config{
 		TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		StoreProvider: &mockstorage.Provider{},
+		StoreProvider:  &mockstorage.Provider{},
+		DocumentLoader: createTestDocumentLoader(t),
 	}
 
 	var subject = make(map[string]interface{})
@@ -1949,8 +1974,9 @@ func TestRevokeVC(t *testing.T) {
 	t.Run("test error from create http request", func(t *testing.T) {
 		svc, err := New(&Config{
 			TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-			VCSURL:        "http://vcs\\",
-			StoreProvider: &mockstorage.Provider{},
+			VCSURL:         "http://vcs\\",
+			StoreProvider:  &mockstorage.Provider{},
+			DocumentLoader: createTestDocumentLoader(t),
 		})
 		require.NotNil(t, svc)
 		require.NoError(t, err)
@@ -1964,7 +1990,7 @@ func TestRevokeVC(t *testing.T) {
 	})
 
 	t.Run("test error from http post", func(t *testing.T) {
-		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}})
+		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}, DocumentLoader: createTestDocumentLoader(t)})
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
@@ -1981,7 +2007,8 @@ func TestRevokeVC(t *testing.T) {
 		}))
 		defer serv.Close()
 
-		svc, err := New(&Config{VCHTML: "", VCSURL: serv.URL, StoreProvider: &mockstorage.Provider{}})
+		svc, err := New(&Config{VCHTML: "", VCSURL: serv.URL, StoreProvider: &mockstorage.Provider{},
+			DocumentLoader: createTestDocumentLoader(t)})
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
@@ -2002,7 +2029,8 @@ func TestRevokeVC(t *testing.T) {
 		}))
 		defer serv.Close()
 
-		svc, err := New(&Config{VCHTML: file.Name(), VCSURL: serv.URL, StoreProvider: &mockstorage.Provider{}})
+		svc, err := New(&Config{VCHTML: file.Name(), VCSURL: serv.URL, StoreProvider: &mockstorage.Provider{},
+			DocumentLoader: createTestDocumentLoader(t)})
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
@@ -2319,7 +2347,8 @@ func TestDIDCommAssuranceDataHandler(t *testing.T) {
 func TestVerifyDIDAuthHandler(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: memstore.NewProvider(),
+			StoreProvider:  memstore.NewProvider(),
+			DocumentLoader: createTestDocumentLoader(t),
 		})
 		require.NoError(t, err)
 
@@ -2358,7 +2387,8 @@ func TestVerifyDIDAuthHandler(t *testing.T) {
 
 	t.Run("invalid domain", func(t *testing.T) {
 		svc, err := New(&Config{
-			StoreProvider: memstore.NewProvider(),
+			StoreProvider:  memstore.NewProvider(),
+			DocumentLoader: createTestDocumentLoader(t),
 		})
 		require.NoError(t, err)
 
@@ -2410,9 +2440,10 @@ func TestCreateCredentialHandler(t *testing.T) {
 		defer vcs.Close()
 
 		cfg := &Config{
-			StoreProvider: memstore.NewProvider(),
-			CMSURL:        cms.URL,
-			VCSURL:        vcs.URL,
+			StoreProvider:  memstore.NewProvider(),
+			DocumentLoader: createTestDocumentLoader(t),
+			CMSURL:         cms.URL,
+			VCSURL:         vcs.URL,
 		}
 
 		svc, err := New(cfg)
@@ -2555,8 +2586,9 @@ func TestGenerateCredentialHandler(t *testing.T) {
 		defer vcs.Close()
 
 		cfg := &Config{
-			StoreProvider: memstore.NewProvider(),
-			VCSURL:        vcs.URL,
+			StoreProvider:  memstore.NewProvider(),
+			DocumentLoader: createTestDocumentLoader(t),
+			VCSURL:         vcs.URL,
 		}
 
 		svc, err := New(cfg)
@@ -2736,8 +2768,9 @@ func TestGenerateCredentialHandler(t *testing.T) {
 		defer vcs.Close()
 
 		cfg := &Config{
-			StoreProvider: memstore.NewProvider(),
-			VCSURL:        vcs.URL,
+			StoreProvider:  memstore.NewProvider(),
+			DocumentLoader: createTestDocumentLoader(t),
+			VCSURL:         vcs.URL,
 		}
 
 		svc, err := New(cfg)

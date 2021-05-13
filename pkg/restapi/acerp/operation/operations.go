@@ -27,6 +27,7 @@ import (
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	vdrapi "github.com/hyperledger/aries-framework-go/pkg/framework/aries/api/vdr"
 	"github.com/hyperledger/aries-framework-go/spi/storage"
+	"github.com/piprate/json-gold/ld"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/zcapld"
 	compclient "github.com/trustbloc/edge-service/pkg/client/comparator/client"
@@ -145,6 +146,7 @@ type Operation struct {
 	compClient           comparatorClient
 	svcName              string
 	vdri                 vdrapi.Registry
+	documentLoader       ld.DocumentLoader
 }
 
 // Config config.
@@ -166,6 +168,7 @@ type Config struct {
 	RequestTokens        map[string]string
 	SvcName              string
 	VDRI                 vdrapi.Registry
+	DocumentLoader       ld.DocumentLoader
 }
 
 // New returns ace-rp operation instance.
@@ -222,6 +225,7 @@ func New(config *Config) (*Operation, error) {
 		compClient:           compclient.New(transport, strfmt.Default).Operations,
 		svcName:              config.SvcName,
 		vdri:                 config.VDRI,
+		documentLoader:       config.DocumentLoader,
 	}
 
 	op.registerHandler()
@@ -1417,7 +1421,8 @@ func (o *Operation) createNationalIDCred(sub, id string) (*verifiable.Credential
 		return nil, fmt.Errorf("failed to create vc - url:%s err: %w", endpoint, err)
 	}
 
-	vc, err := verifiable.ParseCredential(vcResp, verifiable.WithDisabledProofCheck())
+	vc, err := verifiable.ParseCredential(vcResp, verifiable.WithDisabledProofCheck(),
+		verifiable.WithJSONLDDocumentLoader(o.documentLoader))
 	if err != nil {
 		return nil, fmt.Errorf("parse vc : %w", err)
 	}

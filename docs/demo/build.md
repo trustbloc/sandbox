@@ -1,11 +1,11 @@
 # Sandbox - Build and Deployment
 
 ## Prerequisites (General)
-- Go 1.15
+- Go 1.16
 - [git-lfs](https://github.com/git-lfs/git-lfs/blob/master/README.md)
 
 ## Prerequisites (for running tests and demos)
-- Go 1.15
+- Go 1.16
 - Docker
 - Make
 - [TrustBloc k8s deployment](https://github.com/trustbloc/k8s/blob/main/README.md)
