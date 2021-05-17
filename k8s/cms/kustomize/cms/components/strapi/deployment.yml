@@ -44,6 +44,13 @@ spec:
           - name: http-port
             protocol: TCP
             containerPort: 1337
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http-port
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 5
         env:
         - name: DATABASE_CLIENT
           valueFrom:
