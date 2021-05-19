@@ -135,7 +135,7 @@ async function _getLoginAndAccept(email) {
 async function _waitForDashboard() {
   await browser.waitUntil(async () => {
     let didResponse = await $('#dashboard-success-msg');
-    await didResponse.waitForExist({timeout, interval: 5000});
+    await didResponse.waitForExist({timeout, interval: 20000});
     expect(didResponse).toHaveText('Successfully setup your user');
     return true;
   });
