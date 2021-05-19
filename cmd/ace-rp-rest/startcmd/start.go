@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/hyperledger/aries-framework-go-ext/component/vdr/orb"
 	vdrapi "github.com/hyperledger/aries-framework-go/pkg/framework/aries/api/vdr"
 	vdrpkg "github.com/hyperledger/aries-framework-go/pkg/vdr"
 	"github.com/hyperledger/aries-framework-go/pkg/vdr/httpbinding"
@@ -355,7 +354,7 @@ func startRP(parameters *rpParameters) error { // nolint: funlen
 		return err
 	}
 
-	vdri, err := createVDRI(parameters.didResolverURL, tlsConfig)
+	vdri, err := createVDRI(parameters.didResolverURL)
 	if err != nil {
 		return err
 	}
@@ -451,22 +450,15 @@ func getRequestTokens(cmd *cobra.Command) (map[string]string, error) {
 	return tokens, nil
 }
 
-func createVDRI(didResolverURL string, tlsConfig *tls.Config) (vdrapi.Registry, error) {
+func createVDRI(didResolverURL string) (vdrapi.Registry, error) {
 	didResolverVDRI, err := httpbinding.New(didResolverURL,
 		httpbinding.WithAccept(func(method string) bool {
-			return method == "v1" || method == "elem" || method == "sov" ||
+			return method == "orb" || method == "v1" || method == "elem" || method == "sov" ||
 				method == "web" || method == "key" || method == "factom"
 		}))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new universal resolver vdr: %w", err)
 	}
 
-	blocVDR, err := orb.New(nil,
-		orb.WithTLSConfig(tlsConfig),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return vdrpkg.New(vdrpkg.WithVDR(blocVDR), vdrpkg.WithVDR(didResolverVDRI)), nil
+	return vdrpkg.New(vdrpkg.WithVDR(didResolverVDRI)), nil
 }
