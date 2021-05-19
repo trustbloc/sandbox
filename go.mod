@@ -15,7 +15,7 @@ require (
 	github.com/go-openapi/strfmt v0.20.0
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
-	github.com/hyperledger/aries-framework-go v0.1.7-0.20210429205242-c5e97865879c
+	github.com/hyperledger/aries-framework-go v0.1.7-0.20210517160459-a72f856f36b8
 	github.com/hyperledger/aries-framework-go-ext/component/storage/couchdb v0.0.0-20210426192704-553740e279e5
 	github.com/hyperledger/aries-framework-go-ext/component/storage/mysql v0.0.0-20210505173234-006b2f4723fd
 	github.com/hyperledger/aries-framework-go/component/storageutil v0.0.0-20210510053848-903ac6748b72
