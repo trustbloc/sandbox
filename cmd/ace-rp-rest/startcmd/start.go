@@ -354,7 +354,7 @@ func startRP(parameters *rpParameters) error { // nolint: funlen
 		return err
 	}
 
-	vdri, err := createVDRI(parameters.didResolverURL)
+	vdri, err := createVDRI(parameters.didResolverURL, tlsConfig)
 	if err != nil {
 		return err
 	}
@@ -450,8 +450,8 @@ func getRequestTokens(cmd *cobra.Command) (map[string]string, error) {
 	return tokens, nil
 }
 
-func createVDRI(didResolverURL string) (vdrapi.Registry, error) {
-	didResolverVDRI, err := httpbinding.New(didResolverURL,
+func createVDRI(didResolverURL string, tlsConfig *tls.Config) (vdrapi.Registry, error) {
+	didResolverVDRI, err := httpbinding.New(didResolverURL, httpbinding.WithTLSConfig(tlsConfig),
 		httpbinding.WithAccept(func(method string) bool {
 			return method == "orb" || method == "v1" || method == "elem" || method == "sov" ||
 				method == "web" || method == "key" || method == "factom"
