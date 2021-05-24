@@ -56,7 +56,7 @@ generate-test-certs: clean-certs
 	@cd ${CERTS_OUTPUT_DIR} && ln -fs ${DOMAIN}.crt tls.crt
 
 .PHONY: deploy
-deploy: prechecks kustomize set-images set-labels deploy-ace-rp
+deploy: prechecks kustomize kubectl set-images set-labels deploy-ace-rp
 
 .PHONY: prechecks
 prechecks:
@@ -76,22 +76,22 @@ set-images: kustomize
 	@pushd ${KUSTOMIZE_DIR}/base &&\
 	${KUSTOMIZE} edit set image sandbox-ace-rp=${ACE_RP_IMG} &&\
 	popd &&\
-	pushd ${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/ace-rp &&\
+	pushd ${KUSTOMIZE_DIR}/overlays/common &&\
 	${KUSTOMIZE} edit set image sandbox-cli=${CLI_IMG} &&\
 	popd
 
 .PHONY: deploy-ace-rp
-deploy-ace-rp: prechecks kustomize
+deploy-ace-rp: prechecks kustomize kubectl
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
-	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/ace-rp | kubectl apply -f -
+	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/ace-rp | $(KUBECTL) apply -f -
 
 .PHONY: undeploy
-undeploy: prechecks kustomize set-images set-labels undeploy-ace-rp
+undeploy: prechecks kustomize kubectl set-images set-labels undeploy-ace-rp
 
 .PHONY: undeploy-ace-rp
-undeploy-ace-rp: prechecks kustomize
+undeploy-ace-rp: prechecks kustomize kubectl
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
-	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/ace-rp | kubectl delete -f -
+	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/ace-rp | $(KUBECTL) delete -f -
 
 .PHONY: kustomize
 kustomize:
@@ -106,6 +106,21 @@ else
 KUSTOMIZE=$(shell which kustomize)
 endif
 
+.PHONY: kubectl
+kubectl:
+ifeq (, $(shell which kubectl 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p bin ;\
+	curl -sSL https://storage.googleapis.com/kubernetes-release/release/v1.19.6/bin/$(OS)/$(ARCH)/kubectl -o bin/kubectl ;\
+  chmod u+x bin/kubectl ;\
+	}
+KUBECTL=$(realpath ./bin/kubectl)
+else
+KUBECTL=$(shell which kubectl)
+endif
+
+
 .PHONY: clean
 clean: clean-all
 
@@ -118,7 +133,3 @@ clean-no-registry: clean-certs
 .PHONY: clean-certs
 clean-certs:
 	@rm -Rf ${CERTS_OUTPUT_DIR}
-
-.PHONY: clean-registry
-clean-registry:
-	@rm -Rf ${REGISTRY_DIRECTORY}

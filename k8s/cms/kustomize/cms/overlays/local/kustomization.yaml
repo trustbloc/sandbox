@@ -1,8 +1,8 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 # Adds namespace to all resources.
 #namespace: edge-sandbox-system
@@ -23,21 +23,14 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+- ../common
 - strapi/ingress.yml
-- strapi/user-data.yml
 - oathkeeper/ingress.yml
-- oathkeeper/role.yml
-- oathkeeper/rolebinding.yml
-- oathkeeper/process-template.yml
 
 
 transformers:
 - sedtransform.yml
 - sedb64transform.yml
-
-components:
-- ../../components/strapi
-- ../../components/oathkeeper
 
 vars:
 - fieldref:
@@ -57,19 +50,6 @@ secretGenerator:
   type: kubernetes.io/tls
 
 configMapGenerator:
-- files:
-  - strapi/user_data.sh
-  name: strapi-user-data-script
-- behavior: replace
-  files:
-  - oathkeeper/config.yml
-  name: oathkeeper-config
-- files:
-  - oathkeeper/process_template.sh
-  name: process-template-script
-- files:
-  - oathkeeper/access-rules.tmpl
-  name: access-rules-template
 - files:
   - certs/ca.crt
   name: oathkeeper-ca-cert

@@ -48,18 +48,6 @@ configMapGenerator:
 
 
 secretGenerator:
-- behavior: merge
-  envs:
-  - ucis/secret.env
-  name: ucis-comparator-env-secret
-- behavior: merge
-  envs:
-  - cbp/secret.env
-  name: cbp-comparator-env-secret
-- behavior: merge
-  envs:
-  - benefits-dept/secret.env
-  name: benefits-dept-comparator-env-secret
 - files:
   - ../certs/tls.crt
   - ../certs/tls.key
@@ -67,9 +55,7 @@ secretGenerator:
   type: kubernetes.io/tls
 
 resources:
-- ../../ucis
-- ../../cbp
-- ../../benefits-dept
+- ../../common
 - ucis/ingress.yml
 - cbp/ingress.yml
 - benefits-dept/ingress.yml

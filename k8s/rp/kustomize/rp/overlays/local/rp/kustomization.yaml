@@ -36,17 +36,10 @@ configMapGenerator:
   - config.env
   name: rp-env
 - files:
-  - register-tenant.sh
-  name: rp-register-tenant-script
-- files:
   - ../certs/ca.crt
   name: demo-ca-cert
 
 secretGenerator:
-- behavior: merge
-  envs:
-  - secret.env
-  name: rp-env-secret
 - files:
   - ../certs/tls.crt
   - ../certs/tls.key
@@ -54,11 +47,8 @@ secretGenerator:
   type: kubernetes.io/tls
 
 resources:
-- ../../../base
+- ../../common
 - ingress.yml
-- role.yml
-- rolebinding.yml
-- register-tenant.yml
 
 transformers:
 - sedtransform.yml

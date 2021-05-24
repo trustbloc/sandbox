@@ -63,7 +63,7 @@ generate-test-certs: clean-certs
 	@cd ${CERTS_OUTPUT_DIR} && ln -fs ${DOMAIN}.crt tls.crt
 
 .PHONY: deploy
-deploy: prechecks kustomize set-images set-labels deploy-cms
+deploy: prechecks kustomize kubectl set-images set-labels deploy-cms
 
 .PHONY: prechecks
 prechecks:
@@ -88,17 +88,17 @@ set-images: kustomize
 	popd
 
 .PHONY: deploy-cms
-deploy-cms: prechecks kustomize
+deploy-cms: prechecks kustomize kubectl
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
-	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} | kubectl apply -f -
+	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} | $(KUBECTL) apply -f -
 
 .PHONY: undeploy
-undeploy: prechecks kustomize set-images set-labels undeploy-cms
+undeploy: prechecks kustomize kubectl set-images set-labels undeploy-cms
 
 .PHONY: undeploy-cms
-undeploy-cms: prechecks kustomize
+undeploy-cms: prechecks kustomize kubectl
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
-	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} | kubectl delete -f -
+	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} | $(KUBECTL) delete -f -
 
 .PHONY: kustomize
 kustomize:
@@ -111,6 +111,20 @@ ifeq (, $(shell which kustomize 2>/dev/null))
 KUSTOMIZE=$(realpath ./bin/kustomize)
 else
 KUSTOMIZE=$(shell which kustomize)
+endif
+
+.PHONY: kubectl
+kubectl:
+ifeq (, $(shell which kubectl 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p bin ;\
+	curl -sSL https://storage.googleapis.com/kubernetes-release/release/v1.19.6/bin/$(OS)/$(ARCH)/kubectl -o bin/kubectl ;\
+  chmod u+x bin/kubectl ;\
+	}
+KUBECTL=$(realpath ./bin/kubectl)
+else
+KUBECTL=$(shell which kubectl)
 endif
 
 .PHONY: clean

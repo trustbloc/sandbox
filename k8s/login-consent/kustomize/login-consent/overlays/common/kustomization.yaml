@@ -1,0 +1,50 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# Adds namespace to all resources.
+#namespace: edge-sandbox-system
+
+# Value of this field is prepended to the
+# names of all resources, e.g. a deployment named
+# "wordpress" becomes "alices-wordpress".
+# Note that it should also match with the prefix (text before '-') of the namespace
+# field above.
+commonLabels:
+  component: login-consent
+  group: demo
+  project: trustbloc
+
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+secretGenerator:
+- behavior: merge
+  envs:
+  - hydra/hydra-secret.env
+  name: hydra-secret
+
+configMapGenerator:
+- behavior: merge
+  envs:
+  - hydra/hydra-env.env
+  name: hydra-env
+- behavior: merge
+  envs:
+  - login-consent/login-consent.env
+  name: login-consent-env
+
+
+resources:
+- ../../base
+- hydra/hydra-create-client.yml
+
+transformers:
+- sedtransform.yml
+- sedb64transform.yml
+
+components:
+- ../../components/hydra
