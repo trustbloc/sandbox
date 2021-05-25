@@ -1,8 +1,8 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 # Adds namespace to all resources.
 #namespace: edge-sandbox-system
@@ -32,10 +32,6 @@ vars:
     name: login-consent-wildcard-cert
 
 secretGenerator:
-- behavior: merge
-  envs:
-  - hydra/hydra-secret.env
-  name: hydra-secret
 - files:
   - certs/tls.crt
   - certs/tls.key
@@ -43,10 +39,6 @@ secretGenerator:
   type: kubernetes.io/tls
 
 configMapGenerator:
-- behavior: merge
-  envs:
-  - hydra/hydra-env.env
-  name: hydra-env
 - files:
   - certs/ca.crt
   name: login-consent-ca-cert
@@ -57,16 +49,12 @@ configMapGenerator:
 
 
 resources:
-- ../../base
+- ../common
 - login-consent/ingress.yml
-- hydra/hydra-create-client.yml
 
 transformers:
 - sedtransform.yml
 - sedb64transform.yml
-
-components:
-- ../../components/hydra
 
 patchesStrategicMerge:
 - login-consent/add-ca.yml

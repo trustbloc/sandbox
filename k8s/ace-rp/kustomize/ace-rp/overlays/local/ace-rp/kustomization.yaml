@@ -46,40 +46,19 @@ configMapGenerator:
 - files:
   - ../certs/ca.crt
   name: demo-ca-cert
-- files:
-  - ace_rp_configure.sh
-  name: ace-rp-profiles-script
 
 secretGenerator:
-- behavior: merge
-  envs:
-  - ucis/secret.env
-  name: ucis-ace-rp-env-secret
-- behavior: merge
-  envs:
-  - cbp/secret.env
-  name: cbp-ace-rp-env-secret
-- behavior: merge
-  envs:
-  - benefits-dept/secret.env
-  name: benefits-dept-ace-rp-env-secret
 - files:
   - ../certs/tls.crt
   - ../certs/tls.key
   name: demo-applications-wildcard-cert
   type: kubernetes.io/tls
-- files:
-  - ../certs/ca.crt
-  name: demo-ca-cert
 
 resources:
-- ../../ucis
+- ../../common
 - ucis/ingress.yml
-- ../../cbp
 - cbp/ingress.yml
-- ../../benefits-dept
 - benefits-dept/ingress.yml
-- create-profiles.yml
 
 transformers:
 - sedtransform.yml
@@ -89,10 +68,3 @@ patchesStrategicMerge:
 - ucis/add-ca.yml
 - cbp/add-ca.yml
 - benefits-dept/add-ca.yml
-
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-images:
-- name: sandbox-cli
-  newName: ghcr.io/trustbloc-cicd/sandbox-cli
-  newTag: 0.1.7-snapshot-62aff49

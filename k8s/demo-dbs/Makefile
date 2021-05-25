@@ -30,7 +30,7 @@ PREFIX							?=
 all: deploy
 
 .PHONY: deploy
-deploy: prechecks kustomize set-images set-labels deploy-demo-dbs
+deploy: prechecks kustomize kubectl set-images set-labels deploy-demo-dbs
 
 .PHONY: prechecks
 prechecks:
@@ -55,17 +55,17 @@ set-images: kustomize
 	popd
 
 .PHONY: deploy-demo-dbs
-deploy-demo-dbs: prechecks kustomize
+deploy-demo-dbs: prechecks kustomize kubectl
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
-	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} | kubectl apply -f -
+	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} | $(KUBECTL) apply -f -
 
 .PHONY: undeploy
-undeploy: prechecks kustomize set-images set-labels undeploy-demo-dbs
+undeploy: prechecks kustomize kubectl set-images set-labels undeploy-demo-dbs
 
 .PHONY: undeploy-demo-dbs
-undeploy-demo-dbs: prechecks kustomize
+undeploy-demo-dbs: prechecks kustomize kubectl
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
-	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} | kubectl delete -f -
+	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} | $(KUBECTL) delete -f -
 
 .PHONY: kustomize
 kustomize:
@@ -78,4 +78,18 @@ ifeq (, $(shell which kustomize 2>/dev/null))
 KUSTOMIZE=$(realpath ./bin/kustomize)
 else
 KUSTOMIZE=$(shell which kustomize)
+endif
+
+.PHONY: kubectl
+kubectl:
+ifeq (, $(shell which kubectl 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p bin ;\
+	curl -sSL https://storage.googleapis.com/kubernetes-release/release/v1.19.6/bin/$(OS)/$(ARCH)/kubectl -o bin/kubectl ;\
+  chmod u+x bin/kubectl ;\
+	}
+KUBECTL=$(realpath ./bin/kubectl)
+else
+KUBECTL=$(shell which kubectl)
 endif
