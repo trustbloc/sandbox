@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/spf13/cobra v1.1.3
 	github.com/stretchr/testify v1.7.0
-	github.com/trustbloc/edge-core v0.1.7-0.20210429222332-96b987820e63
+	github.com/trustbloc/edge-core v0.1.7-0.20210527163745-994ae929f957
 	github.com/trustbloc/sandbox v0.0.0
 )
 

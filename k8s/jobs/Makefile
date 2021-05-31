@@ -75,6 +75,7 @@ delete-jobs:
 	rp-register-tenant \
 	user-data \
 	verifier-vcs-add-profiles \
+	aries-add-contexts \
 	--ignore-not-found=true
 
 .PHONY: deploy-jobs
