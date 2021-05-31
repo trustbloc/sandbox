@@ -8,21 +8,24 @@
 kind: Job
 apiVersion: batch/v1
 metadata:
-  name: user-data
+  name: holder-vcs-add-profiles
+  labels:
+    component: holder-vcs
+    group: services
 spec:
   template:
     spec:
       volumes:
         - name: script
           configMap:
-            name: strapi-user-data-script
+            name: holder-vcs-add-profiles-script
       restartPolicy: Never
       initContainers:
-        - name: wait
-          image: busybox
-          imagePullPolicy: IfNotPresent
-          command: ["sh"]
-          args: ["-c", "sleep 90"]
+#        - name: wait
+#          image: busybox
+#          imagePullPolicy: IfNotPresent
+#          command: ["sh"]
+#          args: ["-c", "sleep 5"]
         - name: healthcheck-ready
           image: busybox
           imagePullPolicy: IfNotPresent
@@ -30,15 +33,16 @@ spec:
           args:
             - "-c"
             - |
-              while [ "$(wget http://${STRAPI_SERVICE_HOST}/admin -O- -S >/dev/null 2>&1; echo $?)" -ne 0 ];
-              do echo "waiting for strapi/admin endpoint";
-              done
+              while [[ "$(wget -T 5 -S --spider http://holder-vcs/healthcheck 2>&1 | grep '200 OK')" == "" ]];
+              do echo "waiting for endpoint";
+              sleep 5;
+              done;
       containers:
-      - name: user-data
+      - name: holder-vcs-add-profiles
         image: "alpine:latest"
         imagePullPolicy: IfNotPresent
         command: ["/bin/sh"]
-        args: ["/opt/user_data.sh"]
+        args: ["/opt/vcs_holder_configure.sh"]
         volumeMounts:
           - name: script
             mountPath: /opt

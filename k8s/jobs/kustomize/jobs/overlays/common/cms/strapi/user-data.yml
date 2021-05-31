@@ -8,33 +8,37 @@
 kind: Job
 apiVersion: batch/v1
 metadata:
-  name: issuer-register-tenant
+  name: user-data
 spec:
   template:
     spec:
       volumes:
         - name: script
           configMap:
-            name: issuer-register-tenant-script
+            name: strapi-user-data-script
       restartPolicy: Never
-#      serviceAccountName: oathkeeper
       initContainers:
-        - name: wait
-          image: busybox
-          imagePullPolicy: IfNotPresent
-          command: ["sh"]
-          args: ["-c", "sleep 90"]
+#        - name: wait
+#          image: busybox
+#          imagePullPolicy: IfNotPresent
+#          command: ["sh"]
+#          args: ["-c", "sleep 90"]
         - name: healthcheck-ready
           image: busybox
           imagePullPolicy: IfNotPresent
-          command: ["wget"]
-          args: ["-S", "http://$(ISSUER_SERVICE_NAME)", "-O-"]
+          command: ["/bin/sh"]
+          args:
+            - "-c"
+            - |
+              while [ "$(wget http://strapi/admin -O- -S >/dev/null 2>&1; echo $?)" -ne 0 ];
+              do echo "waiting for strapi/admin endpoint";
+              done
       containers:
-      - name: register-tenant
+      - name: user-data
         image: "alpine:latest"
         imagePullPolicy: IfNotPresent
         command: ["/bin/sh"]
-        args: ["/opt/register-tenant.sh"]
+        args: ["/opt/user_data.sh"]
         volumeMounts:
           - name: script
             mountPath: /opt

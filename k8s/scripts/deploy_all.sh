@@ -14,7 +14,7 @@ set -e
 : ${DOMAIN:=trustbloc.dev}
 : ${DEPLOYMENT_ENV:=local}
 ## Should be deployed in the listed order
-: ${COMPONENTS=cms comparator login-consent issuer rp ace-rp}
+: ${COMPONENTS=cms comparator login-consent issuer rp ace-rp jobs}
 DEPLOY_LIST=( $COMPONENTS )
 
 ## Map: component --> healthcheck(s)
@@ -25,6 +25,7 @@ declare -A HEALTCHECK_URL=(
     [rp]="https://demo-rp.$DOMAIN/healthcheck"
     [ace-rp]="https://ucis-rp.$DOMAIN/healthcheck https://cbp-rp.$DOMAIN/healthcheck https://benefits-dept-rp.$DOMAIN/healthcheck"
     [login-consent]=""
+    [jobs]=""
     [LATE]="https://cms.$DOMAIN/"
 )
 ## Map: healthckeck --> http-code

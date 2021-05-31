@@ -22,11 +22,11 @@ spec:
       restartPolicy: Never
 #      serviceAccountName: oathkeeper
       initContainers:
-        - name: wait
-          image: busybox
-          imagePullPolicy: IfNotPresent
-          command: ["sh"]
-          args: ["-c", "sleep 90"]
+#        - name: wait
+#          image: busybox
+#          imagePullPolicy: IfNotPresent
+#          command: ["sh"]
+#          args: ["-c", "sleep 90"]
         - name: healthcheck-ready
           image: busybox
           imagePullPolicy: IfNotPresent
@@ -34,7 +34,7 @@ spec:
           args:
             - "-c"
             - |
-              while [ "$(wget http://${STRAPI_SERVICE_HOST}/admin -O- -S >/dev/null 2>&1; echo $?)" -ne 0 ];
+              while [ "$(wget http://strapi/admin -O- -S >/dev/null 2>&1; echo $?)" -ne 0 ];
               do echo "waiting for strapi/admin endpoint";
               done
       containers:

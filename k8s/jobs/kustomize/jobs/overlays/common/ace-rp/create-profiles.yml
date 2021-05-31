@@ -1,14 +1,16 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 ---
 kind: Job
 apiVersion: batch/v1
 metadata:
   name: ace-rp-profiles
+  labels:
+    group: demo
 spec:
   template:
     spec:
@@ -25,9 +27,9 @@ spec:
           args:
             - "-c"
             - |
-              ENDPOINTS=(BENEFITS_DEPT_RP_SERVICE_HOST CBP_RP_SERVICE_HOST UCIS_RP_SERVICE_HOST);
+              ENDPOINTS=(ucis-rp cbp-rp benefits-dept-rp);
               for endpoint in "${ENDPOINTS[@]}";
-              do while [[ "$(curl -o /dev/null -s -w '%{http_code}' --insecure --connect-timeout 5 http://${!endpoint})" != "200" ]];
+              do while [[ "$(curl -o /dev/null -s -w '%{http_code}' --insecure --connect-timeout 5 https://${endpoint}.||DOMAIN||)" != "200" ]];
               do echo "waiting for ${endpoint} endpoint";
               sleep 5;
               done;

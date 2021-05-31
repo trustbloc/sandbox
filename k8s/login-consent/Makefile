@@ -125,9 +125,6 @@ clean: clean-all
 .PHONY: clean-all
 clean-all: clean-certs
 
-.PHONY: clean-no-registry
-clean-no-registry: clean-certs
-
 .PHONY: clean-certs
 clean-certs:
 	@rm -Rf ${CERTS_OUTPUT_DIR}
