@@ -49,7 +49,11 @@ NONE=$(tput sgr0)
 healthCheck() {
 	sleep 2
 	n=0
-	maxAttempts=200
+  maxAttempts=200
+  if [ "" != "$4" ]
+  then
+	   maxAttempts=$4
+  fi
 	echo "running health check : app=$1 url=$2 timeout=$maxAttempts seconds"
 	until [ $n -ge $maxAttempts ]
 	do
@@ -111,5 +115,5 @@ done
 ## Late health checks
 component=LATE
 for url in ${HEALTCHECK_URL[$component]}; do
-    healthCheck $component "$url" ${HEALTHCHECK_CODE["$url"]}
+    healthCheck $component "$url" ${HEALTHCHECK_CODE["$url"]} 300
 done

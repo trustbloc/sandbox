@@ -54,24 +54,24 @@ configMapGenerator:
   name: governance-vcs-add-profiles-script
 
 resources:
-- adapter-issuer/add-profiles.yml
-- hub-auth/hydra/hydra-create-client.yml
-- vcs/issuer/add-profiles.yml
-- vcs/verifier/add-profiles.yml
-- vcs/holder/add-profiles.yml
-- vcs/governance/add-profiles.yml
-- rp/role.yml
-- rp/rolebinding.yml
-- rp/register-tenant.yml
-- issuer/role.yml
-- issuer/rolebinding.yml
-- issuer/register-tenant.yml
-- ace-rp/create-profiles.yml
-- login-consent/hydra/hydra-create-client.yml
 - cms/strapi/user-data.yml
 - cms/oathkeeper/role.yml
 - cms/oathkeeper/rolebinding.yml
 - cms/oathkeeper/process-template.yml
+- vcs/issuer/add-profiles.yml
+- vcs/verifier/add-profiles.yml
+- vcs/holder/add-profiles.yml
+- vcs/governance/add-profiles.yml
+- hub-auth/hydra/hydra-create-client.yml
+- adapter-issuer/add-profiles.yml
+- login-consent/hydra/hydra-create-client.yml
+- issuer/role.yml
+- issuer/rolebinding.yml
+- issuer/register-tenant.yml
+- rp/role.yml
+- rp/rolebinding.yml
+- rp/register-tenant.yml
+- ace-rp/create-profiles.yml
 
 transformers:
 - sedtransform.yml
