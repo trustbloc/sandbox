@@ -1,14 +1,16 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 ---
 kind: Job
 apiVersion: batch/v1
 metadata:
   name: rp-register-tenant
+  labels:
+    group: demo
 spec:
   template:
     spec:
@@ -19,16 +21,16 @@ spec:
       restartPolicy: Never
 #      serviceAccountName: oathkeeper
       initContainers:
-        - name: wait
-          image: busybox
-          imagePullPolicy: IfNotPresent
-          command: ["sh"]
-          args: ["-c", "sleep 90"]
+#        - name: wait
+#          image: busybox
+#          imagePullPolicy: IfNotPresent
+#          command: ["sh"]
+#          args: ["-c", "sleep 90"]
         - name: healthcheck-ready
           image: busybox
           imagePullPolicy: IfNotPresent
           command: ["wget"]
-          args: ["-S", "http://$(RP_SERVICE_NAME)", "-O-"]
+          args: ["-S", "http://verifier", "-O-"]
       containers:
       - name: register-tenant
         image: "alpine:latest"

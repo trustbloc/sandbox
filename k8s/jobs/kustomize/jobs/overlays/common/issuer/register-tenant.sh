@@ -13,7 +13,7 @@ curl -qL https://storage.googleapis.com/kubernetes-release/release/v1.20.0/bin/l
 chmod +x /usr/local/bin/kubectl
 
 rpAdapterURL=https://adapter-rp.||DOMAIN||/relyingparties
-callbackURL=https://demo-rp.||DOMAIN||/oauth2/callback
+callbackURL=https://demo-issuer.||DOMAIN||/oauth2/callback
 
 registerRPTenant() {
     n=0
@@ -26,7 +26,7 @@ registerRPTenant() {
         response=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" \
         --header "Content-Type: application/json" \
         --request POST \
-        --data '{"label": "demo-rp.||DOMAIN||", "callback": "'$callbackURL'", "scopes": ["credit_card_stmt:remote","driver_license:local","credit_score:remote","driver_license_evidence:remote"], "requiresBlindedRoute": true}' \
+        --data '{"label": "demo-issuer.||DOMAIN||", "callback": "'$callbackURL'", "scopes": ["driver_license:local","driver_license_evidence:remote"]}' \
         --insecure $rpAdapterURL)
 
         code=${response//*RESPONSE_CODE=/}
@@ -63,13 +63,12 @@ clientID=$(echo $registration | jq -r .clientID)
 clientSecret=$(echo $registration | jq -r .clientSecret)
 publicDID=$(echo $registration | jq -r .publicDID)
 scopes=$(echo $registration | jq -r .scopes)
-requiresBlindedRoute=$(echo $registration | jq -r .requiresBlindedRoute)
 
-echo "RP Tenant ClientID=$clientID Callback=$callbackURL Scopes=$scopes PublicDID=$publicDID requiresBlindedRoute=$requiresBlindedRoute"
+echo "RP Tenant ClientID=$clientID Callback=$callbackURL Scopes=$scopes PublicDID=$publicDID"
 echo ""
 
 echo
-config_map_name=$(kubectl get cm  -l component=rp,group=demo  -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep rp-env)
+config_map_name=$(kubectl get cm  -l component=issuer,group=demo  -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep issuer-env)
 config_map_data=$(mktemp)
 config_map_env_file=$(mktemp)
 config_map=$(mktemp)
@@ -81,9 +80,9 @@ do
   v=$(cat ${config_map_data} | jq -r $q)
   echo "$key=$v" | sed -E 's/(^.+)="([^"]*)"/\1=\2/' >> ${config_map_env_file}
 done
-echo "RP_OIDC_CLIENTID=${clientID}" >> ${config_map_env_file}
-echo "RP_OIDC_CLIENTSECRET=${clientSecret}" >> ${config_map_env_file}
 
+grep -q '^ISSUER_OIDC_CLIENTID' ${config_map_env_file} &&  sed -i "s/^ISSUER_OIDC_CLIENTID.*/ISSUER_OIDC_CLIENTID=${clientID}/" ${config_map_env_file} || echo "ISSUER_OIDC_CLIENTID=${clientID}" >> ${config_map_env_file}
+grep -q '^ISSUER_OIDC_CLIENTSECRET' ${config_map_env_file} &&  sed -i "s/^ISSUER_OIDC_CLIENTSECRET.*/ISSUER_OIDC_CLIENTSECRET=${clientSecret}/" ${config_map_env_file} || echo "ISSUER_OIDC_CLIENTSECRET=${clientSecret}" >> ${config_map_env_file}
 
 echo "mutating configMap ${config_map_name}"
 kubectl create cm ${config_map_name} --dry-run=client --from-env-file=${config_map_env_file} -o yaml > ${config_map}
@@ -92,7 +91,7 @@ cat ${config_map}
 echo
 kubectl apply -f ${config_map}
 echo "labeling"
-kubectl label cm ${config_map_name} component=rp group=demo project=trustbloc instance=||DEPLOYMENT_ENV||
-echo "recycling rp deployment/pod"
-kubectl rollout restart deployment rp
+kubectl label cm ${config_map_name} component=issuer group=demo project=trustbloc instance=||DEPLOYMENT_ENV||
+echo "recycling issuer deployment/pod"
+kubectl rollout restart deployment issuer
 echo "Finished processing template"

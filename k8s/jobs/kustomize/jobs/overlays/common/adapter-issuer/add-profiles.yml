@@ -1,0 +1,54 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: adapter-issuer-add-profiles
+  labels:
+    component: adapter
+    group: services
+spec:
+  template:
+    spec:
+      volumes:
+        - name: script
+          configMap:
+            name: adapter-issuer-add-profiles-config
+      restartPolicy: Never
+      initContainers:
+        - name: healthcheck-ready
+          image: fedora
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh"]
+          args:
+            - "-c"
+            - |
+              while [[ "$(curl -o /dev/null -s -w '%{http_code}' --insecure --connect-timeout 5 http://adapter-issuer/healthcheck)" != "200" ]];
+              do echo "waiting for adapter endpoint";
+              sleep 5;
+              done;
+        - name: trustbloc-ready
+          image: fedora
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh"]
+          args:
+            - "-c"
+            - |
+              while [[ "$(curl -o /dev/null -s -w '%{http_code}' --insecure --connect-timeout 5 https://||BLOC_DOMAIN||/.well-known/did-orb)" != "200" ]];
+              do echo "waiting for BLOC endpoint";
+              sleep 5;
+              done;
+      containers:
+      - name: issuer-add-profiles
+        image: "alpine:latest"
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh"]
+        args: ["/opt/issuer_adapter_configure.sh"]
+        volumeMounts:
+          - name: script
+            mountPath: /opt

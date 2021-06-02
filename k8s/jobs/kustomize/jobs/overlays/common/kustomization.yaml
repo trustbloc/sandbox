@@ -1,0 +1,84 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# Adds namespace to all resources.
+#namespace: edge-sandbox-system
+
+# Value of this field is prepended to the
+# names of all resources, e.g. a deployment named
+# "wordpress" becomes "alices-wordpress".
+# Note that it should also match with the prefix (text before '-') of the namespace
+# field above.
+commonLabels:
+  project: trustbloc
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+configMapGenerator:
+- files:
+  - rp/register-tenant.sh
+  name: rp-register-tenant-script
+- files:
+  - issuer/register-tenant.sh
+  name: issuer-register-tenant-script
+- files:
+  - ace-rp/ace_rp_configure.sh
+  name: ace-rp-profiles-script
+- files:
+  - cms/strapi/user_data.sh
+  name: strapi-user-data-script
+- files:
+  - cms/oathkeeper/process_template.sh
+  name: process-template-script
+- files:
+  - cms/oathkeeper/access-rules.tmpl
+  name: access-rules-template
+- files:
+  - adapter-issuer/issuer_adapter_configure.sh
+  name: adapter-issuer-add-profiles-config
+- files:
+  - vcs/issuer/vcs_issuer_configure.sh
+  name: issuer-vcs-add-profiles-script
+- files:
+  - vcs/verifier/vcs_verifier_configure.sh
+  name: verifier-vcs-add-profiles-script
+- files:
+  - vcs/holder/vcs_holder_configure.sh
+  name: holder-vcs-add-profiles-script
+- files:
+  - vcs/governance/vcs_governance_configure.sh
+  name: governance-vcs-add-profiles-script
+
+resources:
+- cms/strapi/user-data.yml
+- cms/oathkeeper/role.yml
+- cms/oathkeeper/rolebinding.yml
+- cms/oathkeeper/process-template.yml
+- vcs/issuer/add-profiles.yml
+- vcs/verifier/add-profiles.yml
+- vcs/holder/add-profiles.yml
+- vcs/governance/add-profiles.yml
+- hub-auth/hydra/hydra-create-client.yml
+- adapter-issuer/add-profiles.yml
+- login-consent/hydra/hydra-create-client.yml
+- issuer/role.yml
+- issuer/rolebinding.yml
+- issuer/register-tenant.yml
+- rp/role.yml
+- rp/rolebinding.yml
+- rp/register-tenant.yml
+- ace-rp/create-profiles.yml
+
+transformers:
+- sedtransform.yml
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: sandbox-cli
+  newName: ghcr.io/trustbloc-cicd/sandbox-cli
+  newTag: 0.1.7-snapshot-62aff49

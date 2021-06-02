@@ -11,50 +11,33 @@ DOCKER_CMD_RUN_OPTS            ?= -u $(USER_ID)
 CONTAINER_CMD_RUN_OPTS         ?= $(if $(findstring docker,$(CONTAINER_CMD)),$(DOCKER_CMD_RUN_OPTS),)
 
 export DEPLOYMENT_ENV	?= local
+export DOMAIN      		?= local.trustbloc.dev
+export BLOC_DOMAIN      		?= testnet.local.trustbloc.dev
 # space delimited of Key:Value pairs
 COMMON_LABELS		:= instance:${DEPLOYMENT_ENV}
-export DOMAIN      		?= ${DEPLOYMENT_ENV}.trustbloc.dev
-export COUCHDB_URL								?= couchdb://cdbadmin:secret@couchdb-demo:5984
 
 OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
-ISSUER_IMG			?= ghcr.io/trustbloc-cicd/sandbox-issuer:0.1.7-snapshot-62aff49
+CLI_IMG				?= ghcr.io/trustbloc-cicd/sandbox-cli:0.1.7-snapshot-62aff49
 
 # do not modify
-KUSTOMIZE_DIR       	= kustomize/issuer
-CERTS_OUTPUT_DIR      	 	= ${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/certs
+KUSTOMIZE_DIR       	= kustomize/jobs
 PREFIX							?=
 KUSTOMIZE_BUILD_OPTS			?= --load-restrictor LoadRestrictionsNone --enable-alpha-plugins
 export KUSTOMIZE_PLUGIN_HOME						= $(abspath .)/kustomize/plugin
-
-.PHONY: all
-all: setup
-
-.PHONY: setup
-setup: generate-test-certs
-	@echo setup
 
 .PHONY: setup-no-certs
 setup-no-certs:
 	@echo setup-no-certs
 
-.PHONY: generate-test-certs
-generate-test-certs: clean-certs
-	@echo $(abspath .)
-	@$(CONTAINER_CMD) run ${CONTAINER_CMD_RUN_OPTS} -i --rm \
-		-v $(abspath .):/opt/workspace:Z \
-		-e DOMAIN=${DOMAIN} \
-		-e CERTS_OUTPUT_DIR=${CERTS_OUTPUT_DIR} \
-		--entrypoint "/opt/workspace/scripts/generate_test_certs.sh" \
-		docker.io/frapsoft/openssl:latest
-	@cd ${CERTS_OUTPUT_DIR} && ln -fs trustbloc-dev-ca.crt ca.crt
-	@cd ${CERTS_OUTPUT_DIR} && ln -fs ${DOMAIN}.key tls.key
-	@cd ${CERTS_OUTPUT_DIR} && ln -fs ${DOMAIN}.crt tls.crt
+
+.PHONY: all
+all: deploy
 
 .PHONY: deploy
-deploy: prechecks kustomize kubectl set-images set-labels deploy-issuer
+deploy: prechecks kustomize kubectl set-images set-labels deploy-jobs
 
 .PHONY: prechecks
 prechecks:
@@ -65,28 +48,47 @@ endif
 
 .PHONY: set-labels
 set-labels: kustomize
-	@pushd ${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/issuer &&\
+	@pushd ${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} &&\
 		${KUSTOMIZE} edit set label ${COMMON_LABELS} &&\
 		popd
 
 .PHONY: set-images
 set-images: kustomize
-	@pushd ${KUSTOMIZE_DIR}/base &&\
-	${KUSTOMIZE} edit set image sandbox-issuer=${ISSUER_IMG} &&\
-	popd
+	@pushd ${KUSTOMIZE_DIR}/overlays/common &&\
+		${KUSTOMIZE} edit set image sandbox-cli=${CLI_IMG} &&\
+		popd
 
-.PHONY: deploy-issuer
-deploy-issuer: prechecks kustomize kubectl
+.PHONY: delete-jobs
+delete-jobs:
+	@echo deleting jobs
+	$(KUBECTL) -n default delete job \
+	ace-rp-profiles \
+	adapter-issuer-add-profiles \
+	governance-vcs-add-profiles \
+	holder-vcs-add-profiles \
+	hub-hydra-create-client \
+	hydra-create-client \
+	issuer-register-tenant \
+	issuer-vcs-add-profiles \
+	orb-add-followers \
+	process-oathkeeper-template \
+	rp-register-tenant \
+	user-data \
+	verifier-vcs-add-profiles \
+	--ignore-not-found=true
+
+.PHONY: deploy-jobs
+deploy-jobs: prechecks kustomize kubectl
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
-	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/issuer | $(KUBECTL) apply -f -
+	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} | $(KUBECTL) apply -f -
 
 .PHONY: undeploy
-undeploy: prechecks kustomize kubectl set-images set-labels undeploy-issuer
+undeploy: prechecks kustomize kubectl set-images set-labels undeploy-jobs
 
-.PHONY: undeploy-issuer
-undeploy-issuer: prechecks kustomize kubectl
+.PHONY: undeploy-jobs
+undeploy-jobs: prechecks kustomize kubectl
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
-	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/issuer | $(KUBECTL) delete -f -
+	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV} | $(KUBECTL) delete -f -
 
 .PHONY: kustomize
 kustomize:
@@ -114,13 +116,3 @@ KUBECTL=$(realpath ./bin/kubectl)
 else
 KUBECTL=$(shell which kubectl)
 endif
-
-.PHONY: clean
-clean: clean-all
-
-.PHONY: clean-all
-clean-all: clean-certs
-
-.PHONY: clean-certs
-clean-certs:
-	@rm -Rf ${CERTS_OUTPUT_DIR}

@@ -25,9 +25,6 @@ configMapGenerator:
   envs:
   - config.env
   name: issuer-env
-- files:
-  - register-tenant.sh
-  name: issuer-register-tenant-script
 
 secretGenerator:
 - behavior: merge
@@ -37,9 +34,6 @@ secretGenerator:
 
 resources:
 - ../../base
-- role.yml
-- rolebinding.yml
-- register-tenant.yml
 
 transformers:
 - sedtransform.yml

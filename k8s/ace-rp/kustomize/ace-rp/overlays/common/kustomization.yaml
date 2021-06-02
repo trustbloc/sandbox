@@ -33,9 +33,6 @@ configMapGenerator:
   envs:
   - benefits-dept/config.env
   name: benefits-dept-ace-rp-env
-- files:
-  - ace_rp_configure.sh
-  name: ace-rp-profiles-script
 
 secretGenerator:
 - behavior: merge
@@ -55,16 +52,7 @@ resources:
 - ../ucis
 - ../cbp
 - ../benefits-dept
-- create-profiles.yml
 
 transformers:
 - sedtransform.yml
 - sedb64transform.yml
-
-
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-images:
-- name: sandbox-cli
-  newName: ghcr.io/trustbloc-cicd/sandbox-cli
-  newTag: 0.1.7-snapshot-62aff49

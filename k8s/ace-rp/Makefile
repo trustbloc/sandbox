@@ -21,12 +21,10 @@ ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
 ACE_RP_IMG				?= ghcr.io/trustbloc-cicd/sandbox-ace-rp:0.1.7-snapshot-62aff49
-CLI_IMG				?= ghcr.io/trustbloc-cicd/sandbox-cli:0.1.7-snapshot-62aff49
 
 # do not modify
 KUSTOMIZE_DIR       	= kustomize/ace-rp
 CERTS_OUTPUT_DIR      	 	= ${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/certs
-REGISTRY_DIRECTORY           	= ${KUSTOMIZE_DIR}/base/registry
 PREFIX							?=
 KUSTOMIZE_BUILD_OPTS			?= --load-restrictor LoadRestrictionsNone --enable-alpha-plugins
 export KUSTOMIZE_PLUGIN_HOME						= $(abspath .)/kustomize/plugin
@@ -75,9 +73,6 @@ set-labels: kustomize
 set-images: kustomize
 	@pushd ${KUSTOMIZE_DIR}/base &&\
 	${KUSTOMIZE} edit set image sandbox-ace-rp=${ACE_RP_IMG} &&\
-	popd &&\
-	pushd ${KUSTOMIZE_DIR}/overlays/common &&\
-	${KUSTOMIZE} edit set image sandbox-cli=${CLI_IMG} &&\
 	popd
 
 .PHONY: deploy-ace-rp
@@ -125,10 +120,7 @@ endif
 clean: clean-all
 
 .PHONY: clean-all
-clean-all: clean-certs clean-registry
-
-.PHONY: clean-no-registry
-clean-no-registry: clean-certs
+clean-all: clean-certs
 
 .PHONY: clean-certs
 clean-certs:

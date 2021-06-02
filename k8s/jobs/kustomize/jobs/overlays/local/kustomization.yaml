@@ -13,37 +13,12 @@
 # Note that it should also match with the prefix (text before '-') of the namespace
 # field above.
 commonLabels:
-  component: login-consent
-  group: demo
+  instance: local
   project: trustbloc
 
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-secretGenerator:
-- behavior: merge
-  envs:
-  - hydra/hydra-secret.env
-  name: hydra-secret
-
-configMapGenerator:
-- behavior: merge
-  envs:
-  - hydra/hydra-env.env
-  name: hydra-env
-- behavior: merge
-  envs:
-  - login-consent/login-consent.env
-  name: login-consent-env
-
-
 resources:
-- ../../base
-
-transformers:
-- sedtransform.yml
-- sedb64transform.yml
-
-components:
-- ../../components/hydra
+- ../common

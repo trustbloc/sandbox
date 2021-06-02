@@ -21,13 +21,6 @@ commonLabels:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-resources:
-- strapi/user-data.yml
-- oathkeeper/role.yml
-- oathkeeper/rolebinding.yml
-- oathkeeper/process-template.yml
-
-
 transformers:
 - sedtransform.yml
 - sedb64transform.yml
@@ -37,16 +30,7 @@ components:
 - ../../components/oathkeeper
 
 configMapGenerator:
-- files:
-  - strapi/user_data.sh
-  name: strapi-user-data-script
 - behavior: replace
   files:
   - oathkeeper/config.yml
   name: oathkeeper-config
-- files:
-  - oathkeeper/process_template.sh
-  name: process-template-script
-- files:
-  - oathkeeper/access-rules.tmpl
-  name: access-rules-template

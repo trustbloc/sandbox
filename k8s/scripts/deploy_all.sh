@@ -14,7 +14,7 @@ set -e
 : ${DOMAIN:=trustbloc.dev}
 : ${DEPLOYMENT_ENV:=local}
 ## Should be deployed in the listed order
-: ${COMPONENTS=cms comparator login-consent issuer rp ace-rp}
+: ${COMPONENTS=cms comparator login-consent issuer rp ace-rp jobs}
 DEPLOY_LIST=( $COMPONENTS )
 
 ## Map: component --> healthcheck(s)
@@ -25,6 +25,7 @@ declare -A HEALTCHECK_URL=(
     [rp]="https://demo-rp.$DOMAIN/healthcheck"
     [ace-rp]="https://ucis-rp.$DOMAIN/healthcheck https://cbp-rp.$DOMAIN/healthcheck https://benefits-dept-rp.$DOMAIN/healthcheck"
     [login-consent]=""
+    [jobs]=""
     [LATE]="https://cms.$DOMAIN/"
 )
 ## Map: healthckeck --> http-code
@@ -48,7 +49,11 @@ NONE=$(tput sgr0)
 healthCheck() {
 	sleep 2
 	n=0
-	maxAttempts=200
+  maxAttempts=200
+  if [ "" != "$4" ]
+  then
+	   maxAttempts=$4
+  fi
 	echo "running health check : app=$1 url=$2 timeout=$maxAttempts seconds"
 	until [ $n -ge $maxAttempts ]
 	do
@@ -110,5 +115,5 @@ done
 ## Late health checks
 component=LATE
 for url in ${HEALTCHECK_URL[$component]}; do
-    healthCheck $component "$url" ${HEALTHCHECK_CODE["$url"]}
+    healthCheck $component "$url" ${HEALTHCHECK_CODE["$url"]} 300
 done
