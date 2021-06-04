@@ -187,8 +187,15 @@ const validVP = `{
 		"holder": "did:example:ebfeb1f712ebc6f1c276e12ec21"
 	}`
 
-//go:embed testdata/examples-ext-v1.jsonld
-var examplesExtV1Context []byte //nolint:gochecknoglobals // embedded test context
+// nolint:gochecknoglobals // embedded test context
+var (
+	//go:embed testdata/odrl.jsonld
+	odrlContext []byte
+	//go:embed testdata/examples-v1.jsonld
+	examplesV1Context []byte
+	//go:embed testdata/examples-ext-v1.jsonld
+	examplesExtV1Context []byte
+)
 
 func TestController_New(t *testing.T) {
 	t.Run("test new - success", func(t *testing.T) {
@@ -1406,6 +1413,14 @@ func createTestDocumentLoader(t *testing.T) *jsonld.DocumentLoader {
 
 	loader, err := jsonld.NewDocumentLoader(memstore.NewProvider(),
 		jsonld.WithExtraContexts(
+			jsonld.ContextDocument{
+				URL:     "https://www.w3.org/ns/odrl.jsonld",
+				Content: odrlContext,
+			},
+			jsonld.ContextDocument{
+				URL:     "https://www.w3.org/2018/credentials/examples/v1",
+				Content: examplesV1Context,
+			},
 			jsonld.ContextDocument{
 				URL:     "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld",
 				Content: examplesExtV1Context,

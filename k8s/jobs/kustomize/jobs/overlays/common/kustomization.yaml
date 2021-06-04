@@ -52,6 +52,10 @@ configMapGenerator:
 - files:
   - vcs/governance/vcs_governance_configure.sh
   name: governance-vcs-add-profiles-script
+- files:
+  - aries-framework/jsonld/add_contexts.sh
+  - aries-framework/jsonld/contexts_payload.json
+  name: aries-add-contexts-config
 
 resources:
 - cms/strapi/user-data.yml
@@ -72,6 +76,7 @@ resources:
 - rp/rolebinding.yml
 - rp/register-tenant.yml
 - ace-rp/create-profiles.yml
+- aries-framework/jsonld/add-contexts.yml
 
 transformers:
 - sedtransform.yml
