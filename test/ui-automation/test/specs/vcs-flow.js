@@ -17,6 +17,11 @@ const uuid = require('uuid-random');
 const SCENARIO_KEY = path.parse(__filename).name;
 
 var flows = new Map();
+flows.set('UniversityDegreeCredential', {
+    description: "Apply for University Grant using University Degree Credential",
+    profile: "trustbloc-jsonwebsignature2020-ed25519",
+    skipStatusCheck: false
+});
 flows.set('PermanentResidentCard', {
     description: "Apply for Home Loan using Permanent Resident Card",
     profile: "trustbloc-ed25519signature2018-ed25519",
@@ -25,11 +30,6 @@ flows.set('PermanentResidentCard', {
 flows.set('VaccinationCertificate', {
     description: "Vaccination Certificate Verification",
     profile: "didkey-bbsblssignature2020-bls12381g2",
-    skipStatusCheck: false
-});
-flows.set('UniversityDegreeCredential', {
-    description: "Apply for University Grant using University Degree Credential",
-    profile: "trustbloc-jsonwebsignature2020-ed25519",
     skipStatusCheck: false
 });
 flows.set('StudentCard', {
