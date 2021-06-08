@@ -25,6 +25,10 @@ var (
 	examplesExtV1 []byte
 	//go:embed contexts/booking-reference-v1.jsonld
 	bookingRefV1 []byte
+	//go:embed contexts/examples-v1.jsonld
+	examplesV1 []byte
+	//go:embed contexts/ns-odrl.jsonld
+	nsodrl []byte
 )
 
 var embedContexts = []jsonld.ContextDocument{ //nolint:gochecknoglobals
@@ -47,6 +51,16 @@ var embedContexts = []jsonld.ContextDocument{ //nolint:gochecknoglobals
 		URL:         "https://trustbloc.github.io/context/vc/examples/booking-ref-v1.jsonld",
 		DocumentURL: "",
 		Content:     bookingRefV1,
+	},
+	{
+		URL:         "https://www.w3.org/2018/credentials/examples/v1",
+		DocumentURL: "",
+		Content:     examplesV1,
+	},
+	{
+		URL:         "https://www.w3.org/ns/odrl.jsonld",
+		DocumentURL: "",
+		Content:     nsodrl,
 	},
 }
 
