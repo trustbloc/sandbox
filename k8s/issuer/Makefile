@@ -77,6 +77,9 @@ set-images: kustomize
 
 .PHONY: deploy-issuer
 deploy-issuer: prechecks kustomize kubectl
+	@docker save $(ISSUER_IMG) > issuer.image
+	@minikube image load issuer.image
+	@rm issuer.image
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
 	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/issuer | $(KUBECTL) apply -f -
 

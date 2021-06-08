@@ -77,6 +77,9 @@ set-images: kustomize
 
 .PHONY: deploy-ace-rp
 deploy-ace-rp: prechecks kustomize kubectl
+	@docker save $(ACE_RP_IMG) > ace-rp.image
+	@minikube image load ace-rp.image
+	@rm ace-rp.image
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
 	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/ace-rp | $(KUBECTL) apply -f -
 
