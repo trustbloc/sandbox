@@ -42,16 +42,21 @@ local-setup-deploy: minikube-down minikube-up minikube-image-load deploy-core
 minikube-image-load:
 	@echo "loading local images to minikube"
 	@eval $(shell minikube docker-env)
-	@minikube image rm $(ISSUER_IMG_LOCAL)
-	@minikube image rm $(RP_IMG_LOCAL)
-	@minikube image rm $(ACE_RP_IMG_LOCAL)
-	@minikube image rm $(LOGIN_CONSENT_IMG_LOCAL)
-	@minikube image rm $(CLI_IMG_LOCAL)
-	@minikube image load $(ISSUER_IMG_LOCAL)
-	@minikube image load $(RP_IMG_LOCAL)
-	@minikube image load $(ACE_RP_IMG_LOCAL)
-	@minikube image load $(LOGIN_CONSENT_IMG_LOCAL)
-	@minikube image load $(CLI_IMG_LOCAL)
+	@docker save $(ISSUER_IMG_LOCAL) > issuer_img_local.image
+	@docker save $(RP_IMG_LOCAL) > rp_img_local.image
+	@docker save $(ACE_RP_IMG_LOCAL) > ace_rp_img_local.image
+	@docker save $(LOGIN_CONSENT_IMG_LOCAL) > login_consent_img_local.image
+	@docker save $(CLI_IMG_LOCAL) > cli_img_local.image
+	@minikube image load issuer_img_local.image
+	@minikube image load rp_img_local.image
+	@minikube image load ace_rp_img_local.image
+	@minikube image load login_consent_img_local.image
+	@minikube image load cli_img_local.image
+	@rm issuer_img_local.image
+	@rm rp_img_local.image
+	@rm ace_rp_img_local.image
+	@rm login_consent_img_local.image
+	@rm cli_img_local.image
 
 ci-minikube-setup: pull-core-deployment
 		cd scripts && ./ci_minikube_setup.sh
