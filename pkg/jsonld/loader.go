@@ -21,10 +21,14 @@ var (
 	w3idCitizenshipV1 []byte
 	//go:embed contexts/w3id-vaccination-v1.jsonld
 	w3idVaccinationV1 []byte
+	//go:embed contexts/examples-v1.jsonld
+	examplesV1 []byte
 	//go:embed contexts/examples-ext-v1.jsonld
 	examplesExtV1 []byte
 	//go:embed contexts/booking-reference-v1.jsonld
 	bookingRefV1 []byte
+	//go:embed contexts/odrl.jsonld
+	odrl []byte
 )
 
 var embedContexts = []jsonld.ContextDocument{ //nolint:gochecknoglobals
@@ -39,6 +43,11 @@ var embedContexts = []jsonld.ContextDocument{ //nolint:gochecknoglobals
 		Content:     w3idVaccinationV1,
 	},
 	{
+		URL:         "https://www.w3.org/2018/credentials/examples/v1",
+		DocumentURL: "",
+		Content:     examplesV1,
+	},
+	{
 		URL:         "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld",
 		DocumentURL: "",
 		Content:     examplesExtV1,
@@ -47,6 +56,11 @@ var embedContexts = []jsonld.ContextDocument{ //nolint:gochecknoglobals
 		URL:         "https://trustbloc.github.io/context/vc/examples/booking-ref-v1.jsonld",
 		DocumentURL: "",
 		Content:     bookingRefV1,
+	},
+	{
+		URL:         "https://www.w3.org/ns/odrl.jsonld",
+		DocumentURL: "",
+		Content:     odrl,
 	},
 }
 
