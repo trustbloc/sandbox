@@ -77,9 +77,6 @@ set-images: kustomize
 
 .PHONY: deploy-rp
 deploy-rp: prechecks kustomize kubectl
-	@docker save $(RP_IMG) > rp.image
-	@minikube image load rp.image
-	@rm rp.image
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
 	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/rp | $(KUBECTL) apply -f -
 
