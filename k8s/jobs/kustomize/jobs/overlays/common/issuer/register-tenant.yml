@@ -31,6 +31,10 @@ spec:
           imagePullPolicy: IfNotPresent
           command: ["wget"]
           args: ["-S", "http://issuer", "-O-"]
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       containers:
       - name: register-tenant
         image: "alpine:latest"

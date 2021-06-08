@@ -49,6 +49,10 @@ spec:
               sleep 5;
               done;
               done;
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       containers:
         - name: aries-add-contexts
           image: "alpine:latest"

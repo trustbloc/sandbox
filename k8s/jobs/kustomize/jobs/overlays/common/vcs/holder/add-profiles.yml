@@ -37,6 +37,10 @@ spec:
               do echo "waiting for endpoint";
               sleep 5;
               done;
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       containers:
       - name: holder-vcs-add-profiles
         image: "alpine:latest"

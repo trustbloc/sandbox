@@ -59,6 +59,10 @@ spec:
               do echo "waiting for issuer-vcs endpoint";
               sleep 5;
               done;
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       containers:
       - name: ace-rp-profiles
         image: "sandbox-cli:latest"

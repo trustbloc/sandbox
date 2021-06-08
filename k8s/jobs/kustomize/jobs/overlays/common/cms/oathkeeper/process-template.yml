@@ -37,6 +37,10 @@ spec:
               while [ "$(wget http://strapi/admin -O- -S >/dev/null 2>&1; echo $?)" -ne 0 ];
               do echo "waiting for strapi/admin endpoint";
               done
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       containers:
       - name: process-oathkeeper-template
         image: "alpine:latest"

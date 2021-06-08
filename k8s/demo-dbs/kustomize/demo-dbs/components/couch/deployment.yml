@@ -29,6 +29,10 @@ spec:
           configMap:
             name: couchdb-config
       hostname: couchdb-demo
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       containers:
       - image: couchdb:latest
         ports:
