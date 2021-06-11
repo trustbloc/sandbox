@@ -142,7 +142,10 @@ async function _waitForDashboard() {
 }
 
 async function _saveAnyDID({method}) {
-  const didManager = await $('a*=Digital Identity Management');
+  const settingsDiv = await $("img[id='dashboardSettings']");
+  await settingsDiv.click();
+
+  const didManager = await $('a*=DID Management');
   await didManager.waitForExist();
   await didManager.click();
 
@@ -189,7 +192,10 @@ async function _saveAnyDID({method}) {
 
 
 async function _createTrustblocDID() {
-  const didManager = await $('a*=Digital Identity Management');
+  const settingsDiv = await $("img[id='dashboardSettings']");
+  await settingsDiv.click();
+
+  const didManager = await $('a*=DID Management');
   await didManager.waitForExist();
   await didManager.click();
 
