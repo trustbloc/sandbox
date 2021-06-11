@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/jsonld"
 	vdrapi "github.com/hyperledger/aries-framework-go/pkg/framework/aries/api/vdr"
 	vdrpkg "github.com/hyperledger/aries-framework-go/pkg/vdr"
 	"github.com/hyperledger/aries-framework-go/pkg/vdr/httpbinding"
@@ -24,7 +25,6 @@ import (
 	tlsutils "github.com/trustbloc/edge-core/pkg/utils/tls"
 
 	"github.com/trustbloc/sandbox/cmd/common"
-	"github.com/trustbloc/sandbox/pkg/jsonld"
 	"github.com/trustbloc/sandbox/pkg/restapi/acerp"
 	"github.com/trustbloc/sandbox/pkg/restapi/acerp/operation"
 	"github.com/trustbloc/sandbox/pkg/restapi/healthcheck"
@@ -359,7 +359,7 @@ func startRP(parameters *rpParameters) error { // nolint: funlen
 		return err
 	}
 
-	documentLoader, err := jsonld.DocumentLoader(storeProvider)
+	documentLoader, err := jsonld.NewDocumentLoader(storeProvider)
 	if err != nil {
 		return err
 	}
