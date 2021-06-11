@@ -7,7 +7,7 @@
 
 apk --no-cache add curl
 
-ENDPOINTS="adapter-issuer adapter-rp issuer-vcs verifier-vcs";
+ENDPOINTS="adapter-issuer adapter-rp issuer-vcs verifier-vcs issuer ucis-rp cbp-rp benefits-dept-rp";
 for endpoint in ${ENDPOINTS};
 do
    n=0

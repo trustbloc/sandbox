@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/jsonld"
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/restapi/logspec"
@@ -21,7 +22,6 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/sandbox/cmd/common"
-	"github.com/trustbloc/sandbox/pkg/jsonld"
 	"github.com/trustbloc/sandbox/pkg/restapi/healthcheck"
 	"github.com/trustbloc/sandbox/pkg/restapi/issuer"
 	"github.com/trustbloc/sandbox/pkg/restapi/issuer/operation"
@@ -423,7 +423,7 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen
 		return err
 	}
 
-	documentLoader, err := jsonld.DocumentLoader(storeProvider)
+	documentLoader, err := jsonld.NewDocumentLoader(storeProvider)
 	if err != nil {
 		return err
 	}
