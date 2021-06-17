@@ -29,6 +29,7 @@ issuer-vcs
 login-consent
 oathkeeper-proxy
 ops-oathkeeper-proxy
+orb-driver
 orb-1
 orb-1-kms
 vct-1
