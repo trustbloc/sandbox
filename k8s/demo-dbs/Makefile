@@ -86,7 +86,7 @@ ifeq (, $(shell which kubectl 2>/dev/null))
 	@{ \
 	set -e ;\
 	mkdir -p bin ;\
-	curl -sSL https://storage.googleapis.com/kubernetes-release/release/v1.19.6/bin/$(OS)/$(ARCH)/kubectl -o bin/kubectl ;\
+	curl -sSL https://storage.googleapis.com/kubernetes-release/release/v1.20.4/bin/$(OS)/$(ARCH)/kubectl -o bin/kubectl ;\
   chmod u+x bin/kubectl ;\
 	}
 KUBECTL=$(realpath ./bin/kubectl)
