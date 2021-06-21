@@ -3,9 +3,9 @@
 ## Components
 | Component   | Cloud URL (Sandbox)**                                     | Cloud URL (Staging)                                     | Cloud URL (Devel)                                     | Local k8s URL*                                        |
 |-------------|-----------------------------------------------------------|---------------------------------------------------------|-------------------------------------------------------|-------------------------------------------------------|
-| Wallet      | [Click Here](https://agent.sandbox.trustbloc.dev)         | [Click Here](https://wallet.staging.trustbloc.dev)      | [Click Here](https://wallet.devel.trustbloc.dev)      | [Click Here](https://wallet.local.trustbloc.dev)      |
-| Issuer      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)   | [Click Here](https://demo-issuer.staging.trustbloc.dev) | [Click Here](https://demo-issuer.devel.trustbloc.dev) | [Click Here](https://demo-issuer.local.trustbloc.dev) |
-| RP/Verifier | [Click Here](https://demo-verifier.sandbox.trustbloc.dev) | [Click Here](https://demo-rp.staging.trustbloc.dev)     | [Click Here](https://demo-rp.devel.trustbloc.dev)     | [Click Here](https://demo-rp.local.trustbloc.dev)     |
+| Wallet      | [Click Here](https://agent.sandbox.trustbloc.dev)         | [Click Here](https://wallet.stg.trustbloc.dev)      | [Click Here](https://wallet.dev.trustbloc.dev)      | [Click Here](https://wallet.local.trustbloc.dev)      |
+| Issuer      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)   | [Click Here](https://demo-issuer.stg.trustbloc.dev) | [Click Here](https://demo-issuer.dev.trustbloc.dev) | [Click Here](https://demo-issuer.local.trustbloc.dev) |
+| RP/Verifier | [Click Here](https://demo-verifier.sandbox.trustbloc.dev) | [Click Here](https://demo-rp.stg.trustbloc.dev)     | [Click Here](https://demo-rp.dev.trustbloc.dev)     | [Click Here](https://demo-rp.local.trustbloc.dev)     |
 
 *: Refer [here](./../../README.md#deployment) to run the local k8s demo.
 **: Soon to be deprecated - pre k8s deployment environment
