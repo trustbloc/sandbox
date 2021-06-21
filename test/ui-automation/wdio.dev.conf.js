@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 const {config} = require('./wdio.shared.conf');
 
-const domain = ".devel.trustbloc.dev"
+const domain = ".dev.trustbloc.dev"
 
 exports.config = {
     ...config,
