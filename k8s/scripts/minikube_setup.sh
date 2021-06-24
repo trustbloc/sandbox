@@ -31,21 +31,29 @@ fi
 minikube start --memory=$MEMORY --cpus=$CPUS --addons=$ADDONS $DRIVER $MINIKUBE_OPTIONS
 MINIKUBE_IP=$( minikube ip )
 
-# Generate coredns configMap patch
-echo '        hosts {' > $PATCH
-for service in $SERVICES; do
-    echo "          $MINIKUBE_IP $service.$DOMAIN" >> $PATCH
-done
-echo '          fallthrough' >> $PATCH
-echo '        }' >> $PATCH
-
 # Patch coredns configMap
 if ! kubectl get cm coredns -n kube-system -o yaml | grep -q hosts; then
+    # Generate coredns configMap patch
+    echo '        hosts {' > $PATCH
+    for service in $SERVICES; do
+        echo "          $MINIKUBE_IP $service.$DOMAIN" >> $PATCH
+    done
+    echo '          fallthrough' >> $PATCH
+    echo '        }' >> $PATCH
+
     echo 'Patching coredns ConfigMap'
     EDITOR='sed -i "/loadbalance/r.ingress_coredns.patch"' kubectl edit cm coredns -n kube-system
     kubectl delete po -l k8s-app=kube-dns -n kube-system # apply new configmap changes
 else
-    echo 'Skipping coredns ConfigMap patch because it has already been patched. Please patch it manually to add any new entries.'
+    # Generate coredns configMap patch
+    rm $PATCH
+    for service in $SERVICES; do
+        echo "           $MINIKUBE_IP $service.$DOMAIN" >> $PATCH
+    done
+
+    echo 'Patching coredns ConfigMap'
+    EDITOR='sed -i "/hosts {/r.ingress_coredns.patch"' kubectl edit cm coredns -n kube-system
+    kubectl delete po -l k8s-app=kube-dns -n kube-system # apply new configmap changes
 fi
 
 echo '!!! Make sure you have these entries added to your /etc/hosts !!!'
