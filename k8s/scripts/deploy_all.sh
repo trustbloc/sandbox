@@ -115,5 +115,5 @@ done
 ## Late health checks
 component=LATE
 for url in ${HEALTCHECK_URL[$component]}; do
-    healthCheck $component "$url" ${HEALTHCHECK_CODE["$url"]} 300
+    healthCheck $component "$url" ${HEALTHCHECK_CODE["$url"]} 600
 done

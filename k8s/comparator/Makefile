@@ -16,6 +16,7 @@ COMMON_LABELS		:= instance:${DEPLOYMENT_ENV}
 export DOMAIN      		?= ${DEPLOYMENT_ENV}.trustbloc.dev
 export BLOC_DOMAIN		?= testnet.${DOMAIN}
 export COUCHDB_DSN								?= couchdb://cdbadmin:secret@couchdb-demo:5984
+export COMPARATOR_REQUEST_TOKENS ?= sidetreeToken=ADMIN_TOKEN
 
 OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
