@@ -14,7 +14,7 @@ export DEPLOYMENT_ENV	?= local
 # space delimited of Key:Value pairs
 COMMON_LABELS		:= instance:${DEPLOYMENT_ENV}
 export DOMAIN      		?= ${DEPLOYMENT_ENV}.trustbloc.dev
-export BLOC_DOMAIN		?= testnet.${DOMAIN}
+export BLOC_DOMAIN		?= orb-1.${DOMAIN}
 export COUCHDB_DSN								?= couchdb://cdbadmin:secret@couchdb-demo:5984
 export COMPARATOR_REQUEST_TOKENS ?= sidetreeToken=ADMIN_TOKEN
 

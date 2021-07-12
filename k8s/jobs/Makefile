@@ -12,7 +12,7 @@ CONTAINER_CMD_RUN_OPTS         ?= $(if $(findstring docker,$(CONTAINER_CMD)),$(D
 
 export DEPLOYMENT_ENV	?= local
 export DOMAIN      		?= local.trustbloc.dev
-export BLOC_DOMAIN      		?= testnet.local.trustbloc.dev
+export BLOC_DOMAIN      		?= orb-1.local.trustbloc.dev
 # space delimited of Key:Value pairs
 COMMON_LABELS		:= instance:${DEPLOYMENT_ENV}
 
