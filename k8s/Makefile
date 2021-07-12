@@ -5,7 +5,7 @@
 #
 export DEPLOYMENT_ENV			?= local
 export DOMAIN      				?= ${DEPLOYMENT_ENV}.trustbloc.dev
-export BLOC_DOMAIN				?= testnet.${DOMAIN}
+export BLOC_DOMAIN				?= orb-1.${DOMAIN}
 export TERM								?= xterm-256color
 COMPONENTS         	 			?=
 ISSUER_IMG_LOCAL         	 	?= ghcr.io/trustbloc/sandbox-issuer:latest

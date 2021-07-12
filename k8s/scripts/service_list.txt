@@ -42,7 +42,6 @@ orb-4-kms
 router
 router-api
 router-ws
-testnet
 ucis-comparator
 ucis-rp
 uni-registrar-web
