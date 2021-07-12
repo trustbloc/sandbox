@@ -31,14 +31,11 @@ oathkeeper-proxy
 ops-oathkeeper-proxy
 orb-driver
 orb-1
-orb-1-kms
+orb-kms
 vct
 orb-2
-orb-2-kms
 orb-3
-orb-3-kms
 orb-4
-orb-4-kms
 router
 router-api
 router-ws
