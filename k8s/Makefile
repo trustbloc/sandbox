@@ -69,10 +69,10 @@ minikube-down:
 	cd scripts && minikube delete ;
 
 deploy-core:
-	make deploy-all -C ./.core
+	ORB_MIN=true make deploy-all -C ./.core
 
 ci-deploy-core:
-	make SHELL=/bin/bash deploy-all -C ./.core
+	ORB_MIN=true make SHELL=/bin/bash deploy-all -C ./.core
 
 pull-core-deployment:
 	TRUSTBLOC_CORE_K8S_COMMIT="$(TRUSTBLOC_CORE_K8S_COMMIT)" ./scripts/core_deployment.sh
