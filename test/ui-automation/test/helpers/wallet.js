@@ -14,7 +14,7 @@ const timeout = 60000;
 
 /*************************** Public API ******************************/
 
-exports.init = async ({did, email}) => {
+exports.init = async ({createDID, importDID, email}) => {
   // login and consent
   await _getLogin();
   await _getLoginAndAccept(email);
@@ -25,11 +25,11 @@ exports.init = async ({did, email}) => {
   // wait for dashboard
   await _waitForDashboard();
 
-  // setup DIDs
-  if (did) {
-    await _saveAnyDID({method: did});
-  } else {
-    await _createTrustblocDID({method: did});
+  // setup DIDs if required.
+  if (importDID) {
+    await _saveAnyDID({method: importDID});
+  } else if(createDID) {
+    await _createTrustblocDID({method: createDID});
   }
 };
 
@@ -58,15 +58,7 @@ exports.didConnect = async () => {
 /*************************** Helper functions ******************************/
 
 async function _didAuth({method='trustbloc'} = {}) {
-  const selectionDiv = await $(`//div/div[contains(@class, 'md-menu md-select')]`);
-  await selectionDiv.waitForExist();
-  await selectionDiv.click();
-
-  const selectDID = await $(`#${DIDS[method].name}`)
-  await selectDID.waitForExist();
-  await selectDID.click();
-
-  const authenticate = await $('#authenticate')
+  const authenticate = await $('#didauth')
   await authenticate.waitForExist();
   await authenticate.click();
 }
@@ -79,21 +71,6 @@ async function _acceptCredentials() {
 }
 
 async function _sendCredentials({method="trustbloc"} = {}) {
-  //expand list
-  const selectionDiv = await $(`//div/div[contains(@class, 'md-menu md-select')]`);
-  await selectionDiv.waitForExist();
-  await selectionDiv.click();
-
-  // select issuer
-  const selectDID = await $(`#${DIDS[method].name}`)
-  await selectDID.waitForExist();
-  await selectDID.click();
-
-  // select VC
-  const selectVC = await $('#cred-result-0')
-  await selectVC.waitForExist();
-  await selectVC.click();
-
   // share
   const shareBtn = await $('#share-credentials')
   await shareBtn.waitForExist();
