@@ -16,8 +16,8 @@ const timeout = 60000;
 
 exports.init = async ({createDID, importDID, email}) => {
   // login and consent
-  await _getLogin();
-  await _getLoginAndAccept(email);
+  await _getSignUp();
+  await _getThirdPartyLogin(email);
 
   // register chapi
   await allow()
@@ -78,16 +78,15 @@ async function _sendCredentials({method="trustbloc"} = {}) {
   await shareBtn.click();
 }
 
-async function _getLogin() {
-  const signinButton = await $('#loginBtn');
-  await signinButton.waitForClickable();
-  await signinButton.click();
-
-  const selectProvider = await $('=Universal Bank');
-  await selectProvider.click();
+async function _getSignUp() {
+  // Todo issue-852 Replace the text with an ID'
+  const signUpButton = await $('button*=Demo Sign-Up Partner');
+  await signUpButton.waitForExist();
+  await signUpButton.click();
 }
 
-async function _getLoginAndAccept(email) {
+
+async function _getThirdPartyLogin(email) {
   await browser.waitUntil(async () => {
     let emailInput = await $('#email');
     await emailInput.waitForExist();
@@ -96,11 +95,8 @@ async function _getLoginAndAccept(email) {
     return true;
   });
 
-  const loginButton = await $('#accept');
-  await loginButton.click();
-
-  const acceptButton = await $('#accept');
-  await acceptButton.click();
+  const signInButton = await $('#accept');
+  await signInButton.click();
 
   await browser.waitUntil(async () => {
     let title = await $('iframe');

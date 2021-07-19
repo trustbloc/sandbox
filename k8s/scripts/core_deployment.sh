@@ -14,11 +14,11 @@ rm -rf $core_dir
 mkdir -p $core_dir
 cd $core_dir
 
-git clone -b main https://github.com/trustbloc/k8s $core_dir
+git clone -b chore.2 https://github.com/talwinder50/k8s $core_dir
 git checkout ${TRUSTBLOC_CORE_K8S_COMMIT}
 
 # uncomment below line to link deployments to https://github.com/trustbloc/k8s directly (assuming k8s repo is in same folder as sandbox)
-# rm -rf $core_dir && mkdir -p $core_dir && ln -s ../../../k8s/* $core_dir
+#rm -rf $core_dir && mkdir -p $core_dir && ln -s ../../../k8s/* $core_dir
 
 cd $root
 
