@@ -39,14 +39,15 @@ const (
 	dlUploadHTML        = "./templates/uploadCred.html"
 	dlUploadConsentHTML = "./templates/uploadCredConsent.html"
 	ucisloginHTML       = "./templates/ucislogin.html"
+	providerQueryParam  = "provider"
 
-	bankLogin = "selectProvider"
-	dlUpload  = "uploaddrivinglicense"
-	prc       = "prc"
-
-	bankFlow     = "bank"
-	dlUploadFlow = "dlUpload"
-	defaultFlow  = "default"
+	bankLogin       = "mockbank"
+	dlUpload        = "uploaddrivinglicense"
+	prc             = "prc"
+	bankFlow        = "bank"
+	skipConsentFlow = "skipConsent"
+	dlUploadFlow    = "dlUpload"
+	defaultFlow     = "default"
 
 	loginTypeCookie = "loginType"
 
@@ -155,7 +156,8 @@ func newConsentServer(adminURL string, tlsSystemCertPool bool, tlsCACerts []stri
 
 	return &consentServer{
 		hydraClient: client.NewHTTPClientWithConfig(nil,
-			&client.TransportConfig{Schemes: []string{u.Scheme}, Host: u.Host, BasePath: u.Path}),
+			&client.TransportConfig{Schemes: []string{u.Scheme}, Host: u.Host, BasePath: u.Path},
+		),
 		loginTemplate:           loginTemplate,
 		consentTemplate:         consentTemplate,
 		bankLoginTemplate:       bankLoginTemplate,
@@ -181,18 +183,37 @@ type consentServer struct {
 	httpClient              *http.Client
 }
 
-func (c *consentServer) login(w http.ResponseWriter, req *http.Request) { // nolint:funlen
+func (c *consentServer) login(w http.ResponseWriter, req *http.Request) { //nolint:funlen,gocyclo
 	switch req.Method {
 	case http.MethodGet:
 		challenge := req.URL.Query().Get("login_challenge")
+		loginReq := prepareLoginRequest(challenge)
+
+		resp, err := c.hydraClient.Admin.GetLoginRequest(loginReq)
+		if err != nil {
+			fmt.Fprintf(w, "Failed to fetch login request from hydra: %s", err.Error())
+			w.WriteHeader(http.StatusBadRequest)
+
+			return
+		}
+
+		// fetching the request url from the valid login request to fetch provider (custom parameter)
+		providerID, err := c.fetchProviderFromURL(resp.Payload.RequestURL)
+		if err != nil {
+			fmt.Fprintf(w, "Failed to fetch the provider name: %s", err.Error())
+			w.WriteHeader(http.StatusBadRequest)
+
+			return
+		}
+
 		fullData := map[string]interface{}{
 			"login_challenge": challenge,
 		}
 
 		switch {
-		case strings.Contains(req.Referer(), bankLogin):
+		case strings.Contains(providerID, bankLogin):
 			expire := time.Now().AddDate(0, 0, 1)
-			cookie := http.Cookie{Name: loginTypeCookie, Value: bankFlow, Expires: expire}
+			cookie := http.Cookie{Name: loginTypeCookie, Value: skipConsentFlow, Expires: expire}
 			http.SetCookie(w, &cookie)
 
 			err := c.bankLoginTemplate.Execute(w, fullData)
@@ -216,7 +237,7 @@ func (c *consentServer) login(w http.ResponseWriter, req *http.Request) { // nol
 			}
 		case strings.Contains(req.Referer(), prc):
 			expire := time.Now().AddDate(0, 0, 1)
-			cookie := http.Cookie{Name: loginTypeCookie, Value: prc, Expires: expire}
+			cookie := http.Cookie{Name: loginTypeCookie, Value: skipConsentFlow, Expires: expire}
 			http.SetCookie(w, &cookie)
 
 			err := c.ucisLoginTemplate.Execute(w, fullData)
@@ -246,6 +267,35 @@ func (c *consentServer) login(w http.ResponseWriter, req *http.Request) { // nol
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
+}
+
+func prepareLoginRequest(challenge string) *admin.GetLoginRequestParams {
+	loginReq := admin.NewGetLoginRequestParams()
+	loginReq.SetLoginChallenge(challenge)
+
+	loginReq.SetHTTPClient(&http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{
+		InsecureSkipVerify: true, //nolint:gosec
+	}}})
+
+	return loginReq
+}
+
+func (c *consentServer) fetchProviderFromURL(requestURL string) (string, error) {
+	parsedURL, err := url.Parse(requestURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse url: %s", parsedURL)
+	}
+
+	params, err := url.ParseQuery(parsedURL.RawQuery)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse raw query for provider name: %s", parsedURL.RawQuery)
+	}
+
+	if providerName, ok := params[providerQueryParam]; ok {
+		return providerName[0], nil
+	}
+
+	return "", nil
 }
 
 func (c *consentServer) consent(w http.ResponseWriter, req *http.Request) {
@@ -380,8 +430,7 @@ func (c *consentServer) showConsentPage(w http.ResponseWriter, req *http.Request
 			fmt.Fprint(w, err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-	case prc:
-		// don't show consent screen for PRC demo
+	case skipConsentFlow:
 		form := url.Values{}
 		form.Add("grant_scope", consentRequest.Payload.RequestedScope[0])
 
