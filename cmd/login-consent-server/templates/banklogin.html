@@ -40,7 +40,7 @@ SPDX-License-Identifier: Apache-2.0
             <div class="flex-none mt-auto rounded-b rounded-t-none overflow-hidden">
                 <div class="flex items-center p-14 justify-center">
                     <form class="bg-white shadow-xl rounded-xl lg:px-11 sm:px-11 px-4 pt-8
-                    md:flex-wrap md:justify-between w-screen h-auto" action="/login" method="post">
+                    md:flex-wrap md:justify-between w-screen h-auto" action="/login" method="post" onsubmit="btn_login.disabled = true; return true;">
                         <input type="hidden" name="challenge" value="{{.login_challenge}}">
 
                         <div class="mb-4 py-2 px-4 rounded-t-lg inputColor border-b-2 border-gray-500 lg:text-sm text-xs">
@@ -60,7 +60,8 @@ SPDX-License-Identifier: Apache-2.0
                         </div>
 
                         <div class="flex items-center justify-center">
-                            <button class="gradient text-sm sm:text-xs rounded-md text-white mb-8 h-10 px-8 shadow-lg" type='submit' id="accept" name='btn_login'>
+                            <button class="gradient text-sm sm:text-xs rounded-md text-white mb-8 h-10 px-8 shadow-lg" type='submit'
+                                    id="accept" name='btn_login'>
                                 Sign In
                             </button>
                         </div>
