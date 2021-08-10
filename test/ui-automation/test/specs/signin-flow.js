@@ -21,6 +21,7 @@ const skipStatusCheck= false
    5. Check the saved credential present in the wallet.
    6. Verifies the saved credential.
    7. User logout from the wallet.
+   8. User changes the locale
  */
 
 describe("TrustBloc - SignUp and SignIn flow", () => {
@@ -129,6 +130,15 @@ describe("TrustBloc - SignUp and SignIn flow", () => {
 
         // 2. Initialize Wallet (register/sign-up/etc.)
         await wallet.logout(ctx);
+    });
+    it(`User changes locale (${ctx.email})`, async function () {
+        this.timeout(300000);
+
+        // 1. Navigate to Wallet Website
+        await browser.navigateTo(browser.config.walletURL);
+
+        // 2. Change locale
+        await wallet.changeLocale();
     });
 })
 

@@ -68,6 +68,9 @@ exports.checkStoredCredentials = async () => {
   await _checkStoredCredentials();
 };
 
+exports.changeLocale = async () => {
+  await _changeLocale();
+};
 
 /*************************** Helper functions ******************************/
 
@@ -114,6 +117,18 @@ async function _signIn(signedUpUserEmail) {
     await signInButton.waitForExist();
     await signInButton.click();
     await _getThirdPartyLogin(signedUpUserEmail);
+    return true;
+  });
+}
+
+
+async function _changeLocale() {
+  const localeSwitcherLink = await $('a*=Français');
+  await localeSwitcherLink.waitForExist();
+  await localeSwitcherLink.click();
+  await browser.waitUntil(async () => {
+    const headingLink = await $('h1*=Inscrivez-vous. C’est gratuit!');
+    expect(headingLink).toHaveValue('Inscrivez-vous. C’est gratuit!');
     return true;
   });
 }
