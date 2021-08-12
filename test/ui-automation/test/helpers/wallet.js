@@ -115,8 +115,16 @@ async function _signIn(signedUpUserEmail) {
   await browser.waitUntil(async () => {
     const signInButton = await $('button*=Demo Sign-In Partner');
     await signInButton.waitForExist();
+    const handles = await browser.getWindowHandles();
     await signInButton.click();
-    await _getThirdPartyLogin(signedUpUserEmail);
+    await browser.waitUntil(async () => {
+      const newHandles = await browser.getWindowHandles();
+      if (newHandles.length - handles.length === 1) {
+        await _getThirdPartyLogin(signedUpUserEmail);
+        return true;
+      }
+      return false;
+    });
     return true;
   });
 }
@@ -134,7 +142,7 @@ async function _changeLocale() {
 }
 
 async function _getThirdPartyLogin(email) {
-  await browser.switchWindow('Login Page')
+  await browser.switchWindow('Login Page');
   await browser.waitUntil(async () => {
     let emailInput = await $('#email');
     await emailInput.waitForExist();
