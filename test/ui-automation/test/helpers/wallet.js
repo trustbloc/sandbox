@@ -99,13 +99,20 @@ async function _getSignUp(email) {
   const signUpButton = await $('#signUpText');
   await signUpButton.waitForExist();
   await signUpButton.click();
-  await _getThirdPartyLogin(email)
+  await _getThirdPartyLogin(email);
 }
 
 async function _logoutWallet() {
   const logOutButton = await $('button*=Log Out');
   await logOutButton.waitForExist();
   await logOutButton.click();
+
+  // wait for logout to complele and go to signup page
+  await browser.waitUntil(async () => {
+    const headingLink = await $('h1*=Sign up.');
+    expect(headingLink).toHaveValue('Sign up.');
+    return true;
+  });
 }
 
 async function _signIn(signedUpUserEmail) {
@@ -115,16 +122,8 @@ async function _signIn(signedUpUserEmail) {
   await browser.waitUntil(async () => {
     const signInButton = await $('button*=Demo Sign-In Partner');
     await signInButton.waitForExist();
-    const handles = await browser.getWindowHandles();
     await signInButton.click();
-    await browser.waitUntil(async () => {
-      const newHandles = await browser.getWindowHandles();
-      if (newHandles.length - handles.length === 1) {
-        await _getThirdPartyLogin(signedUpUserEmail);
-        return true;
-      }
-      return false;
-    });
+    await _getThirdPartyLogin(signedUpUserEmail);
     return true;
   });
 }
@@ -142,7 +141,17 @@ async function _changeLocale() {
 }
 
 async function _getThirdPartyLogin(email) {
-  await browser.switchWindow('Login Page');
+  await browser.waitUntil(async () => {
+    try{
+      await browser.switchWindow('Login Page');
+    } catch (err) {
+      console.warn("[warn] switch window to login page : ", err.message)
+      return false
+    }
+    return true
+  });
+
+  
   await browser.waitUntil(async () => {
     let emailInput = await $('#email');
     await emailInput.waitForExist();
