@@ -98,8 +98,16 @@ async function _sendCredentials({method="trustbloc"} = {}) {
 async function _getSignUp(email) {
   const signUpButton = await $('#signUpText');
   await signUpButton.waitForExist();
+  const handles = await browser.getWindowHandles();
   await signUpButton.click();
-  await _getThirdPartyLogin(email)
+  await browser.waitUntil(async () => {
+    const newHandles = await browser.getWindowHandles();
+    if (newHandles.length - handles.length === 1) {
+      await _getThirdPartyLogin(email);
+      return true;
+    }
+    return false;
+  });
 }
 
 async function _logoutWallet() {
