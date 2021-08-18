@@ -103,7 +103,7 @@ async function _getSignUp(email) {
 }
 
 async function _logoutWallet() {
-  const logOutButton = await $('button*=Log Out');
+  const logOutButton = await $('button*=Sign Out');
   await logOutButton.waitForExist();
   await logOutButton.click();
 
@@ -187,10 +187,7 @@ async function _checkStoredCredentials() {
 }
 
 async function _saveAnyDID({method}) {
-  const settingsDiv = await $("img[id='dashboardSettings']");
-  await settingsDiv.click();
-
-  const didManager = await $('a*=DID Management');
+  const didManager = await $('a*=Settings');
   await didManager.waitForExist();
   await didManager.click();
 
@@ -237,10 +234,7 @@ async function _saveAnyDID({method}) {
 
 
 async function _createTrustblocDID() {
-  const settingsDiv = await $("img[id='dashboardSettings']");
-  await settingsDiv.click();
-
-  const didManager = await $('a*=DID Management');
+  const didManager = await $('a*=Settings');
   await didManager.waitForExist();
   await didManager.click();
 
