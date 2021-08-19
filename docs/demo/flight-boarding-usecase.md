@@ -24,10 +24,10 @@ Reference and selectively disclose few attributes from Vaccination Certificate.
    - On the next page, select `Universal Bank` and provide any email id and password. 
    - Clicking on `Agree` button to accept `Terms of Service` would show the `Wallet` dashboard.
 1. Register a Wallet identity:
-   - Go to `Digital Identity Management` tab on the sidebar.
-   - Select `Key Type` and `Signature Type` from drop down in `Create New TrustBloc Digital Identiy` section.
-   - Enter a `Friendly Name` anc click `Create and Save Digtital Identity` button.
-   - On success, `Digital Identity` table gets updated with this new identity.
+   - Go to `Settings` tab on the sidebar.
+   - Click on `Create Orb Digital Identiy` section.
+   - Select `Key Type`, `Signature Suite` and `Key Puropose` from available options.
+   - Click `Create and Save`.
 1. Issue Permanent Resident Card:
    - Go to [`Permanent Residence Card Issuer`](#components).
    - Look for `Issue Permnanent Card` button and click on it.

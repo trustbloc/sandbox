@@ -3,7 +3,7 @@
 ## Components
 | Component   | Cloud URL (Sandbox)**                                       | Cloud URL (Staging)                                     | Cloud URL (Devel)                                     | Local k8s URL*                                        |
 |-------------|-------------------------------------------------------------|---------------------------------------------------------|-------------------------------------------------------|-------------------------------------------------------|
-| Wallet      | [Click Here](https://agent.sandbox.trustbloc.dev/dashboard) | [Click Here](https://wallet.stg.trustbloc.dev)      | [Click Here](https://wallet.dev.trustbloc.dev)      | [Click Here](https://wallet.local.trustbloc.dev)      |
+| Wallet      | [Click Here](https://wallet.sandbox.trustbloc.dev/dashboard) | [Click Here](https://wallet.stg.trustbloc.dev)      | [Click Here](https://wallet.dev.trustbloc.dev)      | [Click Here](https://wallet.local.trustbloc.dev)      |
 | Issuer      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)     | [Click Here](https://demo-issuer.stg.trustbloc.dev) | [Click Here](https://demo-issuer.dev.trustbloc.dev) | [Click Here](https://demo-issuer.local.trustbloc.dev) |
 | RP/Verifier | [Click Here](https://demo-rp.sandbox.trustbloc.dev)   | [Click Here](https://demo-rp.stg.trustbloc.dev)     | [Click Here](https://demo-rp.dev.trustbloc.dev)     | [Click Here](https://demo-rp.local.trustbloc.dev)     |
 
@@ -13,10 +13,11 @@
 ## Steps
 1. Login to Wallet : Go to [Wallet](#components) and click on `Allow` when a pop-up asks for the permission. This 
 registers the `Wallet` with CHAPI internally.
-2. Register a Wallet identity : Go to `DID Management` tab of [`Wallet`](#components) and 
-create a new TrustBloc DID by selecting the key type (Ed25519 or P256) and signature type (Ed25519Signature2018 or 
-JsonWebSignature2020). Type in a friendly name and click save. If successful, the new DID shows up in the table. Refer 
-[this](#wallet-dids) for more info on supported DIDs.
+2. Register a Wallet identity : 
+   - Go to `Settings` tab on the sidebar.
+   - Click on `Create Orb Digital Identiy` section.
+   - Select `Key Type`, `Signature Suite` and `Key Puropose` from available options.
+   - Click `Create and Save`.
 3. Issue a Credential : Go to [Demo Issuer](#components), click on  `Issue Permanent Residence Card` in `Issue Local Credentials` 
 section, select `TrustBloc ED` and click `issue` button. Refer [this](#issuer-options) for more info on issuer profiles and action.
 4. Login to the Issuer: With default user email as `john.smith@example.com` and password, click the `Login` button. Consent to 
