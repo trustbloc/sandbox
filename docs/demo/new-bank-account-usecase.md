@@ -23,7 +23,9 @@ drivers license, digital drivers license assurance/evidence and digital credit r
 ## Flow details
 1. Login to Wallet:
    - UI Navigation 
-     - Go to [`Wallet`](#components) and click on Login button with default user name and password.
+     - Go to [`Wallet`](#components) and click on `Demo Sign-Up Partner` button.
+     - A new window will open with email id and password. 
+     - Click on `Sign In` button and it will redirect to `Wallet` dashboard.
    - Details 
      - A new [DID]((https://w3c.github.io/did-core/)) (identity) gets created for the user.
      - The `Wallet` registers with the [DIDComm Mediator/Router](https://github.com/hyperledger/aries-framework-go/blob/main/docs/didcomm_mediator.md).

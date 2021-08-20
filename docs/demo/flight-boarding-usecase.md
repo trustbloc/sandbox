@@ -20,14 +20,9 @@ Reference and selectively disclose few attributes from Vaccination Certificate.
 
 ## Flow details
 1. Login to Wallet:
-   - Go to [`Wallet`](#components) and click on `Sign In/Register` button.
-   - On the next page, select `Universal Bank` and provide any email id and password. 
-   - Clicking on `Agree` button to accept `Terms of Service` would show the `Wallet` dashboard.
-1. Register a Wallet identity:
-   - Go to `Settings` tab on the sidebar.
-   - Click on `Create Orb Digital Identiy` section.
-   - Select `Key Type`, `Signature Suite` and `Key Puropose` from available options.
-   - Click `Create and Save`.
+   - Go to [`Wallet`](#components) and click on `Demo Sign-Up Partner` button.
+   - A new window will open with email id and password. 
+   - Click on `Sign In` button and it will redirect to `Wallet` dashboard.
 1. Issue Permanent Resident Card:
    - Go to [`Permanent Residence Card Issuer`](#components).
    - Look for `Issue Permnanent Card` button and click on it.

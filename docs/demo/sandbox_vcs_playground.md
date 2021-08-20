@@ -11,21 +11,18 @@
 **: Soon to be deprecated - pre k8s deployment environment
 
 ## Steps
-1. Login to Wallet : Go to [Wallet](#components) and click on `Allow` when a pop-up asks for the permission. This 
-registers the `Wallet` with CHAPI internally.
-2. Register a Wallet identity : 
-   - Go to `Settings` tab on the sidebar.
-   - Click on `Create Orb Digital Identiy` section.
-   - Select `Key Type`, `Signature Suite` and `Key Puropose` from available options.
-   - Click `Create and Save`.
-3. Issue a Credential : Go to [Demo Issuer](#components), click on  `Issue Permanent Residence Card` in `Issue Local Credentials` 
-section, select `TrustBloc ED` and click `issue` button. Refer [this](#issuer-options) for more info on issuer profiles and action.
-4. Login to the Issuer: With default user email as `john.smith@example.com` and password, click the `Login` button. Consent to 
+1. Login to Wallet:
+   - Go to [`Wallet`](#components) and click on `Demo Sign-Up Partner` button.
+   - A new window will open with email id and password. 
+   - Click on `Sign In` button and it will redirect to `Wallet` dashboard.
+1. Issue a Credential : Go to [Demo Issuer](#components), click on  `Issue Permanent Residence Card` in `Issue Local Credentials` 
+section. Refer [this](#issuer-options) for more info on issuer profiles and action.
+1. Login to the Issuer: With default user email as `john.smith@example.com` and password, click the `Login` button. Consent to 
 sharing the data on next page by clicking `Agree` button.
-5. Authenticate Wallet with Issuer : Click on `Authenticate` button select the registered `wallet`. 
+1. Authenticate Wallet with Issuer : Click on `Authenticate` button select the registered `wallet`. 
 Select a wallet identity (subject DID) and click `Authenticate`. After success, the page displays the verifiable credential (vc).
-6. Store the Credentials in Wallet: Click on `Save your credential`, Give a friendly name and click on `confirm` button.
-7. Verify the Credential : Go to [Demo Verifier](#components) and click on `Apply for Home Loan`. Select the `Permanent Residence Card` vc 
+1. Store the Credentials in Wallet: Click on `Save your credential`, Give a friendly name and click on `confirm` button.
+1. Verify the Credential : Go to [Demo Verifier](#components) and click on `Apply for Home Loan`. Select the `Permanent Residence Card` vc 
 when the Wallet asks for a Credential and click `Share`. The next page should show the verification 
 status of the credential. 
 
