@@ -1,0 +1,180 @@
+<!--
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ -->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta charset="utf-8">
+    <link rel="icon" type="images/x-icon" href="img/logo.png" >
+    <title>Verify Permanent Resident Card</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="author" content="">
+
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss/dist/tailwind.min.css">
+    <!--Replace with your tailwind.css once created-->
+
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+    <style>
+        .gradient {
+            background: linear-gradient(90deg, #2980B9 60%, #2980B9 100%);
+        }
+    </style>
+
+</head>
+
+<body class="leading-normal tracking-normal text-white gradient" style="font-family: 'Source Sans Pro', sans-serif;">
+
+<!--Nav-->
+<div class="pt-12">
+    <nav id="header" class="fixed w-full z-30 top-0 text-white ">
+
+        <div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0">
+
+            <div class="pl-6 flex items-center">
+                <a class="toggleColour text-white no-underline hover:no-underline font-bold text-xl lg:text-2xl"  href="#">
+                    <i class="fa fa-cubes" style="font-size:24px;color:white"></i>
+                    Permanent Resident Card Verifier
+                </a>
+            </div>
+
+            <div class="block lg:hidden pr-4">
+                <button id="nav-toggle" class="flex items-center p-1 text-gray-300 hover:text-gray-900">
+                    <svg class="fill-current h-6 w-6" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/></svg>
+                </button>
+            </div>
+
+            <div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden lg:block mt-2 lg:mt-0 bg-white lg:bg-transparent text-black p-4 lg:p-0 z-20" id="nav-content">
+                <ul class="list-reset lg:flex justify-end flex-1 items-center">
+                    <li class="mr-3">
+                        <a class="inline-block text-gray-400 no-underline hover:text-green hover:text-underline py-2 px-4" href="https://github.com/trustbloc/sandbox">
+                            <i class="fa fa-github"></i></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="bg-white border-b py-48" id="verify-prc" style="display:block">
+        <div class="container mx-auto flex  flex-wrap pt-1 pb-4">
+            <h1 class="w-full my-2 text-3xl text-center text-black"> Verify Permanent Resident Card (PRC)</h1>
+
+            <div class="w-full mb-8">
+                <div class="h-1 mx-auto gradient w-full opacity-10 my-0 py-0 rounded-t"></div>
+            </div>
+
+            <form method="post" id="vpForm" action="/verifyPresentation">
+                <input type="hidden" name="vpDataInput" id="vpDataInput">
+                <input type="hidden" name="domain" id="domainInput">
+                <input type="hidden" name="challenge" id="challengeInput">
+            </form>
+
+            <div class="container justify-center mx-auto flex flex-wrap">
+                <div class="w-full h-full fixed top-0 left-0 bg-black opacity-75 z-50" id="loading-screen" style="display:none">
+
+        <span class="text-green-500 opacity-75 top-1/2 my-0 mx-auto block relative w-0 h-0" style="top: 50%;">
+         <i class="fas fa-circle-notch fa-spin fa-5x"></i>
+       </span>
+                </div>
+                <h1 class="w-full my-2 text-5xl text-center text-red-500" id ="msg-board"></h1>
+
+                <div class="grid grid-cols-1 md:grid-cols-1 gap-8 md:gap-8 text-center text-black mt-8">
+                    <div class="bg-white rounded-lg shadow-lg">
+                        <div class="px-4 py-8">
+                            <button id="prCard" onclick="getPRC()" class="h-24"><img src="img/icon-home-1.svg"></button>
+                            <h4 class="mt-10 text-lg font-medium tracking-wide uppercase leading-tight">Click Here</h4>
+                        </div>
+                    </div>
+                </div>
+         </div>
+        </div>
+    </section>
+
+    </section>
+<footer>
+    <section class="container mx-auto text-center py-2 mb-12">
+        <div class="text-lg text-white font py-1">
+            Copyright &copy; <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+        </div>
+    </section>
+</footer>
+
+
+
+<script>
+    var navMenuDiv = document.getElementById("nav-content");
+    var navMenu = document.getElementById("nav-toggle");
+
+    document.onclick = check;
+
+    function check(e){
+        var target = (e && e.target) || (event && event.srcElement);
+
+        //Nav Menu
+        if (!checkParent(target, navMenuDiv)) {
+            // click NOT on the menu
+            if (checkParent(target, navMenu)) {
+                // click on the link
+                if (navMenuDiv.classList.contains("hidden")) {
+                    navMenuDiv.classList.remove("hidden");
+                } else {navMenuDiv.classList.add("hidden");}
+            } else {
+                // click both outside link and outside menu, hide menu
+                navMenuDiv.classList.add("hidden");
+            }
+        }
+    }
+
+    function checkParent(t, elm) {
+        while(t.parentNode) {
+            if( t == elm ) {return true;}
+            t = t.parentNode;
+        }
+        return false;
+    }
+</script>
+
+<script>
+    installHandler()
+        .catch(e => console.error('Error in installHandler:', e));
+
+    async function installHandler() {
+        console.log('Loading polyfill...');
+        try {
+            await credentialHandlerPolyfill.loadOnce();
+        } catch (e) {
+            console.error('Error in loadOnce:', e);
+        }
+    }
+
+    async function getPRC() {
+        console.log("Receiving presentation from wallet")
+        axios({
+            method: "GET",
+            url: "/oauth2/request?flow=prc&demoType=waci&scope=driver_license:local"
+        }).then(
+            resp => {window.location.href = resp.data.request},
+            err => console.error(err)
+        )
+    }
+
+</script>
+</body>
+</html>
+
+

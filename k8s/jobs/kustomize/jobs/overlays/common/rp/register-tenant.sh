@@ -15,6 +15,7 @@ chmod +x /usr/local/bin/kubectl
 rpAdapterURL=https://adapter-rp.||DOMAIN||/relyingparties
 callbackURL=https://demo-rp.||DOMAIN||/oauth2/callback
 
+# begin - register non-waci tenant at adapter-rp
 registerRPTenant() {
     n=0
 
@@ -67,6 +68,62 @@ requiresBlindedRoute=$(echo $registration | jq -r .requiresBlindedRoute)
 
 echo "RP Tenant ClientID=$clientID Callback=$callbackURL Scopes=$scopes PublicDID=$publicDID requiresBlindedRoute=$requiresBlindedRoute"
 echo ""
+# end - register non-waci tenant at adapter-rp
+
+# begin - register waci tenant at adapter-rp
+registerWACIRPTenant() {
+    n=0
+
+    # TODO implement a smart healthcheck on RP Adapter: https://github.com/trustbloc/edge-adapter/issues/134
+    maxAttempts=60
+
+    until [ $n -ge $maxAttempts ]
+    do
+        response=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" \
+        --header "Content-Type: application/json" \
+        --request POST \
+        --data '{"label": "demo-rp.||DOMAIN||", "callback": "'$callbackURL'", "scopes": ["credit_card_stmt:remote","driver_license:local","credit_score:remote","driver_license_evidence:remote"], "supportsWACI": true}' \
+        --insecure $rpAdapterURL)
+
+        code=${response//*RESPONSE_CODE=/}
+
+        if [[ $code -eq 201 ]]
+        then
+            echo "${response}"
+            break
+        fi
+
+        n=$((n+1))
+        if [ $n -eq $maxAttempts ]
+        then
+            echo "Failed to register WACI RP Tenant: $response"
+            break
+        fi
+        sleep 5
+    done
+}
+
+echo "Registering WACI RP Adapter tenant at "$rpAdapterURL
+result=$(registerWACIRPTenant)
+registration=${result//RESPONSE_CODE*/}
+code=${result//*RESPONSE_CODE=/}
+if [ $code -ne 201 ]
+then
+    echo "Failed to register RP Tenant!"
+    echo "   HTTP STATUS CODE: $code"
+    echo "   HTTP RESPONSE: $registration"
+    exit 1
+fi
+
+waciClientID=$(echo $registration | jq -r .clientID)
+waciClientSecret=$(echo $registration | jq -r .clientSecret)
+waciPublicDID=$(echo $registration | jq -r .publicDID)
+waciScopes=$(echo $registration | jq -r .scopes)
+supportsWACI=$(echo $registration | jq -r .supportsWACI)
+
+echo "WACI RP Tenant ClientID=$clientID Callback=$callbackURL Scopes=$scopes PublicDID=$publicDID supportsWACI=$requiresBlindedRoute"
+echo ""
+# end - register waci tenant at adapter-rp
 
 echo
 config_map_name=$(kubectl get cm  -l component=rp,group=demo  -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep rp-env)
@@ -84,6 +141,11 @@ done
 
 grep -q '^RP_OIDC_CLIENTID' ${config_map_env_file} &&  sed -i "s/^RP_OIDC_CLIENTID.*/RP_OIDC_CLIENTID=${clientID}/" ${config_map_env_file} || echo "RP_OIDC_CLIENTID=${clientID}" >> ${config_map_env_file}
 grep -q '^RP_OIDC_CLIENTSECRET' ${config_map_env_file} &&  sed -i "s/^RP_OIDC_CLIENTSECRET.*/RP_OIDC_CLIENTSECRET=${clientSecret}/" ${config_map_env_file} || echo "RP_OIDC_CLIENTSECRET=${clientSecret}" >> ${config_map_env_file}
+
+grep -q '^RP_WACI_OIDC_CLIENTID' ${config_map_env_file} &&  sed -i "s/^RP_WACI_OIDC_CLIENTID.*/RP_WACI_OIDC_CLIENTID=${clientID}/" ${config_map_env_file} || echo "RP_WACI_OIDC_CLIENTID=${clientID}" >> ${config_map_env_file}
+grep -q '^RP_WACI_OIDC_CLIENTSECRET' ${config_map_env_file} &&  sed -i "s/^RP_WACI_OIDC_CLIENTSECRET.*/RP_WACI_OIDC_CLIENTSECRET=${clientSecret}/" ${config_map_env_file} || echo "RP_WACI_OIDC_CLIENTSECRET=${clientSecret}" >> ${config_map_env_file}
+
+
 
 echo "mutating configMap ${config_map_name}"
 kubectl create cm ${config_map_name} --dry-run=client --from-env-file=${config_map_env_file} -o yaml > ${config_map}

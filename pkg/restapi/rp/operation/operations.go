@@ -39,8 +39,10 @@ const (
 	verifyPresentationPath = "/verify/presentation"
 
 	// api path params
-	scopeQueryParam = "scope"
-	flowQueryParam  = "flow"
+	scopeQueryParam    = "scope"
+	flowQueryParam     = "flow"
+	demoTypeQueryParam = "demoType"
+
 	// edge-service verifier endpoints
 	verifyPresentationURLFormat = "/%s" + "/verifier/presentations/verify"
 
@@ -51,6 +53,7 @@ const (
 
 	transientStoreName = "rp-rest-transient"
 	flowTypeCookie     = "flowType"
+	waciDemoType       = "waci"
 )
 
 var logger = log.New("sandbox-rp-restapi")
@@ -82,6 +85,7 @@ type Operation struct {
 	transientStore storage.Store
 	tlsConfig      *tls.Config
 	oidcClient     oidcClient
+	waciOIDCClient oidcClient
 }
 
 // Config defines configuration for rp operations
@@ -96,6 +100,10 @@ type Config struct {
 	OIDCClientSecret       string
 	OIDCCallbackURL        string
 	TransientStoreProvider storage.Provider
+	WACIOIDCProviderURL    string
+	WACIOIDCClientID       string
+	WACIOIDCClientSecret   string
+	WACIOIDCCallbackURL    string
 }
 
 // vc struct used to return vc data to html
@@ -127,6 +135,15 @@ func New(config *Config) (*Operation, error) {
 		OIDCClientID:     config.OIDCClientID,
 		OIDCClientSecret: config.OIDCClientSecret, OIDCCallbackURL: config.OIDCCallbackURL,
 		OIDCProviderURL: config.OIDCProviderURL, TLSConfig: config.TLSConfig,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create oidc client : %w", err)
+	}
+
+	svc.waciOIDCClient, err = oidcclient.New(&oidcclient.Config{
+		OIDCClientID:     config.WACIOIDCClientID,
+		OIDCClientSecret: config.WACIOIDCClientSecret, OIDCCallbackURL: config.WACIOIDCCallbackURL,
+		OIDCProviderURL: config.WACIOIDCProviderURL, TLSConfig: config.TLSConfig,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create oidc client : %w", err)
@@ -237,7 +254,7 @@ func (c *Operation) verifyVP(w http.ResponseWriter, r *http.Request) {
 	c.verify(req, inputData, c.vpHTML, w, r)
 }
 
-func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) {
+func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) { // nolint: funlen
 	scope := r.URL.Query().Get(scopeQueryParam)
 	if scope == "" {
 		c.writeErrorResponse(w, http.StatusBadRequest, "missing scope")
@@ -252,10 +269,18 @@ func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	demoType := r.URL.Query().Get(demoTypeQueryParam)
+
 	// TODO validate scope
 	state := uuid.New().String()
 
-	redirectURL, err := c.oidcClient.CreateOIDCRequest(state, scope)
+	adapterOIDCClient := c.oidcClient
+
+	if demoType == waciDemoType {
+		adapterOIDCClient = c.waciOIDCClient
+	}
+
+	redirectURL, err := adapterOIDCClient.CreateOIDCRequest(state, scope)
 	if err != nil {
 		c.writeErrorResponse(w,
 			http.StatusInternalServerError, fmt.Sprintf("failed to create oidc request : %s", err))
@@ -273,7 +298,7 @@ func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.transientStore.Put(state, []byte(state))
+	err = c.transientStore.Put(state, []byte(demoType))
 	if err != nil {
 		c.writeErrorResponse(w,
 			http.StatusInternalServerError, fmt.Sprintf("failed to write state to transient store : %s", err))
@@ -319,7 +344,7 @@ func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = c.transientStore.Get(state)
+	demoType, err := c.transientStore.Get(state)
 	if errors.Is(err, storage.ErrDataNotFound) {
 		logger.Errorf("invalid state parameter")
 		c.didcommDemoResult(w, "invalid state parameter", "")
@@ -334,7 +359,12 @@ func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := c.oidcClient.HandleOIDCCallback(r.Context(), code)
+	adapterOIDCClient := c.oidcClient
+	if string(demoType) == waciDemoType {
+		adapterOIDCClient = c.waciOIDCClient
+	}
+
+	data, err := adapterOIDCClient.HandleOIDCCallback(r.Context(), code)
 	if err != nil {
 		logger.Errorf("failed to handle oidc callback : %s", err)
 		c.didcommDemoResult(w, fmt.Sprintf("failed to handle oidc callback: %s", err), "")

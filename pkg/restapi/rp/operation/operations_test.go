@@ -228,6 +228,26 @@ func TestCreateOIDCRequest(t *testing.T) {
 		require.Equal(t, "request", result.Request)
 	})
 
+	t.Run("returns waci oidc request", func(t *testing.T) {
+		const scope = "CreditCardStatement"
+		const flowType = "CreditCard"
+		config, cleanup := config(t)
+		defer cleanup()
+		svc, err := New(config)
+		require.NoError(t, err)
+		svc.waciOIDCClient = &mockOIDCClient{createOIDCRequest: "request"}
+		w := httptest.NewRecorder()
+		svc.createOIDCRequest(w, httptest.NewRequest(http.MethodGet,
+			fmt.Sprintf("http://example.com/oauth2/request?scope=%s&flow=%s&demoType=%s",
+				scope, flowType, waciDemoType), nil))
+		require.Equal(t, http.StatusOK, w.Code)
+		require.Equal(t, http.StatusOK, w.Code)
+		result := &createOIDCRequestResponse{}
+		err = json.NewDecoder(w.Body).Decode(result)
+		require.NoError(t, err)
+		require.Equal(t, "request", result.Request)
+	})
+
 	t.Run("failed to create oidc request", func(t *testing.T) {
 		const scope = "CreditCardStatement"
 		const flowType = "CreditCard"
@@ -561,6 +581,10 @@ func config(t *testing.T) (*Config, func()) {
 			OIDCClientID:           uuid.New().String(),
 			OIDCClientSecret:       uuid.New().String(),
 			OIDCCallbackURL:        "http://test.com",
+			WACIOIDCProviderURL:    path,
+			WACIOIDCClientID:       uuid.New().String(),
+			WACIOIDCClientSecret:   uuid.New().String(),
+			WACIOIDCCallbackURL:    "http://test.com",
 			TransientStoreProvider: memstore.NewProvider(),
 			VPHTML:                 file,
 			DIDCOMMVPHTML:          file,

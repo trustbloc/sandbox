@@ -56,6 +56,7 @@ func config() (*operation.Config, func()) {
 
 	return &operation.Config{
 		OIDCProviderURL:        path,
+		WACIOIDCProviderURL:    path,
 		TransientStoreProvider: mem.NewProvider(),
 	}, cleanup
 }
