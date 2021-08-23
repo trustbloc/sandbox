@@ -82,7 +82,7 @@ registerWACIRPTenant() {
         response=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" \
         --header "Content-Type: application/json" \
         --request POST \
-        --data '{"label": "demo-rp.||DOMAIN||", "callback": "'$callbackURL'", "scopes": ["credit_card_stmt:remote","driver_license:local","credit_score:remote","driver_license_evidence:remote"], "supportsWACI": true}' \
+        --data '{"label": "demo-rp.||DOMAIN||", "callback": "'$callbackURL'", "scopes": ["prc:local","driver_license:local"], "supportsWACI": true}' \
         --insecure $rpAdapterURL)
 
         code=${response//*RESPONSE_CODE=/}
