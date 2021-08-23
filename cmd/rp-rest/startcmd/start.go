@@ -83,12 +83,35 @@ const (
 		" Alternatively, this can be set with the following environment variable: " + oidcCallbackURLEnvKey
 	oidcCallbackURLEnvKey = "RP_OIDC_CALLBACK"
 
+	// OIDC flags
+	waciOIDCProviderURLFlagName  = "waci-oidc-opurl"
+	waciOIDCProviderURLFlagUsage = "URL for the OIDC provider." +
+		" Alternatively, this can be set with the following environment variable: " + waciOIDCProviderURLEnvKey
+	waciOIDCProviderURLEnvKey = "RP_WACI_OIDC_OPURL"
+
+	waciOIDCClientIDFlagName  = "waci-oidc-clientid"
+	waciOIDCClientIDFlagUsage = "OAuth2 client_id for OIDC." +
+		" Alternatively, this can be set with the following environment variable: " + waciOIDCClientIDEnvKey
+	waciOIDCClientIDEnvKey = "RP_WACI_OIDC_CLIENTID"
+
+	waciOIDCClientSecretFlagName  = "waci-oidc-clientsecret" //nolint:gosec
+	waciOIDCClientSecretFlagUsage = "OAuth2 client secret for OIDC." +
+		" Alternatively, this can be set with the following environment variable: " + waciOIDCClientSecretEnvKey
+	waciOIDCClientSecretEnvKey = "RP_WACI_OIDC_CLIENTSECRET" //nolint:gosec
+
+	waciOIDCCallbackURLFlagName  = "waci-oidc-callback"
+	waciOIDCCallbackURLFlagUsage = "Base URL for the OAuth2 callback endpoints." +
+		" Alternatively, this can be set with the following environment variable: " + waciOIDCCallbackURLEnvKey
+	waciOIDCCallbackURLEnvKey = "RP_WACI_OIDC_CALLBACK"
+
 	tokenLength2 = 2
 )
 
 var logger = log.New("rp-rest")
 
 var getOIDCParametersFunc = getOIDCParameters // nolint: gochecknoglobals
+
+var getWACIOIDCParametersFunc = getWACIOIDCParameters // nolint: gochecknoglobals
 
 type server interface {
 	ListenAndServe(host, certFile, keyFile string, router http.Handler) error
@@ -107,17 +130,18 @@ func (s *HTTPServer) ListenAndServe(host, certFile, keyFile string, router http.
 }
 
 type rpParameters struct {
-	srv               server
-	hostURL           string
-	tlsCertFile       string
-	tlsKeyFile        string
-	vcServiceURL      string
-	tlsSystemCertPool bool
-	tlsCACerts        []string
-	requestTokens     map[string]string
-	logLevel          string
-	oidcParameters    *oidcParameters
-	dbParams          *common.DBParameters
+	srv                server
+	hostURL            string
+	tlsCertFile        string
+	tlsKeyFile         string
+	vcServiceURL       string
+	tlsSystemCertPool  bool
+	tlsCACerts         []string
+	requestTokens      map[string]string
+	logLevel           string
+	oidcParameters     *oidcParameters
+	waciOIDCParameters *oidcParameters
+	dbParams           *common.DBParameters
 }
 
 type oidcParameters struct {
@@ -143,7 +167,7 @@ func GetStartCmd(srv server) *cobra.Command {
 	return startCmd
 }
 
-func createStartCmd(srv server) *cobra.Command {
+func createStartCmd(srv server) *cobra.Command { // nolint: funlen
 	return &cobra.Command{
 		Use:   "start",
 		Short: "Start rp",
@@ -179,23 +203,29 @@ func createStartCmd(srv server) *cobra.Command {
 				return err
 			}
 
+			waciOIDCParams, err := getWACIOIDCParametersFunc(cmd)
+			if err != nil {
+				return err
+			}
+
 			dbParams, err := common.DBParams(cmd)
 			if err != nil {
 				return err
 			}
 
 			parameters := &rpParameters{
-				srv:               srv,
-				hostURL:           strings.TrimSpace(hostURL),
-				tlsCertFile:       tlsConfg.certFile,
-				tlsKeyFile:        tlsConfg.keyFile,
-				vcServiceURL:      vcServiceURL,
-				tlsSystemCertPool: tlsConfg.systemCertPool,
-				tlsCACerts:        tlsConfg.caCerts,
-				requestTokens:     requestTokens,
-				logLevel:          loggingLevel,
-				oidcParameters:    oidcParams,
-				dbParams:          dbParams,
+				srv:                srv,
+				hostURL:            strings.TrimSpace(hostURL),
+				tlsCertFile:        tlsConfg.certFile,
+				tlsKeyFile:         tlsConfg.keyFile,
+				vcServiceURL:       vcServiceURL,
+				tlsSystemCertPool:  tlsConfg.systemCertPool,
+				tlsCACerts:         tlsConfg.caCerts,
+				requestTokens:      requestTokens,
+				logLevel:           loggingLevel,
+				oidcParameters:     oidcParams,
+				waciOIDCParameters: waciOIDCParams,
+				dbParams:           dbParams,
 			}
 
 			return startRP(parameters)
@@ -203,6 +233,7 @@ func createStartCmd(srv server) *cobra.Command {
 	}
 }
 
+// nolint: dupl
 func getOIDCParameters(cmd *cobra.Command) (*oidcParameters, error) {
 	oidcProviderURL, err := cmdutils.GetUserSetVarFromString(cmd, oidcProviderURLFlagName, oidcProviderURLEnvKey, true)
 	if err != nil {
@@ -221,6 +252,39 @@ func getOIDCParameters(cmd *cobra.Command) (*oidcParameters, error) {
 	}
 
 	oidcCallbackURL, err := cmdutils.GetUserSetVarFromString(cmd, oidcCallbackURLFlagName, oidcCallbackURLEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return &oidcParameters{
+		oidcProviderURL:  oidcProviderURL,
+		oidcClientID:     oidcClientID,
+		oidcClientSecret: oidcClientSecret,
+		oidcCallbackURL:  oidcCallbackURL,
+	}, nil
+}
+
+// nolint: dupl
+func getWACIOIDCParameters(cmd *cobra.Command) (*oidcParameters, error) {
+	oidcProviderURL, err := cmdutils.GetUserSetVarFromString(cmd, waciOIDCProviderURLFlagName,
+		waciOIDCProviderURLEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	oidcClientID, err := cmdutils.GetUserSetVarFromString(cmd, waciOIDCClientIDFlagName, waciOIDCClientIDEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	oidcClientSecret, err := cmdutils.GetUserSetVarFromString(
+		cmd, oidcClientSecretFlagName, oidcClientSecretEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	oidcCallbackURL, err := cmdutils.GetUserSetVarFromString(cmd, waciOIDCCallbackURLFlagName,
+		waciOIDCCallbackURLEnvKey, true)
 	if err != nil {
 		return nil, err
 	}
@@ -307,6 +371,10 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(oidcClientIDFlagName, "", "", oidcClientIDFlagUsage)
 	startCmd.Flags().StringP(oidcClientSecretFlagName, "", "", oidcClientSecretFlagUsage)
 	startCmd.Flags().StringP(oidcCallbackURLFlagName, "", "", oidcCallbackURLFlagUsage)
+	startCmd.Flags().StringP(waciOIDCProviderURLFlagName, "", "", waciOIDCProviderURLFlagUsage)
+	startCmd.Flags().StringP(waciOIDCClientIDFlagName, "", "", waciOIDCClientIDFlagUsage)
+	startCmd.Flags().StringP(waciOIDCClientSecretFlagName, "", "", waciOIDCClientSecretFlagUsage)
+	startCmd.Flags().StringP(waciOIDCCallbackURLFlagName, "", "", waciOIDCCallbackURLFlagUsage)
 }
 
 func startRP(parameters *rpParameters) error {
@@ -335,6 +403,10 @@ func startRP(parameters *rpParameters) error {
 		OIDCClientID:           parameters.oidcParameters.oidcClientID,
 		OIDCClientSecret:       parameters.oidcParameters.oidcClientSecret,
 		OIDCCallbackURL:        parameters.oidcParameters.oidcCallbackURL,
+		WACIOIDCProviderURL:    parameters.waciOIDCParameters.oidcProviderURL,
+		WACIOIDCClientID:       parameters.waciOIDCParameters.oidcClientID,
+		WACIOIDCClientSecret:   parameters.waciOIDCParameters.oidcClientSecret,
+		WACIOIDCCallbackURL:    parameters.waciOIDCParameters.oidcCallbackURL,
 	}
 
 	rpService, err := rp.New(cfg)
@@ -394,6 +466,9 @@ func pathPrefix() *mux.Router {
 	})
 	router.PathPrefix("/government").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/government.html")
+	})
+	router.PathPrefix("/prcard").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/verifyprcard.html")
 	})
 
 	return router

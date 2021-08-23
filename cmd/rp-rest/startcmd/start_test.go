@@ -103,6 +103,22 @@ func TestOIDCParam(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestWACIOIDCParam(t *testing.T) {
+	startCmd := GetStartCmd(&mockServer{})
+
+	temp := getWACIOIDCParametersFunc
+	getWACIOIDCParametersFunc = func(cmd *cobra.Command) (*oidcParameters, error) {
+		return nil, fmt.Errorf("oidc param error")
+	}
+
+	defer func() { getWACIOIDCParametersFunc = temp }()
+
+	args := getValidArgs(log.ParseString(log.ERROR), "")
+	startCmd.SetArgs(args)
+
+	err := startCmd.Execute()
+	require.Error(t, err)
+}
 func TestStartCmdValidArgsEnvVar(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
@@ -242,6 +258,10 @@ func getValidArgs(logLevel, oidcProviderURL string) []string {
 		args = append(args, oidcProviderURLArg(oidcProviderURL)...)
 	}
 
+	if oidcProviderURL != "" {
+		args = append(args, waciOIDCProviderURLArg(oidcProviderURL)...)
+	}
+
 	return args
 }
 
@@ -277,6 +297,9 @@ func setEnvVars(t *testing.T, oidcProviderURL string) {
 	require.Nil(t, err)
 
 	err = os.Setenv(oidcProviderURLEnvKey, oidcProviderURL)
+	require.NoError(t, err)
+
+	err = os.Setenv(waciOIDCProviderURLEnvKey, oidcProviderURL)
 	require.NoError(t, err)
 
 	err = os.Setenv(common.DatabaseURLEnvKey, "mem://test")
@@ -337,6 +360,10 @@ func logLevelArg(logLevel string) []string {
 
 func oidcProviderURLArg(oidcProviderURL string) []string {
 	return []string{flag + oidcProviderURLFlagName, oidcProviderURL}
+}
+
+func waciOIDCProviderURLArg(oidcProviderURL string) []string {
+	return []string{flag + waciOIDCProviderURLFlagName, oidcProviderURL}
 }
 
 func oidcClientIDArg() []string {
