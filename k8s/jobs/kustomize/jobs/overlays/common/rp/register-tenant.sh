@@ -142,8 +142,8 @@ done
 grep -q '^RP_OIDC_CLIENTID' ${config_map_env_file} &&  sed -i "s/^RP_OIDC_CLIENTID.*/RP_OIDC_CLIENTID=${clientID}/" ${config_map_env_file} || echo "RP_OIDC_CLIENTID=${clientID}" >> ${config_map_env_file}
 grep -q '^RP_OIDC_CLIENTSECRET' ${config_map_env_file} &&  sed -i "s/^RP_OIDC_CLIENTSECRET.*/RP_OIDC_CLIENTSECRET=${clientSecret}/" ${config_map_env_file} || echo "RP_OIDC_CLIENTSECRET=${clientSecret}" >> ${config_map_env_file}
 
-grep -q '^RP_WACI_OIDC_CLIENTID' ${config_map_env_file} &&  sed -i "s/^RP_WACI_OIDC_CLIENTID.*/RP_WACI_OIDC_CLIENTID=${clientID}/" ${config_map_env_file} || echo "RP_WACI_OIDC_CLIENTID=${clientID}" >> ${config_map_env_file}
-grep -q '^RP_WACI_OIDC_CLIENTSECRET' ${config_map_env_file} &&  sed -i "s/^RP_WACI_OIDC_CLIENTSECRET.*/RP_WACI_OIDC_CLIENTSECRET=${clientSecret}/" ${config_map_env_file} || echo "RP_WACI_OIDC_CLIENTSECRET=${clientSecret}" >> ${config_map_env_file}
+grep -q '^RP_WACI_OIDC_CLIENTID' ${config_map_env_file} &&  sed -i "s/^RP_WACI_OIDC_CLIENTID.*/RP_WACI_OIDC_CLIENTID=${waciClientID}/" ${config_map_env_file} || echo "RP_WACI_OIDC_CLIENTID=${waciClientID}" >> ${config_map_env_file}
+grep -q '^RP_WACI_OIDC_CLIENTSECRET' ${config_map_env_file} &&  sed -i "s/^RP_WACI_OIDC_CLIENTSECRET.*/RP_WACI_OIDC_CLIENTSECRET=${waciClientSecret}/" ${config_map_env_file} || echo "RP_WACI_OIDC_CLIENTSECRET=${waciClientSecret}" >> ${config_map_env_file}
 
 
 
