@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	jsonldcontextrest "github.com/hyperledger/aries-framework-go/pkg/controller/rest/jsonld/context"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/hyperledger/aries-framework-go/spi/storage"
@@ -100,26 +99,25 @@ type oidcClient interface {
 
 // Operation defines handlers for authorization service
 type Operation struct {
-	handlers                []Handler
-	tokenIssuer             tokenIssuer
-	tokenResolver           tokenResolver
-	documentLoader          ld.DocumentLoader
-	cmsURL                  string
-	vcsURL                  string
-	receiveVCHTML           string
-	didAuthHTML             string
-	vcHTML                  string
-	didCommHTML             string
-	didCommVpHTML           string
-	httpClient              *http.Client
-	requestTokens           map[string]string
-	issuerAdapterURL        string
-	store                   storage.Store
-	oidcClient              oidcClient
-	homePage                string
-	didcommScopes           map[string]struct{}
-	assuranceScopes         map[string]string
-	addJSONLDContextHandler http.HandlerFunc
+	handlers         []Handler
+	tokenIssuer      tokenIssuer
+	tokenResolver    tokenResolver
+	documentLoader   ld.DocumentLoader
+	cmsURL           string
+	vcsURL           string
+	receiveVCHTML    string
+	didAuthHTML      string
+	vcHTML           string
+	didCommHTML      string
+	didCommVpHTML    string
+	httpClient       *http.Client
+	requestTokens    map[string]string
+	issuerAdapterURL string
+	store            storage.Store
+	oidcClient       oidcClient
+	homePage         string
+	didcommScopes    map[string]struct{}
+	assuranceScopes  map[string]string
 }
 
 // Config defines configuration for issuer operations
@@ -173,30 +171,24 @@ func New(config *Config) (*Operation, error) {
 		return nil, fmt.Errorf("issuer store provider : %w", err)
 	}
 
-	contextOp, err := jsonldcontextrest.New(&storeProvider{config.StoreProvider})
-	if err != nil {
-		return nil, fmt.Errorf("create jsonld context operation: %w", err)
-	}
-
 	svc := &Operation{
-		tokenIssuer:             config.TokenIssuer,
-		tokenResolver:           config.TokenResolver,
-		documentLoader:          config.DocumentLoader,
-		cmsURL:                  config.CMSURL,
-		vcsURL:                  config.VCSURL,
-		didAuthHTML:             config.DIDAuthHTML,
-		receiveVCHTML:           config.ReceiveVCHTML,
-		vcHTML:                  config.VCHTML,
-		didCommHTML:             config.DIDCommHTML,
-		didCommVpHTML:           config.DIDCOMMVPHTML,
-		httpClient:              &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
-		requestTokens:           config.RequestTokens,
-		issuerAdapterURL:        config.IssuerAdapterURL,
-		store:                   store,
-		homePage:                config.OIDCCallbackURL,
-		didcommScopes:           map[string]struct{}{},
-		assuranceScopes:         map[string]string{},
-		addJSONLDContextHandler: contextOp.Add,
+		tokenIssuer:      config.TokenIssuer,
+		tokenResolver:    config.TokenResolver,
+		documentLoader:   config.DocumentLoader,
+		cmsURL:           config.CMSURL,
+		vcsURL:           config.VCSURL,
+		didAuthHTML:      config.DIDAuthHTML,
+		receiveVCHTML:    config.ReceiveVCHTML,
+		vcHTML:           config.VCHTML,
+		didCommHTML:      config.DIDCommHTML,
+		didCommVpHTML:    config.DIDCOMMVPHTML,
+		httpClient:       &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
+		requestTokens:    config.RequestTokens,
+		issuerAdapterURL: config.IssuerAdapterURL,
+		store:            store,
+		homePage:         config.OIDCCallbackURL,
+		didcommScopes:    map[string]struct{}{},
+		assuranceScopes:  map[string]string{},
 	}
 
 	if config.didcommScopes != nil {
@@ -256,9 +248,6 @@ func (c *Operation) registerHandler() {
 		// oidc
 		support.NewHTTPHandler(oauth2GetRequestPath, http.MethodGet, c.createOIDCRequest),
 		support.NewHTTPHandler(oauth2CallbackPath, http.MethodGet, c.handleOIDCCallback),
-
-		// JSON-LD contexts API
-		support.NewHTTPHandler(jsonldcontextrest.AddContextPath, http.MethodPost, c.addJSONLDContextHandler),
 	}
 }
 
@@ -1821,12 +1810,4 @@ type userDataMap struct {
 	ID             string          `json:"id,omitempty"`
 	Data           json.RawMessage `json:"data,omitempty"`
 	AssuranceScope string          `json:"assuranceScope,omitempty"`
-}
-
-type storeProvider struct {
-	storage.Provider
-}
-
-func (p *storeProvider) StorageProvider() storage.Provider {
-	return p
 }

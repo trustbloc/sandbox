@@ -24,10 +24,12 @@ import (
 	"github.com/hyperledger/aries-framework-go/component/storageutil/mem"
 	mockstorage "github.com/hyperledger/aries-framework-go/component/storageutil/mock"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/did"
-	"github.com/hyperledger/aries-framework-go/pkg/doc/jsonld"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/ld"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
+	mockldstore "github.com/hyperledger/aries-framework-go/pkg/mock/ld"
 	vdrmock "github.com/hyperledger/aries-framework-go/pkg/mock/vdr"
+	ldstore "github.com/hyperledger/aries-framework-go/pkg/store/ld"
 	"github.com/hyperledger/aries-framework-go/spi/storage"
 	"github.com/stretchr/testify/require"
 	compclientops "github.com/trustbloc/edge-service/pkg/client/comparator/client/operations"
@@ -46,7 +48,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(&Config{StoreProvider: &mockstorage.Provider{}, ComparatorURL: "http://comp.example.com"})
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 19, len(svc.GetRESTHandlers()))
+		require.Equal(t, 18, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -2558,10 +2560,28 @@ func TestGetUserExtract(t *testing.T) {
 	})
 }
 
-func createTestDocumentLoader(t *testing.T) *jsonld.DocumentLoader {
+type mockLDStoreProvider struct {
+	ContextStore        ldstore.ContextStore
+	RemoteProviderStore ldstore.RemoteProviderStore
+}
+
+func (p *mockLDStoreProvider) JSONLDContextStore() ldstore.ContextStore {
+	return p.ContextStore
+}
+
+func (p *mockLDStoreProvider) JSONLDRemoteProviderStore() ldstore.RemoteProviderStore {
+	return p.RemoteProviderStore
+}
+
+func createTestDocumentLoader(t *testing.T) *ld.DocumentLoader {
 	t.Helper()
 
-	loader, err := jsonld.NewDocumentLoader(mem.NewProvider())
+	ldStore := &mockLDStoreProvider{
+		ContextStore:        mockldstore.NewMockContextStore(),
+		RemoteProviderStore: mockldstore.NewMockRemoteProviderStore(),
+	}
+
+	loader, err := ld.NewDocumentLoader(ldStore)
 	require.NoError(t, err)
 
 	return loader

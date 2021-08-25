@@ -13,7 +13,8 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/hyperledger/aries-framework-go/pkg/doc/jsonld"
+	ldrest "github.com/hyperledger/aries-framework-go/pkg/controller/rest/ld"
+	ldsvc "github.com/hyperledger/aries-framework-go/pkg/ld"
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/restapi/logspec"
@@ -134,6 +135,14 @@ const (
 		" Alternatively, this can be set with the following environment variable: " + oidcCallbackURLEnvKey
 	oidcCallbackURLEnvKey = "ISSUER_OIDC_CALLBACK"
 
+	// remote JSON-LD context provider url
+	contextProviderFlagName  = "context-provider-url"
+	contextProviderEnvKey    = "ISSUER_CONTEXT_PROVIDER_URL"
+	contextProviderFlagUsage = "Remote context provider URL to get JSON-LD contexts from." +
+		" This flag can be repeated, allowing setting up multiple context providers." +
+		" Alternatively, this can be set with the following environment variable (in CSV format): " +
+		contextProviderEnvKey
+
 	tokenLength2 = 2
 )
 
@@ -173,6 +182,7 @@ type issuerParameters struct {
 	logLevel              string
 	dbParameters          *common.DBParameters
 	oidcParameters        *oidcParameters
+	contextProviderURLs   []string
 }
 
 type tlsConfig struct {
@@ -262,6 +272,12 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 				return err
 			}
 
+			contextProviderURLs, err := cmdutils.GetUserSetVarFromArrayString(cmd, contextProviderFlagName,
+				contextProviderEnvKey, true)
+			if err != nil {
+				return err
+			}
+
 			parameters := &issuerParameters{
 				srv:                   srv,
 				hostURL:               strings.TrimSpace(hostURL),
@@ -278,6 +294,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 				logLevel:              loggingLevel,
 				dbParameters:          dbParams,
 				oidcParameters:        oidcParams,
+				contextProviderURLs:   contextProviderURLs,
 			}
 
 			return startIssuer(parameters)
@@ -404,9 +421,11 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(oidcClientIDFlagName, "", "", oidcClientIDFlagUsage)
 	startCmd.Flags().StringP(oidcClientSecretFlagName, "", "", oidcClientSecretFlagUsage)
 	startCmd.Flags().StringP(oidcCallbackURLFlagName, "", "", oidcCallbackURLFlagUsage)
+
+	startCmd.Flags().StringArrayP(contextProviderFlagName, "", []string{}, contextProviderFlagUsage)
 }
 
-func startIssuer(parameters *issuerParameters) error { //nolint:funlen
+func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 	if parameters.logLevel != "" {
 		common.SetDefaultLogLevel(logger, parameters.logLevel)
 	}
@@ -423,7 +442,18 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen
 		return err
 	}
 
-	documentLoader, err := jsonld.NewDocumentLoader(storeProvider)
+	ldStore, err := common.CreateLDStoreProvider(storeProvider)
+	if err != nil {
+		return err
+	}
+
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
+	}
+
+	documentLoader, err := common.CreateJSONLDDocumentLoader(ldStore, httpClient, parameters.contextProviderURLs)
 	if err != nil {
 		return err
 	}
@@ -505,6 +535,11 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen
 
 	healthCheckHandlers := healthCheckService.GetOperations()
 	for _, handler := range healthCheckHandlers {
+		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
+	}
+
+	// handlers for JSON-LD context operations
+	for _, handler := range ldrest.New(ldsvc.New(ldStore)).GetRESTHandlers() {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
 	}
 

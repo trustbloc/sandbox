@@ -14,8 +14,9 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/hyperledger/aries-framework-go/pkg/doc/jsonld"
+	ldrest "github.com/hyperledger/aries-framework-go/pkg/controller/rest/ld"
 	vdrapi "github.com/hyperledger/aries-framework-go/pkg/framework/aries/api/vdr"
+	ldsvc "github.com/hyperledger/aries-framework-go/pkg/ld"
 	vdrpkg "github.com/hyperledger/aries-framework-go/pkg/vdr"
 	"github.com/hyperledger/aries-framework-go/pkg/vdr/httpbinding"
 	"github.com/spf13/cobra"
@@ -102,6 +103,14 @@ const (
 	didResolverURLFlagUsage = "DID Resolver URL."
 	didResolverURLEnvKey    = "ACE_DID_RESOLVER_URL"
 
+	// remote JSON-LD context provider url
+	contextProviderFlagName  = "context-provider-url"
+	contextProviderEnvKey    = "ACE_CONTEXT_PROVIDER_URL"
+	contextProviderFlagUsage = "Remote context provider URL to get JSON-LD contexts from." +
+		" This flag can be repeated, allowing setting up multiple context providers." +
+		" Alternatively, this can be set with the following environment variable (in CSV format): " +
+		contextProviderEnvKey
+
 	tokenLength2 = 2
 )
 
@@ -136,23 +145,24 @@ func (s *HTTPServer) ListenAndServe(host, certFile, keyFile string, router http.
 }
 
 type rpParameters struct {
-	srv                server
-	hostURL            string
-	hostExternalURL    string
-	tlsCertFile        string
-	tlsKeyFile         string
-	tlsSystemCertPool  bool
-	tlsCACerts         []string
-	logLevel           string
-	dbParams           *common.DBParameters
-	modeConf           demoModeConf
-	vaultServerURL     string
-	comparatorURL      string
-	vcIssuerURL        string
-	accountLinkProfile string
-	extractorProfile   string
-	requestTokens      map[string]string
-	didResolverURL     string
+	srv                 server
+	hostURL             string
+	hostExternalURL     string
+	tlsCertFile         string
+	tlsKeyFile          string
+	tlsSystemCertPool   bool
+	tlsCACerts          []string
+	logLevel            string
+	dbParams            *common.DBParameters
+	modeConf            demoModeConf
+	vaultServerURL      string
+	comparatorURL       string
+	vcIssuerURL         string
+	accountLinkProfile  string
+	extractorProfile    string
+	requestTokens       map[string]string
+	didResolverURL      string
+	contextProviderURLs []string
 }
 
 type tlsConfig struct {
@@ -252,24 +262,31 @@ func createStartCmd(srv server) *cobra.Command { //nolint: funlen, gocyclo
 				return err
 			}
 
+			contextProviderURLs, err := cmdutils.GetUserSetVarFromArrayString(cmd, contextProviderFlagName,
+				contextProviderEnvKey, true)
+			if err != nil {
+				return err
+			}
+
 			parameters := &rpParameters{
-				srv:                srv,
-				hostURL:            strings.TrimSpace(hostURL),
-				hostExternalURL:    hostExternalURL,
-				tlsCertFile:        tlsConfg.certFile,
-				tlsKeyFile:         tlsConfg.keyFile,
-				tlsSystemCertPool:  tlsConfg.systemCertPool,
-				tlsCACerts:         tlsConfg.caCerts,
-				logLevel:           loggingLevel,
-				dbParams:           dbParams,
-				modeConf:           demoModeConf,
-				vaultServerURL:     vaultServerURL,
-				comparatorURL:      comparatorURL,
-				vcIssuerURL:        vcIssuerURL,
-				accountLinkProfile: accountLinkProfile,
-				extractorProfile:   extractorProfile,
-				requestTokens:      requestTokens,
-				didResolverURL:     didResolverURL,
+				srv:                 srv,
+				hostURL:             strings.TrimSpace(hostURL),
+				hostExternalURL:     hostExternalURL,
+				tlsCertFile:         tlsConfg.certFile,
+				tlsKeyFile:          tlsConfg.keyFile,
+				tlsSystemCertPool:   tlsConfg.systemCertPool,
+				tlsCACerts:          tlsConfg.caCerts,
+				logLevel:            loggingLevel,
+				dbParams:            dbParams,
+				modeConf:            demoModeConf,
+				vaultServerURL:      vaultServerURL,
+				comparatorURL:       comparatorURL,
+				vcIssuerURL:         vcIssuerURL,
+				accountLinkProfile:  accountLinkProfile,
+				extractorProfile:    extractorProfile,
+				requestTokens:       requestTokens,
+				didResolverURL:      didResolverURL,
+				contextProviderURLs: contextProviderURLs,
 			}
 
 			return startRP(parameters)
@@ -332,9 +349,10 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(didResolverURLFlagName, "", "", didResolverURLFlagUsage)
 	startCmd.Flags().StringArrayP(requestTokensFlagName, "", []string{}, requestTokensFlagUsage)
 	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
+	startCmd.Flags().StringArrayP(contextProviderFlagName, "", []string{}, contextProviderFlagUsage)
 }
 
-func startRP(parameters *rpParameters) error { // nolint: funlen
+func startRP(parameters *rpParameters) error { //nolint:funlen,gocyclo
 	if parameters.logLevel != "" {
 		common.SetDefaultLogLevel(logger, parameters.logLevel)
 	}
@@ -359,7 +377,18 @@ func startRP(parameters *rpParameters) error { // nolint: funlen
 		return err
 	}
 
-	documentLoader, err := jsonld.NewDocumentLoader(storeProvider)
+	ldStore, err := common.CreateLDStoreProvider(storeProvider)
+	if err != nil {
+		return err
+	}
+
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
+	}
+
+	documentLoader, err := common.CreateJSONLDDocumentLoader(ldStore, httpClient, parameters.contextProviderURLs)
 	if err != nil {
 		return err
 	}
@@ -405,6 +434,11 @@ func startRP(parameters *rpParameters) error { // nolint: funlen
 
 	healthCheckHandlers := healthCheckService.GetOperations()
 	for _, handler := range healthCheckHandlers {
+		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
+	}
+
+	// handlers for JSON-LD context operations
+	for _, handler := range ldrest.New(ldsvc.New(ldStore)).GetRESTHandlers() {
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
 	}
 
