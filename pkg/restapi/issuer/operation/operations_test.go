@@ -23,7 +23,10 @@ import (
 	"github.com/gorilla/mux"
 	memstore "github.com/hyperledger/aries-framework-go/component/storageutil/mem"
 	mockstorage "github.com/hyperledger/aries-framework-go/component/storageutil/mock"
-	"github.com/hyperledger/aries-framework-go/pkg/doc/jsonld"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/ld"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/ldcontext"
+	mockldstore "github.com/hyperledger/aries-framework-go/pkg/mock/ld"
+	ldstore "github.com/hyperledger/aries-framework-go/pkg/store/ld"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
@@ -1408,20 +1411,38 @@ func TestOperation_GenerateVC(t *testing.T) {
 	})
 }
 
-func createTestDocumentLoader(t *testing.T) *jsonld.DocumentLoader {
+type mockLDStoreProvider struct {
+	ContextStore        ldstore.ContextStore
+	RemoteProviderStore ldstore.RemoteProviderStore
+}
+
+func (p *mockLDStoreProvider) JSONLDContextStore() ldstore.ContextStore {
+	return p.ContextStore
+}
+
+func (p *mockLDStoreProvider) JSONLDRemoteProviderStore() ldstore.RemoteProviderStore {
+	return p.RemoteProviderStore
+}
+
+func createTestDocumentLoader(t *testing.T) *ld.DocumentLoader {
 	t.Helper()
 
-	loader, err := jsonld.NewDocumentLoader(memstore.NewProvider(),
-		jsonld.WithExtraContexts(
-			jsonld.ContextDocument{
+	ldStore := &mockLDStoreProvider{
+		ContextStore:        mockldstore.NewMockContextStore(),
+		RemoteProviderStore: mockldstore.NewMockRemoteProviderStore(),
+	}
+
+	loader, err := ld.NewDocumentLoader(ldStore,
+		ld.WithExtraContexts(
+			ldcontext.Document{
 				URL:     "https://www.w3.org/ns/odrl.jsonld",
 				Content: odrlContext,
 			},
-			jsonld.ContextDocument{
+			ldcontext.Document{
 				URL:     "https://www.w3.org/2018/credentials/examples/v1",
 				Content: examplesV1Context,
 			},
-			jsonld.ContextDocument{
+			ldcontext.Document{
 				URL:     "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld",
 				Content: examplesExtV1Context,
 			},

@@ -23,7 +23,6 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
-	jsonldcontextrest "github.com/hyperledger/aries-framework-go/pkg/controller/rest/jsonld/context"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	vdrapi "github.com/hyperledger/aries-framework-go/pkg/framework/aries/api/vdr"
@@ -127,28 +126,27 @@ type Handler interface {
 
 // Operation defines handlers.
 type Operation struct {
-	store                   storage.Store
-	userStore               storage.Store
-	userAuthStore           storage.Store
-	handlers                []Handler
-	homePageHTML            string
-	loginHTML               string
-	dashboardHTML           string
-	consentHTML             string
-	accountLinkedHTML       string
-	accountNotLinkedHTML    string
-	httpClient              httpClient
-	vcIssuerURL             string
-	requestTokens           map[string]string
-	accountLinkProfile      string
-	extractorProfile        string
-	hostExternalURL         string
-	vClient                 vaultClient
-	compClient              comparatorClient
-	svcName                 string
-	vdri                    vdrapi.Registry
-	documentLoader          ld.DocumentLoader
-	addJSONLDContextHandler http.HandlerFunc
+	store                storage.Store
+	userStore            storage.Store
+	userAuthStore        storage.Store
+	handlers             []Handler
+	homePageHTML         string
+	loginHTML            string
+	dashboardHTML        string
+	consentHTML          string
+	accountLinkedHTML    string
+	accountNotLinkedHTML string
+	httpClient           httpClient
+	vcIssuerURL          string
+	requestTokens        map[string]string
+	accountLinkProfile   string
+	extractorProfile     string
+	hostExternalURL      string
+	vClient              vaultClient
+	compClient           comparatorClient
+	svcName              string
+	vdri                 vdrapi.Registry
+	documentLoader       ld.DocumentLoader
 }
 
 // Config config.
@@ -174,7 +172,7 @@ type Config struct {
 }
 
 // New returns ace-rp operation instance.
-func New(config *Config) (*Operation, error) { //nolint:funlen
+func New(config *Config) (*Operation, error) {
 	store, err := getStore(config.StoreProvider, txnStoreName, nil)
 	if err != nil {
 		return nil, fmt.Errorf("ace-rp store provider : %w", err)
@@ -207,33 +205,27 @@ func New(config *Config) (*Operation, error) { //nolint:funlen
 		httpClient,
 	)
 
-	contextOp, err := jsonldcontextrest.New(&storeProvider{config.StoreProvider})
-	if err != nil {
-		return nil, fmt.Errorf("create jsonld context operation: %w", err)
-	}
-
 	op := &Operation{
-		store:                   store,
-		userStore:               userStore,
-		userAuthStore:           userAuthStore,
-		homePageHTML:            config.HomePageHTML,
-		loginHTML:               config.LoginHTML,
-		dashboardHTML:           config.DashboardHTML,
-		consentHTML:             config.ConsentHTML,
-		httpClient:              httpClient,
-		accountLinkedHTML:       config.AccountLinkedHTML,
-		accountNotLinkedHTML:    config.AccountNotLinkedHTML,
-		vcIssuerURL:             config.VCIssuerURL,
-		accountLinkProfile:      config.AccountLinkProfile,
-		extractorProfile:        config.ExtractorProfile,
-		hostExternalURL:         config.HostExternalURL,
-		requestTokens:           config.RequestTokens,
-		vClient:                 vaultclient.New(config.VaultServerURL, vaultclient.WithHTTPClient(httpClient)),
-		compClient:              compclient.New(transport, strfmt.Default).Operations,
-		svcName:                 config.SvcName,
-		vdri:                    config.VDRI,
-		documentLoader:          config.DocumentLoader,
-		addJSONLDContextHandler: contextOp.Add,
+		store:                store,
+		userStore:            userStore,
+		userAuthStore:        userAuthStore,
+		homePageHTML:         config.HomePageHTML,
+		loginHTML:            config.LoginHTML,
+		dashboardHTML:        config.DashboardHTML,
+		consentHTML:          config.ConsentHTML,
+		httpClient:           httpClient,
+		accountLinkedHTML:    config.AccountLinkedHTML,
+		accountNotLinkedHTML: config.AccountNotLinkedHTML,
+		vcIssuerURL:          config.VCIssuerURL,
+		accountLinkProfile:   config.AccountLinkProfile,
+		extractorProfile:     config.ExtractorProfile,
+		hostExternalURL:      config.HostExternalURL,
+		requestTokens:        config.RequestTokens,
+		vClient:              vaultclient.New(config.VaultServerURL, vaultclient.WithHTTPClient(httpClient)),
+		compClient:           compclient.New(transport, strfmt.Default).Operations,
+		svcName:              config.SvcName,
+		vdri:                 config.VDRI,
+		documentLoader:       config.DocumentLoader,
 	}
 
 	op.registerHandler()
@@ -264,9 +256,6 @@ func (o *Operation) registerHandler() {
 
 		// TODO find a way to handle this in start.go
 		support.NewHTTPHandler("/showlogin", http.MethodGet, o.showlogin),
-
-		// JSON-LD contexts API
-		support.NewHTTPHandler(jsonldcontextrest.AddContextPath, http.MethodPost, o.addJSONLDContextHandler),
 	}
 }
 
@@ -1612,12 +1601,4 @@ func resolveDID(vdrRegistry vdrapi.Registry, did string, maxRetry int) error {
 	}
 
 	return nil
-}
-
-type storeProvider struct {
-	storage.Provider
-}
-
-func (p *storeProvider) StorageProvider() storage.Provider {
-	return p
 }

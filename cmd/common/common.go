@@ -8,6 +8,7 @@ package common
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -16,7 +17,11 @@ import (
 	"github.com/hyperledger/aries-framework-go-ext/component/storage/couchdb"
 	"github.com/hyperledger/aries-framework-go-ext/component/storage/mysql"
 	"github.com/hyperledger/aries-framework-go/component/storageutil/mem"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/ld"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/ldcontext/remote"
+	ldstore "github.com/hyperledger/aries-framework-go/pkg/store/ld"
 	"github.com/hyperledger/aries-framework-go/spi/storage"
+	jsonld "github.com/piprate/json-gold/ld"
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
 	cmdutils "github.com/trustbloc/edge-core/pkg/utils/cmd"
@@ -194,4 +199,68 @@ func InitEdgeStore(params *DBParameters, logger log.Logger) (storage.Provider, e
 	}
 
 	return store, nil
+}
+
+// LDStoreProvider provides stores for JSON-LD contexts and remote providers.
+type LDStoreProvider struct {
+	ContextStore        ldstore.ContextStore
+	RemoteProviderStore ldstore.RemoteProviderStore
+}
+
+// JSONLDContextStore returns a JSON-LD context store.
+func (p *LDStoreProvider) JSONLDContextStore() ldstore.ContextStore {
+	return p.ContextStore
+}
+
+// JSONLDRemoteProviderStore returns a JSON-LD remote provider store.
+func (p *LDStoreProvider) JSONLDRemoteProviderStore() ldstore.RemoteProviderStore {
+	return p.RemoteProviderStore
+}
+
+// CreateLDStoreProvider creates a new LDStoreProvider.
+func CreateLDStoreProvider(storageProvider storage.Provider) (*LDStoreProvider, error) {
+	contextStore, err := ldstore.NewContextStore(storageProvider)
+	if err != nil {
+		return nil, fmt.Errorf("create JSON-LD context store: %w", err)
+	}
+
+	remoteProviderStore, err := ldstore.NewRemoteProviderStore(storageProvider)
+	if err != nil {
+		return nil, fmt.Errorf("create remote provider store: %w", err)
+	}
+
+	return &LDStoreProvider{
+		ContextStore:        contextStore,
+		RemoteProviderStore: remoteProviderStore,
+	}, nil
+}
+
+type ldStoreProvider interface {
+	JSONLDContextStore() ldstore.ContextStore
+	JSONLDRemoteProviderStore() ldstore.RemoteProviderStore
+}
+
+type httpClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+// CreateJSONLDDocumentLoader creates a new JSON-LD document loader.
+func CreateJSONLDDocumentLoader(ldStore ldStoreProvider, client httpClient,
+	providerURLs []string) (jsonld.DocumentLoader, error) {
+	var loaderOpts []ld.DocumentLoaderOpts
+
+	for _, u := range providerURLs {
+		loaderOpts = append(loaderOpts,
+			ld.WithRemoteProvider(
+				remote.NewProvider(u, remote.WithHTTPClient(client)),
+			),
+		)
+	}
+
+	loader, err := ld.NewDocumentLoader(ldStore, loaderOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("new document loader: %w", err)
+	}
+
+	return loader, nil
 }

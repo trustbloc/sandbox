@@ -48,3 +48,4 @@ vault-server
 verifier-vcs
 wallet
 wallet-support
+static-file-server
