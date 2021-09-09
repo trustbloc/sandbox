@@ -278,7 +278,7 @@ func getWACIOIDCParameters(cmd *cobra.Command) (*oidcParameters, error) {
 	}
 
 	oidcClientSecret, err := cmdutils.GetUserSetVarFromString(
-		cmd, oidcClientSecretFlagName, oidcClientSecretEnvKey, true)
+		cmd, waciOIDCClientSecretFlagName, waciOIDCClientSecretEnvKey, true)
 	if err != nil {
 		return nil, err
 	}
