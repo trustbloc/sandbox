@@ -43,4 +43,4 @@ kind: Kustomization
 images:
 - name: sandbox-rp
   newName: ghcr.io/trustbloc-cicd/sandbox-rp
-  newTag: 0.1.7-snapshot-9b403fd
+  newTag: 0.1.7-snapshot-637b070
