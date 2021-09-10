@@ -208,7 +208,13 @@ SPDX-License-Identifier: Apache-2.0
             "description" :  'Card Description',
             "paymentDueDate" :'Payment Due Date',
             "paymentStatus" : 'Payment Status',
-            "url":'Credit Company URL'
+            "url":'Credit Company URL',
+            "familyName":'Family Name',
+            "givenName":'Given Name',
+            "birthCountry":'Birth Country',
+            "residentSince":'Residence Since',
+            "lprCategory":'LPR Category',
+            "lprNumber":'LPR Number',
         };
         return keys[name];
     }
@@ -234,6 +240,11 @@ SPDX-License-Identifier: Apache-2.0
                 replaceKeys(flattened)
                 createClaimTable(flattened)
                 document.getElementById("proceedClick").href = '/govsuccess';
+            } else if (flowType === "prc") {
+                flattened = json['_claim_sources'][key]['claims']
+                replaceKeys(flattened)
+                createClaimTable(flattened)
+                document.getElementById("proceedClick").href = '/prcsuccess';
             } else {
                 flattened = json['_claim_sources'][key]['claims']
                 replaceKeys(flattened)
