@@ -82,7 +82,7 @@ registerWACIRPTenant() {
         response=$(curl -k -o - -s -w "RESPONSE_CODE=%{response_code}" \
         --header "Content-Type: application/json" \
         --request POST \
-        --data '{"label": "demo-rp.||DOMAIN||", "callback": "'$callbackURL'", "scopes": ["prc:local","driver_license:local"], "supportsWACI": true}' \
+        --data '{"label": "demo-rp.||DOMAIN||", "callback": "'$callbackURL'", "scopes": ["prc:local","driver_license:local"], "supportsWACI": true, "linkedWalletURL":"https://wallet.||DOMAIN||/waci"}' \
         --insecure $rpAdapterURL)
 
         code=${response//*RESPONSE_CODE=/}
@@ -120,8 +120,10 @@ waciClientSecret=$(echo $registration | jq -r .clientSecret)
 waciPublicDID=$(echo $registration | jq -r .publicDID)
 waciScopes=$(echo $registration | jq -r .scopes)
 supportsWACI=$(echo $registration | jq -r .supportsWACI)
+linkedWalletURL=$(echo $registration | jq -r .linkedWalletURL)
 
-echo "WACI RP Tenant ClientID=$clientID Callback=$callbackURL Scopes=$scopes PublicDID=$publicDID supportsWACI=$requiresBlindedRoute"
+
+echo "WACI RP Tenant ClientID=$clientID Callback=$callbackURL Scopes=$scopes PublicDID=$publicDID supportsWACI=$supportsWACI linkedWalletURL=$linkedWalletURL"
 echo ""
 # end - register waci tenant at adapter-rp
 
