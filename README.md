@@ -27,7 +27,7 @@ by the [TrustBloc](https://github.com/trustbloc) projects.
   - [Flight Boarding use case](docs/demo/flight-boarding-usecase.md)
 - [TrustBloc Adapter](docs/demo/sandbox_adapter_playground.md) : [CHAPI](https://w3c-ccg.github.io/credential-handler-api/)/[WACI-PEx](https://identity.foundation/waci-presentation-exchange/) + DIDComm
   - [New Bank Account use case](docs/demo/new-bank-account-usecase.md) (CHAPI + DIDComm)
-  - [Permanent Resident Card Verification](docs/demo/prc-verfication-usecase.md) (WACI-PEx + DIDComm)
+  - [Permanent Resident Card Verification](docs/demo/prc-verification-usecase.md) (WACI-PEx + DIDComm)
 - [TrustBloc Anonymous Comparator and Extractor(ACE)](docs/demo/sandbox_ace_playground.md)
 
 ## Components
