@@ -123,7 +123,7 @@ supportsWACI=$(echo $registration | jq -r .supportsWACI)
 linkedWalletURL=$(echo $registration | jq -r .linkedWalletURL)
 
 
-echo "WACI RP Tenant ClientID=$clientID Callback=$callbackURL Scopes=$scopes PublicDID=$publicDID supportsWACI=$supportsWACI linkedWalletURL=$linkedWalletURL"
+echo "WACI RP Tenant ClientID=$waciClientID Callback=$callbackURL Scopes=$waciScopes PublicDID=$waciPublicDID supportsWACI=$supportsWACI linkedWalletURL=$linkedWalletURL"
 echo ""
 # end - register waci tenant at adapter-rp
 
