@@ -16,7 +16,6 @@ Reference and selectively disclose few attributes from Vaccination Certificate.
 | Taylor Chartered Flight- Checkin/Boarding (Verifier) | [Click Here](https://demo-rp.sandbox.trustbloc.dev/flightcheckin)      | [Click Here](https://demo-rp.stg.trustbloc.dev/flightcheckin)      | [Click Here](https://demo-rp.dev.trustbloc.dev/flightcheckin)      | [Click Here](https://demo-rp.local.trustbloc.dev/flightcheckin)      |
 
 *: Refer [here](./../../README.md#deployment) to run the local k8s demo.
-**: Soon to be deprecated - pre k8s deployment environment
 
 ## Flow details
 1. Login to Wallet:
