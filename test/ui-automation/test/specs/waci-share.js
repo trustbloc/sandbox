@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 const {chapi, wallet, issuer, verifier} = require('../helpers');
 
-describe("TrustBloc - WACI Share flow", () => {
+describe("TrustBloc - Duty Free Shop (WACI Share flow)", () => {
     const ctx = {
         email: `ui-aut-${new Date().getTime()}@test.com`,
     };
@@ -81,9 +81,9 @@ describe("TrustBloc - WACI Share flow", () => {
         })
     })
 
-    it('Verify Permanent Resident Card (WACI Share - Redirect)', async function () {
+    it('Present Permanent Resident Card at Duty Free Shop (WACI Share - Redirect)', async function () {
         // 1. Navigate prc verifier
-        await browser.navigateTo(browser.config.prcWACI);
+        await browser.navigateTo(browser.config.dutyFreeShop);
 
         // 2. connect to RP adapter
         const getCredentialButton = await $('#prCard');

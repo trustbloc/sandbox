@@ -26,5 +26,5 @@ exports.config = {
     "prcURL": "https://demo-issuer" + domain + "/applygreencard",
     "flightBookingURL": "https://demo-issuer" + domain + "/flightbooking",
     "flightBoardingURL": "https://demo-rp" + domain + "/flightcheckin",
-    "prcWACI": "https://demo-rp" + domain + "/prcard",
+    "dutyFreeShop": "https://demo-rp" + domain + "/dutyfree",
 };
