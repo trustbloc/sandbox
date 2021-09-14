@@ -470,7 +470,7 @@ func pathPrefix() *mux.Router {
 	router.PathPrefix("/dutyfree").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/dutyfree.html")
 	})
-	router.PathPrefix("/dutyfreesuccess").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router.PathPrefix("/prcsuccess").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/dutyfreesuccess.html")
 	})
 
