@@ -83,7 +83,7 @@ describe("TrustBloc - WACI Share flow", () => {
 
     it('Verify Permanent Resident Card (WACI Share - Redirect)', async function () {
         // 1. Navigate prc verifier
-        await browser.newWindow(browser.config.prcWACI);
+        await browser.navigateTo(browser.config.prcWACI);
 
         // 2. connect to RP adapter
         const getCredentialButton = await $('#prCard');
