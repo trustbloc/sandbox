@@ -437,7 +437,7 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 
 	tlsConfig := &tls.Config{RootCAs: rootCAs, MinVersion: tls.VersionTLS12}
 
-	storeProvider, err := common.InitEdgeStore(parameters.dbParameters, logger)
+	storeProvider, err := common.InitStore(parameters.dbParameters, logger)
 	if err != nil {
 		return err
 	}
