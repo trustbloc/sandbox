@@ -12,7 +12,7 @@ const domain = ".dev.trustbloc.dev"
 
 exports.config = {
     ...config,
-    "walletName": "wallet" + domain,
+    "walletName": "Trustbloc Wallet",
     "walletURL": "https://wallet" + domain,
     "issuerURL": "https://demo-issuer" + domain,
     "verifierURL": "https://demo-rp" + domain,
