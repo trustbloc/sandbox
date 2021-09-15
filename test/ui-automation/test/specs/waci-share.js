@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 'use strict';
 
-const {chapi, wallet, issuer, verifier} = require('../helpers');
+const {chapi, wallet} = require('../helpers');
 
 describe("TrustBloc - Duty Free Shop (WACI Share flow)", () => {
     const ctx = {
@@ -91,12 +91,13 @@ describe("TrustBloc - Duty Free Shop (WACI Share flow)", () => {
         await getCredentialButton.click();
 
         // 3. use redirect flow
-        const driversLicenseVC = await $('a*=Click here to redirect to your wallet');
-        await driversLicenseVC.waitForClickable();
-        await driversLicenseVC.click()
+        const redirectMsg = await $('a*=Click here to redirect to your wallet');
+        await redirectMsg.waitForClickable();
+        await redirectMsg.click()
 
         // 4. share prc
-       // TODO validate PRC VC
+        const prCardCred = await $('div*=Permanent Resident Card');
+        await prCardCred.waitForExist();
 
         const shareCredBtn = await $('#share-credentials');
         await shareCredBtn.waitForClickable();
@@ -106,7 +107,8 @@ describe("TrustBloc - Duty Free Shop (WACI Share flow)", () => {
         const verifySuccessMsg = await $('div*=Successfully Verified');
         await verifySuccessMsg.waitForExist();
 
-        // TODO validate response data
+        const lastName = await $('td*=Pasteur');
+        await lastName.waitForExist();
 
         const proceedBtn = await $('#proceedClick');
         await proceedBtn.waitForClickable();
