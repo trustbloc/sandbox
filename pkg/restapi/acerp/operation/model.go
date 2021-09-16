@@ -16,9 +16,9 @@ type userData struct {
 }
 
 type userIDNameMap struct {
-	ID          string                         `json:"id"`
-	UserName    string                         `json:"userName"`
-	CreatedTime *util.TimeWithTrailingZeroMsec `json:"createdTime"`
+	ID          string            `json:"id"`
+	UserName    string            `json:"userName"`
+	CreatedTime *util.TimeWrapper `json:"createdTime"`
 }
 
 type sessionData struct {
@@ -56,10 +56,10 @@ type profileData struct {
 }
 
 type userAuthData struct {
-	ID            string                         `json:"id"`
-	Source        string                         `json:"source"`
-	SubmittedTime *util.TimeWithTrailingZeroMsec `json:"submittedTime"`
-	UserAuths     []userAuthorization            `json:"userAuths"`
+	ID            string              `json:"id"`
+	Source        string              `json:"source"`
+	SubmittedTime *util.TimeWrapper   `json:"submittedTime"`
+	UserAuths     []userAuthorization `json:"userAuths"`
 }
 
 type userAuthorization struct {
@@ -82,9 +82,9 @@ type extractResp struct {
 }
 
 type extractData struct {
-	ID            string                         `json:"id"`
-	Source        string                         `json:"source"`
-	SubmittedTime *util.TimeWithTrailingZeroMsec `json:"submittedTime"`
+	ID            string            `json:"id"`
+	Source        string            `json:"source"`
+	SubmittedTime *util.TimeWrapper `json:"submittedTime"`
 }
 
 type getExtractData struct {
