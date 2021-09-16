@@ -15,6 +15,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/hyperledger/aries-framework-go-ext/component/storage/couchdb"
+	"github.com/hyperledger/aries-framework-go-ext/component/storage/mongodb"
 	"github.com/hyperledger/aries-framework-go-ext/component/storage/mysql"
 	"github.com/hyperledger/aries-framework-go/component/storageutil/mem"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/ld"
@@ -46,10 +47,10 @@ const (
 	// DatabaseURLFlagUsage describes the usage.
 	DatabaseURLFlagUsage = "Database URL with credentials if required." +
 		" Format must be <driver>:[//]<driver-specific-dsn>." +
-		" Examples: 'mysql://root:secret@tcp(localhost:3306)/adapter', 'mem://test'." +
-		" Supported drivers are [mem, mysql, couchdb]." +
+		" Examples: 'mysql://root:secret@tcp(localhost:3306)/component', 'mem://test'," +
+		"'mongodb://mongodb.example.com:27017'. Supported drivers are [mem, mysql, couchdb, mongodb]." +
 		" Alternatively, this can be set with the following environment variable: " + DatabaseURLEnvKey
-	// DatabaseURLEnvKey is the databaes url.
+	// DatabaseURLEnvKey is the database url.
 	DatabaseURLEnvKey = "DATABASE_URL"
 
 	// DatabaseTimeoutFlagName is the database timeout.
@@ -71,6 +72,11 @@ const (
 
 	// DatabaseTimeoutDefault is the default storage timeout.
 	DatabaseTimeoutDefault = 30
+
+	databaseTypeMemOption     = "mem"
+	databaseTypeMYSQLDBOption = "mysql"
+	databaseTypeCouchDBOption = "couchdb"
+	databaseTypeMongoDBOption = "mongodb"
 )
 
 // DBParameters holds database configuration.
@@ -81,15 +87,18 @@ type DBParameters struct {
 }
 
 // nolint:gochecknoglobals
-var supportedEdgeStorageProviders = map[string]func(string, string) (storage.Provider, error){
-	"mysql": func(dbURL, prefix string) (storage.Provider, error) {
+var supportedStorageProviders = map[string]func(string, string) (storage.Provider, error){
+	databaseTypeMYSQLDBOption: func(dbURL, prefix string) (storage.Provider, error) {
 		return mysql.NewProvider(dbURL, mysql.WithDBPrefix(prefix))
 	},
-	"mem": func(_, _ string) (storage.Provider, error) { // nolint:unparam
+	databaseTypeMemOption: func(_, _ string) (storage.Provider, error) { // nolint:unparam
 		return mem.NewProvider(), nil
 	},
-	"couchdb": func(dbURL, prefix string) (storage.Provider, error) {
+	databaseTypeCouchDBOption: func(dbURL, prefix string) (storage.Provider, error) {
 		return couchdb.NewProvider(dbURL, couchdb.WithDBPrefix(prefix))
+	},
+	databaseTypeMongoDBOption: func(dbURL, prefix string) (storage.Provider, error) {
+		return mongodb.NewProvider(dbURL, mongodb.WithDBPrefix(prefix))
 	},
 }
 
@@ -152,8 +161,8 @@ func DBParams(cmd *cobra.Command) (*DBParameters, error) {
 	return params, nil
 }
 
-// InitEdgeStore provider.
-func InitEdgeStore(params *DBParameters, logger log.Logger) (storage.Provider, error) {
+// InitStore provider.
+func InitStore(params *DBParameters, logger log.Logger) (storage.Provider, error) {
 	const (
 		sleep    = 1 * time.Second
 		urlParts = 2
@@ -172,9 +181,16 @@ func InitEdgeStore(params *DBParameters, logger log.Logger) (storage.Provider, e
 	}
 
 	driver := parsed[0]
-	dsn := strings.TrimPrefix(parsed[1], "//")
 
-	providerFunc, supported := supportedEdgeStorageProviders[driver]
+	var dsn string
+	if driver == databaseTypeMongoDBOption {
+		// The MongoDB storage provider needs the full connection string (including the driver as part of it).
+		dsn = params.URL
+	} else {
+		dsn = strings.TrimPrefix(parsed[1], "//")
+	}
+
+	providerFunc, supported := supportedStorageProviders[driver]
 	if !supported {
 		return nil, fmt.Errorf("unsupported storage driver: %s", driver)
 	}

@@ -122,7 +122,7 @@ func TestDBParams(t *testing.T) {
 
 func TestInitEdgeStore(t *testing.T) {
 	t.Run("inits ok", func(t *testing.T) {
-		s, err := InitEdgeStore(&DBParameters{
+		s, err := InitStore(&DBParameters{
 			URL:     "mem://test",
 			Prefix:  "test",
 			Timeout: 30,
@@ -132,7 +132,7 @@ func TestInitEdgeStore(t *testing.T) {
 	})
 
 	t.Run("error if url format is invalid", func(t *testing.T) {
-		_, err := InitEdgeStore(&DBParameters{
+		_, err := InitStore(&DBParameters{
 			URL:     "invalid",
 			Prefix:  "test",
 			Timeout: 30,
@@ -141,7 +141,7 @@ func TestInitEdgeStore(t *testing.T) {
 	})
 
 	t.Run("error if driver is not supported", func(t *testing.T) {
-		_, err := InitEdgeStore(&DBParameters{
+		_, err := InitStore(&DBParameters{
 			URL:     "unsupported://test",
 			Prefix:  "test",
 			Timeout: 30,
@@ -150,12 +150,32 @@ func TestInitEdgeStore(t *testing.T) {
 	})
 
 	t.Run("error if cannot connect to store", func(t *testing.T) {
-		_, err := InitEdgeStore(&DBParameters{
-			URL:     "mysql://test:secret@tcp(localhost:5984)",
-			Prefix:  "test",
-			Timeout: 1,
-		}, log.New("test"))
-		require.Error(t, err)
+		t.Run("mysql", func(t *testing.T) {
+			_, err := InitStore(&DBParameters{
+				URL:     "mysql://test:secret@tcp(localhost:5984)",
+				Prefix:  "test",
+				Timeout: 1,
+			}, log.New("test"))
+			require.Error(t, err)
+		})
+		t.Run("couchdb", func(t *testing.T) {
+			_, err := InitStore(&DBParameters{
+				URL:     "couchdb://",
+				Prefix:  "test",
+				Timeout: 1,
+			}, log.New("test"))
+			require.EqualError(t, err, "failed to connect to storage at  : failed to ping couchDB: "+
+				"url can't be blank")
+		})
+		t.Run("mongodb", func(t *testing.T) {
+			_, err := InitStore(&DBParameters{
+				URL:     "mongodb://",
+				Prefix:  "test",
+				Timeout: 1,
+			}, log.New("test"))
+			require.EqualError(t, err, "failed to connect to storage at mongodb:// : "+
+				"failed to create a new MongoDB client: error parsing uri: must have at least 1 host")
+		})
 	})
 }
 

@@ -387,7 +387,7 @@ func startRP(parameters *rpParameters) error {
 		return err
 	}
 
-	transientStore, err := common.InitEdgeStore(parameters.dbParams, logger)
+	transientStore, err := common.InitStore(parameters.dbParams, logger)
 	if err != nil {
 		return err
 	}

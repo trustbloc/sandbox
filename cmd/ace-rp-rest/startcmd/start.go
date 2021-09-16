@@ -367,7 +367,7 @@ func startRP(parameters *rpParameters) error { //nolint:funlen,gocyclo
 	basePath := "static/" + parameters.modeConf.uiPath
 	router := pathPrefix(basePath)
 
-	storeProvider, err := common.InitEdgeStore(parameters.dbParams, logger)
+	storeProvider, err := common.InitStore(parameters.dbParams, logger)
 	if err != nil {
 		return err
 	}
