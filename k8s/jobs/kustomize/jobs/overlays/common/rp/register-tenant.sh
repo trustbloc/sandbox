@@ -4,6 +4,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
+set -e
+
 echo "Adding curl and jq"
 apk --no-cache add curl jq
 
