@@ -1,5 +1,55 @@
 # TrustBloc Adapter Components
 
+## v0.1.7
+### Architecture Diagram 
+![Adapter Architecture diagram v0.1.7](../images/adapter_component_diagram_v0.1.7.svg)
+
+TODO : Add link to DID Orb Component Diagram
+
+### Component Details
+#### Core
+| Component                   | Source URL                                                                 | k8s Configuration                                                                                |
+|-----------------------------|----------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| Router                      | [Source](https://github.com/trustbloc/hub-router)                          | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/hub-router) |
+| EDV                         | [Source](https://github.com/trustbloc/edv)                                 | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/edv)        |
+| EDV Oathkeeper              | [Source](https://github.com/ory/oathkeeper)                                | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/edv)        |
+| Ops KMS                     | [Source](https://github.com/trustbloc/kms)                                 | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/kms)        |
+| Ops KMS Oathkeeper          | [Source](https://github.com/ory/oathkeeper )                               | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/kms)        |
+| Authz KMS                   | [Source](https://github.com/trustbloc/kms)                                 | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/kms)        |
+| Authz KMS Oathkeeper        | [Source](https://github.com/ory/oathkeeper )                               | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/kms)        |
+| TrustBloc SignIn (Hub-Auth) | [Source](https://github.com/trustbloc/hub-auth)                            | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/hub-auth)   |
+| TrustBloc SignIn (Hydra)    | [Source](https://github.com/ory/hydra)                                     | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/hub-auth)   |
+| DID Resolver                | [Source](https://github.com/trustbloc/edge-service/tree/main/cmd/did-rest) | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/resolver)   |
+| DID Orb                     | [Source](https://github.com/trustbloc/orb)                                 | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/orb)        |
+
+#### Wallet
+| Component     | Source URL                                    | k8s Configuration                                                                                   |
+|---------------|-----------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| Wallet Web    | [Source](https://github.com/trustbloc/wallet) | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/wallet-web)    |
+| Wallet Server | [Source](https://github.com/trustbloc/wallet) | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/wallet-server) |
+
+#### Governance
+| Component          | Source URL                                           | k8s Configuration                                                                         |
+|--------------------|------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| Governance Service | [Source]( https://github.com/trustbloc/edge-service) | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/vcs) |
+
+#### Services
+| Component        | Source URL                                     | k8s Configuration                                                                                    |
+|------------------|------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| Issuer Adapter   | [Source](https://github.com/trustbloc/adapter) | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/adapter-issuer) |
+| RP Adapter       | [Source](https://github.com/trustbloc/adapter) | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/adapter-rp)     |
+| RP Adapter Hydra | [Source](https://github.com/ory/hydra)         | [k8s](https://github.com/trustbloc/k8s/tree/b7254443d1efdbb7f7819aeeffff687a38f40706/adapter-rp)     |
+
+#### Demo
+| Component         | Source URL                                     | k8s Configuration                                                                                           |
+|-------------------|------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| Issuer            | [Source](https://github.com/trustbloc/sandbox) | [k8s](https://github.com/trustbloc/sandbox/tree/59b6dee1552f7afdea3a8b6f804e3dfdfcc0837e/k8s/issuer)        |
+| RP/Verifier       | [Source](https://github.com/trustbloc/sandbox) | [k8s](https://github.com/trustbloc/sandbox/tree/59b6dee1552f7afdea3a8b6f804e3dfdfcc0837e/k8s/rp)            |
+| ORY Hydra         | [Source](https://github.com/ory/hydra)         | [k8s](https://github.com/trustbloc/sandbox/tree/59b6dee1552f7afdea3a8b6f804e3dfdfcc0837e/k8s/login-consent) |
+| Login and Consent | [Source](https://github.com/trustbloc/sandbox) | [k8s](https://github.com/trustbloc/sandbox/tree/59b6dee1552f7afdea3a8b6f804e3dfdfcc0837e/k8s/login-consent) |
+| ORY Oathkeeper    | [Source](https://github.com/ory/oathkeeper)    | [k8s](https://github.com/trustbloc/sandbox/tree/59b6dee1552f7afdea3a8b6f804e3dfdfcc0837e/k8s/cms)           |
+| Strapi            | [Source](https://github.com/strapi/strapi)     | [k8s](https://github.com/trustbloc/sandbox/tree/59b6dee1552f7afdea3a8b6f804e3dfdfcc0837e/k8s/cms)           |
+
 ## v0.1.6
 ### Architecture Diagram 
 ![Adapter Architecture diagram v0.1.6](../images/adapter_component_diagram_v0.1.6.svg)
@@ -27,12 +77,12 @@
 | Wallet Web    | [Source](https://github.com/trustbloc/edge-agent) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-wallet.yml) |
 | Wallet Server | [Source](https://github.com/trustbloc/edge-agent) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-wallet.yml) |
 
-### Governance
+#### Governance
 | Component          | Source URL                                           | Sample Docker Configuration                                                                             |
 |--------------------|------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
 | Governance Service | [Source]( https://github.com/trustbloc/edge-service) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-vcs.yml)|
 
-### Services
+#### Services
 | Component        | Source URL                                          | Sample Docker Configuration                                                                                  |
 |------------------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
 | Issuer Adapter   | [Source](https://github.com/trustbloc/edge-adapter) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.6/test/bdd/fixtures/demo/docker-compose-adapter.yml) |
@@ -76,12 +126,12 @@
 | Wallet Web    | [Source](https://github.com/trustbloc/edge-agent) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.5/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L225-L249) |
 | Wallet Server | [Source](https://github.com/trustbloc/edge-agent) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.5/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L189-L223) |
 
-### Governance
+#### Governance
 | Component          | Source URL                                           | Sample Docker Configuration                                                                                                         |
 |--------------------|------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
 | Governance Service | [Source]( https://github.com/trustbloc/edge-service) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.5/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L113-L148) |
 
-### Services
+#### Services
 | Component        | Source URL                                          | Sample Docker Configuration                                                                                                 |
 |------------------|-----------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
 | Issuer Adapter   | [Source](https://github.com/trustbloc/edge-adapter) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.5/test/bdd/fixtures/demo/docker-compose-didcomm.yml#L43-L73)   |
@@ -116,12 +166,12 @@
 |------------|---------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
 | User Agent | [Source](https://github.com/trustbloc/edge-agent) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.4/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L179-L196) |
 
-### Governance
+#### Governance
 | Component          | Source URL                                           | Sample Docker Configuration                                                                                                          |
 |--------------------|------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
 | Governance Service | [Source]( https://github.com/trustbloc/edge-service) | [Docker]( https://github.com/trustbloc/sandbox/blob/v0.1.4/test/bdd/fixtures/demo/docker-compose-edge-components.yml#L110-L144) |
 
-### Services
+#### Services
 | Component      | Source URL                                          | Sample Docker Configuration                                                                                                 |
 |----------------|-----------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
 | Issuer Adapter | [Source](https://github.com/trustbloc/edge-adapter) | [Docker](https://github.com/trustbloc/sandbox/blob/v0.1.4/test/bdd/fixtures/demo/docker-compose-didcomm.yml#L33-L63)   |

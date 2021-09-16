@@ -12,10 +12,9 @@ Sandbox contains the sample implementations of Issuer and Verifier/RP to demonst
 by the [TrustBloc](https://github.com/trustbloc) projects.
 - [W3C Verifiable Credential(VC)](https://w3c.github.io/vc-data-model/)
 - [W3C Decentralized Identifier(DID)](https://w3c.github.io/did-core/)
-- [Hyperledger Fabric](https://www.hyperledger.org/use/fabric)
 - [Hyperledger Aries](https://www.hyperledger.org/use/aries)
 - [DIF Sidetree](https://identity.foundation/sidetree/spec/)
-- [TrustBloc DID Method](https://github.com/trustbloc/trustbloc-did-method/blob/main/docs/spec/trustbloc-did-method.md) 
+- [DID Orb Method](https://trustbloc.github.io/did-method-orb/) 
 
 ## Sample Applications
 - [Issuer](docs/issuer/README.md)
