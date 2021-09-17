@@ -7,7 +7,7 @@
 
 # Release Parameters
 BASE_VERSION=0.1.7
-IS_RELEASE=false
+IS_RELEASE=true
 
 BASE_RP_PKG_NAME=sandbox-rp
 BASE_ACE_RP_PKG_NAME=sandbox-ace-rp
