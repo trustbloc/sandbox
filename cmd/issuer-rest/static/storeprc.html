@@ -10,7 +10,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta charset="utf-8">
-    <link rel="icon" type="images/x-icon" href="img/immigration_logo.jpg" >
+    <link rel="icon" type="images/x-icon" href="img/immigration_logo.jpg">
     <title>Store Digital Green Card</title>
     <meta name="description" content="">
     <meta name="keywords" content="">
@@ -33,13 +33,15 @@ SPDX-License-Identifier: Apache-2.0
         .gradient {
             background: linear-gradient(to right, #f0f2f0, #ffffff);
         }
+
         .cardgradient {
             background: linear-gradient(to right, #1e3c72, #2a5298);
         }
     </style>
 </head>
 <body class="leading-normal tracking-normal bg-gray-100" onload="getSearchID()">
-<div class="bg-red-800 border border-red-400 text-white text-center rounded flex items-center justify-center" role="alert">
+<div class="bg-red-800 border border-red-400 text-white text-center rounded flex items-center justify-center"
+     role="alert">
     <p class="lg:text-xl md:text-lg sm:text-sm">This is not government site. Do not use real data.</p>
 </div>
 
@@ -48,7 +50,8 @@ SPDX-License-Identifier: Apache-2.0
     <div class="w-full px-4">
         <nav class="container px-4 mx-auto flex flex-wrap items-center justify-between">
             <div class="w-full relative flex justify-between lg:w-auto px-4 lg:static lg:block lg:justify-start">
-                <a href="/applygreencard"><img class="block lg:block h-36 w-auto" src="img/immigration_nav_logo.png"></a>
+                <a href="/applygreencard"><img class="block lg:block h-36 w-auto"
+                                               src="img/immigration_nav_logo.png"></a>
             </div>
             <div class="flex lg:flex-grow items-center">
                 <ul class="flex flex-col lg:flex-row list-none ml-auto">
@@ -62,7 +65,8 @@ SPDX-License-Identifier: Apache-2.0
                     </li>
                     <li class="nav-item lg:py-2">
                         <!--todo integrate with issuer auth api -->
-                        <a href="/" class="text-blue-800 bg-blue-100 border shadow-md font-semibold font-sans lg:text-xl sm:text-lg hover:shadow-lg hover:bg-gray-100 px-4 m-5 py-2 rounded-md text-center font-bold">
+                        <a href="/"
+                           class="text-blue-800 bg-blue-100 border shadow-md font-semibold font-sans lg:text-xl sm:text-lg hover:shadow-lg hover:bg-gray-100 px-4 m-5 py-2 rounded-md text-center font-bold">
                             Sign-In</a>
                     </li>
                 </ul>
@@ -107,54 +111,72 @@ SPDX-License-Identifier: Apache-2.0
 <div class="grid grid-rows-3 grid-flow-col gap-4 pt-8 px-48">
     <!--Sidebar-->
     <div class="row-span-3 text-blue-900 bg-white">
-        <h1 class="leading-tight px-4 py-4 text-black font-bold gradient border-l-4 border-blue-900"><i class="fa fa-id-card px-4 text-blue-900" aria-hidden="true"></i>
+        <h1 class="leading-tight px-4 py-4 text-black font-bold gradient border-l-4 border-blue-900"><i
+                class="fa fa-id-card px-4 text-blue-900" aria-hidden="true"></i>
             Green Card</h1>
         <ul class="list-reset flex flex-row md:flex-col text-center md:text-left px-8">
             <li class="mr-3 flex-1">
-                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800 hover:text-green-400 border-gray-800 md:border-gray-900 hover:border-green-400">
-                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Green Card Eligibility</span>
+                <a href="/"
+                   class="block py-1 md:py-3 pl-1 align-middle text-gray-800 hover:text-green-400 border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i
+                            class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Green Card Eligibility</span>
                 </a>
             </li>
             <li class="mr-3 flex-1">
-                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
-                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Digital Green Card Application Lookup</span>
+                <a href="/"
+                   class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i
+                            class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Digital Green Card Application Lookup</span>
                 </a>
             </li>
             <li class="mr-3 flex-1">
-                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
-                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>How to Apply for Digital Green Card </span>
+                <a href="/"
+                   class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i
+                            class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>How to Apply for Digital Green Card </span>
                 </a>
             </li>
             <li class="mr-3 flex-1">
-                <a href="/" class="block py-1 md:py-3 pl-1 align-middle border-l-4 border-blue-900 gradient text-black border-gray-800 md:border-gray-900">
-                    <span class="pb-1 md:pb-0 text-xs md:text-base font-bold block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>How to Apply for a Green Card </span>
+                <a href="/"
+                   class="block py-1 md:py-3 pl-1 align-middle border-l-4 border-blue-900 gradient text-black border-gray-800 md:border-gray-900">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base font-bold block md:inline-block"><i
+                            class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>How to Apply for a Green Card </span>
                 </a>
             </li>
             <li class="mr-3 flex-1">
-                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
-                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Green Card Processes and Procedures </span>
+                <a href="/"
+                   class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i
+                            class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Green Card Processes and Procedures </span>
                 </a>
             </li>
             <li class="mr-3 flex-1">
-                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
-                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Green Card Status with USCIS</span>
+                <a href="/"
+                   class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i
+                            class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>Green Card Status with USCIS</span>
                 </a>
             </li>
             <li class="mr-3 flex-1">
-                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
-                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>After Receiving a Decision </span>
+                <a href="/"
+                   class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i
+                            class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>After Receiving a Decision </span>
                 </a>
             </li>
             <li class="mr-3 flex-1">
-                <a href="/" class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
-                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>After We grant Your Green Card </span>
+                <a href="/"
+                   class="block py-1 md:py-3 pl-1 align-middle text-gray-800  hover:text-green-400  border-gray-800 md:border-gray-900 hover:border-green-400">
+                    <span class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block"><i
+                            class="fa fa-square text-gray-300 px-4 text-lg" aria-hidden="true"></i>After We grant Your Green Card </span>
                 </a>
             </li>
         </ul>
     </div>
     <div class="row-span-3 col-span-2 px-2 py-8" style="display:block" id="connectToWallet">
         <input class=" hidden" id="hiddenID" type="text"/>
-        <div class="w-full h-full fixed top-0 left-0 bg-gray-800 opacity-75 z-50" id="loading-screen" style="display:none">
+        <div class="w-full h-full fixed top-0 left-0 bg-gray-800 opacity-75 z-50" id="loading-screen"
+             style="display:none">
         <span class="text-green-500 my-0 mx-auto block fixed w-0 h-0" style="top: 50%;right: 50%;">
          <i class="fa fa-spinner fa-spin fa-5x"></i>
        </span>
@@ -170,12 +192,13 @@ SPDX-License-Identifier: Apache-2.0
                     Permanent Resident Card
                 </label>
                 <label class="block text-sm font-sans text-gray-600 mb-2 py-4" for="email">
-                    You can click on Connect to wallet button to connect to wallet, or scan the QR Code to store the resident card.
+                    You can click on Connect to wallet button to connect to wallet, or scan the QR Code to store the
+                    resident card.
                 </label>
-                <a class="bg-blue-800 py-2 px-4 border border-gray-800 hover:bg-green-dark text-white font-bold rounded shadow-lg
+                <button class="bg-blue-800 py-2 px-4 border border-gray-800 hover:bg-green-dark text-white font-bold rounded shadow-lg
                 cursor-pointer" type="button" id='authBtn'>
                     Connect To Wallet
-                </a>
+                </button>
                 <input type="text" id="holder" class="hidden"/>
                 <span class="block text-sm py-2 text-gray-400">Or scan QR code in mobile wallet</span>
             </div>
@@ -189,9 +212,9 @@ SPDX-License-Identifier: Apache-2.0
         <h2 class="bold text-4xl py-4">Digital Permanent Resident Card</h2>
         <div class="grid grid-cols-1 bg-white border max-w-xl border-gray-300">
             <div class="grid grid-cols-2 cardgradient shadow-lg rounded bg-white border max-w-xl border-gray-300">
-            <div class="px-4 py-4">
-                <canvas id="canvas" class="h-48"></canvas>
-            </div>
+                <div class="px-4 py-4">
+                    <canvas id="canvas" class="h-48"></canvas>
+                </div>
                 <div class="px-4 flex items-center grid grid-rows-1 py-8 ">
                     <div class="flex items-center justify-start">
                         <img class="h-16 rounded-full text-center" src="img/immigration_logo.jpg">
@@ -210,7 +233,8 @@ SPDX-License-Identifier: Apache-2.0
                 <textarea id="vcDataTextArea" class="hidden"></textarea>
                 <div class="flex-none mt-auto rounded-b rounded-t-none overflow-hidden p-6">
                     <div class="flex items-center justify-center">
-                        <a id="storeprc" class=" flex items-center justify-center cardgradient py-2 px-4 rounded-full border text-white font-bold rounded shadow-lg cursor-pointer"
+                        <a id="storeprc"
+                           class=" flex items-center justify-center cardgradient py-2 px-4 rounded-full border text-white font-bold rounded shadow-lg cursor-pointer"
                            onclick="storeCredential()" type="button">
                             Save Credential
                         </a>
@@ -238,7 +262,8 @@ SPDX-License-Identifier: Apache-2.0
     <section class="container mx-auto text-center">
         <div class="text-sm text-blue-800 font py-6">
             <img class="object-contain object-top-center h-32 w-full" src="img/immigration_nav_logo.png">
-            Copyright &copy; <a href="https://securekey.com/"  class="text-blue-900 hover:text-green-700" rel="nofollow">SecureKey Technologies</a> and the TrustBloc Contributors.
+            Copyright &copy; <a href="https://securekey.com/" class="text-blue-900 hover:text-green-700" rel="nofollow">SecureKey
+            Technologies</a> and the TrustBloc Contributors.
         </div>
     </section>
 </footer>
@@ -250,10 +275,11 @@ SPDX-License-Identifier: Apache-2.0
 <script>
     let searchID = document.getElementById("hiddenID").innerHTML;
 
-    function getSearchID(){
+    function getSearchID() {
         const params = new URLSearchParams(window.location.search);
         searchID = params.get('id');
     }
+
     function ready(fn) {
         if (document.readyState !== 'loading') {
             fn();
@@ -312,8 +338,8 @@ SPDX-License-Identifier: Apache-2.0
         }
 
         let didAuthData = {
-            "holder":result.data.holder,
-            "domain" :domain,
+            "holder": result.data.holder,
+            "domain": domain,
             "challenge": challenge,
             "didAuthResp": result.data
         };
@@ -322,7 +348,7 @@ SPDX-License-Identifier: Apache-2.0
             didAuthData
         ).then(function (response) {
             document.getElementById("holder").innerText = result.data.holder;
-            document.getElementById("connectToWallet").style.display ="none";
+            document.getElementById("connectToWallet").style.display = "none";
             document.getElementById("loading-screen").style.display = "block";
             generateCredential();
             console.log("generate did auth response:", response);
@@ -337,44 +363,44 @@ SPDX-License-Identifier: Apache-2.0
             var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
         });
-     }
+    }
 
-     function generateCredential() {
+    function generateCredential() {
         let holder = document.getElementById("holder").innerText;
         let generateCredData = {
-             "id": searchID,
-             "holder":holder,
-             "vcsProfile" : "trustbloc-ed25519signature2018-ed25519"
-         };
-         axios.post('/credential/generate',
-             generateCredData
-         ).then(function (response) {
-             document.getElementById("previewDataDiv").style.display ="block";
-             console.log("generate credential response:", response);
-             document.getElementById("vcDataTextArea").value = JSON.stringify(response.data);
-             prettyTable(response.data);
-             document.getElementById("loading-screen").style.display = "none";
-         }).catch(error => {
-             console.log(error);
-             document.getElementById("connectToWallet").style.display ="block";
-             document.getElementById("connect-error-board").innerText = "Failed to Generate Permanent Resident Card. Try Again";
-         });
-     }
+            "id": searchID,
+            "holder": holder,
+            "vcsProfile": "trustbloc-ed25519signature2018-ed25519"
+        };
+        axios.post('/credential/generate',
+            generateCredData
+        ).then(function (response) {
+            document.getElementById("previewDataDiv").style.display = "block";
+            console.log("generate credential response:", response);
+            document.getElementById("vcDataTextArea").value = JSON.stringify(response.data);
+            prettyTable(response.data);
+            document.getElementById("loading-screen").style.display = "none";
+        }).catch(error => {
+            console.log(error);
+            document.getElementById("connectToWallet").style.display = "block";
+            document.getElementById("connect-error-board").innerText = "Failed to Generate Permanent Resident Card. Try Again";
+        });
+    }
 
-     function loadUserImage(base64ImageData){
-         let ctx = document.getElementById('canvas').getContext('2d');
-         let image = new Image();
-         image.onload = function() {
-             ctx.drawImage(image, 0, 0, 140, 150);
-         };
-         image.src = base64ImageData;
-     }
+    function loadUserImage(base64ImageData) {
+        let ctx = document.getElementById('canvas').getContext('2d');
+        let image = new Image();
+        image.onload = function () {
+            ctx.drawImage(image, 0, 0, 140, 150);
+        };
+        image.src = base64ImageData;
+    }
 
     function flatten(json, flattened) {
         for (var key in json) {
             if (json.hasOwnProperty(key)) {
                 if (json[key] instanceof Object && json[key] != "") {
-                    flatten(json[key], flattened,  key);
+                    flatten(json[key], flattened, key);
                 } else {
                     flattened[key] = json[key];
                 }
@@ -382,17 +408,17 @@ SPDX-License-Identifier: Apache-2.0
         }
     }
 
-    function prettyTable(credentialData){
+    function prettyTable(credentialData) {
         let flattened = {};
         flatten(credentialData, flattened);
         console.log("what is image", flattened.image, flattened);
         loadUserImage(flattened.image);
         replaceKeys(flattened);
-        for (var key in flattened){
-            if (key !== 'undefined'){
+        for (var key in flattened) {
+            if (key !== 'undefined') {
                 var tbody = document.getElementById('credential');
                 var tr = "<tr>";
-                if (isNaN(key)){
+                if (isNaN(key)) {
                     tr += "<td class=\"  w-full lg:w-auto px-3 text-gray-800 text-left text-sm block lg:table-cell relative lg:static\">" + key +
                         "</td>" + "<td class=\" w-full lg:w-auto px-1 text-gray-800 text-left text-lg block lg:table-cell relative lg:static overflow-auto \">" + flattened[key] + "</td></tr>";
                     tbody.innerHTML += tr;
@@ -408,31 +434,33 @@ SPDX-License-Identifier: Apache-2.0
             "referenceNumber": 'Booking Ref No.',
             "lprNumber": 'LPR Number',
             "birthCountry": 'Country of Birth',
-            "familyName" : 'Last Name',
-            "birthDate":   'Date of Birth',
+            "familyName": 'Last Name',
+            "birthDate": 'Date of Birth',
             "givenName": 'Given Name',
-            "gender":     'Gender',
-            "lprCategory" :'LPR Category',
-            "residentSince" :'Resident Since',
-            "description" :'Description',
-            "issuanceDate" :'Date of Issue',
-            "name" :'Card',
-            "created" :'Date of Creation'
+            "gender": 'Gender',
+            "lprCategory": 'LPR Category',
+            "residentSince": 'Resident Since',
+            "description": 'Description',
+            "issuanceDate": 'Date of Issue',
+            "name": 'Card',
+            "created": 'Date of Creation'
         };
         return keys[name];
     }
+
     function replaceKeys(json) {
         for (var key in json) {
-            var friendlyKeyName =  getFriendlyKeyName(key);
-            if (friendlyKeyName !== 'undefined'){
+            var friendlyKeyName = getFriendlyKeyName(key);
+            if (friendlyKeyName !== 'undefined') {
                 json[friendlyKeyName] = json[key];
                 delete json[key];
             }
         }
     }
+
     async function storeCredential() {
-       let credentialToStore = document.getElementById("vcDataTextArea").value;
-       let credentialObject = JSON.parse(credentialToStore);
+        let credentialToStore = document.getElementById("vcDataTextArea").value;
+        let credentialObject = JSON.parse(credentialToStore);
         console.log('storing prc credential', credentialObject);
         const vp = {
             "@context": [
@@ -452,12 +480,12 @@ SPDX-License-Identifier: Apache-2.0
         if (!result) {
             document.getElementById("error-board").innerText = "Failed to issue Permanent Resident Card. Retry";
         } else {
-            document.getElementById("successDiv").style.display ="block";
-            document.getElementById("previewDataDiv").style.display ="none";
-            document.getElementById("connectToWallet").style.display ="none";
+            document.getElementById("successDiv").style.display = "block";
+            document.getElementById("previewDataDiv").style.display = "none";
+            document.getElementById("connectToWallet").style.display = "none";
         }
     };
-    </script>
+</script>
 
 </html>
 
