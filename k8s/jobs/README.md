@@ -14,4 +14,4 @@
 * `make clean`
 
 ## options and features
-* Will deploy Sandbox MySQL and COUCHDB.
+* Will deploy Sandbox MySQL.

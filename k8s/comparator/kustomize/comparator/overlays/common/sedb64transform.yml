@@ -8,4 +8,4 @@ apiVersion: svceng
 kind: SedB64Transformer
 metadata:
   name: sedb64transformer
-argsOneLiner: s^||COUCHDB_DSN||^${COUCHDB_DSN}^ s^||COMPARATOR_REQUEST_TOKENS||^${COMPARATOR_REQUEST_TOKENS}^
+argsOneLiner: s^||MONGODB_DSN||^${MONGODB_DSN}^ s^||COMPARATOR_REQUEST_TOKENS||^${COMPARATOR_REQUEST_TOKENS}^

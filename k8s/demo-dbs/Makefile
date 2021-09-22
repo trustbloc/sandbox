@@ -19,7 +19,6 @@ ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
 MYSQL_IMG		?= docker.io/mysql:8.0.20
-COUCH_IMG		?= docker.io/couchdb:3.1
 # do not modify
 KUSTOMIZE_DIR       	= kustomize/demo-dbs
 PREFIX							?=
@@ -47,9 +46,6 @@ set-labels: kustomize
 
 .PHONY: set-images
 set-images: kustomize
-	@pushd ${KUSTOMIZE_DIR}/components/couch &&\
-	${KUSTOMIZE} edit set image couchdb=${COUCH_IMG} &&\
-	popd &&\
 	pushd ${KUSTOMIZE_DIR}/components/mysql &&\
 	${KUSTOMIZE} edit set image mysql=${MYSQL_IMG} &&\
 	popd
