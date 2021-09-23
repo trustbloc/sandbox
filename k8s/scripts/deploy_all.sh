@@ -76,12 +76,11 @@ healthCheck() {
 pushd demo-dbs
     make SHELL=/bin/bash
 popd
-### TODO: set up proper mysql, couchDB healthchecks
+### TODO: set up proper MySQL healthcheck
 echo wait for DBs to start up
 while [[ `kubectl get po | grep Running |wc -l` -lt 2 ]]; do
     sleep 1
 done
-# healthCheck couchdb $couchdbHealthCheckURL 200
 # checkMYSQLDB strapi
 # checkMYSQLDB rpadapter_hydra
 # checkMYSQLDB authresthydra
