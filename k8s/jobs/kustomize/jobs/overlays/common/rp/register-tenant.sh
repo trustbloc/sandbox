@@ -150,15 +150,19 @@ grep -q '^RP_WACI_OIDC_CLIENTID' ${config_map_env_file} &&  sed -i "s/^RP_WACI_O
 grep -q '^RP_WACI_OIDC_CLIENTSECRET' ${config_map_env_file} &&  sed -i "s/^RP_WACI_OIDC_CLIENTSECRET.*/RP_WACI_OIDC_CLIENTSECRET=${waciClientSecret}/" ${config_map_env_file} || echo "RP_WACI_OIDC_CLIENTSECRET=${waciClientSecret}" >> ${config_map_env_file}
 
 
+# Process all found configmaps
+for map in ${config_map_name}; do
+    echo "mutating configMap ${map}"
+    kubectl create cm ${map} --dry-run=client --from-env-file=${config_map_env_file} -o yaml > ${config_map}
+    echo
+    cat ${config_map}
+    echo
+    kubectl apply -f ${config_map}
+    echo "labeling"
+    kubectl label --overwrite cm ${map} component=rp group=demo project=trustbloc instance=||DEPLOYMENT_ENV||
+    echo
+done
 
-echo "mutating configMap ${config_map_name}"
-kubectl create cm ${config_map_name} --dry-run=client --from-env-file=${config_map_env_file} -o yaml > ${config_map}
-echo
-cat ${config_map}
-echo
-kubectl apply -f ${config_map}
-echo "labeling"
-kubectl label cm ${config_map_name} component=rp group=demo project=trustbloc instance=||DEPLOYMENT_ENV||
 echo "recycling rp deployment/pod"
 kubectl rollout restart deployment rp
 echo "Finished processing template"
