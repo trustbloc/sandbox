@@ -22,7 +22,7 @@
 	- `cbp-comparator.DOMAIN`
 	- `ucis-comparator.DOMAIN`
 * Will deploy Sandbox Comparator, pointing to an already provisioned MongoDB specified with `MONGODB_DSN`
-	- `make deploy MONGODB_DSN=mongodb://mongoroot:secret@mongodb:27017`
+	- `make deploy MONGODB_DSN=mongodb://mongoroot:secret@mongodb-demo:27017`
 * if running `podman` pass `CONTAINER_CMD=podman` as option to make
 * Running with none self-signed certificates: place certs into kustomize/comparator/overlays/sandbox/certs, then run with: `make setup-no-certs`.
 >files:

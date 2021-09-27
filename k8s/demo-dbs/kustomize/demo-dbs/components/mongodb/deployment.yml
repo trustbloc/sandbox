@@ -1,0 +1,42 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: mongodb-demo
+  name: mongodb-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb-demo
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mongodb-demo
+    spec:
+      hostname: mongodb-demo
+      containers:
+      - image: mongo:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+          - name: mongodb-port
+            protocol: TCP
+            containerPort: 27017
+        name: mongodb
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: 'mongoroot'
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: 'secret'
+        resources: {}
+status: {}

@@ -15,7 +15,7 @@ export DEPLOYMENT_ENV	?= local
 COMMON_LABELS		:= instance:${DEPLOYMENT_ENV}
 export DOMAIN      		?= ${DEPLOYMENT_ENV}.trustbloc.dev
 export BLOC_DOMAIN		?= orb-1.${DOMAIN}
-export MONGODB_DSN								?= mongodb://mongoroot:secret@mongodb:27017
+export MONGODB_DSN								?= mongodb://mongoroot:secret@mongodb-demo:27017
 export COMPARATOR_REQUEST_TOKENS ?= sidetreeToken=ADMIN_TOKEN
 
 OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
