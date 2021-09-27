@@ -10,15 +10,6 @@ kind: Kustomization
 commonLabels:
   component: ucis-rp
 
-vars:
-- fieldref:
-    fieldPath: metadata.name
-  name: UCIS_RP_SERVICE_NAME
-  objref:
-    apiVersion: v1
-    kind: Service
-    name: rp
-
 configMapGenerator:
 - envs:
   - config.env

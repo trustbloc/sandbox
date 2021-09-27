@@ -11,15 +11,6 @@ images:
   newName: strapi/strapi
   newTag: 3.0.6-alpine
 
-vars:
-- fieldref:
-    fieldPath: metadata.name
-  name: STRAPI_SERVICE_NAME
-  objref:
-    apiVersion: v1
-    kind: Service
-    name: strapi
-
 secretGenerator:
 - envs:
   - secret.env

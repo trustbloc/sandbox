@@ -1,8 +1,8 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -14,62 +14,16 @@ metadata:
 spec:
   tls:
   - hosts:
-      - $(LOGIN_CONSENT_SERVICE_NAME).||DOMAIN||
-    secretName: $(INGRESS_TLS_SECRET)
+      - LOGIN_CONSENT_SERVICE_NAME.||DOMAIN||
+    secretName: INGRESS_TLS_SECRET
   rules:
-  - host: $(LOGIN_CONSENT_SERVICE_NAME).||DOMAIN||
+  - host: LOGIN_CONSENT_SERVICE_NAME.||DOMAIN||
     http:
       paths:
       - pathType: Prefix
         path: "/"
         backend:
           service:
-            name: login-consent
-            port:
-              name: http
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: hydra
-  labels:
-    app: hydra
-spec:
-  tls:
-  - hosts:
-      - $(HYDRA_PUBLIC_SERVICE_NAME).||DOMAIN||
-    secretName: $(INGRESS_TLS_SECRET)
-  rules:
-  - host: $(HYDRA_PUBLIC_SERVICE_NAME).||DOMAIN||
-    http:
-      paths:
-      - pathType: Prefix
-        path: "/"
-        backend:
-          service:
-            name: hydra
-            port:
-              name: http
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: hydra-admin
-  labels:
-    app: hydra
-spec:
-  tls:
-  - hosts:
-      - $(HYDRA_ADMIN_SERVICE_NAME).||DOMAIN||
-    secretName: $(INGRESS_TLS_SECRET)
-  rules:
-  - host: $(HYDRA_ADMIN_SERVICE_NAME).||DOMAIN||
-    http:
-      paths:
-      - pathType: Prefix
-        path: "/"
-        backend:
-          service:
-            name: hydra-admin
+            name: LOGIN_CONSENT_SERVICE_NAME
             port:
               name: http

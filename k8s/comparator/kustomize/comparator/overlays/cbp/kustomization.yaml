@@ -10,15 +10,6 @@ kind: Kustomization
 commonLabels:
   component: cbp-comparator
 
-vars:
-- fieldref:
-    fieldPath: metadata.name
-  name: CBP_SERVICE_NAME
-  objref:
-    apiVersion: v1
-    kind: Service
-    name: comparator
-
 configMapGenerator:
 - envs:
   - config.env

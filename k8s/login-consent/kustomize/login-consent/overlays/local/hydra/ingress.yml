@@ -1,29 +1,23 @@
-#
-# Copyright SecureKey Technologies Inc. All Rights Reserved.
-#
-# SPDX-License-Identifier: Apache-2.0
-#
-
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: cbp-comparator
+  name: hydra
   labels:
-    app: cbp-comparator
+    app: hydra
 spec:
   tls:
   - hosts:
-      - CBP_SERVICE_NAME.||DOMAIN||
+      - HYDRA_PUBLIC_SERVICE_NAME.||DOMAIN||
     secretName: INGRESS_TLS_SECRET
   rules:
-  - host: CBP_SERVICE_NAME.||DOMAIN||
+  - host: HYDRA_PUBLIC_SERVICE_NAME.||DOMAIN||
     http:
       paths:
       - pathType: Prefix
         path: "/"
         backend:
           service:
-            name: CBP_SERVICE_NAME
+            name: HYDRA_PUBLIC_SERVICE_NAME
             port:
               name: http

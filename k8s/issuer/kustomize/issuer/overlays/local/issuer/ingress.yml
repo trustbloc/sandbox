@@ -14,16 +14,16 @@ metadata:
 spec:
   tls:
   - hosts:
-      - demo-$(ISSUER_SERVICE_NAME).||DOMAIN||
-    secretName: $(INGRESS_TLS_SECRET)
+      - demo-issuer.||DOMAIN||
+    secretName: INGRESS_TLS_SECRET
   rules:
-  - host: demo-$(ISSUER_SERVICE_NAME).||DOMAIN||
+  - host: demo-issuer.||DOMAIN||
     http:
       paths:
       - pathType: Prefix
         path: "/"
         backend:
           service:
-            name: issuer
+            name: ISSUER_SERVICE_NAME
             port:
               name: http

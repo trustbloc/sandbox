@@ -10,15 +10,6 @@ kind: Kustomization
 commonLabels:
   component: ucis-comparator
 
-vars:
-- fieldref:
-    fieldPath: metadata.name
-  name: UCIS_SERVICE_NAME
-  objref:
-    apiVersion: v1
-    kind: Service
-    name: comparator
-
 configMapGenerator:
 - envs:
   - config.env

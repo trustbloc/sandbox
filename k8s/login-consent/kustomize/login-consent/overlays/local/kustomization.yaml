@@ -22,15 +22,6 @@ commonLabels:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-vars:
-- fieldref:
-    fieldPath: metadata.name
-  name: INGRESS_TLS_SECRET
-  objref:
-    apiVersion: v1
-    kind: Secret
-    name: login-consent-wildcard-cert
-
 secretGenerator:
 - files:
   - certs/tls.crt
@@ -47,9 +38,35 @@ configMapGenerator:
   - login-consent/login-consent.env
   name: login-consent-env
 
+replacements:
+- path: hydra/replacements.yml
+- path: hydra-admin/replacements.yml
+- path: login-consent/replacements.yml
+- source:
+    kind: Secret
+    name: login-consent-wildcard-cert
+    version: v1
+  targets:
+  - fieldPaths:
+    - spec.tls.0.secretName
+    select:
+      kind: Ingress
+      name: hydra
+  - fieldPaths:
+    - spec.tls.0.secretName
+    select:
+      kind: Ingress
+      name: hydra-admin
+  - fieldPaths:
+    - spec.tls.0.secretName
+    select:
+      kind: Ingress
+      name: login-consent
 
 resources:
 - ../common
+- hydra/ingress.yml
+- hydra-admin/ingress.yml
 - login-consent/ingress.yml
 
 transformers:

@@ -14,15 +14,6 @@
 
 generatorOptions: {}
 
-vars:
-- fieldref:
-    fieldPath: metadata.name
-  name: LOGIN_CONSENT_SERVICE_NAME
-  objref:
-    apiVersion: v1
-    kind: Service
-    name: login-consent
-
 configMapGenerator:
 - envs:
   - login-consent.env
