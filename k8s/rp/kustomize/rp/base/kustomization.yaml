@@ -15,15 +15,6 @@
 commonLabels:
   component: rp
 
-vars:
-- fieldref:
-    fieldPath: metadata.name
-  name: RP_SERVICE_NAME
-  objref:
-    apiVersion: v1
-    kind: Service
-    name: verifier
-
 configMapGenerator:
 - envs:
   - config.env

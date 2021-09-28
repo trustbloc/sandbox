@@ -14,16 +14,16 @@ metadata:
 spec:
   tls:
   - hosts:
-      - $(BENEFITS_DEPT_SERVICE_NAME).||DOMAIN||
-    secretName: $(INGRESS_TLS_SECRET)
+      - BENEFITS_DEPT_SERVICE_NAME.||DOMAIN||
+    secretName: INGRESS_TLS_SECRET
   rules:
-  - host: $(BENEFITS_DEPT_SERVICE_NAME).||DOMAIN||
+  - host: BENEFITS_DEPT_SERVICE_NAME.||DOMAIN||
     http:
       paths:
       - pathType: Prefix
         path: "/"
         backend:
           service:
-            name: benefits-dept-comparator
+            name: BENEFITS_DEPT_SERVICE_NAME
             port:
               name: http

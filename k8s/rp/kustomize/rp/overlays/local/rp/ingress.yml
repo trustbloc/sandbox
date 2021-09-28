@@ -15,7 +15,7 @@ spec:
   tls:
   - hosts:
       - demo-rp.||DOMAIN||
-    secretName: $(INGRESS_TLS_SECRET)
+    secretName: INGRESS_TLS_SECRET
   rules:
   - host: demo-rp.||DOMAIN||
     http:
@@ -24,6 +24,6 @@ spec:
         path: "/"
         backend:
           service:
-            name: verifier
+            name: RP_SERVICE_NAME
             port:
               name: http

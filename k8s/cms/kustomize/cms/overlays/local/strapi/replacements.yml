@@ -1,0 +1,10 @@
+source:
+  kind: Service
+  name: strapi
+  version: v1
+targets:
+- fieldPaths:
+  - spec.rules.0.http.paths.0.backend.service.name
+  select:
+    kind: Ingress
+    name: strapi

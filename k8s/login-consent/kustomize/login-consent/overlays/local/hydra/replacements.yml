@@ -1,0 +1,18 @@
+source:
+  kind: Service
+  name: hydra
+  version: v1
+targets:
+- fieldPaths:
+  - spec.tls.0.hosts.0
+  - spec.rules.0.host
+  options:
+    delimiter: .
+  select:
+    kind: Ingress
+    name: hydra
+- fieldPaths:
+  - spec.rules.0.http.paths.0.backend.service.name
+  select:
+    kind: Ingress
+    name: hydra

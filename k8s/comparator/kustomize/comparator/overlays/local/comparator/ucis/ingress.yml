@@ -14,16 +14,16 @@ metadata:
 spec:
   tls:
   - hosts:
-      - $(UCIS_SERVICE_NAME).||DOMAIN||
-    secretName: $(INGRESS_TLS_SECRET)
+      - UCIS_SERVICE_NAME.||DOMAIN||
+    secretName: INGRESS_TLS_SECRET
   rules:
-  - host: $(UCIS_SERVICE_NAME).||DOMAIN||
+  - host: UCIS_SERVICE_NAME.||DOMAIN||
     http:
       paths:
       - pathType: Prefix
         path: "/"
         backend:
           service:
-            name: ucis-comparator
+            name: UCIS_SERVICE_NAME
             port:
               name: http

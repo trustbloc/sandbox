@@ -11,15 +11,6 @@ images:
   newName: oryd/oathkeeper
   newTag: v0.38.4-alpine
 
-vars:
-- fieldref:
-    fieldPath: metadata.name
-  name: PROXY_SERVICE_NAME
-  objref:
-    apiVersion: v1
-    kind: Service
-    name: oathkeeper-proxy
-
 configMapGenerator:
 - files:
   - config.yml

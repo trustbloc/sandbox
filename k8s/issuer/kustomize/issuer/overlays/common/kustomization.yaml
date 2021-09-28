@@ -16,7 +16,6 @@ commonLabels:
   group: demo
   project: trustbloc
 
-
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 

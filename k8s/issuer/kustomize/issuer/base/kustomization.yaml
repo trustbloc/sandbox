@@ -15,15 +15,6 @@
 commonLabels:
   component: issuer
 
-vars:
-- fieldref:
-    fieldPath: metadata.name
-  name: ISSUER_SERVICE_NAME
-  objref:
-    apiVersion: v1
-    kind: Service
-    name: issuer
-
 configMapGenerator:
 - envs:
   - config.env

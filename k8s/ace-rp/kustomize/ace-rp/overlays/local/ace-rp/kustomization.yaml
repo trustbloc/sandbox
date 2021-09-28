@@ -21,15 +21,6 @@ commonLabels:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-vars:
-- fieldref:
-    fieldPath: metadata.name
-  name: INGRESS_TLS_SECRET
-  objref:
-    apiVersion: v1
-    kind: Secret
-    name: demo-applications-wildcard-cert
-
 configMapGenerator:
 - behavior: merge
   envs:
@@ -53,6 +44,31 @@ secretGenerator:
   - ../certs/tls.key
   name: demo-applications-wildcard-cert
   type: kubernetes.io/tls
+
+replacements:
+- path: benefits-dept/replacements.yml
+- path: cbp/replacements.yml
+- path: ucis/replacements.yml
+- source:
+    kind: Secret
+    name: demo-applications-wildcard-cert
+    version: v1
+  targets:
+  - fieldPaths:
+    - spec.tls.0.secretName
+    select:
+      kind: Ingress
+      name: benefits-dept-ace-rp
+  - fieldPaths:
+    - spec.tls.0.secretName
+    select:
+      kind: Ingress
+      name: cbp-ace-rp
+  - fieldPaths:
+    - spec.tls.0.secretName
+    select:
+      kind: Ingress
+      name: ucis-ace-rp
 
 resources:
 - ../../common

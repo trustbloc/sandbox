@@ -27,20 +27,28 @@ resources:
 - strapi/ingress.yml
 - oathkeeper/ingress.yml
 
+replacements:
+- path: oathkeeper/replacements.yml
+- path: strapi/replacements.yml
+- source:
+    kind: Secret
+    name: cms-wildcard-cert
+    version: v1
+  targets:
+  - fieldPaths:
+    - spec.tls.0.secretName
+    select:
+      kind: Ingress
+      name: oathkeeper-proxy
+  - fieldPaths:
+    - spec.tls.0.secretName
+    select:
+      kind: Ingress
+      name: strapi
 
 transformers:
 - sedtransform.yml
 - sedb64transform.yml
-
-vars:
-- fieldref:
-    fieldPath: metadata.name
-  name: INGRESS_TLS_SECRET
-  objref:
-    apiVersion: v1
-    kind: Secret
-    name: cms-wildcard-cert
-
 
 secretGenerator:
 - files:

@@ -1,0 +1,18 @@
+source:
+  kind: Service
+  name: ucis-rp
+  version: v1
+targets:
+- fieldPaths:
+  - spec.tls.0.hosts.0
+  - spec.rules.0.host
+  options:
+    delimiter: .
+  select:
+    kind: Ingress
+    name: ucis-ace-rp
+- fieldPaths:
+  - spec.rules.0.http.paths.0.backend.service.name
+  select:
+    kind: Ingress
+    name: ucis-ace-rp
