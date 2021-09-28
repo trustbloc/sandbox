@@ -23,5 +23,4 @@ kind: Kustomization
 
 components:
 - ../../components/mongodb
-- ../../components/mysql
 - ../../components/postgres

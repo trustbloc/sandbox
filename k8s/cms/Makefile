@@ -16,12 +16,12 @@ COMMON_LABELS		:= instance:${DEPLOYMENT_ENV}
 export DOMAIN      		?= ${DEPLOYMENT_ENV}.trustbloc.dev
 export BLOC_DOMAIN      		?= orb-1.${DOMAIN}
 
-export DATABASE_CLIENT				?= mysql
-export DATABASE_HOST					?= mysql-demo
-export DATABASE_PORT					?= 3306
+export DATABASE_CLIENT				?= postgres
+export DATABASE_HOST					?= postgres-demo
+export DATABASE_PORT					?= 5432
 export DATABASE_NAME					?= strapi
-export DATABASE_USERNAME			?= user
-export DATABASE_PASSWORD			?= secret
+export DATABASE_USERNAME			?= strapi
+export DATABASE_PASSWORD			?= strapi-secret-pw
 
 
 OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')

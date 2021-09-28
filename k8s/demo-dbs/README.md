@@ -14,4 +14,4 @@
 * `make clean`
 
 ## options and features
-* Will deploy Sandbox MongoDB and MySQL.
+* Will deploy Sandbox MongoDB and PostgresSQL.

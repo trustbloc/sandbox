@@ -19,7 +19,7 @@ ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
 POSTGRES_IMG		?= docker.io/postgres:13
-MYSQL_IMG		?= docker.io/mysql:8.0.20
+
 MONGODB_IMG		?= docker.io/mongo:4.0
 # do not modify
 KUSTOMIZE_DIR       	= kustomize/demo-dbs
@@ -53,9 +53,6 @@ set-images: kustomize
 	popd &&\
 	pushd ${KUSTOMIZE_DIR}/components/postgres &&\
 	${KUSTOMIZE} edit set image postgres=${POSTGRES_IMG} &&\
-	popd &&\
-	pushd ${KUSTOMIZE_DIR}/components/mysql &&\
-	${KUSTOMIZE} edit set image mysql=${MYSQL_IMG} &&\
 	popd
 
 .PHONY: deploy-demo-dbs

@@ -1,11 +1,11 @@
-# 
-# Copyright SecureKey Technologies Inc. All Rights Reserved. 
-# 
-# SPDX-License-Identifier: Apache-2.0 
-# 
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 apiVersion: svceng
 kind: SedB64Transformer
 metadata:
   name: sedb64transformer
-argsOneLiner: s^||AUTH_MYSQL_URL||^${AUTH_MYSQL_URL}^ s^||HYDRA_POSTGRES_DSN||^${HYDRA_POSTGRES_DSN}^
+argsOneLiner: s^||HYDRA_POSTGRES_DSN||^${HYDRA_POSTGRES_DSN}^
