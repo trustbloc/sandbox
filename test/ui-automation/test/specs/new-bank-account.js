@@ -99,6 +99,7 @@ describe("TrustBloc - New Bank Account", () => {
         const driversLicenseVC = await $('span*=Drivers License');
         await driversLicenseVC.waitForClickable();
         await driversLicenseVC.click()
+        // TODO: verify that the credential details show up with correct info
 
         const creditReportVC = await $('span*=TrustBloc - Credit Report Issuer');
         await creditReportVC.waitForClickable();
