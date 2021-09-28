@@ -14,4 +14,4 @@
 * `make clean`
 
 ## options and features
-* Will deploy Sandbox MySQL.
+* Will deploy Sandbox.
