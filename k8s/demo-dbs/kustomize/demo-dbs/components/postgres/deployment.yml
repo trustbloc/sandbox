@@ -1,0 +1,47 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: postgres-demo
+  name: postgres-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-demo
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: postgres-demo
+    spec:
+      containers:
+      - image: postgres:latest
+        imagePullPolicy: IfNotPresent
+        name: postgres-demo
+        env:
+          - name: POSTGRES_PASSWORD
+            value: secret
+        volumeMounts:
+          - mountPath: /docker-entrypoint-initdb.d
+            name: postgres-configure
+        ports:
+          - name: postgres-port
+            protocol: TCP
+            containerPort: 5432
+        resources: {}
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: postgres-configure
+        name: postgres-configure
+status: {}

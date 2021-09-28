@@ -20,8 +20,8 @@
 	- `login-consent.DOMAIN`
 	- `hydra.DOMAIN`
 	- `hydra-admin.DOMAIN`
-* Will deploy Sandbox login-consent with [Hydra](https://github.com/ory/hydra), pointing to an already provisioned MySQL specified with `HYDRA_MYSQL_DSN`
-	- `make deploy HYDRA_MYSQL_DSN=mysql://user:pass@@tcp(address:3306)`
+* Will deploy Sandbox login-consent with [Hydra](https://github.com/ory/hydra), pointing to an already provisioned PostgreSQL specified with `HYDRA_POSTGRES_DSN`
+	- `make deploy HYDRA_POSTGRES_DSN=postgres://user:pass@host:5432/dbname`
 * if running `podman` pass `CONTAINER_CMD=podman` as option to make
 * Running with none self-signed certificates: place certs into kustomize/login-consent/overlays/sandbox/certs, then run with: `make setup-no-certs`.
 >files:
