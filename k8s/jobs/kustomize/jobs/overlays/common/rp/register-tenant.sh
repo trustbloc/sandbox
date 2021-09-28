@@ -130,7 +130,7 @@ echo ""
 # end - register waci tenant at adapter-rp
 
 echo
-config_map_name=$(kubectl get cm  -l component=rp,group=demo  -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep rp-env)
+config_map_name=$(kubectl get pods -l component=rp,group=demo -o jsonpath='{.items[-1:].spec.containers[0].envFrom[0].configMapRef.name}' --sort-by=.metadata.creationTimestamp)
 config_map_data=$(mktemp)
 config_map_env_file=$(mktemp)
 config_map=$(mktemp)
@@ -149,8 +149,6 @@ grep -q '^RP_OIDC_CLIENTSECRET' ${config_map_env_file} &&  sed -i "s/^RP_OIDC_CL
 grep -q '^RP_WACI_OIDC_CLIENTID' ${config_map_env_file} &&  sed -i "s/^RP_WACI_OIDC_CLIENTID.*/RP_WACI_OIDC_CLIENTID=${waciClientID}/" ${config_map_env_file} || echo "RP_WACI_OIDC_CLIENTID=${waciClientID}" >> ${config_map_env_file}
 grep -q '^RP_WACI_OIDC_CLIENTSECRET' ${config_map_env_file} &&  sed -i "s/^RP_WACI_OIDC_CLIENTSECRET.*/RP_WACI_OIDC_CLIENTSECRET=${waciClientSecret}/" ${config_map_env_file} || echo "RP_WACI_OIDC_CLIENTSECRET=${waciClientSecret}" >> ${config_map_env_file}
 
-
-
 echo "mutating configMap ${config_map_name}"
 kubectl create cm ${config_map_name} --dry-run=client --from-env-file=${config_map_env_file} -o yaml > ${config_map}
 echo
@@ -158,7 +156,8 @@ cat ${config_map}
 echo
 kubectl apply -f ${config_map}
 echo "labeling"
-kubectl label cm ${config_map_name} component=rp group=demo project=trustbloc instance=||DEPLOYMENT_ENV||
+kubectl label --overwrite cm ${config_map_name} component=rp group=demo project=trustbloc instance=||DEPLOYMENT_ENV||
+
 echo "recycling rp deployment/pod"
 kubectl rollout restart deployment rp
 echo "Finished processing template"
