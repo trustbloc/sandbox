@@ -62,6 +62,8 @@ describe("TrustBloc - Flight Boarding", () => {
         browser.executeAsync((done) => {
             setTimeout(done, 5000)
         })
+
+        console.log('vaccination certification credential saved')
     })
 
     it('Issue Permanent Residence Card', async function () {
@@ -111,6 +113,8 @@ describe("TrustBloc - Flight Boarding", () => {
         browser.executeAsync((done) => {
             setTimeout(done, 5000)
         })
+
+        console.log('permanent resident card credential saved')
     })
 
     it('Issue Booking Reference', async function () {
@@ -148,6 +152,8 @@ describe("TrustBloc - Flight Boarding", () => {
         browser.executeAsync((done) => {
             setTimeout(done, 5000)
         })
+
+        console.log('booking reference credential saved')
     })
 
     it('Flight Check-in with Permanent Residence Card, Booking Reference ' +
@@ -169,9 +175,23 @@ describe("TrustBloc - Flight Boarding", () => {
             name: browser.config.walletName,
         });
 
+        const prCardCred = await $('div*=Permanent Resident Card');
+        await prCardCred.waitForExist();
+
+        const flightBookingCred = await $('div*=Taylor Flights Booking Reference');
+        await flightBookingCred.waitForExist();
+
+        const vacCred = await $('div*=Vaccination Certificate');
+        await vacCred.waitForExist();
+
         const shareCredBtn = await $('#share-credentials');
         await shareCredBtn.waitForClickable();
         await shareCredBtn.click();
+
+        // switching between windows
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        await browser.switchWindow(browser.config.walletURL);
+        await browser.switchWindow(browser.config.verifierURL);
 
         const checkinMsg = await $('div*=Check-In Successful');
         await checkinMsg.waitForExist();
