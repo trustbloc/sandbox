@@ -51,37 +51,9 @@ spec:
           initialDelaySeconds: 450
           periodSeconds: 10
           failureThreshold: 5
-        env:
-        - name: DATABASE_CLIENT
-          valueFrom:
-            configMapKeyRef:
-              name: strapi-env
-              key: DATABASE_CLIENT
-        - name: DATABASE_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: strapi-env
-              key: DATABASE_HOST
-        - name: DATABASE_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: strapi-env
-              key: DATABASE_PORT
-        - name: DATABASE_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: strapi-env
-              key: DATABASE_NAME
-        - name: DATABASE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: strapi-env-secret
-              key: DATABASE_USERNAME
-        - name: DATABASE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: strapi-env-secret
-              key: DATABASE_PASSWORD
+        envFrom:
+          - secretRef:
+             name: strapi-env-secret
         volumeMounts:
           - mountPath: /srv/scripts
             name: strapi-config
