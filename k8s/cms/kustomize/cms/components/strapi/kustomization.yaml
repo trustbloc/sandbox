@@ -17,9 +17,6 @@ secretGenerator:
   name: strapi-env-secret
 
 configMapGenerator:
-- envs:
-  - config.env
-  name: strapi-env
 - files:
   - strapi_configure.sh
   name: strapi-config
