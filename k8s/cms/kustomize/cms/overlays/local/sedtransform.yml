@@ -8,4 +8,4 @@ apiVersion: svceng
 kind: SedTransformer
 metadata:
   name: sedtransformer
-argsOneLiner: s/||DOMAIN||/${DOMAIN}/g s/||BLOC_DOMAIN||/${BLOC_DOMAIN}/g s/||DATABASE_CLIENT||/${DATABASE_CLIENT}/g s/||DATABASE_HOST||/${DATABASE_HOST}/g s/||DATABASE_PORT||/${DATABASE_PORT}/g s/||DATABASE_NAME||/${DATABASE_NAME}/g s/||DEPLOYMENT_ENV||/${DEPLOYMENT_ENV}/g
+argsOneLiner: s/||DOMAIN||/${DOMAIN}/g s/||BLOC_DOMAIN||/${BLOC_DOMAIN}/g s/||DEPLOYMENT_ENV||/${DEPLOYMENT_ENV}/g
