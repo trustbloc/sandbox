@@ -8,9 +8,9 @@ SPDX-License-Identifier: Apache-2.0
 'use strict';
 
 const {chapi, wallet, issuer, verifier} = require('../helpers');
-const profile= "trustbloc-ed25519signature2018-ed25519";
-const credentialKey ="PermanentResidentCard";
-const skipStatusCheck= false
+const profile = "trustbloc-ed25519signature2018-ed25519";
+const credentialKey = "PermanentResidentCard";
+const skipStatusCheck = false
 
 /*
    Use Case handling the following flow in the sequence:
@@ -20,8 +20,9 @@ const skipStatusCheck= false
    4. User sign in to the wallet.
    5. Check the saved credential present in the wallet.
    6. Verifies the saved credential.
-   7. User logout from the wallet.
-   8. User changes the locale
+   7. User deletes the credential.
+   8. User logout from the wallet.
+   9. User changes the locale
  */
 
 describe("TrustBloc - SignUp and SignIn flow", () => {
@@ -105,7 +106,7 @@ describe("TrustBloc - SignUp and SignIn flow", () => {
         await browser.navigateTo(browser.config.walletURL);
 
         // 2. Check if the credential is stored to the registered Wallet (register/sign-up/etc.)
-        await wallet.checkStoredCredentials(ctx);
+        await wallet.checkStoredCredentials();
     });
     it('User verifies the stored credential', async () => {
         // 1. Navigate to Verifier Website
@@ -121,6 +122,24 @@ describe("TrustBloc - SignUp and SignIn flow", () => {
 
         // 3. Show success message at Verifier Website
         await verifier.finish(ctx);
+    });
+    it(`User deletes the saved credential`, async function () {
+        this.timeout(90000);
+
+        // 1. Navigate to Wallet Website
+        await browser.navigateTo(browser.config.walletURL);
+
+        // 2. Check if the credential is stored to the registered Wallet (register/sign-up/etc.)
+        await wallet.checkStoredCredentials()
+
+        // Todo #1267 Refactor sign-in flow file
+        const storedCred = await $("span*=Permanent Resident Card");
+        await storedCred.waitForExist();
+        await storedCred.click();
+
+        // 3. Delete the stored credential
+        await wallet.deleteCredentials();
+        expect(await wallet.checkStoredCredentials()).toBeFalsy()
     });
     it(`User Logout (${ctx.email})`, async function () {
         this.timeout(300000);
