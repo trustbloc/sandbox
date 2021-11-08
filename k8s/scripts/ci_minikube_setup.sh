@@ -17,22 +17,41 @@ OS=$( uname -s | tr '[:upper:]' '[:lower:]' )
 
 MINIKUBE_IP=$( minikube ip )
 
-# Generate coredns configMap patch
-echo '        hosts {' > $PATCH
-for service in $SERVICES; do
-    echo "          $MINIKUBE_IP $service.$DOMAIN" >> $PATCH
-done
-echo '          fallthrough' >> $PATCH
-echo '        }' >> $PATCH
-
 # Patch coredns configMap
+echo 'Patching coredns configMap (adding custom service entries to the hosts section)...'
 if ! kubectl get cm coredns -n kube-system -o yaml | grep -q hosts; then
-    echo 'Patching coredns ConfigMap'
+    echo 'hosts section does not exist, adding it'
+
+    # Generate coredns configMap patch
+    echo '        hosts {' > $PATCH
+    for service in $SERVICES; do
+        echo "          $MINIKUBE_IP $service.$DOMAIN" >> $PATCH
+    done
+    echo '          fallthrough' >> $PATCH
+    echo '        }' >> $PATCH
+
     EDITOR='sed -i "/loadbalance/r.ingress_coredns.patch"' kubectl edit cm coredns -n kube-system
-    kubectl delete po -l k8s-app=kube-dns -n kube-system # apply new configmap changes
 else
-    echo 'Skipping coredns ConfigMap patch because it has already been patched. Please patch it manually to add any new entries.'
+    echo 'hosts section already exists, patching it'
+
+    # Generate new Corefile for replacement
+    kubectl get cm coredns -n kube-system -o jsonpath='{.data}' | jq -r '.Corefile' > Corefile.config
+    HOSTS_START_LINE=$( grep -n 'hosts {' Corefile.config | cut -d : -f 1 )
+    head -$HOSTS_START_LINE Corefile.config > $PATCH
+    for service in $SERVICES; do
+        echo "       $MINIKUBE_IP $service.$DOMAIN" >> $PATCH
+    done
+    tail +$(( HOSTS_START_LINE + 1 )) Corefile.config >> $PATCH
+
+    echo '=== listing the patched Corefile ==='
+    cat $PATCH
+    echo '=== end patched Corefile listing ==='
+
+    kubectl get cm coredns -n kube-system -o json | jq --arg replace "`cat $PATCH`" '.data.Corefile = $replace' | kubectl apply -f -
 fi
+echo 'Restarting coredns pod to apply the patch'
+kubectl delete po -l k8s-app=kube-dns -n kube-system
+echo 'Done patching coreDNS configMap'
 
 echo 'updating entries in /etc/hosts'
 echo '=========================== CUT =========================='

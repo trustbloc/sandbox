@@ -2,8 +2,8 @@ name: "sandbox ci"
 
 env:
   GO_VERSION: 1.16
-  MINIKUBE_VERSION: v1.20.0
-  KUBERNETES_VERSION: v1.20.4
+  MINIKUBE_VERSION: v1.24.0
+  KUBERNETES_VERSION: v1.20.7
 
 on:
   push:
@@ -89,7 +89,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
       - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.3.1
+        uses: manusa/actions-setup-minikube@v2.4.2
         with:
           minikube version: '${{ env.MINIKUBE_VERSION }}'
           kubernetes version: '${{ env.KUBERNETES_VERSION }}'
@@ -122,7 +122,7 @@ jobs:
         run: |
           make sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker login-consent-server-docker sandbox-cli-docker
       - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.3.1
+        uses: manusa/actions-setup-minikube@v2.4.2
         with:
           minikube version: '${{ env.MINIKUBE_VERSION }}'
           kubernetes version: '${{ env.KUBERNETES_VERSION }}'
