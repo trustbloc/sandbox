@@ -17,6 +17,12 @@ OS=$( uname -s | tr '[:upper:]' '[:lower:]' )
 
 MINIKUBE_IP=$( minikube ip )
 
+add_host_entries() {
+    for service in $SERVICES; do
+        echo "          $MINIKUBE_IP $service.$DOMAIN" >> $1
+    done
+}
+
 # Patch coredns configMap
 echo 'Patching coredns configMap (adding custom service entries to the hosts section)...'
 if ! kubectl get cm coredns -n kube-system -o yaml | grep -q hosts; then
@@ -24,9 +30,7 @@ if ! kubectl get cm coredns -n kube-system -o yaml | grep -q hosts; then
 
     # Generate coredns configMap patch
     echo '        hosts {' > $PATCH
-    for service in $SERVICES; do
-        echo "          $MINIKUBE_IP $service.$DOMAIN" >> $PATCH
-    done
+    add_host_entries $PATCH
     echo '          fallthrough' >> $PATCH
     echo '        }' >> $PATCH
 
@@ -38,9 +42,7 @@ else
     kubectl get cm coredns -n kube-system -o jsonpath='{.data}' | jq -r '.Corefile' > Corefile.config
     HOSTS_START_LINE=$( grep -n 'hosts {' Corefile.config | cut -d : -f 1 )
     head -$HOSTS_START_LINE Corefile.config > $PATCH
-    for service in $SERVICES; do
-        echo "       $MINIKUBE_IP $service.$DOMAIN" >> $PATCH
-    done
+    add_host_entries $PATCH
     tail +$(( HOSTS_START_LINE + 1 )) Corefile.config >> $PATCH
 
     echo '=== listing the patched Corefile ==='
