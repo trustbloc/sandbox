@@ -59,10 +59,10 @@ minikube-image-load:
 	@rm cli_img_local.image
 
 ci-minikube-setup: pull-core-deployment
-		cd scripts && ./ci_minikube_setup.sh
+		cd scripts && bash ./ci_minikube_setup.sh
 
 minikube-up: pull-core-deployment
-	cd scripts && ./minikube_setup.sh
+	cd scripts && bash ./minikube_setup.sh
 	@echo "Apply/verify the required changes to /etc/hosts. Once done, press ENTER" && read L
 
 minikube-down:
