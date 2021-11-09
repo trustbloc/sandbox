@@ -38,11 +38,11 @@ else
     echo 'hosts section already exists, patching it'
 
     # Generate new Corefile for replacement
-    jq -r '.data.Corefile' $COREDNS_CM > Corefile.config
-    HOSTS_START_LINE=$( grep -n 'hosts {' Corefile.config | cut -d : -f 1 )
-    head -$HOSTS_START_LINE Corefile.config > $PATCH
+    jq -r '.data.Corefile' $COREDNS_CM > .Corefile.config
+    HOSTS_START_LINE=$( grep -n 'hosts {' .Corefile.config | cut -d : -f 1 )
+    head -$HOSTS_START_LINE .Corefile.config > $PATCH
     generate_host_entries '       ' >> $PATCH
-    tail +$(( HOSTS_START_LINE + 1 )) Corefile.config >> $PATCH
+    tail +$(( HOSTS_START_LINE + 1 )) .Corefile.config >> $PATCH
 
     echo '=== listing the patched Corefile ==='
     cat $PATCH
@@ -56,19 +56,25 @@ kubectl rollout restart deployment/coredns -n kube-system
 
 echo 'Verifying that DNS resolution works inside the cluster'
 
-DNS_CHECK=
+ROLLOUT_CHECK=
 for i in {1..10}; do
     echo "Checking coredns rollout status, attempt $i"
     if kubectl rollout status deployment/coredns -n kube-system | grep -q 'successfully rolled out'; then
-        DNS_CHECK="success"
+        ROLLOUT_CHECK='success'
         break
     fi
     sleep 3
 done
 
-if [[ $DNS_CHECK = "success" ]]; then
+DNS_CHECK=
+if [[ $ROLLOUT_CHECK = 'success' ]]; then
     DNS_CHECK_SCRIPT="for svc in ${SERVICES[*]}; do echo Checking DNS for \$svc...; host \$svc.$DOMAIN | grep \$svc.$DOMAIN; done"
-    kubectl run dnsutils --image=gcr.io/kubernetes-e2e-test-images/dnsutils:1.3 --rm --attach --command --restart=Never -- sh -ec "$DNS_CHECK_SCRIPT"
+    if kubectl run dnsutils --image=gcr.io/kubernetes-e2e-test-images/dnsutils:1.3 --rm --attach --command --restart=Never -- sh -ec "$DNS_CHECK_SCRIPT"; then
+        DNS_CHECK='success'
+    fi
+fi
+
+if [[ $ROLLOUT_CHECK = 'success' && $DNS_CHECK = 'success' ]]; then
     echo 'Done patching coreDNS configMap'
 else
     echo 'DNS resolution test failed, rolling back the coreDNS configMap'
