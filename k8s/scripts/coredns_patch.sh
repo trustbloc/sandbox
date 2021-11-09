@@ -1,11 +1,11 @@
+#!/usr/bin/env bash
 #
 # Copyright SecureKey Technologies Inc. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-
-#!/usr/bin/env bash
 set -e
+
 PATCH=.ingress_coredns.patch
 
 # List of services used to generate domain names
