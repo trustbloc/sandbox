@@ -20,9 +20,15 @@ generate_host_entries() {
     done
 }
 
+check_dns_resolution() {
+    DNS_CHECK_SCRIPT="for svc in ${SERVICES[*]}; do echo Checking DNS for \$svc...; host \$svc.$DOMAIN | grep \$svc.$DOMAIN; done"
+    kubectl run dnsutils --image=gcr.io/kubernetes-e2e-test-images/dnsutils:1.3 --rm --attach --command --restart=Never -- sh -ec "$DNS_CHECK_SCRIPT"
+}
+
 # Patch coredns configMap
 echo 'Patching coredns configMap (adding custom service entries to the hosts section)...'
 kubectl get cm coredns -n kube-system -o json > $COREDNS_CM
+
 if ! grep -q hosts $COREDNS_CM; then
     echo 'hosts section does not exist, adding it'
 
@@ -49,15 +55,27 @@ else
 
     jq --arg replace "`cat $PATCH`" '.data.Corefile = $replace' $COREDNS_CM | kubectl apply -f -
 fi
+
 echo 'Running kubectl rollout restart for coredns...'
 kubectl rollout restart deployment/coredns -n kube-system
+
 echo 'Verifying that DNS resolution works inside the cluster'
-DNS_CHECK_SCRIPT="for svc in ${SERVICES[*]}; do echo Checking DNS for \$svc...; host \$svc.$DOMAIN | grep \$svc.$DOMAIN; done"
-if ! kubectl run dnsutils --image=gcr.io/kubernetes-e2e-test-images/dnsutils:1.3 --rm --attach --command --restart=Never -- sh -ec "$DNS_CHECK_SCRIPT"; then
+
+DNS_CHECK=
+for i in 1 2 3; do
+    echo "DNS check attempt $i"
+    if check_dns_resolution; then
+        DNS_CHECK="success"
+        break
+    fi
+    sleep 3
+done
+
+if [[ $DNS_CHECK = "success" ]]; then
+    echo 'Done patching coreDNS configMap'
+else
     echo 'DNS resolution test failed, rolling back the coreDNS configMap'
-    kubectl apply -f $COREDNS_CM -n kube-system
+    kubectl apply -f $COREDNS_CM -n kube-system --force=true
     kubectl rollout undo deployment/coredns -n kube-system
     exit 11
-else
-    echo 'Done patching coreDNS configMap'
 fi
