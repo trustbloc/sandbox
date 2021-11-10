@@ -47,8 +47,14 @@ secretGenerator:
 
 replacements:
 - path: benefits-dept/replacements.yml
+  source: null
+  targets: null
 - path: cbp/replacements.yml
+  source: null
+  targets: null
 - path: ucis/replacements.yml
+  source: null
+  targets: null
 - source:
     kind: Secret
     name: demo-applications-wildcard-cert

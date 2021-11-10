@@ -40,8 +40,14 @@ configMapGenerator:
 
 replacements:
 - path: hydra/replacements.yml
+  source: null
+  targets: null
 - path: hydra-admin/replacements.yml
+  source: null
+  targets: null
 - path: login-consent/replacements.yml
+  source: null
+  targets: null
 - source:
     kind: Secret
     name: login-consent-wildcard-cert

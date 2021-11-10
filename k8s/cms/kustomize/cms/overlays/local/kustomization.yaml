@@ -29,7 +29,11 @@ resources:
 
 replacements:
 - path: oathkeeper/replacements.yml
+  source: null
+  targets: null
 - path: strapi/replacements.yml
+  source: null
+  targets: null
 - source:
     kind: Secret
     name: cms-wildcard-cert
