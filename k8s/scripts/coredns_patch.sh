@@ -57,14 +57,9 @@ kubectl rollout restart deployment/coredns -n kube-system
 echo 'Verifying that DNS resolution works inside the cluster'
 
 ROLLOUT_CHECK=
-for i in {1..10}; do
-    echo "Checking coredns rollout status, attempt $i"
-    if kubectl rollout status deployment/coredns -n kube-system | grep -q 'successfully rolled out'; then
-        ROLLOUT_CHECK='success'
-        break
-    fi
-    sleep 3
-done
+if kubectl rollout status deployment/coredns -n kube-system --timeout=60s; then
+    ROLLOUT_CHECK='success'
+fi
 
 DNS_CHECK=
 if [[ $ROLLOUT_CHECK = 'success' ]]; then
