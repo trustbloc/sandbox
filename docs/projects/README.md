@@ -26,7 +26,28 @@ Notable open standard ecosystem TrustBloc is following are,
  - [TrustBloc Demos](#trustbloc-demos)
 
 ### TrustBloc Verifiable Credential Services (VCS)
-TODO
+The VC services are a set of RESTful API definitions conforming with the
+[OpenAPI 3.0 Specification](https://swagger.io/specification/) (formerly known
+as Swagger) for the roles of Issuer, Verifier, and Holder as described in the
+[Verifiable Credential Data Model](https://www.w3.org/TR/vc-data-model/)
+specification.  These APIs provide a standard set of interfaces by which
+interoperability may be tested and verified by various parties who leverage
+Verifiable Credentials (VCs).
+
+Current versions of the APIs are,
+* [Issuer](https://w3c-ccg.github.io/vc-api/issuer.html)
+* [Holder](https://w3c-ccg.github.io/vc-api/holder.html)
+* [Verifier](https://w3c-ccg.github.io/vc-api/verifier.html)
+
+
+##### Notable Standards Followed:
+ * [Verifiable Credentials HTTP API v0.3](https://w3c-ccg.github.io/vc-api/): For various operations like authorizing, issuing, verifying, presenting verifiable credentials.
+ * [Verifiable Credentials Data Model v1.1](https://www.w3.org/TR/vc-data-model/): For all the verifiable credential data model operations.
+ * [JSON-LD v1.1](https://w3c.github.io/json-ld-syntax/): For JSON-based Serialization for Linked Data.
+ * [Linked Data Proofs v1.0](https://w3c-ccg.github.io/ld-proofs/): For generating JSON-LD based linked data proofs.
+ 
+
+Visit the [project repo](https://github.com/trustbloc/edge-service) to learn more about VCS services, API documentation and setup instructions.
 
 ### TrustBloc Wallet
 TODO
