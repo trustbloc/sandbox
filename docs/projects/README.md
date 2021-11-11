@@ -48,7 +48,7 @@ Current versions of the APIs are,
  * [Decentralized Identifiers (DIDs) v1.0](https://w3c.github.io/did-core/): For signing and verifying verifiable credentials and presentations.
  
 
-Visit the [project repo](https://github.com/trustbloc/edge-service) to learn more about VCS services, API documentation and setup instructions.
+Visit the [project repo](https://github.com/trustbloc/edge-service) to learn more about VCS services, API documentation, configuration and setup instructions.
 
 ### TrustBloc Wallet
 The TrustBloc Wallet is [Universal Wallet](https://w3c-ccg.github.io/universal-wallet-interop-spec/) based [Verifiable Credential](https://www.w3.org/TR/vc-data-model/) 
@@ -86,7 +86,8 @@ Useful documents to learn more about TrustBloc Wallets
 Currently In Progress
 * [DIDComm V2](https://identity.foundation/didcomm-messaging/spec/): Version 2 DID Communication protocol is currently being implemented in TrustBloc Wallet.
     
-Visit the [project repo](https://github.com/trustbloc/wallet) to learn more about web wallet, API documentation and setup instructions.
+Visit the [project repo](https://github.com/trustbloc/wallet) to learn more about web wallet, API documentation, configuration and setup instructions.
+
 
 ### TrustBloc Orb
 Orb is a decentralized identifier (DID) method based on a federated and replicated Verifiable Data Registry (VDR). 
@@ -97,7 +98,6 @@ Each Orb witness server observes a subset of batches in the graph and includes t
 append-only Merkle Tree logs). The servers coordinate by propagating batches of DID operations and by monitoring the 
 applicable witness servers' ledgers. The Orb servers form a decentralized network without reliance on a common blockchain 
 for coordination.
-
 
 ##### Notable Standards Followed:
 * [The did:orb Method v0.2](https://trustbloc.github.io/did-method-orb/): For Orb spec.
@@ -115,24 +115,107 @@ for coordination.
   their associated PKI metadata, all without the need for centralized authorities or trusted third parties. The syntax of the identifier and accompanying data model used 
   by the protocol is conformant with the [W3C Decentralized Identifiers](https://w3c.github.io/did-core/) specification. Implementations of the protocol can be codified as their own distinct DID Methods and registered 
   in the [W3C DID Method Registry](https://w3c.github.io/did-spec-registries/#did-methods).
+* [Activity Anchors v0.1](https://trustbloc.github.io/activityanchors/): The decentralized network consists of Activity Anchor Servers that write, monitor, witness, and propagate batches of document operations. TrustBloc Orb 
+has implemented data model and rules for representing a graph of batches by following this standard.
 
 
-Visit the [project repo](https://github.com/trustbloc/orb) to learn more about Orb services, API documentation and setup instructions.
+Visit the [project repo](https://github.com/trustbloc/orb) to learn more about Orb services, API documentation, configuration and setup instructions.
 
 ### TrustBloc DIDComm Router
-TODO
+The TrustBloc hub-router is a working implementation of the [Mediator Coordination](https://github.com/hyperledger/aries-rfcs/blob/main/features/0211-route-coordination/README.md) and 
+the [Pickup](https://github.com/hyperledger/aries-rfcs/blob/main/features/0212-pickup/README.md) protocols built using [Hyperledger Aries Framework](https://github.com/hyperledger/aries-framework-go).
+This hub-router can be used by edge agents like web wallet or mobile wallets to send/receive DIDComm messages on their behalf.
+
+##### Notable Standards Followed:
+ * [WebKMS v0.7](https://w3c-ccg.github.io/webkms/): For implementing cryptographic key management systems for the router.
+ * [Aries RFCS](#aries-rfcs): The router implements many aries RFCs for receving and sending messages secureley on behalf of registered edge agents.
+    * [Mediator Coordination](https://github.com/hyperledger/aries-rfcs/blob/main/features/0211-route-coordination/README.md)
+    * [Pickup](https://github.com/hyperledger/aries-rfcs/blob/main/features/0212-pickup/README.md) 
+    * [DIDComm Between Two Mobile Agents Using Cloud Agent Mediator](https://github.com/hyperledger/aries-rfcs/blob/main/concepts/0346-didcomm-between-two-mobile-agents/README.md) 
+
+Currently In Progress
+* [DIDComm V2](https://identity.foundation/didcomm-messaging/spec/): Version 2 DID Communication protocol is currently being implemented in hub-router.
+    
+Visit the [project repo](https://github.com/trustbloc/hub-router) to learn more about hub-router, API documentation, configuration and setup instructions.
 
 ### TrustBloc Adapters
-TODO
+The TrustBloc Adapter acts as an intermediary between Relying Party/Issuer components to support DIDComm operations by hiding majority of the complex interactions or operations. 
+The adapter uses the capabilities provided by [Hyperledger Aries Framework](https://github.com/hyperledger/aries-framework-go) such as DIDComm, W3C Verifiable Credentials(VC), W3C Decentralized Identifiers(DIDs), etc.
+
+The Adapter contains following components.
+
+* [Issuer Adapter](https://github.com/trustbloc/adapter/blob/main/docs/issuer/README.md) :
+* [Relying Party (RP) Adapter](https://github.com/trustbloc/adapter/blob/main/docs/rp/README.md)
+
+The TrustBloc Adapters also provides support for DIDComm to go through a router using [Blinded Routing feature](https://github.com/trustbloc/adapter/blob/main/docs/blinded_routing.md).
+
+##### Notable Standards Followed:
+ * [Verifiable Presentation Request Specification v0.1](https://w3c-ccg.github.io/vp-request-spec/): Standards for requesting credentials to share from user's wallet.
+ * [Presentation Exchange v2.0.0](https://identity.foundation/presentation-exchange/): An advanced form credential request standard which codifies a data format Verifiers can use to articulate proof requirements, and a data format Holders can use to describe proofs submitted in accordance with them.
+ * [Verifiable Credentials Data Model v1.1](https://www.w3.org/TR/vc-data-model/): For all the verifiable credential data model operations.
+ * [JSON-LD v1.1](https://w3c.github.io/json-ld-syntax/): For JSON-based Serialization for Linked Data.
+ * [Linked Data Proofs v1.0](https://w3c-ccg.github.io/ld-proofs/): For generating JSON-LD based linked data proofs.
+ * [Decentralized Identifiers (DIDs) v1.0](https://w3c.github.io/did-core/): For signing and verifying verifiable credentials and presentations.
+ * [WebKMS v0.7](https://w3c-ccg.github.io/webkms/): For implementing cryptographic key management systems for the wallet.
+ * [Authorization Capabilities for Linked Data v0.3](https://w3c-ccg.github.io/zcap-ld/): Followed for implementing features which provides a secure way for linked data systems to grant and express authority utilizing the object capability model.
+ * [Decentralized Identifier Resolution (DID Resolution) v0.2](https://w3c-ccg.github.io/did-resolution/): Followed for resolving various decentralized identifiers. 
+ * [The did:orb Method v0.2](https://trustbloc.github.io/did-method-orb/): For Orb decentralized identifiers which is the default decentralized idenitfiers for TrustBloc wallets.
+ * [Aries RFCS](#aries-rfcs): Since TrustBloc adapters performs credential interaction using aries based framework, it follows many aries RFCs standards for DIDComm, Out-Of-Band Messaging, Issue Credential Protocol, Present Proof Protocol, Messaging etc.
+
+Currently In Progress
+* [DIDComm V2](https://identity.foundation/didcomm-messaging/spec/): Version 2 DID Communication protocol is currently being implemented in TrustBloc Adapter.
+    
+Visit the [project repo](https://github.com/trustbloc/adapter) to learn more about adapters, API documentation, configuration and setup instructions.
 
 ### TrustBloc EDV
-TODO
+An implementation of Encrypted Data Vaults from the [Confidential Storage v0.1](https://identity.foundation/confidential-storage/) specification. 
+This encrypted data vault is used by various TrustBloc components to save user data, like wallet contents of wallet user.
+
+##### Notable Standards Followed:
+ * [Confidential Storage v0.1](https://identity.foundation/confidential-storage/): For secured storage of wallet contents, also know as Encrypted Data Vault.
+ * [JSON-LD v1.1](https://w3c.github.io/json-ld-syntax/): For JSON-based Serialization for Linked Data.
+ * [WebKMS v0.7](https://w3c-ccg.github.io/webkms/): For implementing cryptographic key management systems for the wallet.
+ * [Authorization Capabilities for Linked Data v0.3](https://w3c-ccg.github.io/zcap-ld/): Followed for implementing advanced wallet features which provides a secure way for linked data systems to grant and express authority utilizing the object capability model.
+ * [Aries RFCS](#aries-rfcs): Since TrustBloc EDV uses on aries framework based storage interfaces, it follows many aries RFCs features related to secured data storage.
+
+Visit the [project repo](https://github.com/trustbloc/edv) to learn more about edv, API documentation, configuration and setup instructions.
+
 
 ### TrustBloc KMS
-TODO
+The TrustBloc KMS is an implementation of the remote Key Management System. It exposes kms/crypto operations over REST API.
+Refer [design overview](https://github.com/trustbloc/kms/blob/main/docs/design_overview.md) of TrustBloc KMS for more details.
+
+##### Notable Standards Followed:
+ * [Confidential Storage v0.1](https://identity.foundation/confidential-storage/): For secured storage of wallet contents, also know as Encrypted Data Vault.
+ * [WebKMS v0.7](https://w3c-ccg.github.io/webkms/): For implementing cryptographic key management systems for the wallet.
+ * [Authorization Capabilities for Linked Data v0.3](https://w3c-ccg.github.io/zcap-ld/): Followed for implementing advanced wallet features which provides a secure way for linked data systems to grant and express authority utilizing the object capability model.
+ * [Aries RFCS](#aries-rfcs): Since TrustBloc KMS follows many aries RFCs standards related to key management.
+
+Visit the [project repo](https://github.com/trustbloc/kms) to learn more about TrustBloc KMS, API documentation, configuration and setup instructions.
 
 ### TrustBloc Demos
-TODO
+The TrustBloc Demo is decentralized identity ecosystem sample application built using all of the above TrustBloc components to demonstrate their interactions by following various open standards.
+
+### Sample Applications
+- [Issuer](../issuer/README.md)
+- [Relying Party/Verifier](../rp/README.md)
+- [Anonymous Comparator and Extractor - Relying Party (ACE-RP)](../ace-rp/README.md)
+
+### Demos
+- [TrustBloc VCS](../demo/sandbox_vcs_playground.md) : CHAPI + VC Services + Selective Disclosure
+  - [Flight Boarding use case](../demo/flight-boarding-usecase.md)
+- [TrustBloc Adapter](../demo/sandbox_adapter_playground.md) : [CHAPI](https://w3c-ccg.github.io/credential-handler-api/)/[WACI-PEx](https://identity.foundation/waci-presentation-exchange/) + DIDComm
+  - [Duty Free Shopping use case](../demo/duty-free-shop-usecase.md) (WACI-PEx + DIDComm)
+  - [New Bank Account use case](../demo/new-bank-account-usecase.md) (CHAPI + DIDComm)
+- [TrustBloc Anonymous Comparator and Extractor(ACE)](../demo/sandbox_ace_playground.md)
+
+### Component Details
+- [TrustBloc VCS](../components/vcs_components.md)
+- [TrustBloc Adapter](../components/adapter_components.md)
+- [TrustBloc Anonymous Comparator and Extractor(ACE)](../components/ace_components.md) 
+
+Visit the [project repo](https://github.com/trustbloc/sandbox) to learn more about TrustBloc Demos.
+
 
 ## Aries RFCs
 
