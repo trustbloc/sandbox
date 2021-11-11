@@ -45,12 +45,48 @@ Current versions of the APIs are,
  * [Verifiable Credentials Data Model v1.1](https://www.w3.org/TR/vc-data-model/): For all the verifiable credential data model operations.
  * [JSON-LD v1.1](https://w3c.github.io/json-ld-syntax/): For JSON-based Serialization for Linked Data.
  * [Linked Data Proofs v1.0](https://w3c-ccg.github.io/ld-proofs/): For generating JSON-LD based linked data proofs.
+ * [Decentralized Identifiers (DIDs) v1.0](https://w3c.github.io/did-core/): For signing and verifying verifiable credentials and presentations.
  
 
 Visit the [project repo](https://github.com/trustbloc/edge-service) to learn more about VCS services, API documentation and setup instructions.
 
 ### TrustBloc Wallet
-TODO
+The TrustBloc Wallet is [Universal Wallet](https://w3c-ccg.github.io/universal-wallet-interop-spec/) based [Verifiable Credential](https://www.w3.org/TR/vc-data-model/) 
+digital Web Wallet implementation for storing and sharing Verifiable Credentials, also with support for [DIDComm](https://github.com/hyperledger/aries-rfcs/blob/main/concepts/0005-didcomm/README.md).
+
+This Project has 2 components,
+- Wallet Web: Browser based client-side component of web wallet.
+- Wallet Server: Server component of web wallet, which provides features like user on-boarding, user management etc.
+
+Useful documents to learn more about TrustBloc Wallets
+* [User Agent Web Wallet](https://github.com/trustbloc/wallet/blob/main/docs/components/wallet_web.md)
+* [Aries Verifiable Credential Wallet](https://github.com/hyperledger/aries-framework-go/blob/main/docs/vc_wallet.md)
+* [Wallet JavaScript SDK](https://github.com/trustbloc/agent-sdk/blob/main/cmd/wallet-js-sdk/docs/wallet_sdk.md)
+
+
+##### Notable Standards Followed:
+ * [Universal Wallet 2020](https://w3c-ccg.github.io/universal-wallet-interop-spec/): All wallet operations are based on the universal wallet standard interfaces and data models, 
+ like credential operations, managing decentralized identifiers, user preferences etc.
+ * [WACI Presentation Exchange](https://identity.foundation/waci-presentation-exchange/): Wallet and credential interaction standards using DIDComm.
+ * [Credential Handler API v1.0](https://w3c-ccg.github.io/credential-handler-api/): This specification defines capabilities that enable third-party Web applications to handle credential requests and storage.
+  This is used for implementing browser based polyfill web wallets.
+ * [Verifiable Presentation Request Specification v0.1](https://w3c-ccg.github.io/vp-request-spec/): Standards for requesting credentials to share from wallet.
+ * [Presentation Exchange v2.0.0](https://identity.foundation/presentation-exchange/): An advanced form credential request standard which codifies a data format Verifiers can use to articulate proof requirements, and a data format Holders can use to describe proofs submitted in accordance with them.
+ * [Confidential Storage v0.1](https://identity.foundation/confidential-storage/): For secured storage of wallet contents, also know as Encrypted Data Vault.
+ * [Verifiable Credentials Data Model v1.1](https://www.w3.org/TR/vc-data-model/): For all the verifiable credential data model operations.
+ * [JSON-LD v1.1](https://w3c.github.io/json-ld-syntax/): For JSON-based Serialization for Linked Data.
+ * [Linked Data Proofs v1.0](https://w3c-ccg.github.io/ld-proofs/): For generating JSON-LD based linked data proofs.
+ * [Decentralized Identifiers (DIDs) v1.0](https://w3c.github.io/did-core/): For signing and verifying verifiable credentials and presentations.
+ * [WebKMS v0.7](https://w3c-ccg.github.io/webkms/): For implementing cryptographic key management systems for the wallet.
+ * [Authorization Capabilities for Linked Data v0.3](https://w3c-ccg.github.io/zcap-ld/): Followed for implementing advanced wallet features which provides a secure way for linked data systems to grant and express authority utilizing the object capability model.
+ * [Decentralized Identifier Resolution (DID Resolution) v0.2](https://w3c-ccg.github.io/did-resolution/): Followed for resolving various decentralized identifiers. 
+ * [The did:orb Method v0.2](https://trustbloc.github.io/did-method-orb/): For Orb decentralized identifiers which is the default decentralized idenitfiers for TrustBloc wallets.
+ * [Aries RFCS](#aries-rfcs): Since TrustBloc wallet is built on aries framework based user agents, it follows many aries RFCs features like DIDComm, Out-Of-Band Messaging, Issue Credential Protocol, Present Proof Protocol, Messaging, Mediators etc.
+
+Currently In Progress
+* [DIDComm V2](https://identity.foundation/didcomm-messaging/spec/): Version 2 DID Communication protocol is currently being implemented in TrustBloc Wallet.
+    
+Visit the [project repo](https://github.com/trustbloc/wallet) to learn more about web wallet, API documentation and setup instructions.
 
 ### TrustBloc Orb
 Orb is a decentralized identifier (DID) method based on a federated and replicated Verifiable Data Registry (VDR). 
@@ -97,6 +133,59 @@ TODO
 
 ### TrustBloc Demos
 TODO
+
+## Aries RFCs
+
+Most of the TrustBloc projects are based Aries Framework which has implemented below [aries RFCS](https://github.com/hyperledger/aries-rfcs) mentioned. 
+* 0003: Protocols
+* 0004: Agents
+* 0005: DID Communication
+* 0008: Message ID and Threading
+* 0011: Decorators
+* 0015: ACKs
+* 0017: Attachments
+* 0019: Encryption Envelope
+* 0020: Message Types
+* 0023: DID Exchange Protocol 1.0
+* 0025: DIDComm Transports
+* 0035: Report Problem Protocol 1.0
+* 0036: Issue Credential Protocol 1.0
+* 0037: Present Proof Protocol 1.0
+* 0044: DIDComm File and MIME Types
+* 0046: Mediators and Relays
+* 0047: JSON-LD Compatibility
+* 0092: Transports Return Route
+* 0160: Connection Protocol
+* 0211: Mediator Coordination Protocol
+* 0302: Aries Interop Profile
+* 0360: did:key Usage
+* 0434: Out-of-Band Protocol 1.1
+* 0441: Prover and Verifier Best Practices for Proof Presentation
+* 0453: Issue Credential Protocol 2.0
+* 0454: Present Proof Protocol 2.0
+* 0510: Presentation-Exchange Attachment format for requesting and presenting proofs
+* 0519: Goal Codes
+* 0557: Discover Features Protocol v2.x
+* 0587: Encryption Envelope v2
+* 0593: JSON-LD Credential Attachment format for requesting and issuing credentials
+* 0627: Static Peer DIDs
+* 0646: W3C Credential Exchange using BBS+ Signatures
+* 0348: Transition Message Type to HTTPs
+* 0021: DIDComm Message Anatomy
+* 0024: DIDComm over XMPP
+* 0028: Introduce Protocol 1.0
+* 0056: Service Decorator
+* 0067: DIDComm DID document conventions
+* 0074: DIDComm Best Practices
+* 0124: DID Resolution Protocol 0.9
+* 0270: Interop Test Suite
+* 0309: DIDAuthZ
+* 0317: Please ACK Decorator
+* 0335: HTTP Over DIDComm
+* 0346: DIDComm Between Two Mobile Agents Using Cloud Agent Mediator
+* 0351: Purpose Decorator
+* 0511: Credential-Manifest Attachment format for requesting and presenting credentials
+* 0700: Out-of-Band through redirect
 
 ## Contributing
 Thank you for your interest in contributing. Please see our [community contribution guidelines](https://github.com/trustbloc/community/blob/main/CONTRIBUTING.md) for more information.
