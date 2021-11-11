@@ -16,6 +16,9 @@ by the [TrustBloc](https://github.com/trustbloc) projects.
 - [DIF Sidetree](https://identity.foundation/sidetree/spec/)
 - [DID Orb Method](https://trustbloc.github.io/did-method-orb/) 
 
+## Projects
+Follow this [link](docs/projects/README.md) to learn more about all the TrustBloc projects and APIs. 
+
 ## Sample Applications
 - [Issuer](docs/issuer/README.md)
 - [Relying Party/Verifier](docs/rp/README.md)
