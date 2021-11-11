@@ -6,3 +6,5 @@
 
 # ingress patch file
 .ingress*
+.coredns*
+.Corefile*
