@@ -53,7 +53,35 @@ Visit the [project repo](https://github.com/trustbloc/edge-service) to learn mor
 TODO
 
 ### TrustBloc Orb
-TODO
+Orb is a decentralized identifier (DID) method based on a federated and replicated Verifiable Data Registry (VDR). 
+The decentralized network consists of Orb servers that write, monitor, witness, and propagate batches of DID operations. 
+The batches form a graph that is propagated and replicated between the servers as content-addressable objects. 
+These content-addressable objects can be located via both domain and distributed hash table (DHT) mechanisms. 
+Each Orb witness server observes a subset of batches in the graph and includes them in their ledgers (as 
+append-only Merkle Tree logs). The servers coordinate by propagating batches of DID operations and by monitoring the 
+applicable witness servers' ledgers. The Orb servers form a decentralized network without reliance on a common blockchain 
+for coordination.
+
+
+##### Notable Standards Followed:
+* [The did:orb Method v0.2](https://trustbloc.github.io/did-method-orb/): For Orb spec.
+* [ActivityPub](https://www.w3.org/TR/activitypub/): The ActivityPub protocol is a decentralized social networking protocol 
+  based upon the [ActivityStreams 2.0](https://www.w3.org/TR/activitystreams-core/) data format. 
+  It provides a client to server API for creating, updating and deleting content, as well as a federated server to server API for delivering notifications and content.
+* [WebFinger](https://www.rfc-editor.org/rfc/rfc7033): This specification defines the WebFinger protocol, which can be used
+  to discover information about people or other entities on the
+  Internet using standard HTTP methods.  WebFinger discovers
+  information for a URI that might not be usable as a locator
+  otherwise, such as account or email URIs.
+* [Sidetree v1.0.0](https://identity.foundation/sidetree/spec/v1.0.0/): Sidetree is a protocol for creating scalable [Decentralized Identifier](https://w3c.github.io/did-core/) networks that can run 
+  atop any existing decentralized anchoring system (e.g. Bitcoin, Ethereum, distributed ledgers, witness-based approaches) and be as open, public, and permissionless as 
+  the underlying anchoring systems they utilize. The protocol allows users to create globally unique, user-controlled identifiers and manage 
+  their associated PKI metadata, all without the need for centralized authorities or trusted third parties. The syntax of the identifier and accompanying data model used 
+  by the protocol is conformant with the [W3C Decentralized Identifiers](https://w3c.github.io/did-core/) specification. Implementations of the protocol can be codified as their own distinct DID Methods and registered 
+  in the [W3C DID Method Registry](https://w3c.github.io/did-spec-registries/#did-methods).
+
+
+Visit the [project repo](https://github.com/trustbloc/orb) to learn more about Orb services, API documentation and setup instructions.
 
 ### TrustBloc DIDComm Router
 TODO
