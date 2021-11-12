@@ -11,6 +11,7 @@ set -e
 : ${MEMORY:=6g}
 : ${CPUS:=4}
 : ${ADDONS:=ingress,ingress-dns,dashboard}
+: ${KUBERNETES_VERSION:=v1.21.2}
 
 OS=$( uname -s | tr '[:upper:]' '[:lower:]' )
 
@@ -24,7 +25,7 @@ else
     fi
 fi
 
-minikube start --memory=$MEMORY --cpus=$CPUS --addons=$ADDONS $DRIVER $MINIKUBE_OPTIONS
+minikube start --memory=$MEMORY --cpus=$CPUS --addons=$ADDONS --kubernetes-version=$KUBERNETES_VERSION $DRIVER $MINIKUBE_OPTIONS
 
 source ./coredns_patch.sh
 
