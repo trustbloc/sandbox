@@ -1,0 +1,175 @@
+<!--
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ -->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta charset="utf-8">
+    <link rel="icon" type="images/x-icon" href="img/logo.png">
+    <title>Verifier Presentation Demo</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="author" content="">
+
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss/dist/tailwind.min.css">
+
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
+
+    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <style>
+        .gradient {
+            background: linear-gradient(-135deg, #261131 0%, #100716 100%);
+        }
+
+        .footer {
+            background: #fbf8fc;
+            color: #6c6d7c;
+            border-top-width: 2px;
+            border-color: #dbd7dc;
+            --tw-border-opacity: 0.05;
+        }
+
+        .body {
+            background: #f4f1f5;
+            color: #190c21;
+            box-shadow: 0px 0px 40px 0px rgba(25, 12, 33, 0.1);
+        }
+
+        .flare {
+            background-image: url(img/onboarding-flare.png);
+        }
+
+        .button-color {
+            background: linear-gradient(-180deg, #8631a0 0%, #360b4c 100%)
+        }
+    </style>
+</head>
+
+<body class="leading-normal tracking-normal text-white base px-20"
+      style="font-family: 'Source Sans Pro', sans-serif; background: #dcdadd">
+<div class="body">
+    <div class="max-w mx-auto gradient">
+        <div class="sm:px-6 lg:px-32 py-6 flex justify-center items-center bg-no-repeat bg-center flare">
+            <div class="flex justify-center items-center">
+                <div class="flex items-center">
+                    <img class="block lg:block h-8 w-auto"
+                         src="img/logo.svg">
+                    <a href="/demo" class="text-white bold text-3xl"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="px-64 pt-12 h-full text-left body" id="verificationDiv">
+        <span class="text-2xl font-bold">Validate Presentation</span>
+        <div id="validate_presentation" name="validate_presentation">
+            <div class="grid flex flex-wrap py-6">
+            <textarea type="text" id="vpTextarea" name="vpTextarea"
+                      class="p-4 rounded h-64 placeholder-gray-900 focus:placeholder-transparent required"
+                      placeholder="Paste Verifiable Presentation"
+                      style="background: #eeeaee;"></textarea>
+            </div>
+            <div class="flex items-center justify-center">
+                <button class="flex items-center justify-center button-color rounded-md mb-8 h-10 px-8 shadow-lg"
+                        type='submit'
+                        id="validate" onclick="validatePresentation()">
+                    <span class="flex-0 text-white font-bold text-base" id="btn_text" style="display: block">Validate Presentation</span>
+                    <svg
+                            class="absolute animate-spin hidden "
+                            width="24"
+                            height="24"
+                            id="spinner"
+                            xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <g transform="translate(2 2)" stroke="#FFF" stroke-width="3" fill="none"
+                           fill-rule="evenodd">
+                            <circle opacity=".3" cx="10" cy="10" r="10"/>
+                            <path d="M20 10c0-5.523-4.477-10-10-10" stroke-linecap="round"
+                                  stroke-linejoin="round"/>
+                        </g>
+                    </svg>
+                </button>
+            </div>
+            <div class="bg-green-200 border-t-4 border-green-500 rounded-b text-green-900 px-4 py-3 shadow-md flex items-center justify-center"
+                 id="success" style="display: none">
+                <div class="flex">
+                    <div>
+                        <p class="font-bold">Validation Successful</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-red-100 border-t-4 border-red-400 text-red-700 rounded-b px-4 py-3 shadow-md flex items-center justify-center"
+                 id="error" style="display: none">
+                <div class="flex">
+                    <div>
+                        <p class="font-bold" id="error-heading">Validation Failed !!</p>
+                        <p class="block sm:inline" id="error-detail"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center footer">
+        <section class="container mx-auto text-center">
+            <div class="py-6 px-15 mx-6 w-full text-center">
+                <div class="md:block mx-auto text-center">
+                    © 2021 TrustBloc ･ Privacy Policy ･ Terms of Service
+                </div>
+            </div>
+        </section>
+    </footer>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    function validatePresentation() {
+        var vpData = document.getElementById("vpTextarea").value;
+        const vp = IsJsonString(vpData);
+        let presentationData = {
+            "checks": ["proof"],
+            "vp": vp
+        };
+
+        document.getElementById("spinner").style.display = "block";
+        document.getElementById("btn_text").style.display = "none";
+        axios.post('/verify/presentation',
+            presentationData
+        ).then(function (response) {
+            document.getElementById("success").style.display = "block";
+            document.getElementById("spinner").style.display = "none";
+            document.getElementById("btn_text").style.display = "block";
+            document.getElementById("error").style.display = "none";
+        }).catch(error => {
+            console.error(error.response);
+            document.getElementById("error").style.display = "block";
+            document.getElementById("error-detail").innerText = error.response.data;
+            document.getElementById("spinner").style.display = "none";
+            document.getElementById("btn_text").style.display = 'block';
+            document.getElementById("success").style.display = "none";
+        });
+    }
+
+    function IsJsonString(str) {
+        try {
+            const vp = JSON.parse(str);
+            return vp;
+        } catch (error) {
+            document.getElementById("error-heading").innerText = "Invalid";
+        }
+    }
+</script>
+</body>
+</html>
+
+
+
