@@ -58,6 +58,41 @@ const (
 		}],
 		"holder": "did:example:ebfeb1f712ebc6f1c276e12ec21"
 	}`
+	validVC = `{
+   "@context":[
+      "https://www.w3.org/2018/credentials/v1",
+      "https://www.w3.org/2018/credentials/examples/v1",
+      "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld",
+      "https://w3id.org/vc-revocation-list-2020/v1"
+   ],
+   "credentialStatus":{
+      "id":"https://issuer-vcs.sandbox.trustbloc.dev/trustbloc_ed25519signature2018_ed25519/status/1#0",
+      "revocationListCredential":
+      "https://issuer-vcs.sandbox.trustbloc.dev/trustbloc_ed25519signature2018_ed25519/status/1",
+      "revocationListIndex":"0",
+      "type":"RevocationList2020Status"
+   },
+   "credentialSubject":{
+      "degree":{
+         "degree":"Bachelor of Science and Arts",
+         "type":"BachelorDegree"
+      },
+      "id":"did:trustbloc:4vSjd:EiAQcxO7cXUge_EV54by9ehz6KsDXmsRG59fLSsZiUPOJw",
+      "name":"Jayden Doe"
+   },
+   "description":"University Degree Credential for Mr.Jayden Doe",
+   "id":"http://example.com/678e0dfd-99db-418f-9fc3-6582f8b18bd0",
+   "issuanceDate":"2021-08-10T14:06:39.829544433Z",
+   "issuer":{
+      "id":"did:orb:uAAA:EiDNtWtOHhGu8yRExtT0Ur7g9R-Z575i-8jFS_-PdrKJvg",
+      "name":"trustbloc_ed25519signature2018_ed25519"
+   },
+   "name":"University Degree Credential",
+   "type":[
+      "VerifiableCredential",
+      "UniversityDegreeCredential"
+   ]
+}`
 )
 
 func TestNew(t *testing.T) {
@@ -67,7 +102,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(config)
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 4, len(svc.GetRESTHandlers()))
+		require.Equal(t, 5, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error if oidc provider is invalid", func(t *testing.T) {
@@ -530,6 +565,99 @@ func TestVerifyDIDAuthHandler(t *testing.T) {
 		svc.verifyPresentation(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to verify presentation")
+	})
+}
+
+func TestVerifyCredential(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+
+		svc, err := New(config)
+		require.NoError(t, err)
+
+		svc.client = &mockHTTPClient{postValue: &http.Response{
+			StatusCode: http.StatusOK, Body: nil,
+		}}
+
+		reqBytes, err := json.Marshal(&verifyCredentialRequest{
+			Checks: []string{},
+			VC:     []byte(validVC),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, verifyCredentialPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.verifyCredential(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("bad request", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+
+		svc, err := New(config)
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, verifyCredentialPath, strings.NewReader("invalid-json"))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.verifyCredential(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to decode request")
+	})
+
+	t.Run("verification failure", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+
+		svc, err := New(config)
+		require.NoError(t, err)
+
+		svc.client = &mockHTTPClient{postErr: fmt.Errorf("post error")}
+
+		reqBytes, err := json.Marshal(&verifyCredentialRequest{
+			Checks: []string{},
+			VC:     []byte(validVC),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, verifyPresentationPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.verifyCredential(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to verify vc")
+
+		svc.client = &mockHTTPClient{postValue: &http.Response{
+			StatusCode: http.StatusBadRequest, Body: nil,
+		}}
+
+		rr = httptest.NewRecorder()
+
+		svc.verifyCredential(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to decode request")
+
+		svc.client = &mockHTTPClient{postValue: &http.Response{
+			StatusCode: http.StatusBadRequest, Body: ioutil.NopCloser(strings.NewReader("invalid signature")),
+		}}
+
+		req, err = http.NewRequest(http.MethodPost, verifyCredentialPath, bytes.NewReader(reqBytes))
+		require.NoError(t, err)
+
+		rr = httptest.NewRecorder()
+
+		svc.verifyCredential(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to verify credential")
 	})
 }
 

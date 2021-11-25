@@ -68,7 +68,42 @@ SPDX-License-Identifier: Apache-2.0
             </div>
         </div>
     </div>
-    <div class="px-64 pt-12 h-full text-left body" id="verificationDiv">
+    <div class="bg-white">
+        <nav class="flex flex-col justify-center items-center sm:flex-row">
+            <button
+                    class="
+        text-gray-600
+        py-4
+        px-6
+        block
+        text-lg
+        text-purple-500
+        hover:font-bold
+        border-b-2
+      "
+                    id="presentation"
+                    onclick="showPresentation()">
+                Presentation
+            </button
+            >
+            <button
+                    class="
+        text-gray-600
+        py-4
+        px-6
+        block
+        text-lg
+        focus:text-purple-500
+      "
+                    id="credential"
+                    onclick="showCredential()"
+            >
+                Credential
+            </button
+            >
+        </nav>
+    </div>
+    <div class="px-64 pt-12 h-full text-left body" id="verificationPresentationDiv" style="display: block">
         <span class="text-2xl font-bold">Validate Presentation</span>
         <div id="validate_presentation" name="validate_presentation">
             <div class="grid flex flex-wrap py-6">
@@ -118,6 +153,56 @@ SPDX-License-Identifier: Apache-2.0
         </div>
     </div>
 
+    <div class="px-64 pt-12 h-full text-left body" id="verificationCredentialDiv" style="display: none">
+        <span class="text-2xl font-bold">Validate Credential</span>
+        <div id="validate_presentation" name="validate_presentation">
+            <div class="grid flex flex-wrap py-6">
+            <textarea type="text" id="vcTextarea" name="vcTextarea"
+                      class="p-4 rounded h-64 placeholder-gray-900 focus:placeholder-transparent required"
+                      placeholder="Paste Verifiable Credential"
+                      style="background: #eeeaee;"></textarea>
+            </div>
+            <div class="flex items-center justify-center">
+                <button class="flex items-center justify-center button-color rounded-md mb-8 h-10 px-8 shadow-lg"
+                        type='submit'
+                        id="validate" onclick="validateCredential()">
+                    <span class="flex-0 text-white font-bold text-base" id="btn_vc_text" style="display: block">Validate Credential</span>
+                    <svg
+                            class="absolute animate-spin hidden "
+                            width="24"
+                            height="24"
+                            id="spinnervc"
+                            xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <g transform="translate(2 2)" stroke="#FFF" stroke-width="3" fill="none"
+                           fill-rule="evenodd">
+                            <circle opacity=".3" cx="10" cy="10" r="10"/>
+                            <path d="M20 10c0-5.523-4.477-10-10-10" stroke-linecap="round"
+                                  stroke-linejoin="round"/>
+                        </g>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="bg-green-200 border-t-4 border-green-500 rounded-b text-green-900 px-4 py-3 shadow-md flex items-center justify-center"
+             id="successvc" style="display: none">
+            <div class="flex">
+                <div>
+                    <p class="font-bold">Validation Successful</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-red-100 border-t-4 border-red-400 text-red-700 rounded-b px-4 py-3 shadow-md flex items-center justify-center"
+             id="errorvc" style="display: none">
+            <div class="flex">
+                <div>
+                    <p class="font-bold" id="errorvc-heading">Validation Failed !!</p>
+                    <p class="block sm:inline" id="errorvc-detail"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer class="text-center footer">
         <section class="container mx-auto text-center">
             <div class="py-6 px-15 mx-6 w-full text-center">
@@ -132,6 +217,24 @@ SPDX-License-Identifier: Apache-2.0
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script>
+    function showPresentation() {
+        document.getElementById("verificationCredentialDiv").style.display = "none";
+        document.getElementById("verificationPresentationDiv").style.display = "block";
+        document.getElementById("presentation").style.borderBottomWidth = "2px";
+        document.getElementById("presentation").style.borderBottomColor = "#8631a0";
+        document.getElementById("credential").style.borderBottomWidth = "";
+        document.getElementById("credential").style.borderBottomColor = "";
+    }
+
+    function showCredential() {
+        document.getElementById("verificationPresentationDiv").style.display = "none";
+        document.getElementById("verificationCredentialDiv").style.display = "block";
+        document.getElementById("credential").style.borderBottomWidth = "2px";
+        document.getElementById("credential").style.borderBottomColor = "#8631a0";
+        document.getElementById("presentation").style.borderBottomWidth = "";
+        document.getElementById("presentation").style.borderBottomColor = "";
+    }
+
     function validatePresentation() {
         var vpData = document.getElementById("vpTextarea").value;
         const vp = IsJsonString(vpData);
@@ -159,12 +262,41 @@ SPDX-License-Identifier: Apache-2.0
         });
     }
 
+    function validateCredential() {
+        var vcData = document.getElementById("vcTextarea").value;
+        const vc = IsJsonString(vcData);
+        console.log("vc", vc)
+        let credentialData = {
+            "checks": ["proof"],
+            "vc": vc
+        };
+
+        document.getElementById("spinnervc").style.display = "block";
+        document.getElementById("btn_vc_text").style.display = "none";
+        axios.post('/verify/credential',
+            credentialData
+        ).then(function (response) {
+            document.getElementById("successvc").style.display = "block";
+            document.getElementById("spinnervc").style.display = "none";
+            document.getElementById("btn_vc_text").style.display = "block";
+            document.getElementById("errorvc").style.display = "none";
+        }).catch(error => {
+            console.error(error.response);
+            document.getElementById("errorvc").style.display = "block";
+            document.getElementById("errorvc-detail").innerText = error.response.data;
+            document.getElementById("spinnervc").style.display = "none";
+            document.getElementById("btn_vc_text").style.display = 'block';
+            document.getElementById("successvc").style.display = "none";
+        });
+    }
+
     function IsJsonString(str) {
         try {
             const vp = JSON.parse(str);
             return vp;
         } catch (error) {
             document.getElementById("error-heading").innerText = "Invalid";
+            document.getElementById("errorvc-heading").innerText = "Invalid VC";
         }
     }
 </script>
