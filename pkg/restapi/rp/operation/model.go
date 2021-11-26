@@ -16,3 +16,8 @@ type verifyPresentationRequest struct {
 	Challenge string          `json:"challenge"`
 	VP        json.RawMessage `json:"vp"`
 }
+
+type verifyCredentialRequest struct {
+	Checks []string        `json:"checks"`
+	VC     json.RawMessage `json:"vc"`
+}

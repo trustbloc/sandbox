@@ -37,6 +37,7 @@ const (
 	oauth2GetRequestPath   = "/oauth2/request"
 	oauth2CallbackPath     = "/oauth2/callback"
 	verifyPresentationPath = "/verify/presentation"
+	verifyCredentialPath   = "/verify/credential"
 
 	// api path params
 	scopeQueryParam    = "scope"
@@ -45,6 +46,9 @@ const (
 
 	// edge-service verifier endpoints
 	verifyPresentationURLFormat = "/%s" + "/verifier/presentations/verify"
+
+	// edge-service verifier endpoints
+	verifyCredentialURLFormat = "/%s" + "/verifier/credentials/verify"
 
 	// TODO https://github.com/trustbloc/sandbox/issues/352 Configure verifier profiles in Verifier page
 	verifierProfileID = "trustbloc-verifier"
@@ -168,6 +172,7 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(oauth2CallbackPath, http.MethodGet, c.handleOIDCCallback),
 
 		support.NewHTTPHandler(verifyPresentationPath, http.MethodPost, c.verifyPresentation),
+		support.NewHTTPHandler(verifyCredentialPath, http.MethodPost, c.verifyCredential),
 	}
 }
 
@@ -221,6 +226,56 @@ func (c *Operation) verifyPresentation(w http.ResponseWriter, r *http.Request) {
 		}()
 
 		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to verify presentation: %s", string(respBytes)))
+
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, []byte(""))
+}
+
+func (c *Operation) verifyCredential(w http.ResponseWriter, r *http.Request) {
+	req := &verifyCredentialRequest{}
+
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to decode request: %s", err.Error()))
+
+		return
+	}
+
+	vcReq := edgesvcops.CredentialsVerificationRequest{
+		Credential: req.VC,
+		Opts: &edgesvcops.CredentialsVerificationOptions{
+			Checks: req.Checks,
+		},
+	}
+
+	resp, err := c.callVerifyCredential(vcReq)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to verify vc: %s", err.Error()))
+
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		respBytes, respErr := ioutil.ReadAll(resp.Body)
+		if respErr != nil {
+			c.writeErrorResponse(w, http.StatusBadRequest,
+				fmt.Sprintf("failed to read verify credentail resp : %s", err.Error()))
+
+			return
+		}
+
+		defer func() {
+			e := resp.Body.Close()
+			if e != nil {
+				logger.Errorf("closing response body failed: %v", e)
+			}
+		}()
+
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to verify credential: %s", string(respBytes)))
 
 		return
 	}
@@ -449,6 +504,18 @@ func (c *Operation) verify(verifyReq interface{}, inputData, htmlTemplate string
 
 func (c *Operation) callVerifyPresentation(verifyReq interface{}) (*http.Response, error) {
 	endpoint := fmt.Sprintf(verifyPresentationURLFormat, verifierProfileID)
+
+	reqBytes, err := json.Marshal(verifyReq)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal request : %w", err)
+	}
+
+	return c.sendHTTPRequest(http.MethodPost, c.vcsURL+endpoint, reqBytes, httpContentTypeJSON,
+		c.requestTokens[vcsVerifierRequestTokenName])
+}
+
+func (c *Operation) callVerifyCredential(verifyReq interface{}) (*http.Response, error) {
+	endpoint := fmt.Sprintf(verifyCredentialURLFormat, verifierProfileID)
 
 	reqBytes, err := json.Marshal(verifyReq)
 	if err != nil {
