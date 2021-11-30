@@ -102,8 +102,8 @@ describe("TrustBloc - SignUp and SignIn flow", () => {
     it(`Check if the credential is stored in the wallet (${ctx.email})`, async function () {
         this.timeout(300000);
 
-        // 1. Navigate to Wallet Website
-        await browser.navigateTo(browser.config.walletURL);
+        // 1. Navigate to Credentials page on Wallet Website
+        await browser.navigateTo(`${browser.config.walletURL}/credentials`);
 
         // 2. Check if the credential is stored to the registered Wallet (register/sign-up/etc.)
         await wallet.checkStoredCredentials();
@@ -127,7 +127,7 @@ describe("TrustBloc - SignUp and SignIn flow", () => {
         this.timeout(90000);
 
         // 1. Navigate to Wallet Website
-        await browser.navigateTo(browser.config.walletURL);
+        await browser.navigateTo(`${browser.config.walletURL}/credentials`);
 
         // 2. Check if the credential is stored to the registered Wallet (register/sign-up/etc.)
         await wallet.checkStoredCredentials()
