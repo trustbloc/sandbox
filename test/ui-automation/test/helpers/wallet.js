@@ -22,8 +22,8 @@ exports.init = async ({createDID, importDID, email}) => {
     // register chapi
     await allow()
 
-    // wait for dashboard
-    await _waitForDashboard();
+    // wait for credentials
+    await _waitForCredentials();
 
     // setup DIDs if required.
     if (importDID) {
@@ -176,14 +176,16 @@ async function _getThirdPartyLogin(email) {
     });
 }
 
-async function _waitForDashboard() {
+async function _waitForCredentials() {
     await browser.waitUntil(async () => {
-        let didResponse = await $('#dashboard-success-msg');
-        await didResponse.waitForExist({timeout, interval: 5000});
-        expect(didResponse).toHaveText('Successfully setup your user');
-        return true;
+      const credentialsLink = await $("#navbar-link-credentials");
+      await credentialsLink.click();
+      let didResponse = await $("#loaded-credentials-container");
+      await didResponse.waitForExist({ timeout, interval: 5000 });
+      expect(didResponse).toBeDisplayed();
+      return true;
     });
-}
+  }
 
 // Todo #1267 Refactor sign-in flow file
 async function _checkStoredCredentials() {
