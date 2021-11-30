@@ -32,12 +32,6 @@ configMapGenerator:
   - cms/strapi/user_data.sh
   name: strapi-user-data-script
 - files:
-  - cms/oathkeeper/process_template.sh
-  name: process-template-script
-- files:
-  - cms/oathkeeper/access-rules.tmpl
-  name: access-rules-template
-- files:
   - adapter-issuer/issuer_adapter_configure.sh
   name: adapter-issuer-add-profiles-config
 - files:
@@ -55,9 +49,6 @@ configMapGenerator:
 
 resources:
 - cms/strapi/user-data.yml
-- cms/oathkeeper/role.yml
-- cms/oathkeeper/rolebinding.yml
-- cms/oathkeeper/process-template.yml
 - vcs/issuer/add-profiles.yml
 - vcs/verifier/add-profiles.yml
 - vcs/holder/add-profiles.yml

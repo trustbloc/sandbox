@@ -34,3 +34,17 @@ configMapGenerator:
   files:
   - oathkeeper/config.yml
   name: oathkeeper-config
+- files:
+  - oathkeeper/process_template.sh
+  name: process-template-script
+- files:
+  - oathkeeper/access-rules.tmpl
+  name: access-rules-template
+
+
+resources:
+- oathkeeper/role.yml
+- oathkeeper/rolebinding.yml
+
+patchesStrategicMerge:
+- oathkeeper/process-template.yml
