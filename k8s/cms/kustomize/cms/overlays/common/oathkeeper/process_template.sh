@@ -47,6 +47,4 @@ echo "mutating oathkeeper configMap ${config_map}"
 kubectl create cm ${config_map} --dry-run=client --from-file=/oathkeeper/rules/access-rules.json -o yaml | kubectl apply -f -
 echo "labeling"
 kubectl label cm ${config_map} component=cms group=demo project=trustbloc instance=||DEPLOYMENT_ENV||
-echo "recycling oathkeeper deployment/pod"
-kubectl rollout restart deployment oathkeeper
 echo "Finished processing template"

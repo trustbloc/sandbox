@@ -5,10 +5,10 @@
 #
 
 ---
-kind: Job
-apiVersion: batch/v1
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: process-oathkeeper-template
+  name: oathkeeper
 spec:
   template:
     spec:
@@ -19,14 +19,7 @@ spec:
         - name: access-rules-template
           configMap:
             name: access-rules-template
-      restartPolicy: Never
-#      serviceAccountName: oathkeeper
       initContainers:
-#        - name: wait
-#          image: busybox
-#          imagePullPolicy: IfNotPresent
-#          command: ["sh"]
-#          args: ["-c", "sleep 90"]
         - name: healthcheck-ready
           image: busybox
           imagePullPolicy: IfNotPresent
@@ -37,14 +30,13 @@ spec:
               while [ "$(wget http://strapi/admin -O- -S >/dev/null 2>&1; echo $?)" -ne 0 ];
               do echo "waiting for strapi/admin endpoint";
               done
-      containers:
-      - name: process-oathkeeper-template
-        image: "alpine:latest"
-        imagePullPolicy: IfNotPresent
-        command: ["/bin/sh"]
-        args: ["/opt/process_template.sh"]
-        volumeMounts:
-          - name: script
-            mountPath: /opt
-          - name: access-rules-template
-            mountPath: /oathkeeper/template
+        - name: process-oathkeeper-template
+          image: "alpine:latest"
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh"]
+          args: ["/opt/process_template.sh"]
+          volumeMounts:
+            - name: script
+              mountPath: /opt
+            - name: access-rules-template
+              mountPath: /oathkeeper/template
