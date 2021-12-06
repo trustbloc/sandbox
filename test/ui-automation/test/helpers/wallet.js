@@ -194,17 +194,12 @@ async function _checkStoredCredentials() {
 }
 
 async function _deleteCredential() {
-    const flyoutMenuImage = await $('#outline');
+    const flyoutMenuImage = await $('#credFlyoutMenu');
     await flyoutMenuImage.waitForExist();
     await flyoutMenuImage.waitForClickable();
     await flyoutMenuImage.click();
-    // todo replace with #deleteCredential
-    const deleteCredentialList = await $('button*=Credential');
-    await deleteCredentialList.waitForExist();
-    await deleteCredentialList.waitForClickable();
-    await deleteCredentialList.click();
-    // todo replace with #deleteButton
-    const deleteButton = await $('button*=Delete');
+
+    const deleteButton = await $('button*=Delete Credential');
     await deleteButton.waitForExist();
     await deleteButton.waitForClickable();
     await deleteButton.click();
