@@ -20,7 +20,7 @@ OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
-RP_IMG					?= ghcr.io/trustbloc-cicd/sandbox-rp:0.1.8-snapshot-3260d0d
+RP_IMG					?= ghcr.io/trustbloc-cicd/sandbox-rp:0.1.8-snapshot-ed8169a
 
 # do not modify
 KUSTOMIZE_DIR       	= kustomize/rp
