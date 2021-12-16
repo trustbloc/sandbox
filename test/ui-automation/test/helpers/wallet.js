@@ -194,7 +194,7 @@ async function _checkStoredCredentials() {
 }
 
 async function _deleteCredential() {
-    const flyoutMenuImage = await $('#credFlyoutMenu');
+    const flyoutMenuImage = await $('#credential-details-flyout-button');
     await flyoutMenuImage.waitForExist();
     await flyoutMenuImage.waitForClickable();
     await flyoutMenuImage.click();
