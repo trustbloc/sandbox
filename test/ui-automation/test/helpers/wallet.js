@@ -101,7 +101,7 @@ async function _sendCredentials({method = "trustbloc"} = {}) {
 }
 
 async function _getSignUp(email) {
-    const signUpButton = await $('#signUpText');
+    const signUpButton = await $('button*=Demo Sign-Up Partner');
     await signUpButton.waitForExist();
     await signUpButton.click();
     await _getThirdPartyLogin(email);
