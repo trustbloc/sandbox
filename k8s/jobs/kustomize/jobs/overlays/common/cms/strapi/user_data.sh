@@ -19,7 +19,7 @@ do
    token=$(curl --header "Content-Type: application/json" \
    --request POST \
    --data '{"username":"strapi","email":"user@strapi.io","password":"strapi"}' \
-   http://strapi/admin/auth/local/register | jq -r '.jwt')
+   http://strapi/api/auth/local/register | jq -r '.jwt')
    echo "token: $token"
    if [ -n "$token" ] || [ "$token" = "null" ]
    then
