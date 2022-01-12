@@ -25,7 +25,7 @@ DID_ELEMENT_SIDETREE_REQUEST_URL ?= https://element-did.com/api/v1/sidetree/requ
 SANDBOX_CLI_IMAGE_NAME       ?= trustbloc/sandbox-cli
 
 # TrustBloc core k8s deployment scripts https://github.com/trustbloc/k8s
-TRUSTBLOC_CORE_K8S_COMMIT=6582e0c05bac84d7cf56c303945eae548da73eeb
+TRUSTBLOC_CORE_K8S_COMMIT=f68e52e3020166915e7e7f4c4609cd1b15c37a42
 
 # Tool commands (overridable)
 ALPINE_VER ?= 3.12
