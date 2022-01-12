@@ -66,7 +66,7 @@ jobs:
           git lfs pull
           source ci/version_var.sh
           echo $DOCKER_PASSWORD | docker login ghcr.io --username $DOCKER_USER --password-stdin
-          make sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker login-consent-server-docker sandbox-cli-docker
+          make sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker login-consent-server-docker sandbox-cms-docker sandbox-cli-docker
           docker tag ghcr.io/trustbloc/sandbox-issuer:latest ${ISSUER_REST_PKG}:${EDGE_SANDBOX_TAG}
           docker push ${ISSUER_REST_PKG}:${EDGE_SANDBOX_TAG}
           docker tag ghcr.io/trustbloc/sandbox-rp:latest ${RP_REST_PKG}:${EDGE_SANDBOX_TAG}
@@ -75,6 +75,8 @@ jobs:
           docker push ${ACE_RP_REST_PKG}:${EDGE_SANDBOX_TAG}
           docker tag ghcr.io/trustbloc/sandbox-login-consent-server:latest ${LOGIN_PKG}:${EDGE_SANDBOX_TAG}
           docker push ${LOGIN_PKG}:${EDGE_SANDBOX_TAG}
+          docker tag ghcr.io/trustbloc/sandbox-cms:latest ${CMS_PKG}:${EDGE_SANDBOX_TAG}
+          docker push ${CMS_PKG}:${EDGE_SANDBOX_TAG}
           docker tag ghcr.io/trustbloc/sandbox-cli:latest ${CLI_PKG}:${EDGE_SANDBOX_TAG}
           docker push ${CLI_PKG}:${EDGE_SANDBOX_TAG}
         env:
@@ -103,8 +105,9 @@ jobs:
           export RP_IMG=${RP_REST_PKG}:${EDGE_SANDBOX_TAG}
           export ACE_RP_IMG=${ACE_RP_REST_PKG}:${EDGE_SANDBOX_TAG}
           export LOGIN_CONSENT_IMG=${LOGIN_PKG}:${EDGE_SANDBOX_TAG}
+          export CMS_IMG=${CMS_PKG}:${EDGE_SANDBOX_TAG}
           export CLI_IMG=${CLI_PKG}:${EDGE_SANDBOX_TAG}
-          echo $ISSUER_IMG $RP_IMG $ACE_RP_IMG $LOGIN_CONSENT_IMG $CLI_IMG
+          echo $ISSUER_IMG $RP_IMG $ACE_RP_IMG $LOGIN_CONSENT_IMG $CMS_IMG $CLI_IMG
           make ci-setup-deploy
       - name: Run UI-test
         run: |
@@ -120,7 +123,7 @@ jobs:
         uses: actions/checkout@v1
       - name: Build Sandbox components
         run: |
-          make sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker login-consent-server-docker sandbox-cli-docker
+          make sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker login-consent-server-docker sandbox-cms-docker sandbox-cli-docker
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.4.2
         with:
@@ -135,8 +138,9 @@ jobs:
           export RP_IMG=ghcr.io/trustbloc/sandbox-rp:latest
           export ACE_RP_IMG=ghcr.io/trustbloc/sandbox-ace-rp:latest
           export LOGIN_CONSENT_IMG=ghcr.io/trustbloc/sandbox-login-consent-server:latest
+          export CMS_IMG=ghcr.io/trustbloc/sandbox-cms:latest
           export CLI_IMG=ghcr.io/trustbloc/sandbox-cli:latest
-          echo $ISSUER_IMG $RP_IMG $ACE_RP_IMG $LOGIN_CONSENT_IMG $CLI_IMG
+          echo $ISSUER_IMG $RP_IMG $ACE_RP_IMG $LOGIN_CONSENT_IMG $CMS_IMG $CLI_IMG
           make ci-setup-deploy
       - name: Run UI-test
         run: |

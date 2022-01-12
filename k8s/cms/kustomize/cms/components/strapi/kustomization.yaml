@@ -8,8 +8,8 @@ apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 images:
 - name: strapi
-  newName: strapi/strapi
-  newTag: 3.0.6-alpine
+  newName: ghcr.io/trustbloc-cicd/sandbox-cms
+  newTag: 0.1.8-snapshot-ed8169a
 
 secretGenerator:
 - envs:

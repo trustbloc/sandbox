@@ -1,0 +1,35 @@
+[
+  {
+    "userid":"100",
+    "vcmetadata":{
+      "@context":[
+        "https://www.w3.org/2018/credentials/v1",
+        "https://w3id.org/vaccination/v1"
+      ],
+      "name":"COVID-19 Vaccination Certificate",
+      "description":"COVID-19 Vaccination Certificate for Mr.Louis Pasteur"
+    },
+    "vccredentialsubject":{
+      "type":"VaccinationEvent",
+      "batchNumber":"1183738569",
+      "administeringCentre":"FEMA",
+      "healthProfessional":"FEMA",
+      "countryOfVaccination":"US",
+      "dateOfVaccination":"2021-02-01",
+      "recipient":{
+        "type":"VaccineRecipient",
+        "givenName":"Louis",
+        "familyName":"Pasteur",
+        "gender":"Male",
+        "birthDate":"1958-07-17"
+      },
+      "vaccine":{
+        "type":"Vaccine",
+        "disease":"COVID-19",
+        "atcCode":"J07BX03",
+        "medicinalProductName":"COVID-19 Vaccine Moderna",
+        "marketingAuthorizationHolder":"Moderna Biotech"
+      }
+    }
+  }
+]

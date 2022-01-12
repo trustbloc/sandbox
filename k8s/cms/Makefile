@@ -28,7 +28,8 @@ OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
-STRAPI_IMG					?= strapi/strapi:3.0.6-alpine
+#STRAPI_IMG					?= ghcr.io/trustbloc-cicd/strapi:4.0.4-alpine-snapshot-95e5e3a
+CMS_IMG					?= ghcr.io/trustbloc-cicd/sandbox-login-consent-server:0.1.8-snapshot-ed8169a
 OATHKEEPER_IMG			?= oryd/oathkeeper:v0.38.4-alpine
 
 # do not modify
@@ -81,7 +82,7 @@ set-labels: kustomize
 .PHONY: set-images
 set-images: kustomize
 	@pushd ${KUSTOMIZE_DIR}/components/strapi &&\
-	${KUSTOMIZE} edit set image strapi=${STRAPI_IMG} &&\
+	${KUSTOMIZE} edit set image strapi=${CMS_IMG} &&\
 	popd &&\
 	pushd ${KUSTOMIZE_DIR}/components/oathkeeper &&\
 	${KUSTOMIZE} edit set image oathkeeper=${OATHKEEPER_IMG} &&\
