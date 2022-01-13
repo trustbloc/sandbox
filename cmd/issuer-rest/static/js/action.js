@@ -107,6 +107,15 @@ $(document).ready(function () {
         }
     });
 
+    $('#prcWACI').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $('#didCommScope').val("PermanentResidentCard");
+            $('#adapterProfile').val("tb-prc-issuer");
+            $(this).data('clicked', true);
+            document.getElementById('didFormSubmit').click();
+        }
+    });
+
     $('#creditScore').on('click', function() {
         if (!$(this).data('clicked')) {
             $('#didCommScope').val("CreditScore");
@@ -167,6 +176,8 @@ $(document).ready(function () {
         if($('#creditCard').data('clicked')) {
             $('#didCommDemo').attr('action', '/didcomm/init?');
         } else if ($("#drivingLicense").data('clicked')) {
+            $('#didCommDemo').attr('action', '/didcomm/init?');
+        } else if ($("#prcWACI").data('clicked')) {
             $('#didCommDemo').attr('action', '/didcomm/init?');
         } else if ($("#creditScore").data('clicked')) {
             $('#didCommDemo').attr('action', '/didcomm/init?');
