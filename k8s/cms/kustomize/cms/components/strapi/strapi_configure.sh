@@ -34,7 +34,7 @@ GENERATE_TRAVELCARD_COMMAND="strapi generate:api travelcards UserID:string VcMet
 $GENERATE_TRAVELCARD_COMMAND
 
 # generate the permanent resident card api and model
-GENERATE_PRCARD_COMMAND="strapi generate:api permanentresidentcards UserID:string VcMetadata:json VcCredentialSubject:json"
+GENERATE_PRCARD_COMMAND="strapi generate:api permanentresidentcards UserID:string VcMetadata:json VcCredentialSubject:json metadata:json data:json"
 
 $GENERATE_PRCARD_COMMAND
 

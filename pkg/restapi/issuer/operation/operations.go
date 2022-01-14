@@ -527,6 +527,9 @@ func (c *Operation) getCredentialUsingAccessToken(w http.ResponseWriter, r *http
 		return
 	}
 
+	delete(subjectData, "vcmetadata")
+	delete(subjectData, "vccredentialsubject")
+
 	subjectDataBytes, err := json.Marshal(subjectData)
 	if err != nil {
 		logger.Errorf("failed to marshal subject data: %s", err.Error())
