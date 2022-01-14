@@ -77,8 +77,6 @@ exports.loginConsent = async (btnID) => {
 };
 
 exports.selectBrowserWalletType = async () => {
-    await browser.pause(4000)
-
     const selectBrowserButton = await $('button*=Browser Wallet');
     const displayed = await selectBrowserButton.isDisplayed()
     if (displayed) {
