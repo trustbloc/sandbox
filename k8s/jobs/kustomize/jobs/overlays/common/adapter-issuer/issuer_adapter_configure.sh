@@ -107,4 +107,36 @@ do
    sleep 5
 done
 
+n=0
+until [ $n -ge $maxAttempts ]
+do
+   response=$(curl -k --header "Content-Type: application/json" \
+   --request POST \
+   --data '{"id":"tb-prc-issuer", "name":"TrustBloc - Permanent Resident Card Issuer", "url":"https://demo-issuer.||DOMAIN||/didcomm", "oidcProvider":"https://hydra.||DOMAIN||/", "scopes":["PermanentResidentCard"], "supportedVCContexts" : ["https://w3id.org/citizenship/v1"], "supportsWACI" : true, "linkedWallet":"https://wallet.||DOMAIN||/waci"}' \
+   --insecure http://adapter-issuer/profile 2>/dev/null)
+   echo "'created' field from profile tb-prc-issuer response is: $response"
+
+   responseCreatedTime=$(echo ${response} | jq -r '.createdAt' 2>/dev/null )
+   responseError=$(echo ${response} | jq -r '.errMessage' 2>/dev/null )
+
+   if [ -n "$(echo ${responseError} | grep 'already exists')" ]
+   then
+      break
+   fi
+
+   if [ -n "$responseCreatedTime" ] && [ "$responseCreatedTime" != "null" ]
+   then
+      break
+   fi
+   echo "Invalid 'id' field in the response when trying to create tb-prc-issuer profile (attempt $((n+1))/$maxAttempts)."
+
+   n=$((n+1))
+   if [ $n -eq $maxAttempts ]
+   then
+     echo "failed to create tb-prc-issuer profile"
+     exit 1
+   fi
+   sleep 5
+done
+
 echo "Finished adding Issuer Adapter profiles"
