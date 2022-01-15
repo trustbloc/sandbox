@@ -103,6 +103,10 @@ describe("TrustBloc - Duty Free Shop (WACI Share flow)", () => {
         await shareCredBtn.waitForClickable();
         await shareCredBtn.click();
 
+        const sharedBtn = await $('#share-credentials-ok-btn');
+        await sharedBtn.waitForClickable();
+        await sharedBtn.click();
+
         // 5. validate success msg
         const verifySuccessMsg = await $('div*=Successfully Verified');
         await verifySuccessMsg.waitForExist();
