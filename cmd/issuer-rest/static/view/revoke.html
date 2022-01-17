@@ -39,7 +39,7 @@ SPDX-License-Identifier: Apache-2.0
     }
 
     async function onClickGet() {
-        const credentialQuery = JSON.parse('{"web":{"VerifiablePresentation":{"query":[{"type":"QueryByExample","credentialQuery":{"reason":"Please present a credential to revoke","example":{}}}]}}}');
+        const credentialQuery = JSON.parse('{ "web": { "VerifiablePresentation": { "query": [ { "type": "QueryByExample", "credentialQuery": { "reason": "Please present a credential to revoke.", "example": { "@context": [ "https://www.w3.org/2018/credentials/v1" ], "type": [ "VerifiableCredential" ] } } } ], "challenge": "64a89e03-543f-4fc2-ab53-8b6a447e7f03", "domain": "example.com" } } }');
         const result = await navigator.credentials.get(credentialQuery);
 
         if (!result || !result.data) {
