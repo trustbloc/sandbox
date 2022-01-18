@@ -73,7 +73,7 @@ describe("TrustBloc - [PRC] Duty Free Shop Use Case (WACI Issuance + WACI Share 
         })
     })
 
-    it.skip('Validate Permanent Resident Card in Wallet', async function () {
+    it('Validate Permanent Resident Card in Wallet', async function () {
         this.timeout(300000);
 
         // 1. Navigate to Credentials page on Wallet Website
