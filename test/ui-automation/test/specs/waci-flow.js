@@ -32,14 +32,6 @@ describe("TrustBloc - [PRC] Duty Free Shop Use Case (WACI Issuance + WACI Share 
         await wallet.init(ctx);
     });
 
-    it('Issue Permanent Resident Card (WACI Issuance - Redirect) (Pre-test)', async function () {
-        // 1. Navigate to Issuer Website
-        await browser.newWindow(browser.config.issuerURL);
-
-        // 2. Authenticate at Issuer Website with Wallet
-        await issuer.authenticate({ credential: 'PermanentResidentCardWACI', skipDIDAuth: true});
-    })
-
     it('Issue Permanent Resident Card (WACI Issuance - Redirect)', async function () {
         // 1. Navigate to Issuer Website
         await browser.newWindow(browser.config.issuerURL);
@@ -67,6 +59,10 @@ describe("TrustBloc - [PRC] Duty Free Shop Use Case (WACI Issuance + WACI Share 
         await storeBtn.waitForClickable();
         await storeBtn.click();
 
+        const okBtn = await $("#issue-credentials-ok-btn");
+        await okBtn.waitForExist();
+        await okBtn.click()
+
         // 4. validate success message at the issuer
         const successMsg = await $('div*=Your credential(s) have been stored in your digital wallet.');
         await successMsg.waitForExist();
@@ -77,7 +73,7 @@ describe("TrustBloc - [PRC] Duty Free Shop Use Case (WACI Issuance + WACI Share 
         })
     })
 
-    it('Validate Permanent Resident Card in Wallet', async function () {
+    it.skip('Validate Permanent Resident Card in Wallet', async function () {
         this.timeout(300000);
 
         // 1. Navigate to Credentials page on Wallet Website

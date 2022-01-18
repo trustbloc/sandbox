@@ -33,19 +33,6 @@ describe("TrustBloc - New Bank Account", () => {
         await wallet.init(ctx);
     });
 
-    it('Connect to Credit Report Issuer (pre-action)', async function () {
-        await browser.pause(3000)
-
-        // 1. Navigate to Credit report issuer
-        await browser.newWindow(browser.config.creditReportURL);
-
-        // 2. Issuer login and consent
-        await issuer.loginConsent('#creditScore')
-
-        // 3. select browser as default
-        await issuer.selectBrowserWalletType()
-    })
-
     it('Connect to Credit Report Issuer', async function () {
         await browser.pause(3000)
 
