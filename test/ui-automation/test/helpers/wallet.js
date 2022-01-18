@@ -178,6 +178,9 @@ async function _getThirdPartyLogin(email) {
 
 async function _waitForCredentials() {
     await browser.waitUntil(async () => {
+      const defaultValut = await $("div*=Default Vault");
+      await defaultValut.click();
+
       const credentialsLink = await $("#navbar-link-credentials");
       await credentialsLink.click();
       let didResponse = await $("#loaded-credentials-container");

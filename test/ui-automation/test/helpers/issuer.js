@@ -18,6 +18,7 @@ const FLOW_IDS = {
     'TravelCard': '#travelCard',
     'CrudeProductCredential': '#cpr',
     'CertifiedMillTestReport': '#cmtr',
+    'PermanentResidentCardWACI': '#prcWACI',
 }
 
 const ISSUER_PROFILES = {
@@ -35,7 +36,7 @@ const ISSUER_PROFILES = {
 
 /*************************** Public API ******************************/
 
-exports.authenticate = async ({credential, profile}) => {
+exports.authenticate = async ({credential, profile, skipDIDAuth}) => {
     // profile setting if required
     await _changeProfile({profile})
 
@@ -53,10 +54,12 @@ exports.authenticate = async ({credential, profile}) => {
     const consentButton = await $('#accept');
     await consentButton.click();
 
-    // did auth
-    const authenticateBtn = await $('#authBtn');
-    await authenticateBtn.waitForClickable();
-    await authenticateBtn.click();
+    if (!skipDIDAuth) {
+        // did auth
+        const authenticateBtn = await $('#authBtn');
+        await authenticateBtn.waitForClickable();
+        await authenticateBtn.click();
+    }
 };
 
 exports.loginConsent = async (btnID) => {
@@ -77,6 +80,8 @@ exports.loginConsent = async (btnID) => {
 };
 
 exports.selectBrowserWalletType = async () => {
+    await browser.pause(3000)
+
     const selectBrowserButton = await $('button*=Browser Wallet');
     const displayed = await selectBrowserButton.isDisplayed()
     if (displayed) {
