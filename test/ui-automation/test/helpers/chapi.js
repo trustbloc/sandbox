@@ -20,6 +20,10 @@ exports.chooseWallet = async ({name}) => {
     await browser.pause(1000);
     await nextButton.click();
 
+    const rememberChoiceBtn = await $("span*=Remember");
+    await rememberChoiceBtn.waitForClickable();
+    await rememberChoiceBtn.click();
+
     const demoWallet = await $(`strong*=${name}`);
     await demoWallet.waitForClickable();
     await demoWallet.click();
