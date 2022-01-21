@@ -20,7 +20,7 @@ OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
-CLI_IMG				?= ghcr.io/trustbloc-cicd/sandbox-cli:0.1.8-snapshot-9dcac49
+CLI_IMG				?= ghcr.io/trustbloc-cicd/sandbox-cli:0.1.8-snapshot-9ea948e
 
 # do not modify
 KUSTOMIZE_DIR       	= kustomize/jobs
