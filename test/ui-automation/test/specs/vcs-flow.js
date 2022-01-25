@@ -11,10 +11,6 @@ SPDX-License-Identifier: Apache-2.0
 'use strict';
 
 const {chapi, wallet, issuer, verifier} = require('../helpers');
-const path = require('path');
-const uuid = require('uuid-random');
-
-const SCENARIO_KEY = path.parse(__filename).name;
 
 var flows = new Map();
 flows.set('PermanentResidentCard', {
@@ -69,7 +65,7 @@ describe("TrustBloc - Verifiable Credential Service (VCS) flows", () => {
         await browser.navigateTo(browser.config.walletURL);
 
         // 2. Initialize Wallet (register/sign-up/etc.)
-        await wallet.init(ctx);
+        await wallet.signUp(ctx);
     });
 
 

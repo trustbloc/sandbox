@@ -7,7 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 'use strict';
 
 const {chapi, wallet, issuer, verifier} = require('../helpers');
-const uuid = require('uuid-random');
 
 describe("TrustBloc - New Bank Account", () => {
     const ctx = {
@@ -30,7 +29,7 @@ describe("TrustBloc - New Bank Account", () => {
         await browser.navigateTo(browser.config.walletURL);
 
         // 2. Initialize Wallet (register/sign-up/etc.)
-        await wallet.init(ctx);
+        await wallet.signUp(ctx);
     });
 
     it('Connect to Credit Report Issuer', async function () {

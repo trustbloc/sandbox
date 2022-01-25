@@ -6,8 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 'use strict';
 
-const {chapi, wallet, issuer, verifier} = require('../helpers');
-const uuid = require('uuid-random');
+const {chapi, wallet, issuer} = require('../helpers');
 
 describe("TrustBloc - Flight Boarding", () => {
     const ctx = {
@@ -30,7 +29,7 @@ describe("TrustBloc - Flight Boarding", () => {
         await browser.navigateTo(browser.config.walletURL);
 
         // 2. Initialize Wallet (register/sign-up/etc.)
-        await wallet.init(ctx);
+        await wallet.signUp(ctx);
     });
 
     it('Issue Vaccination Certificate', async function () {
