@@ -38,7 +38,6 @@ exports.config = {
         './test/specs/new-bank-account.js',
         './test/specs/flight-boarding.js',
         './test/specs/vcs-flow.js',
-        './test/specs/signin-flow.js'
     ],
     // Patterns to exclude.
     exclude: [

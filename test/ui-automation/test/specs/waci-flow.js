@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 'use strict';
 
-const {chapi, wallet, issuer} = require('../helpers');
+const {wallet, issuer} = require('../helpers');
 
 describe("TrustBloc - [PRC] Duty Free Shop Use Case (WACI Issuance + WACI Share flow)", () => {
     const ctx = {
@@ -22,17 +22,15 @@ describe("TrustBloc - [PRC] Duty Free Shop Use Case (WACI Issuance + WACI Share 
     beforeEach(function () {
     });
 
-    it(`Register a Wallet (${ctx.email})`, async function () {
-        this.timeout(300000);
-
+    it(`Wallet Sign Up (${ctx.email})`, async function () {
         // 1. Navigate to Wallet Website
         await browser.navigateTo(browser.config.walletURL);
 
-        // 2. Initialize Wallet (register/sign-up/etc.)
-        await wallet.init(ctx);
+        // 2. Sign Up
+        await wallet.signUp(ctx);
     });
 
-    it('Issue Permanent Resident Card (WACI Issuance - Redirect)', async function () {
+    it('Save Permanent Resident Card (WACI Issuance - Redirect)', async function () {
         // 1. Navigate to Issuer Website
         await browser.newWindow(browser.config.issuerURL);
 
@@ -66,32 +64,46 @@ describe("TrustBloc - [PRC] Duty Free Shop Use Case (WACI Issuance + WACI Share 
         // 4. validate success message at the issuer
         const successMsg = await $('div*=Your credential(s) have been stored in your digital wallet.');
         await successMsg.waitForExist();
-
-        // wait for any async operations to complete
-        browser.executeAsync((done) => {
-            setTimeout(done, 5000)
-        })
     })
 
     it('Validate Permanent Resident Card in Wallet', async function () {
-        this.timeout(300000);
-
         // 1. Navigate to Credentials page on Wallet Website
-        await browser.navigateTo(`${browser.config.walletURL}`);
+        await browser.newWindow(browser.config.walletURL);
+        await browser.refresh();
 
-        const credentialsLink = await $("#navbar-link-credentials");
-        await credentialsLink.click();
+        // 2. Validate PRC in wallet
+        await wallet.checkStoredCredentials('Permanent Resident Card')
+    });
 
-        // 2. Check if the credential is stored
-        const checkStoredCredential = await $('div*=Permanent Resident Card');
-        await checkStoredCredential.waitForExist();
+    it(`Wallet Sign Out (${ctx.email})`, async function () {
+        // 1. Navigate to Wallet Website
+        await browser.switchWindow(browser.config.walletURL);
+
+        // 2. sign out 
+        await wallet.signOut(ctx);
+    });
+
+    it(`Wallet Sign In (${ctx.email})`, async function () {
+        // 1. Navigate to Wallet Website
+        await browser.switchWindow(browser.config.walletURL);
+
+        // 2. Sign In to the registered Wallet (register/sign-up/etc.)
+        await wallet.signIn(ctx);
+    });
+
+    it('Validate Permanent Resident Card in Wallet', async function () {
+        // 1. Navigate to Credentials page on Wallet Website
+        await browser.switchWindow(browser.config.walletURL);
+
+        // 2. Validate PRC in wallet
+        await wallet.checkStoredCredentials('Permanent Resident Card')
     });
 
     it('Present Permanent Resident Card at Duty Free Shop (WACI Share - Redirect)', async function () {
         // 1. Navigate prc verifier
-        await browser.navigateTo(browser.config.dutyFreeShop);
+        await browser.newWindow(browser.config.dutyFreeShop);
 
-        // 2. connect to RP adapter
+        // 2. click on share PRC button
         const getCredentialButton = await $('#prCard');
         await getCredentialButton.waitForClickable();
         await getCredentialButton.click();
@@ -130,5 +142,46 @@ describe("TrustBloc - [PRC] Duty Free Shop Use Case (WACI Issuance + WACI Share 
         const successMsg = await $('div*=Your Permanent Resident Card Verified Successfully');
         await successMsg.waitForExist();
     })
+
+    it(`Delete Permanent Resident Card in Wallet`, async function () {
+        // 1. Navigate to Wallet Website
+        await browser.switchWindow(browser.config.walletURL);
+        await browser.refresh();
+
+        // 3. Delete the stored credential
+        await wallet.deleteCredentials('Permanent Resident Card');
+        
+        // wait for any async operations to complete
+        browser.executeAsync((done) => {
+            setTimeout(done, 5000)
+        })
+    });
+
+    it('No Permanent Resident Card in Wallet (WACI Share - Redirect)', async function () {
+        // 1. Navigate prc verifier
+        await browser.newWindow(browser.config.dutyFreeShop);
+
+        // 2. click on share PRC button
+        const getCredentialButton = await $('#prCard');
+        await getCredentialButton.waitForClickable();
+        await getCredentialButton.click();
+
+        // 3. use redirect flow
+        const redirectMsg = await $('a*=Click here to redirect to your wallet');
+        await redirectMsg.waitForClickable();
+        await redirectMsg.click()
+
+        // 4. share prc
+        const missingCredMsg = await $('span*=Missing credentials');
+        await missingCredMsg.waitForExist();
+    })
+
+    it(`Sign out (${ctx.email})`, async function () {
+        // 1. Navigate to Wallet Website
+        await browser.switchWindow(browser.config.walletURL);
+
+        // 2. Sign out of wallet
+        await wallet.signOut(ctx);
+    });
 })
 

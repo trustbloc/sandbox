@@ -11,12 +11,10 @@ const {allow} = require('./chapi');
 
 const DIDS = constants.dids
 const timeout = 60000;
-let signedUpUserEmail;
-let credentialKey;
 
 /*************************** Public API ******************************/
 
-exports.init = async ({createDID, importDID, email}) => {
+exports.signUp = async ({createDID, importDID, email}) => {
     // login and consent
     await _getSignUp(email);
     // register chapi
@@ -31,8 +29,6 @@ exports.init = async ({createDID, importDID, email}) => {
     } else if (createDID) {
         await _createTrustblocDID({method: createDID});
     }
-
-    signedUpUserEmail = email
 };
 
 exports.authenticate = async ({did}) => {
@@ -57,20 +53,20 @@ exports.didConnect = async () => {
     await successMsg.waitForExist();
 };
 
-exports.logout = async () => {
-    await _logoutWallet();
+exports.signOut = async () => {
+    await _signOutWallet();
 };
 
-exports.signIn = async () => {
-    await _signIn(signedUpUserEmail);
+exports.signIn = async ({email}) => {
+    await _signIn(email);
 };
 
-exports.checkStoredCredentials = async () => {
-    await _checkStoredCredentials();
+exports.checkStoredCredentials = async (credName) => {
+    await _checkStoredCredentials(credName);
 };
 
-exports.deleteCredentials = async () => {
-    await _deleteCredential();
+exports.deleteCredentials = async (credName) => {
+    await _deleteCredential(credName);
 };
 
 exports.changeLocale = async () => {
@@ -107,10 +103,10 @@ async function _getSignUp(email) {
     await _getThirdPartyLogin(email);
 }
 
-async function _logoutWallet() {
-    const logOutButton = await $('button*=Sign Out');
-    await logOutButton.waitForExist();
-    await logOutButton.click();
+async function _signOutWallet() {
+    const signOutButton = await $('button*=Sign Out');
+    await signOutButton.waitForExist();
+    await signOutButton.click();
 
     // wait for logout to complele and go to signup page
     await browser.waitUntil(async () => {
@@ -120,15 +116,12 @@ async function _logoutWallet() {
     });
 }
 
-async function _signIn(signedUpUserEmail) {
-    const signInLink = await $('a*=Sign in');
-    await signInLink.waitForExist();
-    await signInLink.click();
+async function _signIn(email) {
     await browser.waitUntil(async () => {
         const signInButton = await $('#mockbank');
         await signInButton.waitForExist();
         await signInButton.click();
-        await _getThirdPartyLogin(signedUpUserEmail);
+        await _getThirdPartyLogin(email);
         return true;
     });
 }
@@ -190,13 +183,19 @@ async function _waitForCredentials() {
     });
   }
 
-// Todo #1267 Refactor sign-in flow file
-async function _checkStoredCredentials() {
-    const checkStoredCredential = await $('div*=Permanent Resident Card');
+async function _checkStoredCredentials(credName) {
+    const credentialsLink = await $("#navbar-link-credentials");
+    await credentialsLink.click();
+
+    const checkStoredCredential = await $('div*=' + credName);
     return await checkStoredCredential.waitForExist();
 }
 
-async function _deleteCredential() {
+async function _deleteCredential(credName) {
+    const storedCred = await $("span*=" + credName);
+    await storedCred.waitForExist();
+    await storedCred.click();
+
     const flyoutMenuImage = await $('#credential-details-flyout-button');
     await flyoutMenuImage.waitForExist();
     await flyoutMenuImage.waitForClickable();
@@ -206,6 +205,11 @@ async function _deleteCredential() {
     await deleteButton.waitForExist();
     await deleteButton.waitForClickable();
     await deleteButton.click();
+
+    const deleteConfirmButton = await $('#delete-credential-button');
+    await deleteConfirmButton.waitForExist();
+    await deleteConfirmButton.waitForClickable();
+    await deleteConfirmButton.click();
 };
 
 async function _saveAnyDID({method}) {
