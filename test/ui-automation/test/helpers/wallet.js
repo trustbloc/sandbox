@@ -7,14 +7,14 @@ SPDX-License-Identifier: Apache-2.0
 'use strict';
 
 const constants = require('./constants');
-const {allow} = require('./chapi');
+const { allow } = require('./chapi');
 
 const DIDS = constants.dids
 const timeout = 60000;
 
 /*************************** Public API ******************************/
 
-exports.signUp = async ({createDID, importDID, email}) => {
+exports.signUp = async ({ createDID, importDID, email }) => {
     // login and consent
     await _getSignUp(email);
     // register chapi
@@ -25,22 +25,22 @@ exports.signUp = async ({createDID, importDID, email}) => {
 
     // setup DIDs if required.
     if (importDID) {
-        await _saveAnyDID({method: importDID});
+        await _saveAnyDID({ method: importDID });
     } else if (createDID) {
-        await _createTrustblocDID({method: createDID});
+        await _createTrustblocDID({ method: createDID });
     }
 };
 
-exports.authenticate = async ({did}) => {
-    await _didAuth({method: did})
+exports.authenticate = async ({ did }) => {
+    await _didAuth({ method: did })
 };
 
 exports.storeCredentials = async () => {
     await _acceptCredentials();
 };
 
-exports.presentCredentials = async ({did}) => {
-    await _sendCredentials({method: did});
+exports.presentCredentials = async ({ did }) => {
+    await _sendCredentials({ method: did });
 };
 
 exports.didConnect = async () => {
@@ -57,7 +57,7 @@ exports.signOut = async () => {
     await _signOutWallet();
 };
 
-exports.signIn = async ({email}) => {
+exports.signIn = async ({ email }) => {
     await _signIn(email);
 };
 
@@ -75,7 +75,7 @@ exports.changeLocale = async () => {
 
 /*************************** Helper functions ******************************/
 
-async function _didAuth({method = 'trustbloc'} = {}) {
+async function _didAuth({ method = 'trustbloc' } = {}) {
     const authenticate = await $('#didauth')
     await authenticate.waitForExist();
     await authenticate.click();
@@ -88,7 +88,7 @@ async function _acceptCredentials() {
     await storeBtn.click();
 }
 
-async function _sendCredentials({method = "trustbloc"} = {}) {
+async function _sendCredentials({ method = "trustbloc" } = {}) {
     // share
     const shareBtn = await $('#share-credentials')
     await shareBtn.waitForExist();
@@ -164,24 +164,24 @@ async function _getThirdPartyLogin(email) {
     await browser.switchWindow(browser.config.walletURL)
     await browser.waitUntil(async () => {
         let title = await $('iframe');
-        await title.waitForExist({timeout, interval: 5000});
+        await title.waitForExist({ timeout, interval: 1000 });
         return true;
     });
 }
 
 async function _waitForCredentials() {
     await browser.waitUntil(async () => {
-      const defaultValut = await $("div*=Default Vault");
-      await defaultValut.click();
+        const defaultValut = await $("div*=Default Vault");
+        await defaultValut.click();
 
-      const credentialsLink = await $("#navbar-link-credentials");
-      await credentialsLink.click();
-      let didResponse = await $("#loaded-credentials-container");
-      await didResponse.waitForExist({ timeout, interval: 5000 });
-      expect(didResponse).toBeDisplayed();
-      return true;
+        const credentialsLink = await $("#navbar-link-credentials");
+        await credentialsLink.click();
+        let didResponse = await $("#loaded-credentials-container");
+        await didResponse.waitForExist({ timeout, interval: 1000 });
+        expect(didResponse).toBeDisplayed();
+        return true;
     });
-  }
+}
 
 async function _checkStoredCredentials(credName) {
     const credentialsLink = await $("#navbar-link-credentials");
@@ -212,7 +212,7 @@ async function _deleteCredential(credName) {
     await deleteConfirmButton.click();
 };
 
-async function _saveAnyDID({method}) {
+async function _saveAnyDID({ method }) {
     const didManager = await $('a*=Settings');
     await didManager.waitForExist();
     await didManager.click();
@@ -250,7 +250,7 @@ async function _saveAnyDID({method}) {
 
     await browser.waitUntil(async () => {
         let didResponse = await $('#save-anydid-success');
-        await didResponse.waitForExist({timeout, interval: 2000});
+        await didResponse.waitForExist({ timeout, interval: 2000 });
         expect(didResponse).toHaveText('Saved your DID successfully.');
         return true;
     });
@@ -285,7 +285,7 @@ async function _createTrustblocDID() {
 
     await browser.waitUntil(async () => {
         let didResponse = await $('#create-did-success');
-        await didResponse.waitForExist({timeout, interval: 2000});
+        await didResponse.waitForExist({ timeout, interval: 2000 });
         expect(didResponse).toHaveText('Saved your DID successfully.');
         return true;
     });
