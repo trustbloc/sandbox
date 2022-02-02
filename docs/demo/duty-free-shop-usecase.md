@@ -3,11 +3,11 @@
 **Use Case**: As a user, I should be able to buy items by confirming my age from the Permanent Resident Card present in my Digital Wallet.
 
 ## Components
-| Component                         | Cloud URL (Sandbox)                                                    | Cloud URL (Staging)                                                | Cloud URL (Devel)                                                  | Local k8s URL*                                                       |
-|-----------------------------------|------------------------------------------------------------------------|--------------------------------------------------------------------|--------------------------------------------------------------------|----------------------------------------------------------------------|
-| User Wallet                       | [Click Here](https://wallet.sandbox.trustbloc.dev)                     | [Click Here](https://wallet.stg.trustbloc.dev)                     | [Click Here](https://wallet.dev.trustbloc.dev)                     | [Click Here](https://wallet.local.trustbloc.dev)                     |
-| Permanent Residence Card Issuer   | [Click Here](https://demo-issuer.sandbox.trustbloc.dev/applygreencard) | [Click Here](https://demo-issuer.stg.trustbloc.dev/applygreencard) | [Click Here](https://demo-issuer.dev.trustbloc.dev/applygreencard) | [Click Here](https://demo-issuer.local.trustbloc.dev/applygreencard) |
-| Duty Free Shop (Verifier) | [Click Here](https://demo-rp.sandbox.trustbloc.dev/dutyfree)             | [Click Here](https://demo-rp.stg.trustbloc.dev/dutyfree)             | [Click Here](https://demo-rp.dev.trustbloc.dev/dutyfree)             | [Click Here](https://demo-rp.local.trustbloc.dev/dutyfree)             |
+| Component                       | Cloud URL (Sandbox)                                          | Cloud URL (Staging)                                      | Cloud URL (Devel)                                        | Local k8s URL*                                                       |
+|---------------------------------|--------------------------------------------------------------|----------------------------------------------------------|----------------------------------------------------------|----------------------------------------------------------------------|
+| User Wallet                     | [Click Here](https://wallet.sandbox.trustbloc.dev)           | [Click Here](https://wallet.stg.trustbloc.dev)           | [Click Here](https://wallet.dev.trustbloc.dev)           | [Click Here](https://wallet.local.trustbloc.dev)                     |
+| Permanent Residence Card Issuer | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)      | [Click Here](https://demo-issuer.stg.trustbloc.dev)      | [Click Here](https://demo-issuer.dev.trustbloc.dev)      | [Click Here](https://demo-issuer.local.trustbloc.dev/applygreencard) |
+| Duty Free Shop (Verifier)       | [Click Here](https://demo-rp.sandbox.trustbloc.dev/dutyfree) | [Click Here](https://demo-rp.stg.trustbloc.dev/dutyfree) | [Click Here](https://demo-rp.dev.trustbloc.dev/dutyfree) | [Click Here](https://demo-rp.local.trustbloc.dev/dutyfree)           |
 
 *: Refer [here](./../../README.md#deployment) to run the local k8s demo.
 
