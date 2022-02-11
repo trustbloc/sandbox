@@ -112,7 +112,7 @@ until [ $n -ge $maxAttempts ]
 do
    response=$(curl -k --header "Content-Type: application/json" \
    --request POST \
-   --data '{"id":"tb-prc-issuer", "name":"TrustBloc - Permanent Resident Card Issuer", "url":"https://demo-issuer.||DOMAIN||/didcomm", "oidcProvider":"https://hydra.||DOMAIN||/", "scopes":["PermanentResidentCard"], "supportedVCContexts" : ["https://w3id.org/citizenship/v1"], "supportsWACI" : true, "linkedWallet":"https://wallet.||DOMAIN||/waci"}' \
+   --data '{"id":"tb-prc-issuer", "name":"TrustBloc - Permanent Resident Card Issuer", "url":"https://demo-issuer.||DOMAIN||/didcomm", "oidcProvider":"https://hydra.||DOMAIN||/", "scopes":["PermanentResidentCard"], "supportedVCContexts" : ["https://w3id.org/citizenship/v1"], "isDIDCommV2" : true,"supportsWACI" : true, "linkedWallet":"https://wallet.||DOMAIN||/waci"}' \
    --insecure http://adapter-issuer/profile 2>/dev/null)
    echo "'created' field from profile tb-prc-issuer response is 2: $response"
 
