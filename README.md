@@ -28,8 +28,8 @@ Follow this [link](docs/projects/README.md) to learn more about all the TrustBlo
 - [TrustBloc VCS](docs/demo/sandbox_vcs_playground.md) : CHAPI + VC Services + Selective Disclosure
   - [Flight Boarding use case](docs/demo/flight-boarding-usecase.md)
 - [TrustBloc Adapter](docs/demo/sandbox_adapter_playground.md) : [CHAPI](https://w3c-ccg.github.io/credential-handler-api/)/[WACI-PEx](https://identity.foundation/waci-presentation-exchange/) + DIDComm
-  - [Duty Free Shopping use case](docs/demo/duty-free-shop-usecase.md) (WACI-PEx (Issuance + Share) + DIDComm)
-  - [New Bank Account use case](docs/demo/new-bank-account-usecase.md) (CHAPI + DIDComm)
+  - [Duty Free Shopping use case](docs/demo/duty-free-shop-usecase.md) (WACI-PEx (Issuance + Share) + DIDComm V2)
+  - [New Bank Account use case](docs/demo/new-bank-account-usecase.md) (CHAPI + DIDComm V1)
 - [TrustBloc Anonymous Comparator and Extractor(ACE)](docs/demo/sandbox_ace_playground.md)
 
 ## Components
