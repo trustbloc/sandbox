@@ -41,9 +41,10 @@ Follow this [link](docs/projects/README.md) to learn more about all the TrustBlo
 For pre-requisites, please refer [TrustBloc k8s deployments](https://github.com/trustbloc/k8s/blob/main/README.md). 
 Also, [refer](./docs/dev_steps.md) for detailed steps to update components in sandbox.
 
-The sandbox k8s is dependent on [TrustBloc k8s](https://github.com/trustbloc/k8s). Use TRUSTBLOC_CORE_K8S_COMMIT 
-variable in [Makefile](Makefile) point to the TrustBloc k8s deployment version. Alternatively, uncomment the 
-[symlink command](./k8s/scripts/core_deployment.sh) to point it to the cloned TrustBloc k8s repo.
+The sandbox k8s is dependent on [TrustBloc k8s](https://github.com/trustbloc/k8s). The TRUSTBLOC_CORE_K8S_COMMIT 
+variable in [Makefile](Makefile) points to the TrustBloc k8s deployment version. In case of any code/docker 
+image changes to the underlying components, update the variable with [k8s commit id](https://github.com/trustbloc/k8s/commits/main). 
+Alternatively, uncomment the [symlink command](./k8s/scripts/core_deployment.sh) to point it to the cloned TrustBloc k8s repo.
 
 Run following target to run the components locally.
 ```
