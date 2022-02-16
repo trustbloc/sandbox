@@ -15,7 +15,7 @@ until [ $n -ge $maxAttempts ]
 do
    response=$(curl -k --header "Content-Type: application/json" \
    --request POST \
-   --data '{"id":"tb-cc-issuer", "name":"TrustBloc - Credit Card Data Issuer", "url": "https://demo-issuer.||DOMAIN||/didcomm", "oidcProvider": "https://hydra.||DOMAIN||/", "scopes":["CreditCardStatement"],  "supportedVCContexts" : ["https://trustbloc.github.io/context/vc/examples/credit-card-v1.jsonld"]}' \
+   --data '{"id":"tb-cc-issuer", "name":"TrustBloc - Credit Card Data Issuer", "url": "https://demo-issuer.||DOMAIN||/didcomm", "oidcProvider": "https://hydra.||DOMAIN||/", "scopes":["CreditCardStatement"], "isDIDCommV1" : true,  "supportedVCContexts" : ["https://trustbloc.github.io/context/vc/examples/credit-card-v1.jsonld"]}' \
    --insecure http://adapter-issuer/profile 2>/dev/null)
    echo "'created' field from profile tb-cc-issuer response is: $response"
 
@@ -48,7 +48,7 @@ until [ $n -ge $maxAttempts ]
 do
    response=$(curl -k --header "Content-Type: application/json" \
    --request POST \
-   --data '{"id":"tb-cr-issuer", "name":"TrustBloc - Credit Report Issuer", "url":"https://demo-issuer.||DOMAIN||/didcomm", "oidcProvider":"https://hydra.||DOMAIN||/", "scopes":["CreditScore"], "supportedVCContexts" : ["https://trustbloc.github.io/context/vc/examples/credit-score-v1.jsonld"], "requiresBlindedRoute": true}' \
+   --data '{"id":"tb-cr-issuer", "name":"TrustBloc - Credit Report Issuer", "url":"https://demo-issuer.||DOMAIN||/didcomm", "oidcProvider":"https://hydra.||DOMAIN||/", "scopes":["CreditScore"], "supportedVCContexts" : ["https://trustbloc.github.io/context/vc/examples/credit-score-v1.jsonld"], "isDIDCommV1" : true, "requiresBlindedRoute": true}' \
    --insecure http://adapter-issuer/profile 2>/dev/null)
    echo "'created' field from profile tb-cr-issuer response is: $response"
 
@@ -80,7 +80,7 @@ until [ $n -ge $maxAttempts ]
 do
    response=$(curl -k --header "Content-Type: application/json" \
    --request POST \
-   --data '{"id":"tb-dl-issuer", "name":"TrustBloc - Driving License + Assurance Issuer", "url":"https://demo-issuer.||DOMAIN||/didcomm", "oidcProvider":"https://hydra.||DOMAIN||/", "scopes":["mDL"], "supportedVCContexts" : ["https://trustbloc.github.io/context/vc/examples/driver-license-evidence-v1.jsonld"], "supportsAssuranceCredential" : true, "requiresBlindedRoute": true}' \
+   --data '{"id":"tb-dl-issuer", "name":"TrustBloc - Driving License + Assurance Issuer", "url":"https://demo-issuer.||DOMAIN||/didcomm", "oidcProvider":"https://hydra.||DOMAIN||/", "scopes":["mDL"], "supportedVCContexts" : ["https://trustbloc.github.io/context/vc/examples/driver-license-evidence-v1.jsonld"],"isDIDCommV1" : true, "supportsAssuranceCredential" : true, "requiresBlindedRoute": true}' \
    --insecure http://adapter-issuer/profile 2>/dev/null)
    echo "'created' field from profile tb-dl-issuer response is: $response"
 
@@ -112,7 +112,7 @@ until [ $n -ge $maxAttempts ]
 do
    response=$(curl -k --header "Content-Type: application/json" \
    --request POST \
-   --data '{"id":"tb-prc-issuer", "name":"TrustBloc - Permanent Resident Card Issuer", "url":"https://demo-issuer.||DOMAIN||/didcomm", "oidcProvider":"https://hydra.||DOMAIN||/", "scopes":["PermanentResidentCard"], "supportedVCContexts" : ["https://w3id.org/citizenship/v1"], "isDIDCommV2" : true,"supportsWACI" : true, "linkedWallet":"https://wallet.||DOMAIN||/waci"}' \
+   --data '{"id":"tb-prc-issuer", "name":"TrustBloc - Permanent Resident Card Issuer", "url":"https://demo-issuer.||DOMAIN||/didcomm", "oidcProvider":"https://hydra.||DOMAIN||/", "scopes":["PermanentResidentCard"], "supportedVCContexts" : ["https://w3id.org/citizenship/v1"],"supportsWACI" : true, "linkedWallet":"https://wallet.||DOMAIN||/waci"}' \
    --insecure http://adapter-issuer/profile 2>/dev/null)
    echo "'created' field from profile tb-prc-issuer response is 2: $response"
 
