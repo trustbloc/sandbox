@@ -5,7 +5,7 @@ drivers license, digital drivers license assurance/evidence and digital credit r
 
 ## References
 - [Demo Recording](https://www.youtube.com/watch?v=0ZNmk6E2EFE&feature=youtu.be)
-- [Component Diagram](../images/adapter_component_diagram.svg)
+- [Component Diagram](../components/adapter_components.md)
 - [Issuer Adapter](https://github.com/trustbloc/edge-adapter/blob/main/docs/issuer/README.md)
 - [RP Adapter](https://github.com/trustbloc/edge-adapter/blob/main/docs/rp/README.md)
 
