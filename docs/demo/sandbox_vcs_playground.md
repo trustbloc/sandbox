@@ -1,9 +1,15 @@
 # TrustBloc Sandbox - VCS/Non-DIDComm Demo Playground
 
+
+## References
+- [Component Diagram](../components/vcs_components.md)
+- [Issuer VCS](https://github.com/trustbloc/edge-service/blob/main/docs/vcs/issuer/README.md)
+- [Verifier VCS](https://github.com/trustbloc/edge-service/blob/main/docs/vcs/verifier/README.md)
+
 ## Components
 | Component   | Cloud URL (Sandbox)**                                       | Cloud URL (Staging)                                     | Cloud URL (Devel)                                     | Local k8s URL*                                        |
 |-------------|-------------------------------------------------------------|---------------------------------------------------------|-------------------------------------------------------|-------------------------------------------------------|
-| Wallet      | [Click Here](https://wallet.sandbox.trustbloc.dev/dashboard) | [Click Here](https://wallet.stg.trustbloc.dev)      | [Click Here](https://wallet.dev.trustbloc.dev)      | [Click Here](https://wallet.local.trustbloc.dev)      |
+| Wallet      | [Click Here](https://wallet.sandbox.trustbloc.dev) | [Click Here](https://wallet.stg.trustbloc.dev)      | [Click Here](https://wallet.dev.trustbloc.dev)      | [Click Here](https://wallet.local.trustbloc.dev)      |
 | Issuer      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)     | [Click Here](https://demo-issuer.stg.trustbloc.dev) | [Click Here](https://demo-issuer.dev.trustbloc.dev) | [Click Here](https://demo-issuer.local.trustbloc.dev) |
 | RP/Verifier | [Click Here](https://demo-rp.sandbox.trustbloc.dev)   | [Click Here](https://demo-rp.stg.trustbloc.dev)     | [Click Here](https://demo-rp.dev.trustbloc.dev)     | [Click Here](https://demo-rp.local.trustbloc.dev)     |
 
@@ -19,16 +25,15 @@
 section. Refer [this](#issuer-options) for more info on issuer profiles and action.
 1. Login to the Issuer: With default user email as `john.smith@example.com` and password, click the `Login` button. Consent to 
 sharing the data on next page by clicking `Agree` button.
-1. Authenticate Wallet with Issuer : Click on `Authenticate` button select the registered `wallet`. 
-Select a wallet identity (subject DID) and click `Authenticate`. After success, the page displays the verifiable credential (vc).
+1. Authenticate Wallet with Issuer : 
+   - Click on `Authenticate` button and select the registered `wallet`. 
+   - In the CHAPI frame,  click on `Connect`. 
+   - After success, the page displays the verifiable credential (vc).
 1. Store the Credentials in Wallet: Click on `Save your credential`, Give a friendly name and click on `confirm` button.
 1. Verify the Credential : Go to [Demo Verifier](#components) and click on `Apply for Home Loan`. Select the `Permanent Residence Card` vc 
 when the Wallet asks for a Credential and click `Share`. The next page should show the verification 
 status of the credential. 
 
-## Wallet DIDs
-On the [DID Management](#components) tab, go to `Save Any DID` and enter DID information 
-on the page to use it as a wallet indentity.
 
 ## Issuer Options
 ### Profile
