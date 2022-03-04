@@ -2,6 +2,7 @@
 
 
 ## References
+- [Demo Recording](https://www.youtube.com/watch?v=-EJjxzTLstk)
 - [Component Diagram](../components/vcs_components.md)
 - [Issuer VCS](https://github.com/trustbloc/edge-service/blob/main/docs/vcs/issuer/README.md)
 - [Verifier VCS](https://github.com/trustbloc/edge-service/blob/main/docs/vcs/verifier/README.md)
