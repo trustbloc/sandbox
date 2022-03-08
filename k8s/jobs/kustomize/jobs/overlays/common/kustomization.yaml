@@ -43,16 +43,12 @@ configMapGenerator:
 - files:
   - vcs/holder/vcs_holder_configure.sh
   name: holder-vcs-add-profiles-script
-- files:
-  - vcs/governance/vcs_governance_configure.sh
-  name: governance-vcs-add-profiles-script
 
 resources:
 - cms/strapi/user-data.yml
 - vcs/issuer/add-profiles.yml
 - vcs/verifier/add-profiles.yml
 - vcs/holder/add-profiles.yml
-- vcs/governance/add-profiles.yml
 - hub-auth/hydra/hydra-create-client.yml
 - adapter-issuer/add-profiles.yml
 - login-consent/hydra/hydra-create-client.yml
