@@ -64,7 +64,6 @@ delete-jobs:
 	$(KUBECTL) -n default delete job \
 	ace-rp-profiles \
 	adapter-issuer-add-profiles \
-	governance-vcs-add-profiles \
 	holder-vcs-add-profiles \
 	hub-hydra-create-client \
 	hydra-create-client \
