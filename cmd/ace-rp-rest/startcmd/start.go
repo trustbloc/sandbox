@@ -485,7 +485,12 @@ func getRequestTokens(cmd *cobra.Command) (map[string]string, error) {
 }
 
 func createVDRI(didResolverURL string, tlsConfig *tls.Config) (vdrapi.Registry, error) {
-	didResolverVDRI, err := httpbinding.New(didResolverURL, httpbinding.WithTLSConfig(tlsConfig),
+	didResolverVDRI, err := httpbinding.New(didResolverURL,
+		httpbinding.WithHTTPClient(&http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: tlsConfig,
+			},
+		}),
 		httpbinding.WithAccept(func(method string) bool {
 			return method == "orb" || method == "v1" || method == "elem" || method == "sov" ||
 				method == "web" || method == "key" || method == "factom"
