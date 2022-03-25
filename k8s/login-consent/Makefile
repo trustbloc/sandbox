@@ -20,7 +20,7 @@ OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
-LOGIN_CONSENT_IMG				?= ghcr.io/trustbloc-cicd/sandbox-login-consent-server:0.1.8-snapshot-4a6a5aa
+LOGIN_CONSENT_IMG				?= ghcr.io/trustbloc-cicd/sandbox-login-consent-server:0.1.8-snapshot-b36b4e4
 HYDRA_IMG			?= oryd/hydra:v1.3.2-alpine
 
 # do not modify
