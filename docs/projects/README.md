@@ -13,6 +13,8 @@ Notable open standard ecosystem TrustBloc is following are,
 - [Decentralized Identity Foundation](https://identity.foundation/)
 - [W3C](https://www.w3.org/)
 - [Hyperledger Aries RFCs](https://github.com/hyperledger/aries-rfcs)
+- [OpenID](https://openid.net)
+- [IETF](https://www.ietf.org/)
 
 
 ## Projects
@@ -48,7 +50,7 @@ Current versions of the APIs are,
  * [Decentralized Identifiers (DIDs) v1.0](https://w3c.github.io/did-core/): For signing and verifying verifiable credentials and presentations.
  
 
-Visit the [project repo](https://github.com/trustbloc/edge-service) to learn more about VCS services, API documentation, configuration and setup instructions.
+Visit the [project repo](https://github.com/trustbloc/vcs) to learn more about VCS services, API documentation, configuration and setup instructions.
 
 ### TrustBloc Wallet
 The TrustBloc Wallet is [Universal Wallet](https://w3c-ccg.github.io/universal-wallet-interop-spec/) based [Verifiable Credential](https://www.w3.org/TR/vc-data-model/) 
@@ -82,9 +84,13 @@ Useful documents to learn more about TrustBloc Wallets
  * [Decentralized Identifier Resolution (DID Resolution) v0.2](https://w3c-ccg.github.io/did-resolution/): Followed for resolving various decentralized identifiers. 
  * [The did:orb Method v0.2](https://trustbloc.github.io/did-method-orb/): For Orb decentralized identifiers which is the default decentralized idenitfiers for TrustBloc wallets.
  * [Aries RFCS](#aries-rfcs): Since TrustBloc wallet is built on aries framework based user agents, it follows many aries RFCs features like DIDComm, Out-Of-Band Messaging, Issue Credential Protocol, Present Proof Protocol, Messaging, Mediators etc.
+ * [DIDComm V2](https://identity.foundation/didcomm-messaging/spec/): Version 2 of DID Communication protocol for secured communication between wallet and issuer/relying party.
+ * [Credential Manifest](https://identity.foundation/credential-manifest/): Credential Manifests are a resource format that defines preconditional requirements, Issuer style preferences, Credential Style preferences and other facets User Agents utilize to help articulate and select the inputs necessary for processing and issuance of a specified credential.
 
 Currently In Progress
-* [DIDComm V2](https://identity.foundation/didcomm-messaging/spec/): Version 2 DID Communication protocol is currently being implemented in TrustBloc Wallet.
+* [OIDC for Verifiable Presentation](https://openid.net/specs/openid-connect-4-verifiable-presentations-1_0.html): extension of OpenID Connect to allow presentation of claims in the form of W3C Verifiable Credentials as part of the protocol flow in addition to claims provided in the id_token and/or via UserInfo responses
+* [OIDC for Verifiable Credential Issuance](https://openid.net/specs/openid-connect-4-verifiable-credential-issuance-1_0.html): Extension of OpenID Connect to allow holders to request issuance of verifiable credentials
+* [Grant Negotiation and Authorization Protocol](https://www.ietf.org/archive/id/draft-ietf-gnap-core-protocol-09.html): This protocol allows a wallet instance to request delegated authorization to resource servers and to request direct information.
     
 Visit the [project repo](https://github.com/trustbloc/wallet) to learn more about web wallet, API documentation, configuration and setup instructions.
 
@@ -132,10 +138,8 @@ This hub-router can be used by edge agents like web wallet or mobile wallets to 
     * [Mediator Coordination](https://github.com/hyperledger/aries-rfcs/blob/main/features/0211-route-coordination/README.md)
     * [Pickup](https://github.com/hyperledger/aries-rfcs/blob/main/features/0212-pickup/README.md) 
     * [DIDComm Between Two Mobile Agents Using Cloud Agent Mediator](https://github.com/hyperledger/aries-rfcs/blob/main/concepts/0346-didcomm-between-two-mobile-agents/README.md) 
+ * [DIDComm V2](https://identity.foundation/didcomm-messaging/spec/): Version 2 of DID Communication protocol for secured communication between wallet and issuer/relying party.
 
-Currently In Progress
-* [DIDComm V2](https://identity.foundation/didcomm-messaging/spec/): Version 2 DID Communication protocol is currently being implemented in hub-router.
-    
 Visit the [project repo](https://github.com/trustbloc/hub-router) to learn more about hub-router, API documentation, configuration and setup instructions.
 
 ### TrustBloc Adapters
@@ -161,10 +165,10 @@ The TrustBloc Adapters also provides support for DIDComm to go through a router 
  * [Decentralized Identifier Resolution (DID Resolution) v0.2](https://w3c-ccg.github.io/did-resolution/): Followed for resolving various decentralized identifiers. 
  * [The did:orb Method v0.2](https://trustbloc.github.io/did-method-orb/): For Orb decentralized identifiers which is the default decentralized idenitfiers for TrustBloc wallets.
  * [Aries RFCS](#aries-rfcs): Since TrustBloc adapters performs credential interaction using aries based framework, it follows many aries RFCs standards for DIDComm, Out-Of-Band Messaging, Issue Credential Protocol, Present Proof Protocol, Messaging etc.
+ * [DIDComm V2](https://identity.foundation/didcomm-messaging/spec/): Version 2 of DID Communication protocol for secured communication between wallet and issuer/relying party.
+ * [Credential Manifest](https://identity.foundation/credential-manifest/): Credential Manifests are a resource format that defines preconditional requirements, Issuer style preferences, Credential Style preferences and other facets User Agents utilize to help articulate and select the inputs necessary for processing and issuance of a specified credential.
+ * [WACI Presentation Exchange](https://identity.foundation/waci-presentation-exchange/): Wallet and credential interaction standards using DIDComm.
 
-Currently In Progress
-* [DIDComm V2](https://identity.foundation/didcomm-messaging/spec/): Version 2 DID Communication protocol is currently being implemented in TrustBloc Adapter.
-    
 Visit the [project repo](https://github.com/trustbloc/adapter) to learn more about adapters, API documentation, configuration and setup instructions.
 
 ### TrustBloc EDV
@@ -190,6 +194,9 @@ Refer [design overview](https://github.com/trustbloc/kms/blob/main/docs/design_o
  * [WebKMS v0.7](https://w3c-ccg.github.io/webkms/): For implementing cryptographic key management systems for the wallet.
  * [Authorization Capabilities for Linked Data v0.3](https://w3c-ccg.github.io/zcap-ld/): Followed for implementing advanced wallet features which provides a secure way for linked data systems to grant and express authority utilizing the object capability model.
  * [Aries RFCS](#aries-rfcs): Since TrustBloc KMS follows many aries RFCs standards related to key management.
+
+Currently In Progress
+ * [Grant Negotiation and Authorization Protocol](https://www.ietf.org/archive/id/draft-ietf-gnap-core-protocol-09.html): This protocol allows a client instance to request delegated authorization to resource servers and to request direct information.
 
 Visit the [project repo](https://github.com/trustbloc/kms) to learn more about TrustBloc KMS, API documentation, configuration and setup instructions.
 
