@@ -13,7 +13,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/spf13/cobra v1.3.0
 	github.com/stretchr/testify v1.7.0
-	github.com/trustbloc/edge-core v0.1.8-0.20220324215259-0ab3fd8db3f3
+	github.com/trustbloc/edge-core v0.1.8
 	github.com/trustbloc/sandbox v0.0.0
 )
 
@@ -33,12 +33,12 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/tink/go v1.6.1-0.20210519071714-58be99b3c4d0 // indirect
-	github.com/hyperledger/aries-framework-go v0.1.8-0.20220324201531-18c87667df19 // indirect
-	github.com/hyperledger/aries-framework-go-ext/component/storage/couchdb v0.0.0-20220318063402-17308bff816f // indirect
-	github.com/hyperledger/aries-framework-go-ext/component/storage/mongodb v0.0.0-20220318063402-17308bff816f // indirect
-	github.com/hyperledger/aries-framework-go-ext/component/storage/mysql v0.0.0-20220318063402-17308bff816f // indirect
-	github.com/hyperledger/aries-framework-go/component/storageutil v0.0.0-20220324201531-18c87667df19 // indirect
-	github.com/hyperledger/aries-framework-go/spi v0.0.0-20220324201531-18c87667df19 // indirect
+	github.com/hyperledger/aries-framework-go v0.1.8 // indirect
+	github.com/hyperledger/aries-framework-go-ext/component/storage/couchdb v0.0.0-20220330151152-6bbd64bde42e // indirect
+	github.com/hyperledger/aries-framework-go-ext/component/storage/mongodb v0.0.0-20220330151152-6bbd64bde42e // indirect
+	github.com/hyperledger/aries-framework-go-ext/component/storage/mysql v0.0.0-20220330151152-6bbd64bde42e // indirect
+	github.com/hyperledger/aries-framework-go/component/storageutil v0.0.0-20220330140627-07042d78580c // indirect
+	github.com/hyperledger/aries-framework-go/spi v0.0.0-20220330140627-07042d78580c // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kilic/bls12-381 v0.1.1-0.20210503002446-7b7597926c69 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
@@ -54,7 +54,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/square/go-jose/v3 v3.0.0-20200630053402-0a67ce9b0693 // indirect
 	github.com/teserakt-io/golang-ed25519 v0.0.0-20210104091850-3888c087a4c8 // indirect
-	github.com/trustbloc/edge-service v0.1.8-0.20220324182924-1714345809ba // indirect
+	github.com/trustbloc/edge-service v0.1.8 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.0.2 // indirect
 	github.com/xdg-go/stringprep v1.0.2 // indirect
