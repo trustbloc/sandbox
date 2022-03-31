@@ -1,5 +1,52 @@
 # TrustBloc Adapter Components
 
+## v0.1.8
+### Architecture Diagram 
+![Adapter Architecture diagram v0.1.8](../images/adapter_component_diagram_v0.1.8.svg)
+
+[DID Orb Component Diagram](https://trustbloc.readthedocs.io/en/latest/orb/introduction.html)
+
+### Component Details
+#### Core
+| Component                   | Source URL                                                                 | k8s Configuration                                                                                |
+|-----------------------------|----------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| Router                      | [Source](https://github.com/trustbloc/hub-router)                          | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/hub-router) |
+| EDV                         | [Source](https://github.com/trustbloc/edv)                                 | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/edv)        |
+| EDV Oathkeeper              | [Source](https://github.com/ory/oathkeeper)                                | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/edv)        |
+| Ops KMS                     | [Source](https://github.com/trustbloc/kms)                                 | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/kms)        |
+| Ops KMS Oathkeeper          | [Source](https://github.com/ory/oathkeeper )                               | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/kms)        |
+| Authz KMS                   | [Source](https://github.com/trustbloc/kms)                                 | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/kms)        |
+| Authz KMS Oathkeeper        | [Source](https://github.com/ory/oathkeeper )                               | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/kms)        |
+| TrustBloc SignIn (Hub-Auth) | [Source](https://github.com/trustbloc/hub-auth)                            | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/hub-auth)   |
+| TrustBloc SignIn (Hydra)    | [Source](https://github.com/ory/hydra)                                     | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/hub-auth)   |
+| DID Resolver                | [Source](https://github.com/trustbloc/edge-service/tree/main/cmd/did-rest) | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/resolver)   |
+| DID Orb                     | [Source](https://github.com/trustbloc/orb)                                 | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/orb)        |
+
+#### Wallet
+| Component     | Source URL                                    | k8s Configuration                                                                                   |
+|---------------|-----------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| Wallet Web    | [Source](https://github.com/trustbloc/wallet) | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/wallet-web)    |
+| Wallet Server | [Source](https://github.com/trustbloc/wallet) | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/wallet-server) |
+
+
+#### Services
+| Component        | Source URL                                     | k8s Configuration                                                                                    |
+|------------------|------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| Issuer Adapter   | [Source](https://github.com/trustbloc/adapter) | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/adapter-issuer) |
+| RP Adapter       | [Source](https://github.com/trustbloc/adapter) | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/adapter-rp)     |
+| RP Adapter Hydra | [Source](https://github.com/ory/hydra)         | [k8s](https://github.com/trustbloc/k8s/tree/v0.1.8/adapter-rp)     |
+
+#### Demo
+| Component         | Source URL                                     | k8s Configuration                                                                                           |
+|-------------------|------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| Issuer            | [Source](https://github.com/trustbloc/sandbox) | [k8s](https://github.com/trustbloc/sandbox/tree/v0.1.8/k8s/issuer)        |
+| RP/Verifier       | [Source](https://github.com/trustbloc/sandbox) | [k8s](https://github.com/trustbloc/sandbox/tree/v0.1.8/k8s/rp)            |
+| ORY Hydra         | [Source](https://github.com/ory/hydra)         | [k8s](https://github.com/trustbloc/sandbox/tree/v0.1.8/k8s/login-consent) |
+| Login and Consent | [Source](https://github.com/trustbloc/sandbox) | [k8s](https://github.com/trustbloc/sandbox/tree/v0.1.8/k8s/login-consent) |
+| ORY Oathkeeper    | [Source](https://github.com/ory/oathkeeper)    | [k8s](https://github.com/trustbloc/sandbox/tree/v0.1.8/k8s/cms)           |
+| Strapi            | [Source](https://github.com/strapi/strapi)     | [k8s](https://github.com/trustbloc/sandbox/tree/v0.1.8/k8s/cms)           |
+
+
 ## v0.1.7
 ### Architecture Diagram 
 ![Adapter Architecture diagram v0.1.7](../images/adapter_component_diagram_v0.1.7.svg)
