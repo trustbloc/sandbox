@@ -34,4 +34,4 @@ kind: Kustomization
 images:
 - name: comparator-server
   newName: ghcr.io/trustbloc/comparator-server
-  newTag: 0.1.7
+  newTag: 0.1.8

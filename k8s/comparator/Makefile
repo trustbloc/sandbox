@@ -22,7 +22,7 @@ OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
-COMPARATOR_IMAGE				?= ghcr.io/trustbloc/comparator-server:0.1.7
+COMPARATOR_IMAGE				?= ghcr.io/trustbloc/comparator-server:0.1.8
 
 # do not modify
 KUSTOMIZE_DIR       	= kustomize/comparator
