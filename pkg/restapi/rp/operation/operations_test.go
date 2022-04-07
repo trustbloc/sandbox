@@ -95,6 +95,21 @@ const (
 }`
 )
 
+const presDefQuery = `{
+            "id": "3bc5ac72-bdd7-42de-aeba-45816cc4f776",
+            "name": "Demo Verifier",
+            "input_descriptors": [
+                {
+                    "id": "c9e85b4e-496f-40c2-8572-4b35e17c7b78",
+                    "schema": [
+                        {
+                            "uri": "https://w3id.org/citizenship#PermanentResidentCard"
+                        }
+                    ]
+                }
+            ]
+        }`
+
 func TestNew(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		config, cleanup := config(t)
@@ -102,7 +117,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(config)
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 5, len(svc.GetRESTHandlers()))
+		require.Equal(t, 7, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error if oidc provider is invalid", func(t *testing.T) {
@@ -255,7 +270,6 @@ func TestCreateOIDCRequest(t *testing.T) {
 		svc.oidcClient = &mockOIDCClient{createOIDCRequest: "request"}
 		w := httptest.NewRecorder()
 		svc.createOIDCRequest(w, newCreateOIDCHTTPRequest(scope, flowType))
-		require.Equal(t, http.StatusOK, w.Code)
 		require.Equal(t, http.StatusOK, w.Code)
 		result := &createOIDCRequestResponse{}
 		err = json.NewDecoder(w.Body).Decode(result)
@@ -471,6 +485,143 @@ func TestHandleOIDCCallback(t *testing.T) {
 	})
 }
 
+func TestCreateOIDCShareRequest(t *testing.T) {
+	t.Run("returns oidc request", func(t *testing.T) {
+		vpRequest := oidcVpRequest{
+			PresentationDefinition: json.RawMessage(presDefQuery),
+			WalletAuthURL:          "https://testingwallet/oidc/share"}
+		vpRequestBytes, err := json.Marshal(vpRequest)
+		require.NoError(t, err)
+		config, cleanup := config(t)
+		defer cleanup()
+		svc, err := New(config)
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+		svc.createOIDCShareRequest(w, newCreateOIDCShareHTTPRequest(vpRequestBytes))
+		require.Equal(t, http.StatusOK, w.Code)
+		require.Contains(t, w.Body.String(), "https://testingwallet/oidc/share")
+	})
+
+	t.Run("bad request if incorrect vp request", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+		svc, err := New(config)
+		require.NoError(t, err)
+		svc.oidcClient = &mockOIDCClient{}
+		w := httptest.NewRecorder()
+		svc.createOIDCShareRequest(w, newCreateOIDCShareHTTPRequest([]byte(`make chan(int)`)))
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		require.Contains(t, w.Body.String(), "failed to decode request")
+	})
+
+	t.Run("internal server error if transient store fails", func(t *testing.T) {
+		vpRequest := oidcVpRequest{
+			PresentationDefinition: json.RawMessage(presDefQuery),
+			WalletAuthURL:          "https://testingwallet/oidc/share"}
+		vpRequestBytes, err := json.Marshal(vpRequest)
+		require.NoError(t, err)
+		config, cleanup := config(t)
+		defer cleanup()
+		config.TransientStoreProvider = &mockstore.Provider{
+			OpenStoreReturn: &mockstore.Store{
+				ErrPut: errors.New("test"),
+			},
+		}
+
+		svc, err := New(config)
+		require.NoError(t, err)
+		svc.oidcClient = &mockOIDCClient{}
+		w := httptest.NewRecorder()
+		svc.createOIDCShareRequest(w, newCreateOIDCShareHTTPRequest(vpRequestBytes))
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+}
+
+func TestHandleOIDCShareCallback(t *testing.T) {
+	idToken := "eyJhbGciOiJub25lIn0.eyJpc3MiOiJkZW1vLXZlcmlmaWVyIiwic3ViIjoiZGVtby12ZXJpZmllciIsImF1ZCI6ImRlbW8tdmVyaWZpZXIiLCJpYXQiOjE2NDk1NzQwODg0NzAsImV4cCI6MTY0OTU3NDA4ODQ3MH0.e30"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   //nolint:gosec,lll
+	vpToken := "%7B%22@context%22:%5B%22https://www.w3.org/2018/credentials/v1%22%5D,%22holder%22:%22did:orb:uEiD_Qb302UEyoxn5yQD0ppr-ZNMWowmbvby4VnzTqNosDQ:EiCr2dgSRgrXUT-e5DZIlBdeUsXoFrKrVZ8ZQmYymCERKg%22,%22proof%22:%7B%22created%22:%222022-04-10T03:01:28.662-04:00%22,%22jws%22:%22eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Tpg1a6Tj-i4SeljvZ7SixPkdzxe49HNDppDp-97hf-hQN-m4Bt_dRp8aWEWpo0XZCOk1hMiMXK3R71KAP6WlDw%22,%22proofPurpose%22:%22authentication%22,%22type%22:%22Ed25519Signature2018%22,%22verificationMethod%22:%22did:orb:uEiD_Qb302UEyoxn5yQD0ppr-ZNMWowmbvby4VnzTqNosDQ:EiCr2dgSRgrXUT-e5DZIlBdeUsXoFrKrVZ8ZQmYymCERKg#Y8US6IeIb7AIX4K1S2BjMfbk_ZuYRO_w9qN-aAJR2Ng%22%7D,%22type%22:%22VerifiablePresentation%22,%22verifiableCredential%22:%5B%7B%22@context%22:%5B%22https://www.w3.org/2018/credentials/v1%22,%22https://w3id.org/citizenship/v1%22%5D,%22credentialSubject%22:%7B%22birthCountry%22:%22Bahamas%22,%22birthDate%22:%221958-07-17%22,%22familyName%22:%22Pasteur%22,%22gender%22:%22Male%22,%22givenName%22:%22Louis%22,%22id%22:%22did:trustbloc:orb-1.local.trustbloc.dev:EiD6cBirl2gND93LLKQzDMX4XjR3F7W2v4dPJzd8bQpPYQ%22,%22lprCategory%22:%22C09%22,%22lprNumber%22:%22999-999-999%22,%22residentSince%22:%222015-01-01%22%7D,%22description%22:%22Permanent%20Resident%20Card%20of%20Mr.Louis%20Pasteur%22,%22id%22:%22urn:uuid:df436131-dda9-408b-8d8b-c999d742ba83%22,%22issuanceDate%22:%222022-04-10T06:27:26.004244495Z%22,%22issuer%22:%7B%22id%22:%22https://demo-issuer.local.trustbloc.dev/didcomm%22,%22name%22:%22TrustBloc%20-%20Permanent%20Resident%20Card%20Issuer%22%7D,%22name%22:%22Permanent%20Resident%20Card%22,%22type%22:%5B%22VerifiableCredential%22,%22PermanentResidentCard%22%5D%7D%5D%7D" //nolint:gosec,lll
+
+	t.Run("success handle call back", func(t *testing.T) {
+		state := uuid.New().String()
+		config, configCleanup := config(t)
+		defer configCleanup()
+
+		storeToReturnFromMockProvider, err := memstore.NewProvider().OpenStore("mockstoretoreturn")
+		require.NoError(t, err)
+
+		err = storeToReturnFromMockProvider.Put(state, []byte(presDefQuery))
+		require.NoError(t, err)
+
+		config.TransientStoreProvider = &mockstore.Provider{
+			OpenStoreReturn: storeToReturnFromMockProvider,
+		}
+
+		o, err := New(config)
+		require.NoError(t, err)
+
+		result := httptest.NewRecorder()
+
+		o.handleOIDCShareCallback(result, newOIDCShareCallback(state, idToken, vpToken))
+		require.Equal(t, http.StatusOK, result.Code)
+	})
+
+	t.Run("error missing state", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+		svc, err := New(config)
+		require.NoError(t, err)
+		result := httptest.NewRecorder()
+		svc.handleOIDCShareCallback(result, newOIDCShareCallback("", "", ""))
+		require.Equal(t, http.StatusInternalServerError, result.Code)
+	})
+
+	t.Run("generic transient store error", func(t *testing.T) {
+		state := uuid.New().String()
+		config, cleanup := config(t)
+		defer cleanup()
+
+		config.TransientStoreProvider = &mockstore.Provider{
+			OpenStoreReturn: &mockstore.Store{
+				GetReturn: []byte(state),
+				ErrGet:    errors.New("generic"),
+			},
+		}
+
+		svc, err := New(config)
+		require.NoError(t, err)
+		result := httptest.NewRecorder()
+		svc.handleOIDCShareCallback(result, newOIDCShareCallback(state, "", ""))
+		require.Equal(t, http.StatusInternalServerError, result.Code)
+	})
+
+	t.Run("test vp html not exist", func(t *testing.T) {
+		state := uuid.New().String()
+		config, configCleanup := config(t)
+		defer configCleanup()
+		config.DIDCOMMVPHTML = ""
+
+		storeToReturnFromMockProvider, err := memstore.NewProvider().OpenStore("mockstoretoreturn")
+		require.NoError(t, err)
+
+		err = storeToReturnFromMockProvider.Put(state, []byte(presDefQuery))
+		require.NoError(t, err)
+
+		config.TransientStoreProvider = &mockstore.Provider{
+			OpenStoreReturn: storeToReturnFromMockProvider,
+		}
+
+		o, err := New(config)
+		require.NoError(t, err)
+
+		o.oidcClient = &mockOIDCClient{}
+
+		result := httptest.NewRecorder()
+		o.handleOIDCShareCallback(result, newOIDCShareCallback(state, idToken, vpToken))
+		require.Equal(t, http.StatusInternalServerError, result.Code)
+		require.Contains(t, result.Body.String(), "unable to load html")
+	})
+}
+
 func TestVerifyDIDAuthHandler(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		config, cleanup := config(t)
@@ -666,11 +817,24 @@ func newCreateOIDCHTTPRequest(scope, flowType string) *http.Request {
 		scope, flowType), nil)
 }
 
+func newCreateOIDCShareHTTPRequest(reqBytes []byte) *http.Request {
+	return httptest.NewRequest(http.MethodPost,
+		"https://example.com/oidc/share/request", bytes.NewReader(reqBytes))
+}
+
 func newOIDCCallback(state, code string) (req *http.Request) {
 	cookie := &http.Cookie{Name: flowTypeCookie, Value: "credit"}
 	req = httptest.NewRequest(http.MethodGet,
 		fmt.Sprintf("http://example.com/oauth2/callback?state=%s&code=%s", state, code), nil)
 	req.AddCookie(cookie)
+
+	return req
+}
+
+func newOIDCShareCallback(state, idToken, vpToken string) (req *http.Request) {
+	req = httptest.NewRequest(http.MethodGet,
+		fmt.Sprintf("http://example.com/oidc/share/cb?state=%s&id_token=%s&vp_token=%s",
+			state, idToken, vpToken), nil)
 
 	return req
 }
@@ -685,13 +849,19 @@ func tmpFile(t *testing.T) (string, func()) {
 }
 
 type mockOIDCClient struct {
-	createOIDCRequest     string
-	createOIDCRequestErr  error
-	handleOIDCCallbackErr error
+	createOIDCRequest         string
+	createOIDCShareRequest    string
+	createOIDCRequestErr      error
+	createOIDCShareRequestErr error
+	handleOIDCCallbackErr     error
 }
 
 func (m *mockOIDCClient) CreateOIDCRequest(state, scope string) (string, error) {
 	return m.createOIDCRequest, m.createOIDCRequestErr
+}
+
+func (m *mockOIDCClient) CreateOIDCShareRequest() (string, error) {
+	return m.createOIDCShareRequest, m.createOIDCShareRequestErr
 }
 
 func (m *mockOIDCClient) HandleOIDCCallback(reqContext context.Context, code string) ([]byte, error) {

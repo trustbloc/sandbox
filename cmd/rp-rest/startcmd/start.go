@@ -104,6 +104,11 @@ const (
 		" Alternatively, this can be set with the following environment variable: " + waciOIDCCallbackURLEnvKey
 	waciOIDCCallbackURLEnvKey = "RP_WACI_OIDC_CALLBACK"
 
+	walletAuthURLFlagName  = "wallet-auth-url"
+	walletAuthURLFlagUsage = "Wallet auth URL for rp oidc share" +
+		" Alternatively, this can be set with the following environment variable: " + walletAuthURLEnvKey
+	walletAuthURLEnvKey = "RP_WALLET_AUTH_URL"
+
 	tokenLength2 = 2
 )
 
@@ -141,6 +146,7 @@ type rpParameters struct {
 	logLevel           string
 	oidcParameters     *oidcParameters
 	waciOIDCParameters *oidcParameters
+	walletAuthURL      string
 	dbParams           *common.DBParameters
 }
 
@@ -213,6 +219,11 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen
 				return err
 			}
 
+			walletAuthURL, err := cmdutils.GetUserSetVarFromString(cmd, walletAuthURLFlagName, walletAuthURLEnvKey, true)
+			if err != nil {
+				return err
+			}
+
 			parameters := &rpParameters{
 				srv:                srv,
 				hostURL:            strings.TrimSpace(hostURL),
@@ -225,6 +236,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen
 				logLevel:           loggingLevel,
 				oidcParameters:     oidcParams,
 				waciOIDCParameters: waciOIDCParams,
+				walletAuthURL:      walletAuthURL,
 				dbParams:           dbParams,
 			}
 
@@ -375,6 +387,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(waciOIDCClientIDFlagName, "", "", waciOIDCClientIDFlagUsage)
 	startCmd.Flags().StringP(waciOIDCClientSecretFlagName, "", "", waciOIDCClientSecretFlagUsage)
 	startCmd.Flags().StringP(waciOIDCCallbackURLFlagName, "", "", waciOIDCCallbackURLFlagUsage)
+	startCmd.Flags().StringP(walletAuthURLFlagName, "", "", walletAuthURLFlagUsage)
 }
 
 func startRP(parameters *rpParameters) error {
@@ -407,6 +420,7 @@ func startRP(parameters *rpParameters) error {
 		WACIOIDCClientID:       parameters.waciOIDCParameters.oidcClientID,
 		WACIOIDCClientSecret:   parameters.waciOIDCParameters.oidcClientSecret,
 		WACIOIDCCallbackURL:    parameters.waciOIDCParameters.oidcCallbackURL,
+		WalletAuthURL:          parameters.walletAuthURL,
 	}
 
 	rpService, err := rp.New(cfg)
@@ -475,6 +489,13 @@ func pathPrefix() *mux.Router {
 	})
 	router.PathPrefix("/prcsuccess").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/dutyfreesuccess.html")
+	})
+	router.PathPrefix("/backgroundcheck").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/backgroundcheck.html")
+	})
+	// TODO Issue #1411: Fix the background check success page
+	router.PathPrefix("/bgcsuccess").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/backgroundchecksuccess.html")
 	})
 
 	return router

@@ -149,13 +149,10 @@ SPDX-License-Identifier: Apache-2.0
             document.getElementById("successful-verification").style.display= "none"
             document.getElementById("failMsg").innerText = JSON.stringify(JSON.parse({{.Msg}}));
         }
-
         document.getElementById("vpDataJSON").innerHTML = syntaxHighlight(JSON.stringify(JSON.parse({{.Data}}), undefined, 4));
         console.log("verifiable presentation", JSON.stringify(JSON.parse({{.Data}})));
         var data =  JSON.parse({{.Data}});
         var flowType =  document.getElementById("flow").innerText;
-        console.log("flow type", flowType)
-
         var flattened = {};
         flatten(data, flattened, flowType);
     })

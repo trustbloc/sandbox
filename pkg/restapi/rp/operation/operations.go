@@ -17,11 +17,16 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/presexch"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/hyperledger/aries-framework-go/spi/storage"
+	"github.com/piprate/json-gold/ld"
+	"github.com/square/go-jose/jwt"
 	"github.com/trustbloc/edge-core/pkg/log"
 	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/verifier/operation"
 
@@ -36,6 +41,8 @@ const (
 	verifyVPPath           = "/verifyPresentation"
 	oauth2GetRequestPath   = "/oauth2/request"
 	oauth2CallbackPath     = "/oauth2/callback"
+	oidcShareRequestPath   = "/oidc/share/request"
+	oidcShareCallbackPath  = "/oidc/share/cb"
 	verifyPresentationPath = "/verify/presentation"
 	verifyCredentialPath   = "/verify/credential"
 
@@ -90,6 +97,7 @@ type Operation struct {
 	tlsConfig      *tls.Config
 	oidcClient     oidcClient
 	waciOIDCClient oidcClient
+	walletAuthURL  string
 }
 
 // Config defines configuration for rp operations
@@ -108,6 +116,7 @@ type Config struct {
 	WACIOIDCClientID       string
 	WACIOIDCClientSecret   string
 	WACIOIDCCallbackURL    string
+	WalletAuthURL          string
 }
 
 // vc struct used to return vc data to html
@@ -131,6 +140,7 @@ func New(config *Config) (*Operation, error) {
 		client:        &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
 		requestTokens: config.RequestTokens,
 		tlsConfig:     config.TLSConfig,
+		walletAuthURL: config.WalletAuthURL,
 	}
 
 	var err error
@@ -170,6 +180,9 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(verifyVPPath, http.MethodPost, c.verifyVP),
 		support.NewHTTPHandler(oauth2GetRequestPath, http.MethodGet, c.createOIDCRequest),
 		support.NewHTTPHandler(oauth2CallbackPath, http.MethodGet, c.handleOIDCCallback),
+
+		support.NewHTTPHandler(oidcShareRequestPath, http.MethodPost, c.createOIDCShareRequest),
+		support.NewHTTPHandler(oidcShareCallbackPath, http.MethodGet, c.handleOIDCShareCallback),
 
 		support.NewHTTPHandler(verifyPresentationPath, http.MethodPost, c.verifyPresentation),
 		support.NewHTTPHandler(verifyCredentialPath, http.MethodPost, c.verifyCredential),
@@ -307,6 +320,156 @@ func (c *Operation) verifyVP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.verify(req, inputData, c.vpHTML, w, r)
+}
+
+func (c *Operation) createOIDCShareRequest(w http.ResponseWriter, r *http.Request) { // nolint: funlen
+	oidcVpReq := &oidcVpRequest{}
+
+	err := json.NewDecoder(r.Body).Decode(oidcVpReq)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to decode request: %s", err.Error()))
+
+		return
+	}
+
+	walletAuthURL := oidcVpReq.WalletAuthURL
+	if walletAuthURL == "" {
+		walletAuthURL = c.walletAuthURL
+	}
+
+	var pd *presexch.PresentationDefinition
+
+	err = json.Unmarshal(oidcVpReq.PresentationDefinition, &pd)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to unmarshal presentation definition : %s", err))
+		return
+	}
+
+	authClaims := &oidcAuthClaims{
+		VPToken: &vpToken{
+			PresDef: pd,
+		},
+	}
+
+	claimsBytes, err := json.Marshal(authClaims)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to unmarshal invitation : %s", err))
+
+		return
+	}
+
+	state := uuid.NewString()
+
+	// TODO: use OIDC client library
+	// construct wallet auth req with PEx
+	walletReq, err := http.NewRequest("GET", walletAuthURL, nil)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to get interaction data : %s", err))
+
+		return
+	}
+
+	redirectURI := &url.URL{
+		Scheme: r.URL.Scheme,
+		Host:   r.Host,
+		Path:   oidcShareCallbackPath,
+	}
+
+	q := walletReq.URL.Query()
+	q.Add("client_id", "demo-verifier")
+	q.Add("redirect_uri", redirectURI.String())
+	q.Add("scope", "openid")
+	q.Add("state", state)
+	q.Add("claims", string(claimsBytes))
+
+	walletReq.URL.RawQuery = q.Encode()
+
+	redirectURL := walletReq.URL.String()
+
+	err = c.savePresentationDefinition(pd, state)
+	if err != nil {
+		c.writeErrorResponse(w,
+			http.StatusInternalServerError, fmt.Sprintf("failed save presentation definition : %s", err))
+
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, []byte(redirectURL))
+}
+
+func (c *Operation) savePresentationDefinition(pd *presexch.PresentationDefinition, state string) error {
+	pdBytes, err := json.Marshal(pd)
+	if err != nil {
+		return fmt.Errorf("failed marshal presentation definition : %w", err)
+	}
+
+	err = c.transientStore.Put(state, pdBytes)
+	if err != nil {
+		return fmt.Errorf("failed store presentation definition : %w", err)
+	}
+
+	return nil
+}
+
+func (c *Operation) handleOIDCShareCallback(w http.ResponseWriter, r *http.Request) {
+	state := r.URL.Query().Get("state")
+
+	pdBytes, err := c.transientStore.Get(state)
+	if err != nil {
+		c.writeErrorResponse(w,
+			http.StatusInternalServerError, fmt.Sprintf("failed to get oidc state data : %s", err))
+
+		return
+	}
+
+	var pd *presexch.PresentationDefinition
+
+	err = json.Unmarshal(pdBytes, &pd)
+	if err != nil {
+		c.writeErrorResponse(w,
+			http.StatusInternalServerError, fmt.Sprintf("failed to unmarshal presentation definition : %s", err))
+
+		return
+	}
+
+	idToken := r.URL.Query().Get("id_token")
+	vpToken := r.URL.Query().Get("vp_token")
+	logger.Infof("oidc share callback : id_token=%s vp_token=%s",
+		idToken, vpToken)
+
+	var claims *oidcTokenClaims
+
+	token, err := jwt.ParseSigned(idToken)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to parsed token : %s", err))
+
+		return
+	}
+
+	err = token.UnsafeClaimsWithoutVerification(&claims)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to convert to claim object : %s", err))
+
+		return
+	}
+
+	logger.Infof("oidc share callback : vp_token=%s", vpToken)
+
+	_, err = verifiable.ParsePresentation([]byte(vpToken),
+		verifiable.WithPresJSONLDDocumentLoader(ld.NewDefaultDocumentLoader(nil)),
+		verifiable.WithPresDisabledProofCheck())
+
+	if err != nil {
+		logger.Errorf("failed to handle oidc share callback : %s vptoken %s", err, vpToken)
+		c.didcommDemoResult(w, fmt.Sprintf("failed to parse presentation: %s", err), "")
+
+		return
+	}
+
+	c.didcommDemoResult(w, "Successfully Received Presentation", "oidcVp")
 }
 
 func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) { // nolint: funlen
@@ -550,11 +713,11 @@ func checkSubstrings(str string, subs ...string) bool {
 	return isCompleteMatch
 }
 
-func (c *Operation) sendHTTPRequest(method, url string, body []byte, contentType,
+func (c *Operation) sendHTTPRequest(method, reqURL string, body []byte, contentType,
 	token string) (*http.Response, error) {
-	logger.Infof("send http request : url=%s methdod=%s body=%s", url, method, string(body))
+	logger.Infof("send http request : url=%s methdod=%s body=%s", reqURL, method, string(body))
 
-	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
+	req, err := http.NewRequest(method, reqURL, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http request: %w", err)
 	}
