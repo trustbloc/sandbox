@@ -33,5 +33,5 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 images:
 - name: comparator-server
-  newName: ghcr.io/trustbloc/comparator-server
-  newTag: 0.1.8
+  newName: ghcr.io/trustbloc-cicd/comparator-server
+  newTag: 0.1.9-snapshot-d7dd714
