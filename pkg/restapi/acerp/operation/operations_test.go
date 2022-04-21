@@ -32,9 +32,9 @@ import (
 	ldstore "github.com/hyperledger/aries-framework-go/pkg/store/ld"
 	"github.com/hyperledger/aries-framework-go/spi/storage"
 	"github.com/stretchr/testify/require"
-	compclientops "github.com/trustbloc/edge-service/pkg/client/comparator/client/operations"
-	compmodel "github.com/trustbloc/edge-service/pkg/client/comparator/models"
-	"github.com/trustbloc/edge-service/pkg/restapi/vault"
+	compclientops "github.com/trustbloc/ace/pkg/client/comparator/client/operations"
+	compmodel "github.com/trustbloc/ace/pkg/client/comparator/models"
+	"github.com/trustbloc/ace/pkg/restapi/vault"
 )
 
 const (
