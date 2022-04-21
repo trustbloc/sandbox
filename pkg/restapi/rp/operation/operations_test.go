@@ -560,7 +560,6 @@ func TestHandleOIDCShareCallback(t *testing.T) {
 		require.NoError(t, err)
 
 		result := httptest.NewRecorder()
-
 		o.handleOIDCShareCallback(result, newOIDCShareCallback(state, idToken, vpToken))
 		require.Equal(t, http.StatusOK, result.Code)
 	})
@@ -594,11 +593,11 @@ func TestHandleOIDCShareCallback(t *testing.T) {
 		require.Equal(t, http.StatusInternalServerError, result.Code)
 	})
 
-	t.Run("test vp html not exist", func(t *testing.T) {
+	t.Run("test oidc vp html not exist", func(t *testing.T) {
 		state := uuid.New().String()
 		config, configCleanup := config(t)
 		defer configCleanup()
-		config.DIDCOMMVPHTML = ""
+		config.OIDCShareVPHTML = ""
 
 		storeToReturnFromMockProvider, err := memstore.NewProvider().OpenStore("mockstoretoreturn")
 		require.NoError(t, err)
@@ -886,6 +885,7 @@ func config(t *testing.T) (*Config, func()) {
 			TransientStoreProvider: memstore.NewProvider(),
 			VPHTML:                 file,
 			DIDCOMMVPHTML:          file,
+			OIDCShareVPHTML:        file,
 		}, func() {
 			oidcCleanup()
 			fileCleanup()

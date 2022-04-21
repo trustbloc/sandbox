@@ -87,23 +87,25 @@ type oidcClient interface {
 
 // Operation defines handlers
 type Operation struct {
-	handlers       []Handler
-	vpHTML         string
-	didCommVpHTML  string
-	vcsURL         string
-	client         httpClient
-	requestTokens  map[string]string
-	transientStore storage.Store
-	tlsConfig      *tls.Config
-	oidcClient     oidcClient
-	waciOIDCClient oidcClient
-	walletAuthURL  string
+	handlers        []Handler
+	vpHTML          string
+	didCommVpHTML   string
+	oidcShareVpHTML string
+	vcsURL          string
+	client          httpClient
+	requestTokens   map[string]string
+	transientStore  storage.Store
+	tlsConfig       *tls.Config
+	oidcClient      oidcClient
+	waciOIDCClient  oidcClient
+	walletAuthURL   string
 }
 
 // Config defines configuration for rp operations
 type Config struct {
 	VPHTML                 string
 	DIDCOMMVPHTML          string
+	OIDCShareVPHTML        string
 	VCSURL                 string
 	TLSConfig              *tls.Config
 	RequestTokens          map[string]string
@@ -134,13 +136,14 @@ type createOIDCRequestResponse struct {
 // New returns rp operation instance
 func New(config *Config) (*Operation, error) {
 	svc := &Operation{
-		vpHTML:        config.VPHTML,
-		didCommVpHTML: config.DIDCOMMVPHTML,
-		vcsURL:        config.VCSURL,
-		client:        &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
-		requestTokens: config.RequestTokens,
-		tlsConfig:     config.TLSConfig,
-		walletAuthURL: config.WalletAuthURL,
+		vpHTML:          config.VPHTML,
+		didCommVpHTML:   config.DIDCOMMVPHTML,
+		oidcShareVpHTML: config.OIDCShareVPHTML,
+		vcsURL:          config.VCSURL,
+		client:          &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
+		requestTokens:   config.RequestTokens,
+		tlsConfig:       config.TLSConfig,
+		walletAuthURL:   config.WalletAuthURL,
 	}
 
 	var err error
@@ -464,12 +467,12 @@ func (c *Operation) handleOIDCShareCallback(w http.ResponseWriter, r *http.Reque
 
 	if err != nil {
 		logger.Errorf("failed to handle oidc share callback : %s vptoken %s", err, vpToken)
-		c.didcommDemoResult(w, fmt.Sprintf("failed to parse presentation: %s", err), "")
+		c.oidcShareVpResult(w, fmt.Sprintf("failed to parse presentation: %s", err))
 
 		return
 	}
 
-	c.didcommDemoResult(w, "Successfully Received Presentation", "oidcVp")
+	c.oidcShareVpResult(w, "Successfully Received OIDC verifiable Presentation")
 }
 
 func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) { // nolint: funlen
@@ -591,6 +594,22 @@ func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.didcommDemoResult(w, string(data), flowTypeCookie.Value)
+}
+
+func (c *Operation) oidcShareVpResult(w http.ResponseWriter, msg string) {
+	t, err := template.ParseFiles(c.oidcShareVpHTML)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to load html: %s", err.Error()))
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	if err := t.Execute(w, vc{Msg: msg}); err != nil {
+		logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
+	}
 }
 
 func (c *Operation) didcommDemoResult(w http.ResponseWriter, data, flowType string) {
