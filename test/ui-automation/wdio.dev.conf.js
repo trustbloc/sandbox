@@ -24,6 +24,7 @@ exports.config = {
     "ucisInternalURL": "https://ucis-rp" + domain + "/internal",
     "fedSettlementURL": "https://benefits-dept-rp" + domain,
     "prcURL": "https://demo-issuer" + domain + "/applygreencard",
+    "backgroundCheckURL": "https://demo-rp" + domain + "/backgroundcheck",
     "flightBookingURL": "https://demo-issuer" + domain + "/flightbooking",
     "flightBoardingURL": "https://demo-rp" + domain + "/flightcheckin",
     "dutyFreeShop": "https://demo-rp" + domain + "/dutyfree",
