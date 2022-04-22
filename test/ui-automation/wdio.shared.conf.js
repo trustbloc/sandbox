@@ -35,6 +35,7 @@ exports.config = {
         './test/specs/ace.js',
         './test/specs/credential-validations.js',
         './test/specs/waci-flow.js',
+        './test/specs/oidc-flow.js',
         './test/specs/new-bank-account.js',
         './test/specs/flight-boarding.js',
         './test/specs/vcs-flow.js',
