@@ -10,7 +10,7 @@ replace github.com/trustbloc/sandbox => ../..
 
 require (
 	github.com/gorilla/mux v1.8.0
-	github.com/hyperledger/aries-framework-go v0.1.9-0.20220412155017-81442062e607
+	github.com/hyperledger/aries-framework-go v0.1.9-0.20220422131523-ab194a3e6a32
 	github.com/spf13/cobra v1.3.0
 	github.com/stretchr/testify v1.7.0
 	github.com/trustbloc/edge-core v0.1.8
@@ -90,7 +90,7 @@ require (
 	github.com/square/go-jose/v3 v3.0.0-20200630053402-0a67ce9b0693 // indirect
 	github.com/teserakt-io/golang-ed25519 v0.0.0-20210104091850-3888c087a4c8 // indirect
 	github.com/trustbloc/ace v0.0.0-20220421073629-a6885c9900cb // indirect
-	github.com/trustbloc/edge-service v0.1.9-0.20220421144748-7051577e4331 // indirect
+	github.com/trustbloc/edge-service v0.1.9-0.20220422160555-e0cf5e6eeec7 // indirect
 	github.com/trustbloc/edv v0.1.8 // indirect
 	github.com/trustbloc/orb v1.0.0-rc.1 // indirect
 	github.com/trustbloc/sidetree-core-go v1.0.0-rc.1 // indirect

@@ -15,7 +15,7 @@ require (
 	github.com/go-openapi/strfmt v0.21.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/hyperledger/aries-framework-go v0.1.9-0.20220412155017-81442062e607
+	github.com/hyperledger/aries-framework-go v0.1.9-0.20220422131523-ab194a3e6a32
 	github.com/hyperledger/aries-framework-go-ext/component/storage/couchdb v0.0.0-20220330151152-6bbd64bde42e
 	github.com/hyperledger/aries-framework-go-ext/component/storage/mongodb v0.0.0-20220330151152-6bbd64bde42e
 	github.com/hyperledger/aries-framework-go-ext/component/storage/mysql v0.0.0-20220330151152-6bbd64bde42e
@@ -29,7 +29,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/trustbloc/ace v0.0.0-20220421073629-a6885c9900cb
 	github.com/trustbloc/edge-core v0.1.8
-	github.com/trustbloc/edge-service v0.1.9-0.20220421144748-7051577e4331
+	github.com/trustbloc/edge-service v0.1.9-0.20220422160555-e0cf5e6eeec7
 	github.com/trustbloc/edv v0.1.8
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 )

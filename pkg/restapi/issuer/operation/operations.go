@@ -1664,7 +1664,7 @@ func prepareStoreVCRequest(cred []byte, profile string) ([]byte, error) {
 func prepareUpdateCredentialStatusRequest(vc *verifiable.Credential) ([]byte, error) {
 	request := edgesvcops.UpdateCredentialStatusRequest{
 		CredentialID:     vc.ID,
-		CredentialStatus: edgesvcops.CredentialStatus{Type: csl.RevocationList2020Status, Status: "1"},
+		CredentialStatus: edgesvcops.CredentialStatus{Type: csl.StatusList2021Entry, Status: "1"},
 	}
 
 	return json.Marshal(request)
