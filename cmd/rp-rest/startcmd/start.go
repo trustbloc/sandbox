@@ -408,6 +408,7 @@ func startRP(parameters *rpParameters) error {
 	cfg := &operation.Config{
 		VPHTML:                 "static/vp.html",
 		DIDCOMMVPHTML:          "static/didcommvp.html",
+		OIDCShareVPHTML:        "static/oidcvp.html",
 		VCSURL:                 parameters.vcServiceURL,
 		TLSConfig:              &tls.Config{RootCAs: rootCAs, MinVersion: tls.VersionTLS12},
 		RequestTokens:          parameters.requestTokens,
@@ -492,10 +493,6 @@ func pathPrefix() *mux.Router {
 	})
 	router.PathPrefix("/backgroundcheck").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/backgroundcheck.html")
-	})
-	// TODO Issue #1411: Fix the background check success page
-	router.PathPrefix("/bgcsuccess").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/backgroundchecksuccess.html")
 	})
 
 	return router

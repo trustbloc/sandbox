@@ -84,6 +84,9 @@ SPDX-License-Identifier: Apache-2.0
                 Successfully</h3>
             <h3 class="w-full my-8 text-xl text-center text-gray-700"> You will receive your background check report
                 shortly</h3>
+                   <div id = "source" class="flex flex-wrap overflow-auto bg-white">
+                                <textarea id="vcDataTextArea" style="display:none;">{{.Msg}}</textarea>
+                            </div>
 
             <div class="container mx-auto flex  flex-wrap my-12 pt-1 pb-4">
 
@@ -94,7 +97,7 @@ SPDX-License-Identifier: Apache-2.0
                     <div class="grid grid-cols-1 md:grid-cols-1 gap-8 md:gap-8 text-center text-black mt-8">
                         <div class="bg-white rounded-lg shadow-lg">
                             <div class="px-4 py-8">
-                                <img src="img/success.png">
+                                <img src="/img/success.png">
                             </div>
                         </div>
                     </div>
