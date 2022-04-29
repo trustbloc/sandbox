@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -59,6 +60,127 @@ const testCredentialRequest = `{
       "spouse":"did:example:c276e12ec21ebfeb1f712ebc6f1"
    }
 }`
+const credManifest = `[{
+                             "output_descriptors":[
+                                {
+                                   "id":"prc_output",
+                                   "schema":"https://w3id.org/citizenship/v1",
+                                   "display":{
+                                      "title":{
+                                         "path":[
+                                            "$.name"
+                                         ],
+                                         "fallback":"Permanent Resident Card",
+                                         "schema":{
+                                            "type":"string"
+                                         }
+                                      },
+                                      "subtitle":{
+                                         "path":[
+                                            "$.description"
+                                         ],
+                                         "fallback":"Government of Example Permanent Resident Card.",
+                                         "schema":{
+                                            "type":"string"
+                                         }
+                                      },
+		  "description":{
+			 "text":"Sample Permanent Resident Card issued by Government of Example Citizenship & Immigration Services"
+		  },
+                                      "properties":[
+                                          {
+                                           "path": ["$.credentialSubject.image"],
+                                           "schema": {
+                                             "type": "string",
+                                             "format": "image/png"
+                                           },
+                                           "label": "Card Holder"
+                                         },
+                                         {
+                                            "path":[
+                                               "$.credentialSubject.givenName"
+                                            ],
+                                            "schema":{
+                                               "type":"string"
+                                            },
+                                            "label":"Given Name"
+                                         },
+                                         {
+                                            "path":[
+                                               "$.credentialSubject.familyName"
+                                            ],
+                                            "schema":{
+                                               "type":"string"
+                                            },
+                                            "label":"Family Name"
+                                         },
+                                         {
+                                            "path":[
+                                               "$.credentialSubject.gender"
+                                            ],
+                                            "schema":{
+                                               "type":"string"
+                                            },
+                                            "fallback":"Not disclosed",
+                                            "label":"Gender"
+                                         },
+                                         {
+                                            "path":[
+                                               "$.credentialSubject.birthDate"
+                                            ],
+                                            "schema":{
+                                               "type":"string",
+                                               "format":"date"
+                                            },
+                                            "label":"Date of Birth"
+                                         },
+                                         {
+                                            "path":[
+                                               "$.credentialSubject.birthCountry"
+                                            ],
+                                            "schema":{
+                                               "type":"string"
+                                            },
+                                            "label":"Country of Birth"
+                                         },
+                                         {
+                                            "path":[
+                                               "$.credentialSubject.residentSince"
+                                            ],
+                                            "schema":{
+                                               "type":"string",
+                                               "format":"date"
+                                            },
+                                            "label":"Resident Since"
+                                         }
+                                      ]
+                                   },
+                                   "styles":{
+							  "thumbnail":{
+								 "uri":"https://file-server.trustbloc.local:12096/images/credential--uscis-icon.svg",
+								 "alt":"Citizenship & Immigration Services"
+							  },
+                                      "hero":{
+                                         "uri":"https://example.com/trust.png",
+                                         "alt":"Service we trust"
+                                      },
+                                      "background":{
+                                         "color":"#2b5283"
+                                      },
+                                      "text":{
+                                         "color":"#fff"
+                                      }
+                                   }
+                                }
+                             ],
+                             "id": "GE-PRC-2022-CLASS-A",
+                             "version": "0.1.0",
+                             "issuer": {
+                               "id": "did:example:123?linked-domains=3",
+                               "name": "Government of Example Immigration",
+                               "styles": {}
+                             }
+                          }]`
 
 const profileData = `{
    "name":"issuer",
@@ -306,6 +428,664 @@ func TestAuth(t *testing.T) {
 		svc.auth(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "referrer is mandatory")
+	})
+}
+
+func TestCreateOIDCIssuanceRequest(t *testing.T) {
+	issuanceRequest := &oidcIssuanceRequest{
+		CredManifest:          json.RawMessage(credManifest),
+		WalletInitIssuanceURL: "https://testingwallet/oidc/share",
+		IssuerURL:             "https://issuer/oidc/share",
+		Credential:            json.RawMessage(testCredentialRequest),
+	}
+
+	t.Run("oidc issuance success", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		issuanceRequestBytes, err := json.Marshal(issuanceRequest)
+		require.NoError(t, err)
+		req, err := http.NewRequest(http.MethodGet, oidcIssuerIssuance, bytes.NewReader(issuanceRequestBytes))
+		require.NoError(t, err)
+
+		svc.initiateIssuance(w, req)
+		require.Equal(t, http.StatusOK, w.Code)
+	})
+	t.Run("error - failed to parse wallet init issuance URL", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		issuanceRequest.WalletInitIssuanceURL = `jfjiör@@@a::`
+		issuanceRequestBytes, err := json.Marshal(issuanceRequest)
+		require.NoError(t, err)
+		req, err := http.NewRequest(http.MethodGet, oidcIssuerIssuance, bytes.NewReader(issuanceRequestBytes))
+		require.NoError(t, err)
+
+		svc.initiateIssuance(w, req)
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		require.Contains(t, w.Body.String(), "failed to parse wallet init issuance URL")
+	})
+	t.Run("error - oidc issuance bad request error", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodGet, oidcIssuerIssuance, bytes.NewReader([]byte(`{`)))
+		require.NoError(t, err)
+
+		svc.initiateIssuance(w, req)
+		require.Equal(t, http.StatusBadRequest, w.Code)
+	})
+	t.Run("error - failed to store issuer server configuration", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				OpenStoreReturn: &mockstorage.Store{ErrPut: errors.New("save error")},
+			},
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		issuanceRequestBytes, err := json.Marshal(issuanceRequest)
+		require.NoError(t, err)
+		req, err := http.NewRequest(http.MethodGet, oidcIssuerIssuance, bytes.NewReader(issuanceRequestBytes))
+		require.NoError(t, err)
+
+		svc.initiateIssuance(w, req)
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		require.Contains(t, w.Body.String(), "failed to store issuer server configuration")
+	})
+}
+
+func TestSaveIssuanceConfig(t *testing.T) {
+	svc, err := New(&Config{
+		StoreProvider: memstore.NewProvider(),
+	})
+	require.NoError(t, err)
+
+	err = svc.saveIssuanceConfig([]byte("issuerConf"), nil)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "failed to store credential")
+}
+
+func TestWellConfiguration(t *testing.T) {
+	t.Run("error - failed to read wellknown configuration", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				OpenStoreReturn: &mockstorage.Store{ErrGet: errors.New("get error")},
+			},
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodGet, oidcIssuanceOpenID, bytes.NewReader([]byte(`test`)))
+		require.NoError(t, err)
+
+		svc.wellKnownConfiguration(w, req)
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		require.Contains(t, w.Body.String(), "failed to read wellknown configuration")
+	})
+}
+
+func TestOIDCAuthorize(t *testing.T) {
+	t.Run("success - issue authorize", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodGet,
+			oidcIssuanceAuthorize,
+			nil)
+		require.NoError(t, err)
+		req.Form = make(url.Values)
+		req.Form["claims"] = []string{"claims"}
+		req.Form["redirect_uri"] = []string{"redirect_uri"}
+		req.Form["client_id"] = []string{"client_id"}
+		req.Form["state"] = []string{"state"}
+
+		svc.oidcAuthorize(w, req)
+		require.Equal(t, http.StatusFound, w.Code)
+	})
+	t.Run("failure - failed to read claims", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodGet,
+			oidcIssuanceAuthorize,
+			nil)
+		require.NoError(t, err)
+		req.Form = make(url.Values)
+		req.Form["claims"] = []string{"claims%%%!*^"}
+
+		svc.oidcAuthorize(w, req)
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		require.Contains(t, w.Body.String(), "failed to read claims")
+	})
+	t.Run("failure - failed to read redirect URI", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodGet,
+			oidcIssuanceAuthorize,
+			nil)
+		require.NoError(t, err)
+		req.Form = make(url.Values)
+		req.Form["claims"] = []string{"claims"}
+		req.Form["redirect_uri"] = []string{"redirect_uri%%%!*^"}
+
+		svc.oidcAuthorize(w, req)
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		require.Contains(t, w.Body.String(), "failed to read redirect URI")
+	})
+	t.Run("failure - failed to save state", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{
+				OpenStoreReturn: &mockstorage.Store{ErrPut: errors.New("save error")},
+			},
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodGet,
+			oidcIssuanceAuthorize,
+			nil)
+		require.NoError(t, err)
+		req.Form = make(url.Values)
+		req.Form["claims"] = []string{"claims"}
+		req.Form["redirect_uri"] = []string{"redirect_uri"}
+		req.Form["state"] = []string{"state"}
+		req.Form["client_id"] = []string{"client_id"}
+
+		svc.oidcAuthorize(w, req)
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		require.Contains(t, w.Body.String(), "failed to save state")
+	})
+	t.Run("failure - failed to parse request", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodOptions, oidcIssuanceAuthorize+"?claims;;", strings.NewReader("{"))
+		require.NoError(t, err)
+
+		svc.oidcAuthorize(w, req)
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		require.Contains(t, w.Body.String(), "failed to parse request")
+	})
+	t.Run("failure - invalid request basic validation", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodGet, oidcIssuanceAuthorize, nil)
+		require.NoError(t, err)
+
+		svc.oidcAuthorize(w, req)
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		require.Contains(t, w.Body.String(), "Invalid Request")
+	})
+}
+
+func TestOIDCSendAuthorizeResponse(t *testing.T) {
+	t.Run("success send authorize response", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceAuthorizeRequest,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+		c := http.Cookie{
+			Name:  "state",
+			Value: "testing",
+		}
+		req.AddCookie(&c)
+		authRequest := map[string]string{
+			"state":        "state",
+			"redirect_uri": "redirect_uri",
+		}
+
+		authBytes, err := json.Marshal(authRequest)
+		require.NoError(t, err, authBytes)
+
+		err = svc.store.Put(getAuthStateKeyPrefix("testing"), authBytes)
+		require.NoError(t, err)
+
+		svc.oidcSendAuthorizeResponse(w, req)
+		require.Equal(t, http.StatusFound, w.Code)
+	})
+	t.Run("failure send authorize response- failed to redirect, invalid URL", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceAuthorizeRequest,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+		c := http.Cookie{
+			Name:  "state",
+			Value: "testing",
+		}
+		req.AddCookie(&c)
+		authRequest := map[string]string{
+			"state": "state",
+		}
+
+		authBytes, err := json.Marshal(authRequest)
+		require.NoError(t, err, authBytes)
+
+		err = svc.store.Put(getAuthStateKeyPrefix("testing"), authBytes)
+		require.NoError(t, err)
+
+		svc.oidcSendAuthorizeResponse(w, req)
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		require.Contains(t, w.Body.String(), "failed to redirect, invalid URL")
+	})
+	t.Run("failure send authorize response- failed to redirect, invalid state", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceAuthorizeRequest,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+		c := http.Cookie{
+			Name:  "state",
+			Value: "testing",
+		}
+		req.AddCookie(&c)
+		authRequest := map[string]string{
+			"redirect_uri": "redirect_uri",
+		}
+
+		authBytes, err := json.Marshal(authRequest)
+		require.NoError(t, err, authBytes)
+
+		err = svc.store.Put(getAuthStateKeyPrefix("testing"), authBytes)
+		require.NoError(t, err)
+
+		svc.oidcSendAuthorizeResponse(w, req)
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		require.Contains(t, w.Body.String(), "failed to redirect, invalid state")
+	})
+	t.Run("failure send authorize response - invalid state", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceAuthorizeRequest,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+
+		svc.oidcSendAuthorizeResponse(w, req)
+		require.Equal(t, http.StatusForbidden, w.Code)
+		require.Contains(t, w.Body.String(), "invalid state")
+	})
+	t.Run("failure send authorize response - Invalid Request", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceAuthorizeRequest,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+		c := http.Cookie{
+			Name:  "state",
+			Value: "testing",
+		}
+		req.AddCookie(&c)
+
+		svc.oidcSendAuthorizeResponse(w, req)
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		require.Contains(t, w.Body.String(), "invalid request")
+	})
+}
+
+func TestOIDCTokenEndpoint(t *testing.T) {
+	req, err := http.NewRequest(http.MethodPost,
+		oidcIssuanceToken,
+		strings.NewReader(`testing`))
+	require.NoError(t, err)
+
+	req.Form = make(url.Values)
+	req.Form["code"] = []string{"code"}
+	req.Form["redirect_uri"] = []string{"redirect_uri"}
+	req.Form["grant_type"] = []string{"authorization_code"}
+
+	t.Run("success - oidc token endpoint", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		authRequest := map[string]string{
+			"state":        "state",
+			"redirect_url": "redirect_url",
+		}
+		authReqBytes, err := json.Marshal(authRequest)
+		require.NoError(t, err)
+
+		err = svc.store.Put(getAuthCodeKeyPrefix("code"), []byte("authstate"))
+		require.NoError(t, err)
+		err = svc.store.Put(getAuthStateKeyPrefix("authstate"), authReqBytes)
+		require.NoError(t, err)
+
+		svc.oidcTokenEndpoint(w, req)
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		require.Contains(t, w.Body.String(), "request validation failed")
+	})
+	t.Run("success - oidc Token Endpoint", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		svc.oidcTokenEndpoint(w, req)
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		require.Contains(t, w.Body.String(), "invalid state")
+	})
+	t.Run("failure - invalid state", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		svc.oidcTokenEndpoint(w, req)
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		require.Contains(t, w.Body.String(), "invalid state")
+	})
+	t.Run("failure - invalid request", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		err = svc.store.Put(getAuthCodeKeyPrefix("code"), []byte("authstate"))
+		require.NoError(t, err)
+
+		svc.oidcTokenEndpoint(w, req)
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		require.Contains(t, w.Body.String(), "invalid request")
+	})
+	t.Run("failure - failed to read request", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		err = svc.store.Put(getAuthCodeKeyPrefix("code"), []byte("authstate"))
+		require.NoError(t, err)
+
+		err = svc.store.Put(getAuthStateKeyPrefix("authstate"), []byte("authReq"))
+		require.NoError(t, err)
+
+		svc.oidcTokenEndpoint(w, req)
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		require.Contains(t, w.Body.String(), "failed to read request")
+	})
+
+	t.Run("failure - failed to read request", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		authRequest := map[string]string{
+			"state": "state",
+		}
+		authReqBytes, err := json.Marshal(authRequest)
+		require.NoError(t, err)
+
+		err = svc.store.Put(getAuthCodeKeyPrefix("code"), []byte("authstate"))
+		require.NoError(t, err)
+
+		err = svc.store.Put(getAuthStateKeyPrefix("authstate"), authReqBytes)
+		require.NoError(t, err)
+
+		svc.oidcTokenEndpoint(w, req)
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		require.Contains(t, w.Body.String(), "request validation failed")
+	})
+	t.Run("failure - unsupported grant type", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceToken,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+
+		req.Form = make(url.Values)
+		req.Form["code"] = []string{"code"}
+		req.Form["redirect_uri"] = []string{"redirect_uri"}
+		req.Form["grant_type"] = []string{"grant"}
+
+		svc.oidcTokenEndpoint(w, req)
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		require.Contains(t, w.Body.String(), "unsupported grant type")
+	})
+}
+
+func TestOIDCCredentialEndpoint(t *testing.T) {
+	t.Run("success - oidc credential endpoint", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceCredential,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+
+		req.Form = make(url.Values)
+		req.Form["format"] = []string{"ldp_vc"}
+		req = mux.SetURLVars(req, map[string]string{
+			"id": "mockIssuer",
+		})
+
+		req.Header.Set("Authorization", "Bearer testToken")
+		err = svc.store.Put(getAccessTokenKeyPrefix("testToken"), []byte("mockIssuer"))
+		require.NoError(t, err)
+
+		err = svc.store.Put(getCredStoreKeyPrefix("mockIssuer"), []byte(testCredentialRequest))
+		require.NoError(t, err)
+
+		svc.oidcCredentialEndpoint(w, req)
+		require.Equal(t, http.StatusOK, w.Code)
+	})
+	t.Run("failure - unsupported format requested", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceCredential,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+
+		req.Form = make(url.Values)
+
+		req.Form["format"] = []string{"test"}
+
+		svc.oidcCredentialEndpoint(w, req)
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		require.Contains(t, w.Body.String(), "unsupported format requested")
+	})
+	t.Run("failure - malformed token", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceCredential,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+
+		req.Form = make(url.Values)
+
+		svc.oidcCredentialEndpoint(w, req)
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		require.Contains(t, w.Body.String(), "malformed token")
+	})
+	t.Run("failure - invalid token", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceCredential,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+
+		req.Form = make(url.Values)
+		req.Header.Set("Authorization", "Bearer ")
+
+		svc.oidcCredentialEndpoint(w, req)
+		require.Equal(t, http.StatusForbidden, w.Code)
+		require.Contains(t, w.Body.String(), "invalid token")
+	})
+	t.Run("failure - unsupported format requested", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceCredential,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+
+		req.Form = make(url.Values)
+
+		req.Header.Set("Authorization", "Bearer testToken")
+
+		svc.oidcCredentialEndpoint(w, req)
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		require.Contains(t, w.Body.String(), "unsupported format requested")
+	})
+	t.Run("failure - invalid transaction", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceCredential,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+
+		req.Form = make(url.Values)
+
+		req.Header.Set("Authorization", "Bearer testToken")
+		err = svc.store.Put(getAccessTokenKeyPrefix("testToken"), []byte("mockIssuer"))
+		require.NoError(t, err)
+
+		svc.oidcCredentialEndpoint(w, req)
+		require.Equal(t, http.StatusForbidden, w.Code)
+		require.Contains(t, w.Body.String(), "invalid transaction")
+	})
+	t.Run("failure - failed to get credential", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceCredential,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+
+		req.Form = make(url.Values)
+		req.Form["format"] = []string{"ldp_vc"}
+		req = mux.SetURLVars(req, map[string]string{
+			"id": "mockIssuer",
+		})
+
+		req.Header.Set("Authorization", "Bearer testToken")
+		err = svc.store.Put(getAccessTokenKeyPrefix("testToken"), []byte("mockIssuer"))
+		require.NoError(t, err)
+
+		svc.oidcCredentialEndpoint(w, req)
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		require.Contains(t, w.Body.String(), "failed to get credential")
+	})
+	t.Run("failure - failed to prepare credential", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+		req, err := http.NewRequest(http.MethodPost,
+			oidcIssuanceCredential,
+			strings.NewReader(`testing`))
+		require.NoError(t, err)
+
+		req.Form = make(url.Values)
+		req.Form["format"] = []string{"ldp_vc"}
+		req = mux.SetURLVars(req, map[string]string{
+			"id": "mockIssuer",
+		})
+
+		req.Header.Set("Authorization", "Bearer testToken")
+		err = svc.store.Put(getAccessTokenKeyPrefix("testToken"), []byte("mockIssuer"))
+		require.NoError(t, err)
+
+		err = svc.store.Put(getCredStoreKeyPrefix("mockIssuer"), []byte(`{
+			"@context": [
+	"https://www.w3.org/2018/credentials/v1",
+		"https://www.w3.org/2018/credentials/examples/v1"
+],}`))
+		require.NoError(t, err)
+		svc.oidcCredentialEndpoint(w, req)
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		require.Contains(t, w.Body.String(), "failed to prepare credential")
 	})
 }
 

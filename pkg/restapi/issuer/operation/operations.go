@@ -9,6 +9,7 @@ package operation
 import (
 	"bytes"
 	"context"
+	"crypto/ed25519"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -20,7 +21,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/btcsuite/btcutil/base58"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/signature/jsonld"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/signature/suite"
+	"github.com/hyperledger/aries-framework-go/pkg/doc/signature/suite/ed25519signature2018"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/util"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/hyperledger/aries-framework-go/spi/storage"
@@ -58,6 +64,15 @@ const (
 	generateCredentialPath = createCredentialPath + "/generate"
 	oidcRedirectPath       = "/oidc/redirect" + "/{id}"
 
+	oidcIssuanceLogin            = "/oidc/login"
+	oidcIssuerIssuance           = "/oidc/issuance"
+	oidcIssuanceOpenID           = "/{id}/.well-known/openid-configuration"
+	oidcIssuanceAuthorize        = "/{id}/oidc/authorize"
+	oidcIssuanceAuthorizeRequest = "/oidc/authorize-request"
+	//nolint: gosec
+	oidcIssuanceToken      = "/{id}/oidc/token"
+	oidcIssuanceCredential = "/{id}/oidc/credential"
+
 	// http query params
 	stateQueryParam = "state"
 
@@ -83,6 +98,12 @@ const (
 	scopeQueryParam = "scope"
 )
 
+// Mock signer for signing VCs.
+const (
+	pkBase58 = "2MP5gWCnf67jvW3E4Lz8PpVrDWAXMYY1sDxjnkEnKhkkbKD7yP2mkVeyVpu5nAtr3TeDgMNjBPirk2XcQacs3dvZ"
+	kid      = "did:key:z6MknC1wwS6DEYwtGbZZo2QvjQjkh2qSBjb4GYmbye8dv4S5#z6MknC1wwS6DEYwtGbZZo2QvjQjkh2qSBjb4GYmbye8dv4S5"
+)
+
 var logger = log.New("sandbox-issuer-restapi")
 
 // Handler http handler for each controller API endpoint
@@ -105,6 +126,7 @@ type Operation struct {
 	documentLoader   ld.DocumentLoader
 	cmsURL           string
 	vcsURL           string
+	walletURL        string
 	receiveVCHTML    string
 	didAuthHTML      string
 	vcHTML           string
@@ -127,6 +149,7 @@ type Config struct {
 	DocumentLoader   ld.DocumentLoader
 	CMSURL           string
 	VCSURL           string
+	WalletURL        string
 	ReceiveVCHTML    string
 	DIDAuthHTML      string
 	VCHTML           string
@@ -177,6 +200,7 @@ func New(config *Config) (*Operation, error) {
 		documentLoader:   config.DocumentLoader,
 		cmsURL:           config.CMSURL,
 		vcsURL:           config.VCSURL,
+		walletURL:        config.WalletURL,
 		didAuthHTML:      config.DIDAuthHTML,
 		receiveVCHTML:    config.ReceiveVCHTML,
 		vcHTML:           config.VCHTML,
@@ -241,13 +265,20 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(didcommCallback, http.MethodGet, c.didcommCallbackHandler),
 		support.NewHTTPHandler(didcommCredential, http.MethodPost, c.didcommCredentialHandler),
 		support.NewHTTPHandler(didcommAssuranceData, http.MethodPost, c.didcommAssuraceHandler),
-
 		support.NewHTTPHandler(didcommInit, http.MethodGet, c.initiateDIDCommConnection),
 		support.NewHTTPHandler(didcommUserEndpoint, http.MethodGet, c.getIDHandler),
 
 		// oidc
 		support.NewHTTPHandler(oauth2GetRequestPath, http.MethodGet, c.createOIDCRequest),
 		support.NewHTTPHandler(oauth2CallbackPath, http.MethodGet, c.handleOIDCCallback),
+
+		// oidc issuance
+		support.NewHTTPHandler(oidcIssuerIssuance, http.MethodPost, c.initiateIssuance),
+		support.NewHTTPHandler(oidcIssuanceOpenID, http.MethodGet, c.wellKnownConfiguration),
+		support.NewHTTPHandler(oidcIssuanceAuthorize, http.MethodGet, c.oidcAuthorize),
+		support.NewHTTPHandler(oidcIssuanceAuthorizeRequest, http.MethodPost, c.oidcSendAuthorizeResponse),
+		support.NewHTTPHandler(oidcIssuanceToken, http.MethodPost, c.oidcTokenEndpoint),
+		support.NewHTTPHandler(oidcIssuanceCredential, http.MethodPost, c.oidcCredentialEndpoint),
 	}
 }
 
@@ -1122,6 +1153,398 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) { //nolint:
 	}
 }
 
+func (c *Operation) initiateIssuance(w http.ResponseWriter, r *http.Request) {
+	oidcIssuanceReq := &oidcIssuanceRequest{}
+
+	err := json.NewDecoder(r.Body).Decode(oidcIssuanceReq)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to decode request: %s", err.Error()))
+
+		return
+	}
+
+	walletURL := oidcIssuanceReq.WalletInitIssuanceURL
+	if walletURL == "" {
+		walletURL = c.walletURL
+	}
+
+	credentialTypes := strings.Split(oidcIssuanceReq.CredentialTypes, ",")
+	manifestIDs := strings.Split(oidcIssuanceReq.ManifestIDs, ",")
+	issuerURL := oidcIssuanceReq.IssuerURL
+	credManifest := oidcIssuanceReq.CredManifest
+	credential := oidcIssuanceReq.Credential
+
+	key := uuid.NewString()
+	issuer := issuerURL + "/" + key
+
+	issuerConf, err := json.MarshalIndent(&issuerConfiguration{
+		Issuer:                issuer,
+		AuthorizationEndpoint: issuer + "/oidc/authorize",
+		TokenEndpoint:         issuer + "/oidc/token",
+		CredentialEndpoint:    issuer + "/oidc/credential",
+		CredentialManifests:   credManifest,
+	}, "", "	")
+
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to prepare issuer wellknown configuration : %s", err))
+
+		return
+	}
+
+	err = c.saveIssuanceConfig(issuerConf, credential)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to store issuer server configuration : %s", err))
+
+		return
+	}
+
+	redirectURL, err := parseWalletURL(walletURL, issuer, credentialTypes, manifestIDs)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to parse wallet init issuance URL : %s", err))
+
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, []byte(redirectURL))
+}
+
+func parseWalletURL(walletURL, issuer string, credentialTypes, manifestIDs []string) (string, error) {
+	u, err := url.Parse(walletURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse wallet init issuance URL : %w", err)
+	}
+
+	q := u.Query()
+	q.Set("issuer", issuer)
+
+	for _, credType := range credentialTypes {
+		q.Add("credential_type", credType)
+	}
+
+	for _, manifestID := range manifestIDs {
+		q.Add("manifest_id", manifestID)
+	}
+
+	u.RawQuery = q.Encode()
+
+	return u.String(), nil
+}
+
+func (c *Operation) saveIssuanceConfig(issuerConf, credential []byte) error {
+	key := uuid.NewString()
+
+	err := c.store.Put(key, issuerConf)
+	if err != nil {
+		return fmt.Errorf("failed to store issuer server configuration : %w", err)
+	}
+
+	err = c.store.Put(getCredStoreKeyPrefix(key), credential)
+	if err != nil {
+		return fmt.Errorf("failed to store credential : %w", err)
+	}
+
+	return nil
+}
+
+func (c *Operation) wellKnownConfiguration(w http.ResponseWriter, r *http.Request) {
+	enableCors(w)
+
+	id := mux.Vars(r)["id"]
+
+	issuerConf, err := c.store.Get(id)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to read wellknown configuration : %s", err))
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	c.writeResponse(w, http.StatusOK, issuerConf)
+}
+
+func (c *Operation) oidcAuthorize(w http.ResponseWriter, r *http.Request) { //nolint: funlen
+	if err := r.ParseForm(); err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to parse request : %s", err))
+
+		return
+	}
+
+	claims, err := url.PathUnescape(r.Form.Get("claims"))
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to read claims : %s", err))
+
+		return
+	}
+
+	redirectURI, err := url.PathUnescape(r.Form.Get("redirect_uri"))
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to read redirect URI : %s", err))
+
+		return
+	}
+
+	scope := r.Form.Get("scope")
+	state := r.Form.Get("state")
+	responseType := r.Form.Get("response_type")
+	clientID := r.Form.Get("client_id")
+
+	// basic validation only.
+	if claims == "" || redirectURI == "" || clientID == "" || state == "" {
+		c.writeErrorResponse(w, http.StatusBadRequest, "Invalid Request")
+
+		return
+	}
+
+	authState := uuid.NewString()
+
+	authRequest, err := json.Marshal(map[string]string{
+		"claims":        claims,
+		"scope":         scope,
+		"state":         state,
+		"response_type": responseType,
+		"client_id":     clientID,
+		"redirect_uri":  redirectURI,
+	})
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to process authorization request : %s", err))
+
+		return
+	}
+
+	err = c.store.Put(getAuthStateKeyPrefix(authState), authRequest)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to save state : %s", err))
+
+		return
+	}
+
+	authStateCookie := http.Cookie{
+		Name:    "state",
+		Value:   authState,
+		Expires: time.Now().Add(5 * time.Minute), //nolint: gomnd
+		Path:    "/",
+	}
+
+	http.SetCookie(w, &authStateCookie)
+	http.Redirect(w, r, oidcIssuanceLogin, http.StatusFound)
+}
+
+func (c *Operation) oidcSendAuthorizeResponse(w http.ResponseWriter, r *http.Request) {
+	stateCookie, err := r.Cookie("state")
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusForbidden, "invalid state")
+
+		return
+	}
+
+	authRqstBytes, err := c.store.Get(getAuthStateKeyPrefix(stateCookie.Value))
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, "invalid request")
+
+		return
+	}
+
+	var authRequest map[string]string
+
+	err = json.Unmarshal(authRqstBytes, &authRequest)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError, "failed to read request")
+
+		return
+	}
+
+	redirectURI, ok := authRequest["redirect_uri"]
+	if !ok {
+		c.writeErrorResponse(w, http.StatusInternalServerError, "failed to redirect, invalid URL")
+
+		return
+	}
+
+	state, ok := authRequest["state"]
+	if !ok {
+		c.writeErrorResponse(w, http.StatusInternalServerError, "failed to redirect, invalid state")
+
+		return
+	}
+
+	authCode := uuid.NewString()
+
+	err = c.store.Put(getAuthCodeKeyPrefix(authCode), []byte(stateCookie.Value))
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError, "failed to store state cookie value")
+
+		return
+	}
+
+	redirectTo := fmt.Sprintf("%s?code=%s&state=%s", redirectURI, authCode, state)
+
+	// TODO process credential types or manifests from claims and prepare credential
+	// endpoint with credential to be issued.
+	http.Redirect(w, r, redirectTo, http.StatusFound)
+}
+
+func (c *Operation) oidcTokenEndpoint(w http.ResponseWriter, r *http.Request) {
+	setOIDCResponseHeaders(w)
+
+	code := r.FormValue("code")
+	redirectURI := r.FormValue("redirect_uri")
+	grantType := r.FormValue("grant_type")
+
+	if grantType != "authorization_code" {
+		c.sendOIDCErrorResponse(w, "unsupported grant type", http.StatusBadRequest)
+		return
+	}
+
+	authState, err := c.store.Get(getAuthCodeKeyPrefix(code))
+	if err != nil {
+		c.sendOIDCErrorResponse(w, "invalid state", http.StatusBadRequest)
+		return
+	}
+
+	authRqstBytes, err := c.store.Get(getAuthStateKeyPrefix(string(authState)))
+	if err != nil {
+		c.sendOIDCErrorResponse(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	var authRequest map[string]string
+
+	err = json.Unmarshal(authRqstBytes, &authRequest)
+	if err != nil {
+		c.sendOIDCErrorResponse(w, "failed to read request", http.StatusInternalServerError)
+		return
+	}
+
+	if authRedirectURI := authRequest["redirect_uri"]; authRedirectURI != redirectURI {
+		c.sendOIDCErrorResponse(w, "request validation failed", http.StatusInternalServerError)
+		return
+	}
+
+	mockAccessToken := uuid.NewString()
+	mockIssuerID := mux.Vars(r)["id"]
+
+	err = c.store.Put(getAccessTokenKeyPrefix(mockAccessToken), []byte(mockIssuerID))
+	if err != nil {
+		c.sendOIDCErrorResponse(w, "failed to save token state", http.StatusInternalServerError)
+		return
+	}
+
+	response, err := json.Marshal(map[string]interface{}{
+		"token_type":   "Bearer",
+		"access_token": mockAccessToken,
+		"expires_in":   3600 * time.Second, //nolint: gomnd
+	})
+	// TODO add id_token, c_nonce, c_nonce_expires_in
+
+	if err != nil {
+		c.sendOIDCErrorResponse(w, "response_write_error", http.StatusBadRequest)
+
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, response)
+}
+
+func (c *Operation) oidcCredentialEndpoint(w http.ResponseWriter, r *http.Request) { //nolint: funlen,gocyclo
+	setOIDCResponseHeaders(w)
+
+	// TODO read and validate credential 'type', useful in multiple credential download.
+	format := r.FormValue("format")
+
+	if format != "" && format != "ldp_vc" {
+		c.sendOIDCErrorResponse(w, "unsupported format requested", http.StatusBadRequest)
+		return
+	}
+
+	authHeader := strings.Split(r.Header.Get("Authorization"), "Bearer ")
+	if len(authHeader) != 2 { //nolint: gomnd
+		c.sendOIDCErrorResponse(w, "malformed token", http.StatusBadRequest)
+		return
+	}
+
+	if authHeader[1] == "" {
+		c.sendOIDCErrorResponse(w, "invalid token", http.StatusForbidden)
+		return
+	}
+
+	mockIssuerID := mux.Vars(r)["id"]
+
+	issuerID, err := c.store.Get(getAccessTokenKeyPrefix(authHeader[1]))
+	if err != nil {
+		c.sendOIDCErrorResponse(w, "unsupported format requested", http.StatusBadRequest)
+		return
+	}
+
+	if mockIssuerID != string(issuerID) {
+		c.sendOIDCErrorResponse(w, "invalid transaction", http.StatusForbidden)
+		return
+	}
+
+	credentialBytes, err := c.store.Get(getCredStoreKeyPrefix(mockIssuerID))
+	if err != nil {
+		c.sendOIDCErrorResponse(w, "failed to get credential", http.StatusInternalServerError)
+		return
+	}
+
+	docLoader := ld.NewDefaultDocumentLoader(nil)
+
+	credential, err := verifiable.ParseCredential(credentialBytes, verifiable.WithJSONLDDocumentLoader(docLoader))
+	if err != nil {
+		c.sendOIDCErrorResponse(w, "failed to prepare credential", http.StatusInternalServerError)
+		return
+	}
+
+	err = signVCWithED25519(credential, docLoader)
+	if err != nil {
+		c.sendOIDCErrorResponse(w, "failed to issue credential", http.StatusInternalServerError)
+		return
+	}
+
+	credBytes, err := credential.MarshalJSON()
+	if err != nil {
+		c.sendOIDCErrorResponse(w, "failed to write credential bytes", http.StatusInternalServerError)
+		return
+	}
+
+	response, err := json.Marshal(map[string]interface{}{
+		"format":     format,
+		"credential": json.RawMessage(credBytes),
+	})
+	// TODO add support for acceptance token & nonce for deferred flow.
+	if err != nil {
+		c.sendOIDCErrorResponse(w, "response_write_error", http.StatusBadRequest)
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, response)
+}
+
+func setOIDCResponseHeaders(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+}
+
+func (c *Operation) sendOIDCErrorResponse(w http.ResponseWriter, msg string, status int) {
+	w.WriteHeader(status)
+	c.writeResponse(w, status, []byte(fmt.Sprintf(`{"error": "%s"}`, msg)))
+}
+
+func enableCors(w http.ResponseWriter) {
+	(w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 // didcomm redirects to the issuer-adapter so it connects to the wallet over DIDComm.
 func (c *Operation) didcomm(w http.ResponseWriter, r *http.Request, userID string, subjectData map[string]interface{},
 	issuerID string) {
@@ -1711,6 +2134,25 @@ func (c *Operation) getUserData(tk *oauth2.Token, searchQuery, scope string) (st
 	return user.UserID, respBytes, nil
 }
 
+func signVCWithED25519(vc *verifiable.Credential, loader ld.DocumentLoader) error {
+	edPriv := ed25519.PrivateKey(base58.Decode(pkBase58))
+	edSigner := &edd25519Signer{edPriv}
+	sigSuite := ed25519signature2018.New(suite.WithSigner(edSigner))
+
+	tt := time.Now()
+
+	ldpContext := &verifiable.LinkedDataProofContext{
+		SignatureType:           "Ed25519Signature2018",
+		SignatureRepresentation: verifiable.SignatureProofValue,
+		Suite:                   sigSuite,
+		VerificationMethod:      kid,
+		Purpose:                 "assertionMethod",
+		Created:                 &tt,
+	}
+
+	return vc.AddLinkedDataProof(ldpContext, jsonld.WithDocumentLoader(loader))
+}
+
 // nolint:interfacer
 func sendHTTPRequest(req *http.Request, client *http.Client, status int, httpToken string) ([]byte, error) {
 	if httpToken != "" {
@@ -1762,7 +2204,7 @@ func (c *Operation) writeErrorResponse(rw http.ResponseWriter, status int, msg s
 }
 
 // writeResponse writes interface value to response
-func (c *Operation) writeResponse(rw http.ResponseWriter, status int, data []byte) { // nolint: unparam
+func (c *Operation) writeResponse(rw http.ResponseWriter, status int, data []byte) {
 	rw.WriteHeader(status)
 
 	if _, err := rw.Write(data); err != nil {
@@ -1813,4 +2255,33 @@ type userDataMap struct {
 	ID             string          `json:"id,omitempty"`
 	Data           json.RawMessage `json:"data,omitempty"`
 	AssuranceScope string          `json:"assuranceScope,omitempty"`
+}
+
+func getCredStoreKeyPrefix(key string) string {
+	return fmt.Sprintf("cred_store_%s", key)
+}
+
+func getAuthStateKeyPrefix(key string) string {
+	return fmt.Sprintf("authstate_%s", key)
+}
+
+func getAuthCodeKeyPrefix(key string) string {
+	return fmt.Sprintf("authcode_%s", key)
+}
+
+func getAccessTokenKeyPrefix(key string) string {
+	return fmt.Sprintf("access_token_%s", key)
+}
+
+// signer for signing ed25519 for tests.
+type edd25519Signer struct {
+	privateKey []byte
+}
+
+func (s *edd25519Signer) Sign(doc []byte) ([]byte, error) {
+	if l := len(s.privateKey); l != ed25519.PrivateKeySize {
+		return nil, errors.New("ed25519: bad private key length")
+	}
+
+	return ed25519.Sign(s.privateKey, doc), nil
 }
