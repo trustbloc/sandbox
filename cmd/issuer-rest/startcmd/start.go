@@ -143,6 +143,11 @@ const (
 		" Alternatively, this can be set with the following environment variable (in CSV format): " +
 		contextProviderEnvKey
 
+	walletInitURLFlagName  = "wallet-auth-url"
+	walletInitURLFlagUsage = "Wallet auth URL for issuer oidc initiate" +
+		" Alternatively, this can be set with the following environment variable: " + walletInitURLEnvKey
+	walletInitURLEnvKey = "ISSUER_WALLET_INIT_URL"
+
 	tokenLength2 = 2
 )
 
@@ -175,6 +180,7 @@ type issuerParameters struct {
 	tlsKeyFile            string
 	cmsURL                string
 	vcsURL                string
+	walletURL             string
 	tlsSystemCertPool     bool
 	tlsCACerts            []string
 	requestTokens         map[string]string
@@ -278,6 +284,11 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 				return err
 			}
 
+			walletaInitURL, err := cmdutils.GetUserSetVarFromString(cmd, walletInitURLFlagName, walletInitURLEnvKey, true)
+			if err != nil {
+				return err
+			}
+
 			parameters := &issuerParameters{
 				srv:                   srv,
 				hostURL:               strings.TrimSpace(hostURL),
@@ -287,6 +298,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 				tlsKeyFile:            tlsConfg.keyFile,
 				cmsURL:                strings.TrimSpace(cmsURL),
 				vcsURL:                strings.TrimSpace(vcsURL),
+				walletURL:             strings.TrimSpace(walletaInitURL),
 				tlsSystemCertPool:     tlsConfg.systemCertPool,
 				tlsCACerts:            tlsConfg.caCerts,
 				requestTokens:         requestTokens,
@@ -423,6 +435,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(oidcCallbackURLFlagName, "", "", oidcCallbackURLFlagUsage)
 
 	startCmd.Flags().StringArrayP(contextProviderFlagName, "", []string{}, contextProviderFlagUsage)
+	startCmd.Flags().StringP(walletInitURLFlagName, "", "", walletInitURLFlagUsage)
 }
 
 func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
@@ -464,6 +477,7 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 		DocumentLoader:   documentLoader,
 		CMSURL:           parameters.cmsURL,
 		VCSURL:           parameters.vcsURL,
+		WalletURL:        parameters.walletURL,
 		DIDAuthHTML:      "static/didAuth.html",
 		ReceiveVCHTML:    "static/receiveVC.html",
 		VCHTML:           "static/vc.html",
@@ -520,6 +534,14 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 
 	router.PathPrefix("/uploaddrivinglicense").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/uploaddrivinglicense.html")
+	})
+
+	router.PathPrefix("/applyprcard").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/applyPrCard.html")
+	})
+
+	router.PathPrefix("/oidc/login").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/oidc-login.html")
 	})
 
 	for _, handler := range handlers {

@@ -42,3 +42,20 @@ type generateCredentialReq struct {
 	Holder     string `json:"holder"`
 	VCSProfile string `json:"vcsProfile"`
 }
+
+type oidcIssuanceRequest struct {
+	WalletInitIssuanceURL string          `json:"walletInitIssuanceURL"`
+	CredentialTypes       string          `json:"credentialTypes"`
+	ManifestIDs           string          `json:"manifestIDs"`
+	IssuerURL             string          `json:"issuerURL"`
+	CredManifest          json.RawMessage `json:"credManifest"`
+	Credential            json.RawMessage `json:"credToIssue"`
+}
+
+type issuerConfiguration struct {
+	Issuer                string          `json:"issuer"`
+	AuthorizationEndpoint string          `json:"authorization_endpoint"`
+	CredentialEndpoint    string          `json:"credential_endpoint"`
+	TokenEndpoint         string          `json:"token_endpoint"`
+	CredentialManifests   json.RawMessage `json:"credential_manifests"`
+}
