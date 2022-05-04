@@ -11,6 +11,7 @@ replace github.com/trustbloc/sandbox => ../..
 require (
 	github.com/gorilla/mux v1.8.0
 	github.com/hyperledger/aries-framework-go v0.1.9-0.20220422131523-ab194a3e6a32
+	github.com/rs/cors v1.7.0
 	github.com/spf13/cobra v1.3.0
 	github.com/stretchr/testify v1.7.0
 	github.com/trustbloc/edge-core v0.1.8

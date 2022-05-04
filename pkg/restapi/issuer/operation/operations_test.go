@@ -510,13 +510,13 @@ func TestSaveIssuanceConfig(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	err = svc.saveIssuanceConfig([]byte("issuerConf"), nil)
+	err = svc.saveIssuanceConfig(uuid.NewString(), []byte("issuerConf"), nil)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to store credential")
 }
 
 func TestWellConfiguration(t *testing.T) {
-	t.Run("error - failed to read wellknown configuration", func(t *testing.T) {
+	t.Run("error - failed to read well known configuration", func(t *testing.T) {
 		svc, err := New(&Config{
 			StoreProvider: &mockstorage.Provider{
 				OpenStoreReturn: &mockstorage.Store{ErrGet: errors.New("get error")},
@@ -530,7 +530,7 @@ func TestWellConfiguration(t *testing.T) {
 
 		svc.wellKnownConfiguration(w, req)
 		require.Equal(t, http.StatusInternalServerError, w.Code)
-		require.Contains(t, w.Body.String(), "failed to read wellknown configuration")
+		require.Contains(t, w.Body.String(), "failed to read well known configuration")
 	})
 }
 

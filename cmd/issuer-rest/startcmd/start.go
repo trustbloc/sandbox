@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 	ldrest "github.com/hyperledger/aries-framework-go/pkg/controller/rest/ld"
 	ldsvc "github.com/hyperledger/aries-framework-go/pkg/ld"
+	"github.com/rs/cors"
 	"github.com/spf13/cobra"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/restapi/logspec"
@@ -284,7 +285,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 				return err
 			}
 
-			walletaInitURL, err := cmdutils.GetUserSetVarFromString(cmd, walletInitURLFlagName, walletInitURLEnvKey, true)
+			walletInitURL, err := cmdutils.GetUserSetVarFromString(cmd, walletInitURLFlagName, walletInitURLEnvKey, true)
 			if err != nil {
 				return err
 			}
@@ -298,7 +299,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 				tlsKeyFile:            tlsConfg.keyFile,
 				cmsURL:                strings.TrimSpace(cmsURL),
 				vcsURL:                strings.TrimSpace(vcsURL),
-				walletURL:             strings.TrimSpace(walletaInitURL),
+				walletURL:             strings.TrimSpace(walletInitURL),
 				tlsSystemCertPool:     tlsConfg.systemCertPool,
 				tlsCACerts:            tlsConfg.caCerts,
 				requestTokens:         requestTokens,
@@ -565,7 +566,14 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 		router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
 	}
 
-	return parameters.srv.ListenAndServe(parameters.hostURL, parameters.tlsCertFile, parameters.tlsKeyFile, router)
+	handler := cors.New(
+		cors.Options{
+			AllowedMethods: []string{http.MethodGet, http.MethodPost},
+			AllowedHeaders: []string{"Origin", "Accept", "Content-Type", "X-Requested-With", "Authorization"},
+		},
+	).Handler(router)
+
+	return parameters.srv.ListenAndServe(parameters.hostURL, parameters.tlsCertFile, parameters.tlsKeyFile, handler)
 }
 
 func getOAuth2Config(cmd *cobra.Command) (*oauth2.Config, error) {

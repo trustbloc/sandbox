@@ -18,6 +18,7 @@ exports.config = {
     "verifierURL": "https://demo-rp" + domain,
     "driversLicenseURL": "https://demo-issuer" + domain + "/drivinglicense",
     "creditReportURL": "https://demo-issuer" + domain + "/creditscore",
+    "applyPrCardURL": "https://demo-issuer" + domain + "/applyprcard",
     "bankURL": "https://demo-rp" + domain + "/bankaccount",
     "ucisURL": "https://ucis-rp" + domain,
     "cbpURL": "https://cbp-rp" + domain,
