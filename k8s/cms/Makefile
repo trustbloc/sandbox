@@ -28,7 +28,7 @@ OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
-STRAPI_IMG					?= strapi/strapi:3.0.6-alpine
+STRAPI_IMG					?= strapi/strapi:3.6.8-alpine
 OATHKEEPER_IMG			?= oryd/oathkeeper:v0.38.4-alpine
 
 # do not modify
