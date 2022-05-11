@@ -18,6 +18,7 @@ did-resolver
 edv
 edv-oathkeeper-api
 edv-oathkeeper-proxy
+gatekeeper
 holder-vcs
 hub-auth
 hub-hydra

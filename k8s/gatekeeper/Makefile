@@ -4,32 +4,32 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-SHELL                       := /bin/bash
-CONTAINER_CMD         	 	?= docker
-USER_ID                          = $(shell id -u)
-DOCKER_CMD_RUN_OPTS            ?= -u $(USER_ID)
-CONTAINER_CMD_RUN_OPTS         ?= $(if $(findstring docker,$(CONTAINER_CMD)),$(DOCKER_CMD_RUN_OPTS),)
+SHELL                           := /bin/bash
+CONTAINER_CMD         	        ?= docker
+USER_ID                         = $(shell id -u)
+DOCKER_CMD_RUN_OPTS             ?= -u $(USER_ID)
+CONTAINER_CMD_RUN_OPTS          ?= $(if $(findstring docker,$(CONTAINER_CMD)),$(DOCKER_CMD_RUN_OPTS),)
 
-export DEPLOYMENT_ENV	?= local
+export DEPLOYMENT_ENV           ?= local
 # space delimited of Key:Value pairs
-COMMON_LABELS		:= instance:${DEPLOYMENT_ENV}
-export DOMAIN      		?= ${DEPLOYMENT_ENV}.trustbloc.dev
-export BLOC_DOMAIN		?= orb-1.${DOMAIN}
-export MONGODB_DSN								?= mongodb://mongoroot:secret@mongodb-demo:27017
-export COMPARATOR_REQUEST_TOKENS ?= sidetreeToken=ADMIN_TOKEN
+COMMON_LABELS                   := instance:${DEPLOYMENT_ENV}
+export DOMAIN                   ?= ${DEPLOYMENT_ENV}.trustbloc.dev
+export BLOC_DOMAIN		        ?= orb-1.${DOMAIN}
+export MONGODB_URL              ?= mongodb://mongoroot:secret@mongodb:27017
+export GK_REQUEST_TOKENS        ?= sidetreeToken=ADMIN_TOKEN,vcs_issuer=vcs_issuer_rw_token
 
-OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
-ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
+OS                              = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ARCH  				            = $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
-COMPARATOR_IMAGE				?= ghcr.io/trustbloc-cicd/comparator-server:0.1.9-snapshot-cb06664
+GATEKEEPER_SERVER_IMG           ?= ghcr.io/trustbloc-cicd/gatekeeper:0.1.9-snapshot-cb06664
 
 # do not modify
-KUSTOMIZE_DIR       	= kustomize/comparator
-CERTS_OUTPUT_DIR      	 	= ${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/certs
-PREFIX							?=
-KUSTOMIZE_BUILD_OPTS			?= --load-restrictor LoadRestrictionsNone --enable-alpha-plugins
-export KUSTOMIZE_PLUGIN_HOME						= $(abspath .)/kustomize/plugin
+KUSTOMIZE_DIR                   = kustomize/gatekeeper
+CERTS_OUTPUT_DIR                = ${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/certs
+PREFIX                          ?=
+KUSTOMIZE_BUILD_OPTS            ?= --load-restrictor LoadRestrictionsNone --enable-alpha-plugins
+export KUSTOMIZE_PLUGIN_HOME    = $(abspath .)/kustomize/plugin
 
 .PHONY: all
 all: setup
@@ -56,7 +56,7 @@ generate-test-certs: clean-certs
 	@cd ${CERTS_OUTPUT_DIR} && ln -fs ${DOMAIN}.crt tls.crt
 
 .PHONY: deploy
-deploy: prechecks kustomize kubectl set-images set-labels deploy-comparator
+deploy: prechecks kustomize kubectl set-images set-labels deploy-gatekeeper
 
 .PHONY: prechecks
 prechecks:
@@ -67,28 +67,30 @@ endif
 
 .PHONY: set-labels
 set-labels: kustomize
-	@pushd ${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/comparator &&\
+	@pushd ${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/gatekeeper &&\
 		${KUSTOMIZE} edit set label ${COMMON_LABELS} &&\
 		popd
 
 .PHONY: set-images
 set-images: kustomize
 	@pushd ${KUSTOMIZE_DIR}/base &&\
-	${KUSTOMIZE} edit set image comparator-server=${COMPARATOR_IMAGE} &&\
+	${KUSTOMIZE} edit set image gatekeeper=${GATEKEEPER_SERVER_IMG} &&\
 	popd
 
-.PHONY: deploy-comparator
-deploy-comparator: prechecks kustomize kubectl
+.PHONY: deploy-gatekeeper
+deploy-gatekeeper: prechecks kustomize kubectl
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
-	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/comparator | $(KUBECTL) apply -f -
+	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/gatekeeper | $(KUBECTL) apply -f -
 
 .PHONY: undeploy
-undeploy: prechecks kustomize kubectl set-images set-labels undeploy-comparator
+undeploy: prechecks kustomize kubectl set-images set-labels undeploy-gatekeeper
 
-.PHONY: undeploy-comparator
-undeploy-comparator: prechecks kustomize kubectl
+.PHONY: undeploy-gatekeeper
+undeploy-gatekeeper: prechecks kustomize kubectl
+	@docker pull $(GATEKEEPER_SERVER_IMG)
+	@minikube image load $(GATEKEEPER_SERVER_IMG)
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
-	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/comparator | $(KUBECTL) delete -f -
+	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/gatekeeper | $(KUBECTL) delete -f -
 
 .PHONY: kustomize
 kustomize:

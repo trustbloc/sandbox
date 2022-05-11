@@ -1,0 +1,11 @@
+# 
+# Copyright SecureKey Technologies Inc. All Rights Reserved. 
+# 
+# SPDX-License-Identifier: Apache-2.0 
+# 
+
+apiVersion: svceng
+kind: SedTransformer
+metadata:
+  name: sedtransformer
+argsOneLiner: s^||DOMAIN||^${DOMAIN}^g s^||DEPLOYMENT_ENV||^${DEPLOYMENT_ENV}^g s^||BLOC_DOMAIN||^${BLOC_DOMAIN}^g
