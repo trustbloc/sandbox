@@ -12,26 +12,27 @@
 #commonAnnotations:
 #  someName: someValue
 
-generatorOptions: {}
+commonLabels:
+  component: gatekeeper
 
 configMapGenerator:
 - envs:
-  - comparator/config.env
-  name: comparator-env
+  - config.env
+  name: gatekeeper-env
 
 secretGenerator:
 - envs:
-  - comparator/secret.env
-  name: comparator-env-secret
+  - secret.env
+  name: gatekeeper-env-secret
 
 resources:
-- comparator/deployment.yml
-- comparator/service.yml
+- deployment.yml
+- service.yml
 
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 images:
-- name: comparator-server
-  newName: ghcr.io/trustbloc-cicd/comparator-server
+- name: gatekeeper
+  newName: ghcr.io/trustbloc-cicd/gatekeeper
   newTag: 0.1.9-snapshot-cb06664

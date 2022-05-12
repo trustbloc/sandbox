@@ -1,0 +1,42 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: gatekeeper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gatekeeper
+  template:
+    metadata:
+      labels:
+        app: gatekeeper
+    spec:
+      containers:
+      - name: gatekeeper
+        envFrom:
+          - configMapRef:
+              name: gatekeeper-env
+          - secretRef:
+              name: gatekeeper-env-secret
+        image: gatekeeper:latest
+        imagePullPolicy: IfNotPresent
+        args: ["start"]
+        ports:
+          - containerPort: 8081
+            protocol: TCP
+            name: http-port
+        livenessProbe:
+          httpGet:
+            path: /healthcheck
+            port: http-port
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 5

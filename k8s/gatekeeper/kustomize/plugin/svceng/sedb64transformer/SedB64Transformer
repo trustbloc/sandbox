@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# https://github.com/kubernetes-sigs/kustomize/blob/master/plugin/someteam.example.com/v1/sedtransformer/SedTransformer
+# Skip the config file name argument.
+shift
+args=()
+sed_expression=""
+for arg in "$@"; do
+  env_expanded=${arg@P}
+  IFS_TEMP=${IFS}
+  IFS='^'
+  for word in ${env_expanded};
+  do
+    if [ "${word}" == "s" ];
+    then
+      sed_expression+="s^"
+    else
+      sed_expression+=$(echo -n $word | base64 -w0)
+      sed_expression+='^'
+    fi
+  done
+  IFS=${IFS_TEMP}
+  args+=(-e "$sed_expression")
+  sed_expression=""
+done
+
+sed "${args[@]}"

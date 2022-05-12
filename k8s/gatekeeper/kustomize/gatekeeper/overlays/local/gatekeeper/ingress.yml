@@ -1,0 +1,29 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gatekeeper
+  labels:
+    app: gatekeeper
+spec:
+  tls:
+  - hosts:
+      - gatekeeper.||DOMAIN||
+    secretName: INGRESS_TLS_SECRET
+  rules:
+  - host: gatekeeper.||DOMAIN||
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: GATEKEEPER_SERVICE_NAME
+            port:
+              name: http
