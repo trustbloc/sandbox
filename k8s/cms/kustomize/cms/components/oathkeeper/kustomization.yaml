@@ -9,7 +9,7 @@ kind: Component
 images:
 - name: oathkeeper
   newName: oryd/oathkeeper
-  newTag: v0.38.4-alpine
+  newTag: v0.38.15-alpine
 
 configMapGenerator:
 - files:

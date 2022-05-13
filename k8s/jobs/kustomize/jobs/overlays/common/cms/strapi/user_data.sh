@@ -18,8 +18,8 @@ until [ $n -ge 10 ]
 do
    token=$(curl --header "Content-Type: application/json" \
    --request POST \
-   --data '{"username":"strapi","email":"user@strapi.io","password":"strapi"}' \
-   http://strapi/admin/auth/local/register | jq -r '.jwt')
+   --data '{"username":"strapiUser","email":"user@strapiUser.io","password":"strapiUser"}' \
+   http://strapi/auth/local/register | jq -r '.jwt')
    echo "token: $token"
    if [ -n "$token" ] || [ "$token" = "null" ]
    then

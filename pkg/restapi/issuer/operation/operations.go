@@ -1193,7 +1193,7 @@ func (c *Operation) initiateIssuance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.saveIssuanceConfig(issuerConf, credential)
+	err = c.saveIssuanceConfig(key, issuerConf, credential)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to store issuer server configuration : %s", err))
@@ -1234,9 +1234,7 @@ func parseWalletURL(walletURL, issuer string, credentialTypes, manifestIDs []str
 	return u.String(), nil
 }
 
-func (c *Operation) saveIssuanceConfig(issuerConf, credential []byte) error {
-	key := uuid.NewString()
-
+func (c *Operation) saveIssuanceConfig(key string, issuerConf, credential []byte) error {
 	err := c.store.Put(key, issuerConf)
 	if err != nil {
 		return fmt.Errorf("failed to store issuer server configuration : %w", err)
@@ -1258,7 +1256,7 @@ func (c *Operation) wellKnownConfiguration(w http.ResponseWriter, r *http.Reques
 	issuerConf, err := c.store.Get(id)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to read wellknown configuration : %s", err))
+			fmt.Sprintf("failed to read well known configuration : %s", err))
 
 		return
 	}
@@ -1533,7 +1531,6 @@ func setOIDCResponseHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Pragma", "no-cache")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func (c *Operation) sendOIDCErrorResponse(w http.ResponseWriter, msg string, status int) {

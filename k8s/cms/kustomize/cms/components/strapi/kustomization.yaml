@@ -9,7 +9,7 @@ kind: Component
 images:
 - name: strapi
   newName: strapi/strapi
-  newTag: 3.0.6-alpine
+  newTag: 3.6.8-alpine
 
 secretGenerator:
 - envs:
@@ -20,6 +20,9 @@ configMapGenerator:
 - files:
   - strapi_configure.sh
   name: strapi-config
+- files:
+  - bootstrap.js
+  name: strapi-bootstrap
 
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
