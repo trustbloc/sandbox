@@ -27,4 +27,4 @@ kind: Kustomization
 images:
 - name: login-consent-server
   newName: ghcr.io/trustbloc-cicd/sandbox-login-consent-server
-  newTag: 0.1.9-snapshot-4c53fa6
+  newTag: 0.1.9-snapshot-9911f2d
