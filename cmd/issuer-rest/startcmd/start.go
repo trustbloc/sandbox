@@ -542,7 +542,7 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 	})
 
 	router.PathPrefix("/oidc/login").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/oidc-login.html")
+		http.ServeFile(w, r, "static/oidclogin.html")
 	})
 
 	for _, handler := range handlers {
