@@ -1,0 +1,56 @@
+<!--
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ -->
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://unpkg.com/tailwindcss@0.3.0/dist/tailwind.min.css" rel="stylesheet">
+      <style>
+            .gradient {
+                background: linear-gradient(90deg, #e2e2e2 20%, #e2e2e2 100%);
+            }
+        </style>
+</head>
+<body  class="leading-normal tracking-normal text-white gradient" style="font-family: 'Source Sans Pro', sans-serif;">
+  <form action="/oidc/authorize-request" id="oidc-issuance-form" method="POST">
+    <div class="min-h-screen flex flex-col bg-white">
+            <div class="flex flex-1 items-center justify-center ">
+                <div class="rounded-lg sm:border-2 px-4 lg:px-24 py-12 lg:max-w-xl sm:max-w-md w-1/2 text-center gradient">
+                        <h1 class="font-bold tracking-wider text-3xl mb-8 w-full text-black">
+                             OIDC Issuer Login
+                        </h1>
+                              <label class="block text-grey-darker text-lg">
+                                                            Username
+                                                        </label>
+                        <div class="py-4 text-left flex items-center justify-center">
+
+                            <input type="username" class="bg-gray-200 border-2 border-gray-100
+                            focus:outline-none bg-gray-100 block w-1/2 py-2 px-4 rounded-lg"
+                             value="sampleuser">
+                        </div>
+                                <label class="block text-grey-darker text-lg">
+                                                                                    Password
+                                                                                </label>
+                        <div class="py-4 text-left flex items-center justify-center">
+                            <input type="password" class="bg-gray-200 border-2 border-gray-100
+                            focus:outline-none bg-gray-100 block w-1/2 py-2 px-4 rounded-lg"
+                             value="samplepwd">
+                        </div>
+                        <div class="flex items-center justify-center">
+                                           <button class="mx-auto lg:mx-0 hover:underline bg-indigo text-white
+                                            font-bold rounded-full w-1/2 my-4 py-4 px-8" type="submit" id="issuer-login">
+                                               Sign In
+                                           </button>
+                        </div>
+                </div>
+            </div>
+        </div>
+     </form>
+</body>
+</html>
