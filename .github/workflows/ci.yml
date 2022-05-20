@@ -12,6 +12,15 @@ on:
     branches: [ main ]
 
 jobs:
+  SemanticPullRequest:
+    name: Semantic Pull Request Check
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   Checks:
     runs-on: ubuntu-20.04
     timeout-minutes: 30
@@ -46,7 +55,7 @@ jobs:
           CODECOV_UPLOAD_TOKEN: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
 
   Publish:
-    needs: [Checks, UnitTest]
+    needs: [ Checks, UnitTest ]
     if: github.event_name == 'push' && (github.repository == 'trustbloc/sandbox' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-20.04
     timeout-minutes: 30
@@ -83,7 +92,7 @@ jobs:
 
   DeployTest:
     name: Deploy-Test
-    needs: [Publish]
+    needs: [ Publish ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -112,7 +121,7 @@ jobs:
 
   BuildDeployTest-PR:
     name: Build-Deploy-Test-PR
-    needs: [UnitTest]
+    needs: [ UnitTest ]
     if: github.event_name == 'pull_request' && github.repository == 'trustbloc/sandbox'
     runs-on: ubuntu-latest
     steps:
