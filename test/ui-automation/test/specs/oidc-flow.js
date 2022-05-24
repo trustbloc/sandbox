@@ -98,11 +98,9 @@ describe("TrustBloc - [PRC] Background Check Use Case (OIDC Share flow)", async 
         await shareCredBtn.waitForClickable();
         await shareCredBtn.click();
 
-        // TODO#1431 - OIDC share is giving connection closed error after clicking share button
-        /*
         // 4. validate success msg;
         const successMsg = await $("b*=Successfully Received OIDC verifiable Presentation");
-        await successMsg.waitForExist();*/
+        await successMsg.waitForExist();
     });
 
     it(`User signs out`, async function () {
