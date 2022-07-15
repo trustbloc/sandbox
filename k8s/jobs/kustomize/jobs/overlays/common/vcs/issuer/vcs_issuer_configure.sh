@@ -11,9 +11,9 @@ checkProfileIsCreated()
 {
    if [ "$1" == "201" ] || [ "$1" == "400" ]
    then
-     echo "issuer profile $2 is created"
+     echo "issuer profile $2 is created: response code $1"
    else
-     echo "failed create issuer profile $2 response code $1"
+     echo "failed create issuer profile $2: response code $1"
      exit 1
    fi
 }
