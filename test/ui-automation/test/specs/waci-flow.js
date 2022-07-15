@@ -84,18 +84,12 @@ describe("TrustBloc - [PRC] Duty Free Shop Use Case (WACI Issuance + WACI Share 
     });
 
     it(`Wallet Sign In (${ctx.email})`, async function () {
-        // 1. Navigate to Wallet Website
-        await browser.switchWindow(browser.config.walletURL);
-
-        // 2. Sign In to the registered Wallet (register/sign-up/etc.)
+        // 1. Sign In to the registered Wallet (register/sign-up/etc.)
         await wallet.signIn(ctx);
     });
 
     it('Validate Permanent Resident Card in Wallet', async function () {
-        // 1. Navigate to Credentials page on Wallet Website
-        await browser.switchWindow(browser.config.walletURL);
-
-        // 2. Validate PRC in wallet
+         // 1. Validate PRC in wallet
         await wallet.checkStoredCredentials('Permanent Resident Card')
     });
 
