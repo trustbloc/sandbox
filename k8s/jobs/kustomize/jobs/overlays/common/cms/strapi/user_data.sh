@@ -90,6 +90,17 @@ if [ "$result" != "null" ]
         echo "error insert prcards data in strapi: $result"
 fi
 
+# Add uscis pr card data for above created user
+result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
+   --request POST \
+   --data '{"userid":"100", "vcmetadata":{"@context": [ "https://www.w3.org/2018/credentials/v1", "https://w3id.org/citizenship/v1" ], "name": "Permanent Resident Card", "description": "Permanent Resident Card of Mr.Louis Pasteur"}, "vccredentialsubject": { "image": "data:image/png;base64,iVBOR....=", "lprNumber": "1958-08-17", "gender": "Male", "residentSince": "2015-01-01", "givenName": "Louis", "familyName": "Pasteur", "birthCountry": "France", "commuterClassification": "C1", "birthDate": "1958-08-17", "lprCategory": "C09" }}' \
+   http://strapi/uscispermanentresidentcards | jq  -r ".error")
+# check for error
+if [ "$result" != "null" ]
+   then
+        echo "error insert uscis prcards data in strapi: $result"
+fi
+
 # Add vaccine certificate data for above created user
 result=$(curl --header "Content-Type: application/json" --header "Authorization: Bearer $token" \
    --request POST \
