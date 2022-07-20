@@ -541,6 +541,10 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 		http.ServeFile(w, r, "static/applyPrCard.html")
 	})
 
+	router.PathPrefix("/issuePrCard").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/issuePrCard.html")
+	})
+
 	router.PathPrefix("/oidc/login").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/oidclogin.html")
 	})
