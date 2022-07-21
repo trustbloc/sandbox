@@ -41,7 +41,6 @@ router-api
 router-ws
 ucis-comparator
 ucis-rp
-uni-registrar-web
 uni-resolver-web
 vault-kms
 vault-server
