@@ -25,6 +25,7 @@ Follow this [link](docs/projects/README.md) to learn more about all the TrustBlo
 - [Anonymous Comparator and Extractor - Relying Party (ACE-RP)](docs/ace-rp/README.md)
 
 ## Demo
+- [TrustBloc OpenID for Verifiable Credentials (OpenID4VC)](docs/demo/background-check-usecase.md)
 - [TrustBloc VCS](docs/demo/sandbox_vcs_playground.md) : CHAPI + VC Services + Selective Disclosure
   - [Flight Boarding use case](docs/demo/flight-boarding-usecase.md)
 - [TrustBloc Adapter](docs/demo/sandbox_adapter_playground.md) : [CHAPI](https://w3c-ccg.github.io/credential-handler-api/)/[WACI-PEx](https://identity.foundation/waci-presentation-exchange/) + DIDComm
