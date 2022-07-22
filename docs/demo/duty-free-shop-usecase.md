@@ -1,4 +1,4 @@
-# Duty Free Shop Use Case (WACI-Share)
+# Duty Free Shop Use Case (WACI-DIDComm)
 
 **Use Case**: As a user, I should be able to buy items by confirming my age from the Permanent Resident Card present in my Digital Wallet.
 
