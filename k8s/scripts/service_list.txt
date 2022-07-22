@@ -4,7 +4,6 @@ adapter-issuer
 adapter-issuer-didcomm
 adapter-rp
 adapter-rp-didcomm
-authz-oathkeeper-proxy
 benefits-dept-comparator
 benefits-dept-rp
 cbp-comparator
@@ -16,19 +15,14 @@ demo-rp
 did-method
 did-resolver
 edv
-edv-oathkeeper-api
-edv-oathkeeper-proxy
 gatekeeper
 holder-vcs
 hub-auth
-hub-hydra
-hub-hydra-admin
 hydra
 hydra-admin
 issuer-vcs
 login-consent
 oathkeeper-proxy
-ops-oathkeeper-proxy
 orb-driver
 orb-1
 orb-kms
@@ -46,5 +40,4 @@ vault-kms
 vault-server
 verifier-vcs
 wallet
-wallet-support
 static-file-server
