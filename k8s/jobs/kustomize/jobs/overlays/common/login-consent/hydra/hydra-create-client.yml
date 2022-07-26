@@ -39,7 +39,7 @@ spec:
             echo $err_resp;
             if [ -z "$err_resp" ] || [ -n "$(echo ${err_resp} | grep already )" ];then echo "Success client creation"; break;else exit 1;fi;
 
-            err_resp=$(hydra clients create --endpoint http://hydra-admin --fake-tls-termination --id hub-auth --secret hub-auth-secret --grant-types authorization_code,refresh_token --response-types code,id_token --scope openid,profile,email --skip-tls-verify --callbacks https://hub-auth.||DOMAIN||/oidc/callback 2>&1 > /dev/null);
+            err_resp=$(hydra clients create --endpoint http://hydra-admin --fake-tls-termination --id auth --secret auth-secret --grant-types authorization_code,refresh_token --response-types code,id_token --scope openid,profile,email --skip-tls-verify --callbacks https://auth.||DOMAIN||/oidc/callback 2>&1 > /dev/null);
             echo $err_resp;
             if [ -z "$err_resp" ] || [ -n "$(echo ${err_resp} | grep already )" ];then echo "Success client creation"; exit 0;else exit 1;fi;
             echo "... Finished creating clients"
