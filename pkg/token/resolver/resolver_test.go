@@ -111,5 +111,4 @@ func (r *mockReader) Close() error {
 const jsonBody = `{
   "active": true,
   "sub": "a@b.com"
-}
-`
+}`

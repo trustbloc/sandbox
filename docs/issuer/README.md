@@ -6,7 +6,7 @@ Issuer application will:
 - authenticate user 
 - ask for user consent for data sharing
 - retrieve user data from content management system
-- call [edge service](https://github.com/trustbloc/edge-service) to create student card verifiable credential on behalf of the issuer
+- call [vc service](https://github.com/trustbloc/vcs) to create student card verifiable credential on behalf of the issuer
 - present student card verifiable credential to the user
 - create the QR Code for retrieving the verifiable credential 
   

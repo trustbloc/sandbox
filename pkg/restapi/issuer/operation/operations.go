@@ -32,9 +32,9 @@ import (
 	"github.com/hyperledger/aries-framework-go/spi/storage"
 	"github.com/piprate/json-gold/ld"
 	"github.com/trustbloc/edge-core/pkg/log"
-	vcprofile "github.com/trustbloc/edge-service/pkg/doc/vc/profile"
-	"github.com/trustbloc/edge-service/pkg/doc/vc/status/csl"
-	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
+	vcprofile "github.com/trustbloc/vcs/pkg/doc/vc/profile"
+	"github.com/trustbloc/vcs/pkg/doc/vc/status/csl"
+	edgesvcops "github.com/trustbloc/vcs/pkg/restapi/issuer/operation"
 	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/sandbox/pkg/internal/common/support"

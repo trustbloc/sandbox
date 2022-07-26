@@ -28,7 +28,7 @@ import (
 	"github.com/piprate/json-gold/ld"
 	"github.com/square/go-jose/jwt"
 	"github.com/trustbloc/edge-core/pkg/log"
-	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/verifier/operation"
+	edgesvcops "github.com/trustbloc/vcs/pkg/restapi/verifier/operation"
 
 	"github.com/trustbloc/sandbox/pkg/internal/common/support"
 	oidcclient "github.com/trustbloc/sandbox/pkg/restapi/internal/common/oidc"

@@ -23,7 +23,7 @@ import (
 	memstore "github.com/hyperledger/aries-framework-go/component/storageutil/mem"
 	mockstore "github.com/hyperledger/aries-framework-go/component/storageutil/mock"
 	"github.com/stretchr/testify/require"
-	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/verifier/operation"
+	edgesvcops "github.com/trustbloc/vcs/pkg/restapi/verifier/operation"
 )
 
 const (
