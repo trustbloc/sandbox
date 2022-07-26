@@ -1,4 +1,4 @@
-# [Comparator](https://github.com/trustbloc/edge-service/blob/f48851fa0210c74fcf3a4c7569ac8eaded1794f8/cmd/comparator-rest/README.md) k8s deployment #
+# [Comparator](https://github.com/trustbloc/vcs/blob/f48851fa0210c74fcf3a4c7569ac8eaded1794f8/cmd/comparator-rest/README.md) k8s deployment #
 
 
 ## pre-requisits

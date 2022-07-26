@@ -4,15 +4,15 @@
 ## References
 - [Demo Recording](https://www.youtube.com/watch?v=-EJjxzTLstk)
 - [Component Diagram](../components/vcs_components.md)
-- [Issuer VCS](https://github.com/trustbloc/edge-service/blob/main/docs/vcs/issuer/README.md)
-- [Verifier VCS](https://github.com/trustbloc/edge-service/blob/main/docs/vcs/verifier/README.md)
+- [Issuer VCS](https://github.com/trustbloc/vcs/blob/main/docs/vcs/issuer/README.md)
+- [Verifier VCS](https://github.com/trustbloc/vcs/blob/main/docs/vcs/verifier/README.md)
 
 ## Components
-| Component   | Cloud URL (Sandbox)**                                       | Cloud URL (Staging)                                     | Cloud URL (Devel)                                     | Local k8s URL*                                        |
-|-------------|-------------------------------------------------------------|---------------------------------------------------------|-------------------------------------------------------|-------------------------------------------------------|
-| Wallet      | [Click Here](https://wallet.sandbox.trustbloc.dev) | [Click Here](https://wallet.stg.trustbloc.dev)      | [Click Here](https://wallet.dev.trustbloc.dev)      | [Click Here](https://wallet.local.trustbloc.dev)      |
-| Issuer      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev)     | [Click Here](https://demo-issuer.stg.trustbloc.dev) | [Click Here](https://demo-issuer.dev.trustbloc.dev) | [Click Here](https://demo-issuer.local.trustbloc.dev) |
-| RP/Verifier | [Click Here](https://demo-rp.sandbox.trustbloc.dev)   | [Click Here](https://demo-rp.stg.trustbloc.dev)     | [Click Here](https://demo-rp.dev.trustbloc.dev)     | [Click Here](https://demo-rp.local.trustbloc.dev)     |
+| Component   | Cloud URL (Sandbox)**                                   | Cloud URL (Staging)                                 | Cloud URL (Devel)                                   | Local k8s URL*                                        |
+|-------------|---------------------------------------------------------|-----------------------------------------------------|-----------------------------------------------------|-------------------------------------------------------|
+| Wallet      | [Click Here](https://wallet.sandbox.trustbloc.dev)      | [Click Here](https://wallet.stg.trustbloc.dev)      | [Click Here](https://wallet.dev.trustbloc.dev)      | [Click Here](https://wallet.local.trustbloc.dev)      |
+| Issuer      | [Click Here](https://demo-issuer.sandbox.trustbloc.dev) | [Click Here](https://demo-issuer.stg.trustbloc.dev) | [Click Here](https://demo-issuer.dev.trustbloc.dev) | [Click Here](https://demo-issuer.local.trustbloc.dev) |
+| RP/Verifier | [Click Here](https://demo-rp.sandbox.trustbloc.dev)     | [Click Here](https://demo-rp.stg.trustbloc.dev)     | [Click Here](https://demo-rp.dev.trustbloc.dev)     | [Click Here](https://demo-rp.local.trustbloc.dev)     |
 
 *: Refer [here](./../../README.md#deployment) to run the local k8s demo.
 **: Soon to be deprecated - pre k8s deployment environment

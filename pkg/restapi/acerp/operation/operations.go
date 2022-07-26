@@ -36,8 +36,8 @@ import (
 	"github.com/trustbloc/ace/pkg/restapi/vault"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/edge-core/pkg/zcapld"
-	edgesvcops "github.com/trustbloc/edge-service/pkg/restapi/issuer/operation"
 	"github.com/trustbloc/edv/pkg/edvutils"
+	edgesvcops "github.com/trustbloc/vcs/pkg/restapi/issuer/operation"
 
 	"github.com/trustbloc/sandbox/pkg/internal/common/support"
 )

@@ -5,14 +5,14 @@
 
 
 ### Components
-| Component                                     | Source URL                                          |
-|-----------------------------------------------|-----------------------------------------------------|
-| Demo Issuer                                   | [Source](https://github.com/trustbloc/sandbox)      |
-| Demo IDMS (ORY Hydra)                         | [Source](https://github.com/ory/hydra)              |
-| Demo Identity & Access Proxy (ORY Oathkeeper) | [Source](https://github.com/ory/oathkeeper)         |
-| Demo CMS (Strapi)                             | [Source](https://github.com/strapi/strapi)          |
-| Issuer HTTP API                               | [Source](https://github.com/trustbloc/edge-service) |
-| Wallet                                        | [Source](https://github.com/trustbloc/wallet)       |
+| Component                                     | Source URL                                     |
+|-----------------------------------------------|------------------------------------------------|
+| Demo Issuer                                   | [Source](https://github.com/trustbloc/sandbox) |
+| Demo IDMS (ORY Hydra)                         | [Source](https://github.com/ory/hydra)         |
+| Demo Identity & Access Proxy (ORY Oathkeeper) | [Source](https://github.com/ory/oathkeeper)    |
+| Demo CMS (Strapi)                             | [Source](https://github.com/strapi/strapi)     |
+| Issuer HTTP API                               | [Source](https://github.com/trustbloc/vcs)     |
+| Wallet                                        | [Source](https://github.com/trustbloc/wallet)  |
 
 ### PRC Demo
 
