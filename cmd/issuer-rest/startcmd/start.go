@@ -48,6 +48,15 @@ const (
 	endpointTokenURLFlagUsage     = "Token URL for auth2 server. Format: HostName:Port." // #nosec
 	endpointTokenURLEnvKey        = "OAUTH2_ENDPOINT_TOKEN_URL"                          // #nosec
 
+	// external oauth2 endpoint config flags
+	externalEndpointAuthURLFlagName  = "external-auth-url"
+	externalEndpointAuthURLFlagUsage = "Auth URL for external auth2 server. Format: HostName:Port."
+	externalEndpointAuthURLEnvKey    = "EXTERNAL_OAUTH2_ENDPOINT_AUTH_URL"
+
+	externalEndpointTokenURLFlagName  = "external-token-url"
+	externalEndpointTokenURLFlagUsage = "Token URL for external auth2 server. Format: HostName:Port." // #nosec
+	externalEndpointTokenURLEnvKey    = "EXTERNAL_ENDPOINT_TOKEN_URL"                                 // #nosec
+
 	// oauth2 client config flags
 	clientRedirectURLFlagName      = "redirect-url"
 	clientRedirectURLFlagShorthand = "r"
@@ -63,6 +72,14 @@ const (
 	clientSecretFlagShorthand = "s"
 	clientSecretFlagUsage     = "Client secret for issuer auth2 client."
 	clientSecretEnvKey        = "OAUTH2_ISSUER_CLIENT_SECRET" // #nosec
+
+	externalClientIDFlagName  = "external-client-id"
+	externalClientIDFlagUsage = "Client ID for external auth2 client."
+	externalClientIDEnvKey    = "OAUTH2_EXTERNAL_CLIENT_ID"
+
+	externalClientSecretFlagName  = "external-client-secret"
+	externalClientSecretFlagUsage = "Client secret for external auth2 client."
+	externalClientSecretEnvKey    = "OAUTH2_EXTERNAL_CLIENT_SECRET" // #nosec
 
 	// oauth2 token introspection config flags
 	introspectionURLFlagName      = "introspect-url"
@@ -136,6 +153,27 @@ const (
 		" Alternatively, this can be set with the following environment variable: " + oidcCallbackURLEnvKey
 	oidcCallbackURLEnvKey = "ISSUER_OIDC_CALLBACK"
 
+	// External OIDC flags
+	externalAuthProviderURLFlagName  = "external-opurl"
+	externalAuthProviderURLFlagUsage = "URL for the OIDC provider." +
+		" Alternatively, this can be set with the following environment variable: " + externalAuthProviderURLEnvKey
+	externalAuthProviderURLEnvKey = "EXTERNAL_OIDC_OPURL"
+
+	externalAuthClientIDFlagName  = "external-api-clientid"
+	externalAuthClientIDFlagUsage = "OAuth2 client_id for OIDC." +
+		" Alternatively, this can be set with the following environment variable: " + externalAuthClientIDEnvKey
+	externalAuthClientIDEnvKey = "EXTERNAL_API_CLIENTID"
+
+	externalAuthClientSecretFlagName  = "external-api-clientsecret"
+	externalAuthClientSecretFlagUsage = "OAuth2 client secret for OIDC." +
+		" Alternatively, this can be set with the following environment variable: " + externalAuthClientSecretEnvKey
+	externalAuthClientSecretEnvKey = "EXTERNAL_API_CLIENTSECRET" //nolint:gosec
+
+	externalDataSourceURLFlagName  = "external-datasource"
+	externalDataSourceURLFlagUsage = "Base URL for the internal data source." +
+		" Alternatively, this can be set with the following environment variable: " + externalDataSourceURLEnvKey
+	externalDataSourceURLEnvKey = "EXTERNAL_DATA_SOURCE_URL"
+
 	// remote JSON-LD context provider url
 	contextProviderFlagName  = "context-provider-url"
 	contextProviderEnvKey    = "ISSUER_CONTEXT_PROVIDER_URL"
@@ -176,6 +214,7 @@ type issuerParameters struct {
 	srv                   server
 	hostURL               string
 	oauth2Config          *oauth2.Config
+	extOauth2Config       *oauth2.Config
 	tokenIntrospectionURL string
 	tlsCertFile           string
 	tlsKeyFile            string
@@ -189,6 +228,8 @@ type issuerParameters struct {
 	logLevel              string
 	dbParameters          *common.DBParameters
 	oidcParameters        *oidcParameters
+	externalDataSourceURL string
+	externalAuthParameter *externalAuthParameters
 	contextProviderURLs   []string
 }
 
@@ -206,6 +247,12 @@ type oidcParameters struct {
 	oidcCallbackURL  string
 }
 
+type externalAuthParameters struct {
+	ExternalAuthProviderURL  string
+	ExternalAuthClientID     string
+	ExternalAuthClientSecret string
+}
+
 // GetStartCmd returns the Cobra start command.
 func GetStartCmd(srv server) *cobra.Command {
 	startCmd := createStartCmd(srv)
@@ -215,8 +262,7 @@ func GetStartCmd(srv server) *cobra.Command {
 	return startCmd
 }
 
-// nolint: funlen
-func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
+func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo,gocognit
 	return &cobra.Command{
 		Use:   "start",
 		Short: "Start issuer",
@@ -226,11 +272,58 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 			if err != nil {
 				return err
 			}
-
-			oauth2Config, err := getOAuth2Config(cmd)
+			authURL, err := cmdutils.GetUserSetVarFromString(cmd, endpointAuthURLFlagName, endpointAuthURLEnvKey, false)
 			if err != nil {
 				return err
 			}
+
+			tokenURL, err := cmdutils.GetUserSetVarFromString(cmd, endpointTokenURLFlagName, endpointTokenURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
+			redirectURL, err := cmdutils.GetUserSetVarFromString(cmd, clientRedirectURLFlagName, clientRedirectURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
+			clientID, err := cmdutils.GetUserSetVarFromString(cmd, clientIDFlagName, clientIDEnvKey, false)
+			if err != nil {
+				return err
+			}
+
+			secret, err := cmdutils.GetUserSetVarFromString(cmd, clientSecretFlagName, clientSecretEnvKey, false)
+			if err != nil {
+				return err
+			}
+
+			extAuthURL, err := cmdutils.GetUserSetVarFromString(cmd,
+				externalEndpointAuthURLFlagName, externalEndpointAuthURLEnvKey, true)
+			if err != nil {
+				return err
+			}
+
+			extTokenURL, err := cmdutils.GetUserSetVarFromString(cmd,
+				externalEndpointTokenURLFlagName, externalEndpointTokenURLEnvKey, true)
+			if err != nil {
+				return err
+			}
+
+			extClientID, err := cmdutils.GetUserSetVarFromString(cmd,
+				externalClientIDFlagName, externalClientIDEnvKey, true)
+			if err != nil {
+				return err
+			}
+
+			extSecret, err := cmdutils.GetUserSetVarFromString(cmd,
+				externalClientSecretFlagName, externalClientSecretEnvKey, true)
+			if err != nil {
+				return err
+			}
+
+			oauth2Config := getOauth2Config(authURL, tokenURL, redirectURL, clientID, secret)
+
+			extOauth2Config := getOauth2Config(extAuthURL, extTokenURL, redirectURL, extClientID, extSecret)
 
 			tokenIntrospectionURL, err := cmdutils.GetUserSetVarFromString(cmd, introspectionURLFlagName,
 				introspectionURLEnvKey, false)
@@ -244,6 +337,12 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 			}
 
 			vcsURL, err := cmdutils.GetUserSetVarFromString(cmd, vcsURLFlagName, vcsURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
+			externalDataSourceURL, err := cmdutils.GetUserSetVarFromString(cmd,
+				externalDataSourceURLFlagName, externalDataSourceURLEnvKey, true)
 			if err != nil {
 				return err
 			}
@@ -264,7 +363,8 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 				return err
 			}
 
-			loggingLevel, err := cmdutils.GetUserSetVarFromString(cmd, common.LogLevelFlagName, common.LogLevelEnvKey, true)
+			loggingLevel, err := cmdutils.GetUserSetVarFromString(cmd,
+				common.LogLevelFlagName, common.LogLevelEnvKey, true)
 			if err != nil {
 				return err
 			}
@@ -275,6 +375,11 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 			}
 
 			oidcParams, err := getOIDCParametersFunc(cmd)
+			if err != nil {
+				return err
+			}
+
+			externalAuthParams, err := getExternalAuthParameters(cmd)
 			if err != nil {
 				return err
 			}
@@ -294,6 +399,8 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 				srv:                   srv,
 				hostURL:               strings.TrimSpace(hostURL),
 				oauth2Config:          oauth2Config,
+				extOauth2Config:       extOauth2Config,
+				externalDataSourceURL: strings.TrimSpace(externalDataSourceURL),
 				tokenIntrospectionURL: strings.TrimSpace(tokenIntrospectionURL),
 				tlsCertFile:           tlsConfg.certFile,
 				tlsKeyFile:            tlsConfg.keyFile,
@@ -307,6 +414,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: gocyclo
 				logLevel:              loggingLevel,
 				dbParameters:          dbParams,
 				oidcParameters:        oidcParams,
+				externalAuthParameter: externalAuthParams,
 				contextProviderURLs:   contextProviderURLs,
 			}
 
@@ -342,6 +450,32 @@ func getOIDCParameters(cmd *cobra.Command) (*oidcParameters, error) {
 		oidcClientID:     oidcClientID,
 		oidcClientSecret: oidcClientSecret,
 		oidcCallbackURL:  oidcCallbackURL,
+	}, nil
+}
+
+func getExternalAuthParameters(cmd *cobra.Command) (*externalAuthParameters, error) {
+	externalAuthProviderURL, err := cmdutils.GetUserSetVarFromString(cmd,
+		externalAuthProviderURLFlagName, externalAuthProviderURLEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	externalAuthClientID, err := cmdutils.GetUserSetVarFromString(cmd, externalAuthClientIDFlagName,
+		externalAuthClientIDEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	externalAuthClientSecret, err := cmdutils.GetUserSetVarFromString(
+		cmd, externalAuthClientSecretFlagName, externalAuthClientSecretEnvKey, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return &externalAuthParameters{
+		ExternalAuthProviderURL:  externalAuthProviderURL,
+		ExternalAuthClientID:     externalAuthClientID,
+		ExternalAuthClientSecret: externalAuthClientSecret,
 	}, nil
 }
 
@@ -414,6 +548,13 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(clientSecretFlagName, clientSecretFlagShorthand, "", clientSecretFlagUsage)
 	startCmd.Flags().StringP(introspectionURLFlagName, introspectionURLFlagShorthand, "",
 		introspectionURLFlagUsage)
+
+	// external oauth2
+	startCmd.Flags().StringP(externalEndpointAuthURLFlagName, "", "", externalEndpointAuthURLFlagUsage)
+	startCmd.Flags().StringP(externalEndpointTokenURLFlagName, "", "", externalEndpointTokenURLFlagUsage)
+	startCmd.Flags().StringP(externalClientIDFlagName, "", "", externalClientIDFlagUsage)
+	startCmd.Flags().StringP(externalClientSecretFlagName, "", "", externalClientSecretFlagUsage)
+
 	startCmd.Flags().StringP(tlsCertFileFlagName, tlsCertFileFlagShorthand, "", tlsCertFileFlagUsage)
 	startCmd.Flags().StringP(tlsKeyFileFlagName, tlsKeyFileFlagShorthand, "", tlsKeyFileFlagUsage)
 	startCmd.Flags().StringP(cmsURLFlagName, cmsURLFlagShorthand, "", cmsURLFlagUsage)
@@ -434,6 +575,12 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(oidcClientIDFlagName, "", "", oidcClientIDFlagUsage)
 	startCmd.Flags().StringP(oidcClientSecretFlagName, "", "", oidcClientSecretFlagUsage)
 	startCmd.Flags().StringP(oidcCallbackURLFlagName, "", "", oidcCallbackURLFlagUsage)
+
+	// Internal Auth OIDC
+	startCmd.Flags().StringP(externalAuthProviderURLFlagName, "", "", externalAuthProviderURLFlagUsage)
+	startCmd.Flags().StringP(externalAuthClientIDFlagName, "", "", externalAuthClientIDFlagUsage)
+	startCmd.Flags().StringP(externalAuthClientSecretFlagName, "", "", externalAuthClientSecretFlagUsage)
+	startCmd.Flags().StringP(externalDataSourceURLFlagName, "", "", externalDataSourceURLFlagUsage)
 
 	startCmd.Flags().StringArrayP(contextProviderFlagName, "", []string{}, contextProviderFlagUsage)
 	startCmd.Flags().StringP(walletInitURLFlagName, "", "", walletInitURLFlagUsage)
@@ -473,25 +620,30 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 	}
 
 	cfg := &operation.Config{
-		TokenIssuer:      tokenIssuer.New(parameters.oauth2Config, tokenIssuer.WithTLSConfig(tlsConfig)),
-		TokenResolver:    tokenResolver.New(parameters.tokenIntrospectionURL, tokenResolver.WithTLSConfig(tlsConfig)),
-		DocumentLoader:   documentLoader,
-		CMSURL:           parameters.cmsURL,
-		VCSURL:           parameters.vcsURL,
-		WalletURL:        parameters.walletURL,
-		DIDAuthHTML:      "static/didAuth.html",
-		ReceiveVCHTML:    "static/receiveVC.html",
-		VCHTML:           "static/vc.html",
-		DIDCommHTML:      "static/didcomm.html",
-		DIDCOMMVPHTML:    "static/didcommvp.html",
-		TLSConfig:        tlsConfig,
-		RequestTokens:    parameters.requestTokens,
-		IssuerAdapterURL: parameters.issuerAdapterURL,
-		StoreProvider:    storeProvider,
-		OIDCProviderURL:  parameters.oidcParameters.oidcProviderURL,
-		OIDCClientID:     parameters.oidcParameters.oidcClientID,
-		OIDCClientSecret: parameters.oidcParameters.oidcClientSecret,
-		OIDCCallbackURL:  parameters.oidcParameters.oidcCallbackURL,
+		TokenIssuer:              tokenIssuer.New(parameters.oauth2Config, tokenIssuer.WithTLSConfig(tlsConfig)),
+		ExtTokenIssuer:           tokenIssuer.New(parameters.extOauth2Config, tokenIssuer.WithTLSConfig(tlsConfig)),
+		TokenResolver:            tokenResolver.New(parameters.tokenIntrospectionURL, tokenResolver.WithTLSConfig(tlsConfig)),
+		DocumentLoader:           documentLoader,
+		CMSURL:                   parameters.cmsURL,
+		VCSURL:                   parameters.vcsURL,
+		WalletURL:                parameters.walletURL,
+		DIDAuthHTML:              "static/didAuth.html",
+		ReceiveVCHTML:            "static/receiveVC.html",
+		VCHTML:                   "static/vc.html",
+		DIDCommHTML:              "static/didcomm.html",
+		DIDCOMMVPHTML:            "static/didcommvp.html",
+		TLSConfig:                tlsConfig,
+		RequestTokens:            parameters.requestTokens,
+		IssuerAdapterURL:         parameters.issuerAdapterURL,
+		StoreProvider:            storeProvider,
+		OIDCProviderURL:          parameters.oidcParameters.oidcProviderURL,
+		OIDCClientID:             parameters.oidcParameters.oidcClientID,
+		OIDCClientSecret:         parameters.oidcParameters.oidcClientSecret,
+		OIDCCallbackURL:          parameters.oidcParameters.oidcCallbackURL,
+		ExternalDataSourceURL:    parameters.externalDataSourceURL,
+		ExternalAuthProviderURL:  parameters.externalAuthParameter.ExternalAuthProviderURL,
+		ExternalAuthClientID:     parameters.externalAuthParameter.ExternalAuthClientID,
+		ExternalAuthClientSecret: parameters.externalAuthParameter.ExternalAuthClientSecret,
 	}
 
 	issuerService, err := issuer.New(cfg)
@@ -541,7 +693,7 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 		http.ServeFile(w, r, "static/applyPrCard.html")
 	})
 
-	router.PathPrefix("/issuePrCard").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router.PathPrefix("/issueprcard").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/issuePrCard.html")
 	})
 
@@ -580,36 +732,11 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 	return parameters.srv.ListenAndServe(parameters.hostURL, parameters.tlsCertFile, parameters.tlsKeyFile, handler)
 }
 
-func getOAuth2Config(cmd *cobra.Command) (*oauth2.Config, error) {
-	authURL, err := cmdutils.GetUserSetVarFromString(cmd, endpointAuthURLFlagName, endpointAuthURLEnvKey, false)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenURL, err := cmdutils.GetUserSetVarFromString(cmd, endpointTokenURLFlagName, endpointTokenURLEnvKey, false)
-	if err != nil {
-		return nil, err
-	}
-
+func getOauth2Config(authURL, tokenURL, redirectURL, clientID, secret string) *oauth2.Config {
 	hydra := oauth2.Endpoint{
 		AuthURL:   strings.TrimSpace(authURL),
 		TokenURL:  strings.TrimSpace(tokenURL),
 		AuthStyle: oauth2.AuthStyleInHeader, // basic
-	}
-
-	redirectURL, err := cmdutils.GetUserSetVarFromString(cmd, clientRedirectURLFlagName, clientRedirectURLEnvKey, false)
-	if err != nil {
-		return nil, err
-	}
-
-	clientID, err := cmdutils.GetUserSetVarFromString(cmd, clientIDFlagName, clientIDEnvKey, false)
-	if err != nil {
-		return nil, err
-	}
-
-	secret, err := cmdutils.GetUserSetVarFromString(cmd, clientSecretFlagName, clientSecretEnvKey, false)
-	if err != nil {
-		return nil, err
 	}
 
 	config := &oauth2.Config{
@@ -619,5 +746,5 @@ func getOAuth2Config(cmd *cobra.Command) (*oauth2.Config, error) {
 		Endpoint:     hydra,
 	}
 
-	return config, nil
+	return config
 }

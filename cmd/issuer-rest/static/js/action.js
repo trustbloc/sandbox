@@ -27,6 +27,13 @@ $(document).ready(function () {
         }
     });
 
+    $('#permanentResidentCard').on('click', function() {
+        if (!$(this).data('clicked')) {
+            $('#scope').val("subject_data");
+            $(this).data('clicked', true);
+        }
+    });
+
     $('#vaccinationCertificate').on('click', function() {
         if (!$(this).data('clicked')) {
             $('#scope').val("VaccinationCertificate");
@@ -62,7 +69,7 @@ $(document).ready(function () {
         }
     });
 
-    $('#studentCard, #prCard, #travelCard, #cpr, #universityDegree, #cmtr').on('click', function() {
+    $('#studentCard, #prCard, #permanentResidentCard, #travelCard, #cpr, #universityDegree, #cmtr').on('click', function() {
         if (document.cookie.split('vcsProfile').length > 1) {
             var cookieValue = document.cookie.split("vcsProfile=")[1].split(';')[0];
             $('#vcsProfile').val(cookieValue);
@@ -158,7 +165,11 @@ $(document).ready(function () {
 
             $('#demoSetupForm').attr('action', '/login?');
 
-        }  else if ($("#vaccinationCertificate").data('clicked')) {
+        }  else if ($("#permanentResidentCard").data('clicked')) {
+
+            $('#demoSetupForm').attr('action', '/login?');
+
+        } else if ($("#vaccinationCertificate").data('clicked')) {
 
             $('#demoSetupForm').attr('action', '/login?');
 

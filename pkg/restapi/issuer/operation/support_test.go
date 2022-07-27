@@ -53,6 +53,8 @@ func handleRequestWithCookies(handler Handler, headers map[string]string, path s
 		req.AddCookie(cookie)
 	}
 
+	req.AddCookie(&http.Cookie{Name: scopeCookie, Value: "prc"})
+
 	router := mux.NewRouter()
 
 	router.HandleFunc(handler.Path(), handler.Handle()).Methods(handler.Method())
