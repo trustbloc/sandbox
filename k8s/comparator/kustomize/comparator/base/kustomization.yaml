@@ -34,4 +34,4 @@ kind: Kustomization
 images:
 - name: comparator-server
   newName: ghcr.io/trustbloc-cicd/comparator-server
-  newTag: 0.1.9-snapshot-cb06664
+  newTag: 0.1.9-snapshot-37daf72
