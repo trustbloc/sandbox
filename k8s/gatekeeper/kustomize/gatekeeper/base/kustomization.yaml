@@ -35,4 +35,4 @@ kind: Kustomization
 images:
 - name: gatekeeper
   newName: ghcr.io/trustbloc-cicd/gatekeeper
-  newTag: 0.1.9-snapshot-37daf72
+  newTag: 0.1.9-snapshot-d5992d5
