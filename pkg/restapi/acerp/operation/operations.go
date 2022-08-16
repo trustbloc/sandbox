@@ -111,10 +111,14 @@ type vaultClient interface {
 }
 
 type comparatorClient interface {
-	GetConfig(params *compclientops.GetConfigParams) (*compclientops.GetConfigOK, error)
-	PostAuthorizations(params *compclientops.PostAuthorizationsParams) (*compclientops.PostAuthorizationsOK, error)
-	PostCompare(params *compclientops.PostCompareParams) (*compclientops.PostCompareOK, error)
-	PostExtract(params *compclientops.PostExtractParams) (*compclientops.PostExtractOK, error)
+	GetConfig(params *compclientops.GetConfigParams,
+		opts ...compclientops.ClientOption) (*compclientops.GetConfigOK, error)
+	PostAuthorizations(params *compclientops.PostAuthorizationsParams,
+		opts ...compclientops.ClientOption) (*compclientops.PostAuthorizationsOK, error)
+	PostCompare(params *compclientops.PostCompareParams,
+		opts ...compclientops.ClientOption) (*compclientops.PostCompareOK, error)
+	PostExtract(params *compclientops.PostExtractParams,
+		opts ...compclientops.ClientOption) (*compclientops.PostExtractOK, error)
 }
 
 // Handler http handler for each controller API endpoint.

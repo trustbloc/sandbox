@@ -2718,7 +2718,8 @@ type mockComparatorClient struct {
 	PostExtractResp        *compclientops.PostExtractOK
 }
 
-func (m *mockComparatorClient) GetConfig(params *compclientops.GetConfigParams) (*compclientops.GetConfigOK, error) {
+func (m *mockComparatorClient) GetConfig(params *compclientops.GetConfigParams,
+	opts ...compclientops.ClientOption) (*compclientops.GetConfigOK, error) {
 	if m.GetConfigErr != nil {
 		return nil, m.GetConfigErr
 	}
@@ -2734,8 +2735,8 @@ func (m *mockComparatorClient) GetConfig(params *compclientops.GetConfigParams) 
 	}, nil
 }
 
-func (m *mockComparatorClient) PostAuthorizations(
-	params *compclientops.PostAuthorizationsParams) (*compclientops.PostAuthorizationsOK, error) {
+func (m *mockComparatorClient) PostAuthorizations(params *compclientops.PostAuthorizationsParams,
+	opts ...compclientops.ClientOption) (*compclientops.PostAuthorizationsOK, error) {
 	if m.PostAuthorizationsErr != nil {
 		return nil, m.PostAuthorizationsErr
 	}
@@ -2748,7 +2749,7 @@ func (m *mockComparatorClient) PostAuthorizations(
 }
 
 func (m *mockComparatorClient) PostCompare(
-	params *compclientops.PostCompareParams) (*compclientops.PostCompareOK, error) {
+	params *compclientops.PostCompareParams, opts ...compclientops.ClientOption) (*compclientops.PostCompareOK, error) {
 	if m.PostCompareErr != nil {
 		return nil, m.PostCompareErr
 	}
@@ -2761,7 +2762,7 @@ func (m *mockComparatorClient) PostCompare(
 }
 
 func (m *mockComparatorClient) PostExtract(
-	params *compclientops.PostExtractParams) (*compclientops.PostExtractOK, error) {
+	params *compclientops.PostExtractParams, opts ...compclientops.ClientOption) (*compclientops.PostExtractOK, error) {
 	if m.PostExtractErr != nil {
 		return nil, m.PostExtractErr
 	}

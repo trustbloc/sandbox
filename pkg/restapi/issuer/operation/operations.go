@@ -32,9 +32,9 @@ import (
 	"github.com/hyperledger/aries-framework-go/spi/storage"
 	"github.com/piprate/json-gold/ld"
 	"github.com/trustbloc/edge-core/pkg/log"
-	vcprofile "github.com/trustbloc/vcs/pkg/doc/vc/profile"
 	"github.com/trustbloc/vcs/pkg/doc/vc/status/csl"
 	edgesvcops "github.com/trustbloc/vcs/pkg/restapi/issuer/operation"
+	vcprofile "github.com/trustbloc/vcs/pkg/storage"
 	"golang.org/x/oauth2"
 
 	"github.com/trustbloc/sandbox/pkg/internal/common/support"
@@ -1972,6 +1972,10 @@ func (c *Operation) issueCredential(profileID, holder string, cred []byte) ([]by
 
 	if subject, ok := credential.Subject.([]verifiable.Subject); ok && len(subject) > 0 {
 		subject[0].ID = holder
+	} else if subjectString, ok := credential.Subject.(string); ok {
+		subject := make([]verifiable.Subject, 1)
+
+		subject[0].ID = subjectString
 	} else {
 		return nil, errors.New("invalid credential subject")
 	}
@@ -2281,4 +2285,8 @@ func (s *edd25519Signer) Sign(doc []byte) ([]byte, error) {
 	}
 
 	return ed25519.Sign(s.privateKey, doc), nil
+}
+
+func (s *edd25519Signer) Alg() string {
+	return ""
 }
