@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/coreos/go-oidc"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/signature/jsonld"
@@ -31,6 +32,7 @@ import (
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/hyperledger/aries-framework-go/spi/storage"
 	"github.com/piprate/json-gold/ld"
+	"github.com/square/go-jose/jwt"
 	"github.com/trustbloc/edge-core/pkg/log"
 	"github.com/trustbloc/vcs/pkg/doc/vc/status/csl"
 	edgesvcops "github.com/trustbloc/vcs/pkg/restapi/issuer/operation"
@@ -57,6 +59,7 @@ const (
 	didcommUserEndpoint    = "/didcomm/uid"
 	oauth2GetRequestPath   = "/oauth2/request"
 	oauth2CallbackPath     = "/oauth2/callback"
+	oauth2TokenRequestPath = "oauth2/token" //nolint:gosec
 	verifyDIDAuthPath      = "/verify/didauth"
 	createCredentialPath   = "/credential"
 	authPath               = "/auth"
@@ -81,6 +84,7 @@ const (
 	vcsUpdateStatusURLFormat = "%s/%s" + "/credentials/status"
 
 	vcsProfileCookie     = "vcsProfile"
+	scopeCookie          = "scopeCookie"
 	adapterProfileCookie = "adapterProfile"
 	assuranceScopeCookie = "assuranceScope"
 	callbackURLCookie    = "callbackURL"
@@ -89,13 +93,15 @@ const (
 
 	// contexts
 	trustBlocExampleContext = "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld"
+	citizenshipContext      = "https://w3id.org/citizenship/v1"
 
 	vcsIssuerRequestTokenName = "vcs_issuer"
 
 	// store
 	txnStoreName = "issuer_txn"
 
-	scopeQueryParam = "scope"
+	scopeQueryParam         = "scope"
+	externalScopeQueryParam = "subject_data"
 )
 
 // Mock signer for signing VCs.
@@ -120,57 +126,75 @@ type oidcClient interface {
 
 // Operation defines handlers for authorization service
 type Operation struct {
-	handlers         []Handler
-	tokenIssuer      tokenIssuer
-	tokenResolver    tokenResolver
-	documentLoader   ld.DocumentLoader
-	cmsURL           string
-	vcsURL           string
-	walletURL        string
-	receiveVCHTML    string
-	didAuthHTML      string
-	vcHTML           string
-	didCommHTML      string
-	didCommVpHTML    string
-	httpClient       *http.Client
-	requestTokens    map[string]string
-	issuerAdapterURL string
-	store            storage.Store
-	oidcClient       oidcClient
-	homePage         string
-	didcommScopes    map[string]struct{}
-	assuranceScopes  map[string]string
+	handlers                 []Handler
+	tokenIssuer              tokenIssuer
+	extTokenIssuer           tokenIssuer
+	tokenResolver            tokenResolver
+	documentLoader           ld.DocumentLoader
+	cmsURL                   string
+	vcsURL                   string
+	walletURL                string
+	receiveVCHTML            string
+	didAuthHTML              string
+	vcHTML                   string
+	didCommHTML              string
+	didCommVpHTML            string
+	httpClient               *http.Client
+	requestTokens            map[string]string
+	issuerAdapterURL         string
+	store                    storage.Store
+	oidcClient               oidcClient
+	externalDataSourceURL    string
+	externalAuthClientID     string
+	externalAuthClientSecret string
+	externalAuthProviderURL  string
+	homePage                 string
+	didcommScopes            map[string]struct{}
+	assuranceScopes          map[string]string
+	tlsConfig                *tls.Config
 }
 
 // Config defines configuration for issuer operations
 type Config struct {
-	TokenIssuer      tokenIssuer
-	TokenResolver    tokenResolver
-	DocumentLoader   ld.DocumentLoader
-	CMSURL           string
-	VCSURL           string
-	WalletURL        string
-	ReceiveVCHTML    string
-	DIDAuthHTML      string
-	VCHTML           string
-	DIDCommHTML      string
-	DIDCOMMVPHTML    string
-	TLSConfig        *tls.Config
-	RequestTokens    map[string]string
-	IssuerAdapterURL string
-	StoreProvider    storage.Provider
-	OIDCProviderURL  string
-	OIDCClientID     string
-	OIDCClientSecret string
-	OIDCCallbackURL  string
-	didcommScopes    map[string]struct{}
-	assuranceScopes  map[string]string
+	TokenIssuer              tokenIssuer
+	ExtTokenIssuer           tokenIssuer
+	TokenResolver            tokenResolver
+	DocumentLoader           ld.DocumentLoader
+	CMSURL                   string
+	VCSURL                   string
+	WalletURL                string
+	ReceiveVCHTML            string
+	DIDAuthHTML              string
+	VCHTML                   string
+	DIDCommHTML              string
+	DIDCOMMVPHTML            string
+	TLSConfig                *tls.Config
+	RequestTokens            map[string]string
+	IssuerAdapterURL         string
+	StoreProvider            storage.Provider
+	OIDCProviderURL          string
+	OIDCClientID             string
+	OIDCClientSecret         string
+	OIDCCallbackURL          string
+	ExternalDataSourceURL    string
+	ExternalAuthProviderURL  string
+	ExternalAuthClientID     string
+	ExternalAuthClientSecret string
+	didcommScopes            map[string]struct{}
+	assuranceScopes          map[string]string
 }
 
 // vc struct used to return vc data to html
 type vc struct {
 	Msg  string `json:"msg"`
 	Data string `json:"data"`
+}
+
+type clientCredentialsTokenResponseStruct struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
+	Scope       string `json:"scope"`
 }
 
 type tokenIssuer interface {
@@ -195,24 +219,30 @@ func New(config *Config) (*Operation, error) {
 	}
 
 	svc := &Operation{
-		tokenIssuer:      config.TokenIssuer,
-		tokenResolver:    config.TokenResolver,
-		documentLoader:   config.DocumentLoader,
-		cmsURL:           config.CMSURL,
-		vcsURL:           config.VCSURL,
-		walletURL:        config.WalletURL,
-		didAuthHTML:      config.DIDAuthHTML,
-		receiveVCHTML:    config.ReceiveVCHTML,
-		vcHTML:           config.VCHTML,
-		didCommHTML:      config.DIDCommHTML,
-		didCommVpHTML:    config.DIDCOMMVPHTML,
-		httpClient:       &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
-		requestTokens:    config.RequestTokens,
-		issuerAdapterURL: config.IssuerAdapterURL,
-		store:            store,
-		homePage:         config.OIDCCallbackURL,
-		didcommScopes:    map[string]struct{}{},
-		assuranceScopes:  map[string]string{},
+		tokenIssuer:              config.TokenIssuer,
+		tokenResolver:            config.TokenResolver,
+		extTokenIssuer:           config.ExtTokenIssuer,
+		documentLoader:           config.DocumentLoader,
+		cmsURL:                   config.CMSURL,
+		vcsURL:                   config.VCSURL,
+		walletURL:                config.WalletURL,
+		didAuthHTML:              config.DIDAuthHTML,
+		receiveVCHTML:            config.ReceiveVCHTML,
+		vcHTML:                   config.VCHTML,
+		didCommHTML:              config.DIDCommHTML,
+		didCommVpHTML:            config.DIDCOMMVPHTML,
+		httpClient:               &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
+		requestTokens:            config.RequestTokens,
+		issuerAdapterURL:         config.IssuerAdapterURL,
+		store:                    store,
+		homePage:                 config.OIDCCallbackURL,
+		externalDataSourceURL:    config.ExternalDataSourceURL,
+		externalAuthProviderURL:  config.ExternalAuthProviderURL,
+		externalAuthClientID:     config.ExternalAuthClientID,
+		externalAuthClientSecret: config.ExternalAuthClientSecret,
+		tlsConfig:                config.TLSConfig,
+		didcommScopes:            map[string]struct{}{},
+		assuranceScopes:          map[string]string{},
 	}
 
 	if config.didcommScopes != nil {
@@ -284,7 +314,19 @@ func (c *Operation) registerHandler() {
 
 // login using oauth2, will redirect to Auth Code URL
 func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
-	u := c.tokenIssuer.AuthCodeURL(w)
+	var u string
+
+	scope := r.URL.Query()["scope"]
+
+	if len(scope) > 0 {
+		if scope[0] == externalScopeQueryParam {
+			u = c.extTokenIssuer.AuthCodeURL(w)
+			u += "&scope=" + oidc.ScopeOpenID + " " + scope[0]
+		} else {
+			u = c.tokenIssuer.AuthCodeURL(w)
+			u += "&scope=" + scope[0]
+		}
+	}
 
 	expire := time.Now().AddDate(0, 0, 1)
 
@@ -295,10 +337,8 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	scope := r.URL.Query()["scope"]
-	if len(scope) > 0 {
-		u += "&scope=" + scope[0]
-	}
+	scopeCookie := http.Cookie{Name: scopeCookie, Value: r.URL.Query()["scope"][0], Expires: expire}
+	http.SetCookie(w, &scopeCookie)
 
 	cookie := http.Cookie{Name: vcsProfileCookie, Value: r.URL.Query()["vcsProfile"][0], Expires: expire}
 	http.SetCookie(w, &cookie)
@@ -647,14 +687,41 @@ func (c *Operation) settings(w http.ResponseWriter, r *http.Request) {
 }
 
 // callback for oauth2 login
-func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint: funlen,gocyclo
+func (c *Operation) callback(w http.ResponseWriter, r *http.Request) {
 	if len(r.URL.Query()["error"]) != 0 {
 		if r.URL.Query()["error"][0] == "access_denied" {
 			http.Redirect(w, r, c.homePage, http.StatusTemporaryRedirect)
 		}
 	}
 
-	tk, err := c.tokenIssuer.Exchange(r)
+	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
+	if err != nil {
+		logger.Errorf("failed to get cookie: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get cookie: %s", err.Error()))
+
+		return
+	}
+
+	scopeCookie, err := r.Cookie(scopeCookie)
+	if err != nil {
+		logger.Errorf("failed to get scope cookie: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get scope cookie: %s", err.Error()))
+
+		return
+	}
+
+	if strings.Contains(scopeCookie.String(), externalScopeQueryParam) {
+		c.getDataFromExternalSource(w, r, scopeCookie.Value, vcsProfileCookie.Value)
+	} else {
+		c.getDataFromCms(w, r, vcsProfileCookie.Value)
+	}
+}
+
+func (c *Operation) getDataFromExternalSource(w http.ResponseWriter, r *http.Request, scope, //nolint: funlen
+	vcsCookie string) {
+	tk, err := c.extTokenIssuer.Exchange(r)
 	if err != nil {
 		logger.Errorf("failed to exchange code for token: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest,
@@ -662,20 +729,95 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 
 		return
 	}
+	// Fetching idToken from the token issuer
+	idToken, ok := tk.Extra("id_token").(string)
+	if !ok {
+		logger.Errorf("failed to get id token: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to get id token: %s", err.Error()))
 
+		return
+	}
+
+	subRefClaim, err := getSubjectReferenceClaim(idToken)
+	if err != nil {
+		logger.Errorf("failed to get subject reference claim: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get subject reference claim: %s", err.Error()))
+
+		return
+	}
+
+	// get the access_token
+	accessToken, err := c.getAccessToken(externalScopeQueryParam)
+	if err != nil {
+		logger.Errorf("failed to get access token: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get access token: %s", err.Error()))
+
+		return
+	}
+
+	// get subject data from internal data source
+	subjectData, err := c.getSubjectData(accessToken, subRefClaim)
+	if err != nil {
+		logger.Errorf("failed to get subject data from internal data source: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get subject data from internal data source: %s", err.Error()))
+
+		return
+	}
+
+	// get the subject data and prepare credential
+	cred, err := c.prepareCredential(subjectData, scope, vcsCookie)
+	if err != nil {
+		logger.Errorf("failed to create credential now: %s", err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to create credential: %s", err.Error()))
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	t, err := template.ParseFiles(c.didAuthHTML)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to load html: %s", err.Error()))
+
+		return
+	}
+
+	if err := t.Execute(w, map[string]interface{}{
+		"Path": generate + "?" + "profile=" + vcsCookie,
+		"Cred": string(cred),
+	}); err != nil {
+		logger.Errorf(fmt.Sprintf("failed execute qr html template: %s", err.Error()))
+	}
+}
+
+func (c *Operation) getDataFromCms(w http.ResponseWriter, r *http.Request, vcsCookie string) { //nolint: funlen,gocyclo
+	tk, e := c.tokenIssuer.Exchange(r)
+	if e != nil {
+		logger.Errorf("failed to exchange code for token: %s", e.Error())
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to exchange code for token: %s", e.Error()))
+
+		return
+	}
 	// user info from token will be used for to retrieve data from cms
 	info, err := c.tokenResolver.Resolve(tk.AccessToken)
 	if err != nil {
-		logger.Errorf("failed to get token info: %s", err.Error())
+		logger.Errorf("failed to get token info: %s and access token %s", err.Error(), tk.AccessToken)
 		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to get token info: %s", err.Error()))
+			fmt.Sprintf("failed to get token info: %s and access token %s", err.Error(), tk.AccessToken))
 
 		return
 	}
 
 	userID, subject, err := c.getCMSData(tk, "email="+info.Subject, info.Scope)
 	if err != nil {
-		logger.Errorf("failed to get cms data: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest,
 			fmt.Sprintf("failed to get cms data: %s", err.Error()))
 
@@ -718,16 +860,7 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 		return
 	}
 
-	vcsProfileCookie, err := r.Cookie(vcsProfileCookie)
-	if err != nil {
-		logger.Errorf("failed to get cookie: %s", err.Error())
-		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to get cookie: %s", err.Error()))
-
-		return
-	}
-
-	cred, err := c.prepareCredential(subject, info.Scope, vcsProfileCookie.Value)
+	cred, err := c.prepareCredential(subject, info.Scope, vcsCookie)
 	if err != nil {
 		logger.Errorf("failed to create credential: %s", err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -748,11 +881,84 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) { //nolint:
 	}
 
 	if err := t.Execute(w, map[string]interface{}{
-		"Path": generate + "?" + "profile=" + vcsProfileCookie.Value,
+		"Path": generate + "?" + "profile=" + vcsCookie,
 		"Cred": string(cred),
 	}); err != nil {
 		logger.Errorf(fmt.Sprintf("failed execute qr html template: %s", err.Error()))
 	}
+}
+
+func (c *Operation) getAccessToken(scope string) (string, error) {
+	// call auth api to get access token
+	req := url.Values{}
+	req.Set("client_id", c.externalAuthClientID)
+	req.Set("grant_type", "client_credentials")
+	req.Set("scope", scope)
+	reqBodyBytes := bytes.NewBuffer([]byte(req.Encode()))
+
+	httpRequest, err := http.NewRequest("POST", c.externalAuthProviderURL+oauth2TokenRequestPath, reqBodyBytes)
+	if err != nil {
+		return "", fmt.Errorf("failed to post the request %w", err)
+	}
+
+	httpRequest.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	httpRequest.SetBasicAuth(url.QueryEscape(c.externalAuthClientID), url.QueryEscape(c.externalAuthClientSecret))
+
+	resp, err := sendHTTPRequest(httpRequest, c.httpClient, http.StatusOK, "")
+	if err != nil {
+		return "", fmt.Errorf("failed to post the request to get the access token %w", err)
+	}
+
+	// unmarshal the response
+	var tokenResponse clientCredentialsTokenResponseStruct
+
+	err = json.Unmarshal(resp, &tokenResponse)
+	if err != nil {
+		return "", fmt.Errorf("error unmarshalling the token response %w", err)
+	}
+
+	return tokenResponse.AccessToken, nil
+}
+
+func (c *Operation) getSubjectData(accessToken, subRefClaim string) (subjectData map[string]interface{}, err error) {
+	// pass access token to subjects/data?
+	req, err := http.NewRequest("GET", c.externalDataSourceURL+"1.0/subjects/data?", nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get subject data %w", err)
+	}
+
+	reqQuery := req.URL.Query()
+	reqQuery.Add("aiid", "FiIJethCqaTkWh70Gq8D")
+	reqQuery.Add("subjectReference", subRefClaim)
+	req.URL.RawQuery = reqQuery.Encode()
+
+	resp, err := sendHTTPRequest(req, c.httpClient, http.StatusOK, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request to get the subject data %w", err)
+	}
+
+	err = json.Unmarshal(resp, &subjectData)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling the subject data  %w", err)
+	}
+
+	return subjectData, nil
+}
+
+func getSubjectReferenceClaim(idToken string) (string, error) {
+	var claims jwt.Claims
+
+	jwtToken, err := jwt.ParseSigned(idToken)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse id token %w", err)
+	}
+
+	err = jwtToken.UnsafeClaimsWithoutVerification(&claims)
+	if err != nil {
+		return "", fmt.Errorf("failed to deserializes the claims of jwt %w", err)
+	}
+
+	return claims.Subject, nil
 }
 
 func (c *Operation) getCreditScore(w http.ResponseWriter, r *http.Request) {
@@ -1876,7 +2082,6 @@ func unmarshalSubject(data []byte) (map[string]interface{}, error) {
 func (c *Operation) prepareCredential(subject map[string]interface{}, scope, vcsProfile string) ([]byte, error) {
 	// will be replaced by DID auth response subject ID
 	subject["id"] = ""
-
 	vcContext := []string{credentialContext, trustBlocExampleContext}
 	customFields := make(map[string]interface{})
 	// get custom vc data if available
@@ -1900,9 +2105,17 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, scope, vcs
 	}
 
 	cred := &verifiable.Credential{}
-	cred.Context = vcContext
+	// Todo ideally scope should be what need to passed as a type
+	// but from external data source the scope is subject_data. Need to revisit this logic
+	if strings.Contains(scope, externalScopeQueryParam) {
+		cred.Context = []string{credentialContext, citizenshipContext}
+		cred.Types = []string{"VerifiableCredential", "PermanentResidentCard"}
+	} else {
+		cred.Types = []string{"VerifiableCredential", scope}
+		cred.Context = vcContext
+	}
+
 	cred.Subject = subject
-	cred.Types = []string{"VerifiableCredential", scope}
 	cred.Issued = util.NewTime(time.Now().UTC())
 	cred.Issuer.ID = profileResponse.DID
 	cred.Issuer.CustomFields = make(verifiable.CustomFields)

@@ -62,14 +62,19 @@ SPDX-License-Identifier: Apache-2.0
             <div class="flex-none mt-auto bg-white rounded-b rounded-t-none overflow-hidden shadow p-6">
                 <img class="object-contain h-64 w-full" src="img/onboarding-icon-1.svg">
                 <div class="flex justify-center mt-8 pt-2">
-                   <!-- Todo issue-1472 integrate uscis login -->
-                    <form id=""  action="">
-                        <input type="submit" id="uscisprcard" class="lg:mx-0 hover:underline gradient text-white font-bold my-6 py-4 px-8 shadow-lg" value="Get your Permanent Resident Card">
-                    </form>
+                 <input type='button' id='permanentResidentCard' class="lg:mx-0 hover:underline gradient text-white font-bold my-6 py-4 px-8 shadow-lg" value="Get your Permanent Resident Card">
                 </div>
             </div>
         </div>
     </div>
+</section>
+
+<section id="testModal">
+    <form id="demoSetupForm"  action="">
+        <input type="text" id="scope" name="scope" value="" checked hidden>
+        <input type="radio" id="vcsProfile" name="vcsProfile" value="trustbloc-ed25519signature2018-ed25519" checked hidden>
+        <input type="submit" id="formSubmit" value="Issue" hidden>
+    </form>
 </section>
 
 <footer>
@@ -82,6 +87,7 @@ SPDX-License-Identifier: Apache-2.0
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 <script type="text/javascript" src="js/jquery.1.11.1.js"></script>
+<script type="text/javascript" src="js/action.js"></script>
 </body>
 
 </html>

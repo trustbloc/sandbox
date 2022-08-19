@@ -1860,6 +1860,8 @@ func TestOperation_Callback(t *testing.T) {
 		require.NoError(t, err)
 
 		req.AddCookie(&http.Cookie{Name: callbackURLCookie, Value: "/abc"})
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "test"})
+		req.AddCookie(&http.Cookie{Name: scopeCookie, Value: "prc"})
 
 		rr := httptest.NewRecorder()
 
@@ -1887,7 +1889,8 @@ func TestOperation_Callback(t *testing.T) {
 		require.NoError(t, err)
 
 		req.AddCookie(&http.Cookie{Name: callbackURLCookie, Value: "/abc"})
-
+		req.AddCookie(&http.Cookie{Name: vcsProfileCookie, Value: "test"})
+		req.AddCookie(&http.Cookie{Name: scopeCookie, Value: "test"})
 		rr := httptest.NewRecorder()
 
 		svc.callback(rr, req)
