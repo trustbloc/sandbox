@@ -38,6 +38,10 @@ Follow this [link](docs/projects/README.md) to learn more about all the TrustBlo
 - [TrustBloc Adapter](docs/components/adapter_components.md)
 - [TrustBloc Anonymous Comparator and Extractor(ACE)](docs/components/ace_components.md)
 
+## OpenAPI specifications
+
+- [Gatekeeper](k8s/gatekeeper/swagger-ui-index.html)
+
 ## Build and Deployment
 For pre-requisites, please refer [TrustBloc k8s deployments](https://github.com/trustbloc/k8s/blob/main/README.md). 
 Also, [refer](./docs/dev_steps.md) for detailed steps to update components in sandbox.
