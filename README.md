@@ -8,7 +8,7 @@
 
 # sandbox
 
-[Gatekeeper OpenAPI spec](./index.html)
+[Gatekeeper OpenAPI spec](./old.index.html)
 
 Sandbox contains the sample implementations of Issuer and Verifier/RP to demonstrate the following main features provided 
 by the [TrustBloc](https://github.com/trustbloc) projects.
