@@ -8,6 +8,8 @@
 
 # sandbox
 
+[Gatekeeper OpenAPI spec](./index.html)
+
 Sandbox contains the sample implementations of Issuer and Verifier/RP to demonstrate the following main features provided 
 by the [TrustBloc](https://github.com/trustbloc) projects.
 - [W3C Verifiable Credential(VC)](https://w3c.github.io/vc-data-model/)
