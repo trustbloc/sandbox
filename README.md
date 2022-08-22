@@ -8,8 +8,6 @@
 
 # sandbox
 
-[Gatekeeper OpenAPI spec](k8s/gatekeeper/gatekeeper-swagger-ui-index.html)
-
 Sandbox contains the sample implementations of Issuer and Verifier/RP to demonstrate the following main features provided 
 by the [TrustBloc](https://github.com/trustbloc) projects.
 - [W3C Verifiable Credential(VC)](https://w3c.github.io/vc-data-model/)
@@ -39,6 +37,10 @@ Follow this [link](docs/projects/README.md) to learn more about all the TrustBlo
 - [TrustBloc VCS](docs/components/vcs_components.md)
 - [TrustBloc Adapter](docs/components/adapter_components.md)
 - [TrustBloc Anonymous Comparator and Extractor(ACE)](docs/components/ace_components.md)
+
+## OpenAPI specifications
+
+- [Gatekeeper](k8s/gatekeeper/gatekeeper-swagger-ui-index.html)
 
 ## Build and Deployment
 For pre-requisites, please refer [TrustBloc k8s deployments](https://github.com/trustbloc/k8s/blob/main/README.md). 
