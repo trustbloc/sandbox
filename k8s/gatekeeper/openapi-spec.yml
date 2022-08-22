@@ -1,0 +1,921 @@
+consumes:
+- application/json
+definitions:
+  AuthorizationsScope:
+    properties:
+      actions:
+        items:
+          type: string
+        type: array
+        x-go-name: Actions
+      caveats:
+        items:
+          $ref: '#/definitions/Caveat'
+        type: array
+        x-go-name: Caveats
+      target:
+        type: string
+        x-go-name: Target
+      targetAttr:
+        type: string
+        x-go-name: TargetAttr
+    title: AuthorizationsScope represents authorization request.
+    type: object
+    x-go-package: github.com/trustbloc/ace/pkg/restapi/vault
+  Caveat:
+    properties:
+      duration:
+        format: uint64
+        type: integer
+        x-go-name: Duration
+      type:
+        type: string
+        x-go-name: Type
+    title: Caveat for the AuthorizationsScope request.
+    type: object
+    x-go-package: github.com/trustbloc/ace/pkg/restapi/vault
+  CreateAuthorizationsBody:
+    properties:
+      requestingParty:
+        type: string
+        x-go-name: RequestingParty
+      scope:
+        $ref: '#/definitions/AuthorizationsScope'
+    title: CreateAuthorizationsBody describes body for the createAuthorizations request.
+    type: object
+    x-go-package: github.com/trustbloc/ace/pkg/restapi/vault/operation
+  CreatedAuthorization:
+    properties:
+      authTokens:
+        $ref: '#/definitions/Tokens'
+      id:
+        type: string
+        x-go-name: ID
+      requestingParty:
+        type: string
+        x-go-name: RequestingParty
+      scope:
+        $ref: '#/definitions/AuthorizationsScope'
+    title: CreatedAuthorization represents success response of CreateAuthorization
+      function.
+    type: object
+    x-go-package: github.com/trustbloc/ace/pkg/restapi/vault
+  CreatedVault:
+    properties:
+      edv:
+        $ref: '#/definitions/Location'
+      id:
+        type: string
+        x-go-name: ID
+      kms:
+        $ref: '#/definitions/Location'
+    title: CreatedVault represents success response of CreateVault function.
+    type: object
+    x-go-package: github.com/trustbloc/ace/pkg/restapi/vault
+  DocumentMetadata:
+    properties:
+      docID:
+        type: string
+        x-go-name: ID
+      edvDocURI:
+        type: string
+        x-go-name: URI
+      encKeyURI:
+        type: string
+        x-go-name: EncKeyURI
+    title: DocumentMetadata represents document`s metadata.
+    type: object
+    x-go-package: github.com/trustbloc/ace/pkg/restapi/vault
+  ErrorResponse:
+    properties:
+      errMessage:
+        description: error message
+        type: string
+        x-go-name: Message
+    title: ErrorResponse to send error message in the response.
+    type: object
+    x-go-package: github.com/trustbloc/ace/pkg/restapi/model
+  Location:
+    properties:
+      authToken:
+        type: string
+        x-go-name: AuthToken
+      uri:
+        type: string
+        x-go-name: URI
+    title: Location consists of URI and zcap capability.
+    type: object
+    x-go-package: github.com/trustbloc/ace/pkg/restapi/vault
+  SaveDocRequestBody:
+    properties:
+      content:
+        type: object
+        x-go-name: Content
+      id:
+        type: string
+        x-go-name: ID
+      tags:
+        items:
+          type: string
+        type: array
+        x-go-name: Tags
+    title: SaveDocRequestBody describes body for the SaveDoc request.
+    type: object
+    x-go-package: github.com/trustbloc/ace/pkg/restapi/vault/operation
+  Tokens:
+    properties:
+      edv:
+        type: string
+        x-go-name: EDV
+      kms:
+        type: string
+        x-go-name: KMS
+    title: Tokens zcap tokens.
+    type: object
+    x-go-package: github.com/trustbloc/ace/pkg/restapi/vault
+  WebFingerLink:
+    properties:
+      href:
+        type: string
+        x-go-name: Href
+      rel:
+        type: string
+        x-go-name: Rel
+      type:
+        type: string
+        x-go-name: Type
+    title: WebFingerLink web finger link.
+    type: object
+    x-go-package: github.com/trustbloc/vct/pkg/controller/command
+  WebFingerResponse:
+    properties:
+      links:
+        items:
+          $ref: '#/definitions/WebFingerLink'
+        type: array
+        x-go-name: Links
+      properties:
+        additionalProperties:
+          type: object
+        type: object
+        x-go-name: Properties
+      subject:
+        type: string
+        x-go-name: Subject
+    title: WebFingerResponse web finger response.
+    type: object
+    x-go-package: github.com/trustbloc/vct/pkg/controller/command
+info:
+  license:
+    name: 'SPDX-License-Identifier: Apache-2.0'
+  title: REST API.
+  version: 0.1.0
+paths:
+  /{alias}/.well-known/webfinger:
+    get:
+      operationId: webfingerRequest
+      parameters:
+      - description: Alias
+        in: path
+        name: alias
+        required: true
+        type: string
+        x-go-name: Alias
+      responses:
+        "200":
+          $ref: '#/responses/webfingerResponse'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Returns discovery info.
+      tags:
+      - vct
+  /{alias}/v1/add-vc:
+    post:
+      operationId: addVCRequest
+      parameters:
+      - description: Alias
+        in: path
+        name: alias
+        required: true
+        type: string
+        x-go-name: Alias
+      - description: Verifiable Credentials https://www.w3.org/TR/vc-data-model
+        in: body
+        name: Body
+        schema:
+          properties:
+            '@context':
+              items:
+                type: string
+              type: array
+              x-go-name: Context
+            credentialSubject:
+              properties:
+                id:
+                  type: string
+                  x-go-name: ID
+              type: object
+              x-go-name: CredentialSubject
+            id:
+              type: string
+              x-go-name: ID
+            issuanceDate:
+              format: date-time
+              type: string
+              x-go-name: IssuanceDate
+            issuer:
+              type: string
+              x-go-name: Issuer
+            type:
+              items:
+                type: string
+              type: array
+              x-go-name: Type
+          type: object
+      responses:
+        "200":
+          $ref: '#/responses/addVCResponse'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Adds verifiable credential to log.
+      tags:
+      - vct
+  /{alias}/v1/get-entries:
+    get:
+      operationId: getEntriesRequest
+      parameters:
+      - description: Alias
+        in: path
+        name: alias
+        required: true
+        type: string
+        x-go-name: Alias
+      - description: Start
+        format: int64
+        in: query
+        name: start
+        type: integer
+        x-go-name: Start
+      - description: End
+        format: int64
+        in: query
+        name: end
+        type: integer
+        x-go-name: End
+      responses:
+        "200":
+          $ref: '#/responses/getEntriesResponse'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Retrieves entries from log.
+      tags:
+      - vct
+  /{alias}/v1/get-entry-and-proof:
+    get:
+      operationId: getEntryAndProofRequest
+      parameters:
+      - description: Alias
+        in: path
+        name: alias
+        required: true
+        type: string
+        x-go-name: Alias
+      - description: LeafIndex
+        format: int64
+        in: query
+        name: leaf_index
+        type: integer
+        x-go-name: LeafIndex
+      - description: TreeSize
+        format: int64
+        in: query
+        name: tree_size
+        type: integer
+        x-go-name: TreeSize
+      responses:
+        "200":
+          $ref: '#/responses/getEntryAndProofResponse'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Retrieves entry and merkle audit proof from log.
+      tags:
+      - vct
+  /{alias}/v1/get-issuers:
+    get:
+      operationId: getIssuersRequest
+      parameters:
+      - description: Alias
+        in: path
+        name: alias
+        required: true
+        type: string
+        x-go-name: Alias
+      responses:
+        "200":
+          $ref: '#/responses/getIssuersResponse'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Returns issuers.
+      tags:
+      - vct
+  /{alias}/v1/get-proof-by-hash:
+    get:
+      operationId: getProofByHashRequest
+      parameters:
+      - description: Alias
+        in: path
+        name: alias
+        required: true
+        type: string
+        x-go-name: Alias
+      - description: Hash
+        in: query
+        name: hash
+        type: string
+        x-go-name: Hash
+      - description: Tree size
+        format: int64
+        in: query
+        name: tree_size
+        type: integer
+        x-go-name: TreeSize
+      responses:
+        "200":
+          $ref: '#/responses/getProofByHashResponse'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Retrieves Merkle Audit proof from Log by leaf hash.
+      tags:
+      - vct
+  /{alias}/v1/get-sth:
+    get:
+      operationId: getSTHRequest
+      parameters:
+      - description: Alias
+        in: path
+        name: alias
+        required: true
+        type: string
+        x-go-name: Alias
+      responses:
+        "200":
+          $ref: '#/responses/getSTHResponse'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Retrieves the latest signed tree head.
+      tags:
+      - vct
+  /{alias}/v1/get-sth-consistency:
+    get:
+      operationId: getSTHConsistencyRequest
+      parameters:
+      - description: Alias
+        in: path
+        name: alias
+        required: true
+        type: string
+        x-go-name: Alias
+      - description: First
+        format: int64
+        in: query
+        name: first
+        type: integer
+        x-go-name: First
+      - description: Second
+        format: int64
+        in: query
+        name: second
+        type: integer
+        x-go-name: Second
+      responses:
+        "200":
+          $ref: '#/responses/getSTHConsistencyResponse'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Retrieves merkle consistency proofs between signed tree heads.
+      tags:
+      - vct
+  /healthcheck:
+    get:
+      operationId: healthCheckRequest
+      responses:
+        "200":
+          $ref: '#/responses/healthCheckResponse'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Returns health check status.
+      tags:
+      - vct
+  /v1/extract:
+    post:
+      operationId: extractReq
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          properties:
+            query_id:
+              type: string
+              x-go-name: QueryID
+          type: object
+      responses:
+        "200":
+          $ref: '#/responses/extractResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Extracts protected data.
+      tags:
+      - gatekeeper
+  /v1/policy/{policy_id}:
+    put:
+      description: 'Authorization: Bearer token'
+      operationId: createPolicyReq
+      parameters:
+      - description: Policy ID.
+        in: path
+        name: policy_id
+        required: true
+        type: string
+        x-go-name: PolicyID
+      - in: body
+        name: Body
+        schema:
+          properties:
+            approvers:
+              items:
+                type: string
+              type: array
+              x-go-name: Approvers
+            collectors:
+              items:
+                type: string
+              type: array
+              x-go-name: Collectors
+            handlers:
+              items:
+                type: string
+              type: array
+              x-go-name: Handlers
+            min_approvers:
+              format: int64
+              type: integer
+              x-go-name: MinApprovers
+          type: object
+      responses:
+        "200":
+          $ref: '#/responses/createPolicyResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Creates policy configuration for storing and releasing protected data.
+      tags:
+      - gatekeeper
+  /v1/protect:
+    post:
+      description: 'Authorization: HTTP Signatures (headers="(request-target) date
+        digest")'
+      operationId: protectReq
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          properties:
+            policy:
+              type: string
+              x-go-name: Policy
+            target:
+              type: string
+              x-go-name: Target
+          type: object
+      responses:
+        "200":
+          $ref: '#/responses/protectResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Converts a social media handle (or other sensitive string data) into
+        a DID.
+      tags:
+      - gatekeeper
+  /v1/release:
+    post:
+      description: 'Authorization: HTTP Signatures (headers="(request-target) date")'
+      operationId: releaseReq
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          properties:
+            did:
+              type: string
+              x-go-name: DID
+          type: object
+      responses:
+        "200":
+          $ref: '#/responses/releaseResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Creates a new release transaction (ticket) on a DID.
+      tags:
+      - gatekeeper
+  /v1/release/{ticket_id}/authorize:
+    post:
+      description: 'Authorization: HTTP Signatures (headers="(request-target) date")'
+      operationId: authorizeReq
+      parameters:
+      - description: Ticket ID.
+        in: path
+        name: ticket_id
+        required: true
+        type: string
+        x-go-name: TicketID
+      responses:
+        "200":
+          $ref: '#/responses/authorizeResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Authorizes release transaction (ticket).
+      tags:
+      - gatekeeper
+  /v1/release/{ticket_id}/collect:
+    post:
+      description: 'Authorization: HTTP Signatures (headers="(request-target) date")'
+      operationId: collectReq
+      parameters:
+      - description: Ticket ID.
+        in: path
+        name: ticket_id
+        required: true
+        type: string
+        x-go-name: TicketID
+      responses:
+        "200":
+          $ref: '#/responses/collectResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Generates extract query for the ticket that has completed authorization
+        process.
+      tags:
+      - gatekeeper
+  /v1/release/{ticket_id}/status:
+    get:
+      description: 'Authorization: HTTP Signatures (headers="(request-target) date")'
+      operationId: ticketStatusReq
+      parameters:
+      - description: Ticket ID.
+        in: path
+        name: ticket_id
+        required: true
+        type: string
+        x-go-name: TicketID
+      responses:
+        "200":
+          $ref: '#/responses/ticketStatusResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Gets the status of the ticket.
+      tags:
+      - gatekeeper
+  /vaults:
+    post:
+      operationId: createVaultReq
+      responses:
+        "201":
+          $ref: '#/responses/createVaultResp'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Creates a new vault.
+      tags:
+      - vault
+  /vaults/{vaultID}:
+    delete:
+      operationId: deleteVaultReq
+      parameters:
+      - in: path
+        name: vaultID
+        required: true
+        type: string
+        x-go-name: VaultID
+      responses:
+        "200":
+          $ref: '#/responses/deleteVaultResp'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Deletes an existing vault.
+      tags:
+      - vault
+  /vaults/{vaultID}/authorizations:
+    post:
+      operationId: createAuthorizationsReq
+      parameters:
+      - in: path
+        name: vaultID
+        required: true
+        type: string
+        x-go-name: VaultID
+      - in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/CreateAuthorizationsBody'
+      responses:
+        "201":
+          $ref: '#/responses/createAuthorizationResp'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Creates an authorization.
+      tags:
+      - vault
+  /vaults/{vaultID}/authorizations/{authID}:
+    delete:
+      operationId: deleteAuthorizationReq
+      parameters:
+      - in: path
+        name: vaultID
+        required: true
+        type: string
+        x-go-name: VaultID
+      - in: path
+        name: authID
+        required: true
+        type: string
+        x-go-name: AuthorizationID
+      responses:
+        "200":
+          $ref: '#/responses/deleteAuthorizationResp'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Deletes an authorization.
+      tags:
+      - vault
+    get:
+      operationId: getAuthorizationReq
+      parameters:
+      - in: path
+        name: vaultID
+        required: true
+        type: string
+        x-go-name: VaultID
+      - in: path
+        name: authID
+        required: true
+        type: string
+        x-go-name: AuthorizationID
+      responses:
+        "200":
+          $ref: '#/responses/getAuthorizationResp'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Fetches an authorization.
+      tags:
+      - vault
+  /vaults/{vaultID}/docs:
+    post:
+      operationId: saveDocReq
+      parameters:
+      - in: path
+        name: vaultID
+        required: true
+        type: string
+        x-go-name: VaultID
+      - in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/SaveDocRequestBody'
+      responses:
+        "201":
+          $ref: '#/responses/saveDocResp'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Creates or updates a document by encrypting it and storing it in the
+        vault.
+      tags:
+      - vault
+  /vaults/{vaultID}/docs/{docID}/metadata:
+    get:
+      operationId: getDocMetadataReq
+      parameters:
+      - in: path
+        name: vaultID
+        required: true
+        type: string
+        x-go-name: VaultID
+      - in: path
+        name: docID
+        required: true
+        type: string
+        x-go-name: DocID
+      responses:
+        "200":
+          $ref: '#/responses/getDocMetadataResp'
+        default:
+          $ref: '#/responses/genericError'
+      summary: Returns the document`s metadata by given docID.
+      tags:
+      - vault
+produces:
+- application/json
+responses:
+  addVCResponse:
+    description: Response message
+    schema:
+      properties:
+        extensions:
+          type: string
+          x-go-name: Extensions
+        id:
+          type: string
+          x-go-name: ID
+        signature:
+          type: string
+          x-go-name: Signature
+        svct_version:
+          format: uint8
+          type: integer
+          x-go-name: SVCTVersion
+        timestamp:
+          format: uint64
+          type: integer
+          x-go-name: Timestamp
+      type: object
+  authorizeResp:
+    description: authorizeResp model
+  collectResp:
+    description: collectResp model
+    schema:
+      properties:
+        query_id:
+          type: string
+          x-go-name: QueryID
+      type: object
+  createAuthorizationResp:
+    description: createAuthorizationResp model
+    schema:
+      $ref: '#/definitions/CreatedAuthorization'
+  createPolicyResp:
+    description: createPolicyResp model
+  createVaultResp:
+    description: createVaultResp model
+    schema:
+      $ref: '#/definitions/CreatedVault'
+  deleteAuthorizationResp:
+    description: deleteAuthorizationResp model
+  deleteVaultResp:
+    description: deleteVaultResp model
+  errorResp:
+    description: errorResp model
+    schema:
+      properties:
+        errMessage:
+          type: string
+          x-go-name: Message
+      type: object
+  extractResp:
+    description: extractResp model
+    schema:
+      properties:
+        target:
+          type: string
+          x-go-name: Target
+      type: object
+  genericError:
+    description: genericError model
+    schema:
+      $ref: '#/definitions/ErrorResponse'
+  getAuthorizationResp:
+    description: getAuthorizationResp model
+    schema:
+      $ref: '#/definitions/CreatedAuthorization'
+  getDocMetadataResp:
+    description: getDocMetadataResp model
+    schema:
+      $ref: '#/definitions/DocumentMetadata'
+  getEntriesResponse:
+    description: Response message
+    schema:
+      properties:
+        entries:
+          items:
+            properties:
+              extra_data:
+                type: string
+                x-go-name: ExtraData
+              leaf_input:
+                type: string
+                x-go-name: LeafInput
+            type: object
+          type: array
+          x-go-name: Entries
+      type: object
+  getEntryAndProofResponse:
+    description: Response message
+    schema:
+      properties:
+        audit_path:
+          items:
+            type: string
+          type: array
+          x-go-name: AuditPath
+        extra_data:
+          type: string
+          x-go-name: ExtraData
+        leaf_input:
+          type: string
+          x-go-name: LeafInput
+      type: object
+  getIssuersResponse:
+    description: Response message
+    schema:
+      items:
+        type: string
+      type: array
+  getProofByHashResponse:
+    description: Response message
+    schema:
+      properties:
+        audit_path:
+          items:
+            type: string
+          type: array
+          x-go-name: AuditPath
+        leaf_index:
+          format: int64
+          type: integer
+          x-go-name: LeafIndex
+      type: object
+  getSTHConsistencyResponse:
+    description: Response message
+    schema:
+      properties:
+        consistency:
+          items:
+            type: string
+          type: array
+          x-go-name: Consistency
+      type: object
+  getSTHResponse:
+    description: Response message
+    schema:
+      properties:
+        sha256_root_hash:
+          type: string
+          x-go-name: SHA256RootHash
+        timestamp:
+          format: uint64
+          type: integer
+          x-go-name: Timestamp
+        tree_head_signature:
+          type: string
+          x-go-name: TreeHeadSignature
+        tree_size:
+          format: uint64
+          type: integer
+          x-go-name: TreeSize
+      type: object
+  healthCheckResponse:
+    description: Response message
+    schema:
+      properties:
+        current_time:
+          format: date-time
+          type: string
+          x-go-name: CurrentTime
+        status:
+          type: string
+          x-go-name: Status
+      type: object
+  protectResp:
+    description: protectResp model
+    schema:
+      properties:
+        did:
+          type: string
+          x-go-name: DID
+      type: object
+  releaseResp:
+    description: releaseResp model
+    schema:
+      properties:
+        ticket_id:
+          type: string
+          x-go-name: TicketID
+      type: object
+  saveDocResp:
+    description: saveDocResp model
+    schema:
+      $ref: '#/definitions/DocumentMetadata'
+  ticketStatusResp:
+    description: ticketStatusResp model
+    schema:
+      properties:
+        status:
+          type: string
+          x-go-name: Status
+      type: object
+  webfingerResponse:
+    description: Response message
+    schema:
+      $ref: '#/definitions/WebFingerResponse'
+schemes:
+- http
+- https
+swagger: "2.0"
