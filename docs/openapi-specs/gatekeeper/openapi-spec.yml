@@ -1,0 +1,235 @@
+consumes:
+  - application/json
+info:
+  license:
+    name: 'SPDX-License-Identifier: Apache-2.0'
+  title: REST API.
+  version: 0.1.0
+paths:
+  /v1/extract:
+    post:
+      operationId: extractReq
+      parameters:
+        - in: body
+          name: Body
+          schema:
+            properties:
+              query_id:
+                type: string
+                x-go-name: QueryID
+            type: object
+      responses:
+        "200":
+          $ref: '#/responses/extractResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Extracts protected data.
+      tags:
+        - gatekeeper
+  /v1/policy/{policy_id}:
+    put:
+      description: 'Authorization: Bearer token'
+      operationId: createPolicyReq
+      parameters:
+        - description: Policy ID.
+          in: path
+          name: policy_id
+          required: true
+          type: string
+          x-go-name: PolicyID
+        - in: body
+          name: Body
+          schema:
+            properties:
+              approvers:
+                items:
+                  type: string
+                type: array
+                x-go-name: Approvers
+              collectors:
+                items:
+                  type: string
+                type: array
+                x-go-name: Collectors
+              handlers:
+                items:
+                  type: string
+                type: array
+                x-go-name: Handlers
+              min_approvers:
+                format: int64
+                type: integer
+                x-go-name: MinApprovers
+            type: object
+      responses:
+        "200":
+          $ref: '#/responses/createPolicyResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Creates policy configuration for storing and releasing protected data.
+      tags:
+        - gatekeeper
+  /v1/protect:
+    post:
+      description: 'Authorization: HTTP Signatures (headers="(request-target) date
+        digest")'
+      operationId: protectReq
+      parameters:
+        - in: body
+          name: Body
+          schema:
+            properties:
+              policy:
+                type: string
+                x-go-name: Policy
+              target:
+                type: string
+                x-go-name: Target
+            type: object
+      responses:
+        "200":
+          $ref: '#/responses/protectResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Converts a social media handle (or other sensitive string data) into
+        a DID.
+      tags:
+        - gatekeeper
+  /v1/release:
+    post:
+      description: 'Authorization: HTTP Signatures (headers="(request-target) date")'
+      operationId: releaseReq
+      parameters:
+        - in: body
+          name: Body
+          schema:
+            properties:
+              did:
+                type: string
+                x-go-name: DID
+            type: object
+      responses:
+        "200":
+          $ref: '#/responses/releaseResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Creates a new release transaction (ticket) on a DID.
+      tags:
+        - gatekeeper
+  /v1/release/{ticket_id}/authorize:
+    post:
+      description: 'Authorization: HTTP Signatures (headers="(request-target) date")'
+      operationId: authorizeReq
+      parameters:
+        - description: Ticket ID.
+          in: path
+          name: ticket_id
+          required: true
+          type: string
+          x-go-name: TicketID
+      responses:
+        "200":
+          $ref: '#/responses/authorizeResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Authorizes release transaction (ticket).
+      tags:
+        - gatekeeper
+  /v1/release/{ticket_id}/collect:
+    post:
+      description: 'Authorization: HTTP Signatures (headers="(request-target) date")'
+      operationId: collectReq
+      parameters:
+        - description: Ticket ID.
+          in: path
+          name: ticket_id
+          required: true
+          type: string
+          x-go-name: TicketID
+      responses:
+        "200":
+          $ref: '#/responses/collectResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Generates extract query for the ticket that has completed authorization
+        process.
+      tags:
+        - gatekeeper
+  /v1/release/{ticket_id}/status:
+    get:
+      description: 'Authorization: HTTP Signatures (headers="(request-target) date")'
+      operationId: ticketStatusReq
+      parameters:
+        - description: Ticket ID.
+          in: path
+          name: ticket_id
+          required: true
+          type: string
+          x-go-name: TicketID
+      responses:
+        "200":
+          $ref: '#/responses/ticketStatusResp'
+        default:
+          $ref: '#/responses/errorResp'
+      summary: Gets the status of the ticket.
+      tags:
+        - gatekeeper
+produces:
+  - application/json
+responses:
+  authorizeResp:
+    description: authorizeResp model
+  collectResp:
+    description: collectResp model
+    schema:
+      properties:
+        query_id:
+          type: string
+          x-go-name: QueryID
+      type: object
+  createPolicyResp:
+    description: createPolicyResp model
+  errorResp:
+    description: errorResp model
+    schema:
+      properties:
+        errMessage:
+          type: string
+          x-go-name: Message
+      type: object
+  extractResp:
+    description: extractResp model
+    schema:
+      properties:
+        target:
+          type: string
+          x-go-name: Target
+      type: object
+  protectResp:
+    description: protectResp model
+    schema:
+      properties:
+        did:
+          type: string
+          x-go-name: DID
+      type: object
+  releaseResp:
+    description: releaseResp model
+    schema:
+      properties:
+        ticket_id:
+          type: string
+          x-go-name: TicketID
+      type: object
+  ticketStatusResp:
+    description: ticketStatusResp model
+    schema:
+      properties:
+        status:
+          type: string
+          x-go-name: Status
+      type: object
+schemes:
+  - http
+  - https
+swagger: "2.0"
