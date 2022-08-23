@@ -40,7 +40,7 @@ Follow this [link](docs/projects/README.md) to learn more about all the TrustBlo
 
 ## OpenAPI specifications
 
-- [Gatekeeper](swagger-ui-index.html)
+- Follow this [link](docs/index.md)
 
 ## Build and Deployment
 For pre-requisites, please refer [TrustBloc k8s deployments](https://github.com/trustbloc/k8s/blob/main/README.md). 
