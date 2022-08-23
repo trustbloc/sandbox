@@ -12,6 +12,10 @@ args=()
 sed_expression=""
 for arg in "$@"; do
   env_expanded=${arg@P}
+  if [[ "${env_expanded}" =~ "^^" ]];
+  then
+    continue;
+  fi
   IFS_TEMP=${IFS}
   IFS='^'
   for word in ${env_expanded};
@@ -28,5 +32,9 @@ for arg in "$@"; do
   args+=(-e "$sed_expression")
   sed_expression=""
 done
-
-sed "${args[@]}"
+if [ ${#args[@]} -ne 0 ];
+then
+  sed "${args[@]}"
+else
+  sed ""
+fi
