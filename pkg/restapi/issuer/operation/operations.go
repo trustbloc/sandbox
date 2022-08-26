@@ -152,6 +152,7 @@ type Operation struct {
 	didcommScopes            map[string]struct{}
 	assuranceScopes          map[string]string
 	tlsConfig                *tls.Config
+	externalLogin            bool
 }
 
 // Config defines configuration for issuer operations
@@ -182,6 +183,7 @@ type Config struct {
 	ExternalAuthClientSecret string
 	didcommScopes            map[string]struct{}
 	assuranceScopes          map[string]string
+	externalLogin            bool
 }
 
 // vc struct used to return vc data to html
@@ -243,6 +245,7 @@ func New(config *Config) (*Operation, error) {
 		tlsConfig:                config.TLSConfig,
 		didcommScopes:            map[string]struct{}{},
 		assuranceScopes:          map[string]string{},
+		externalLogin:            config.externalLogin,
 	}
 
 	if config.didcommScopes != nil {
@@ -317,11 +320,15 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 	var u string
 
 	scope := r.URL.Query()["scope"]
+	extAuthURL := c.extTokenIssuer.AuthCodeURL(w)
 
 	if len(scope) > 0 {
-		if scope[0] == externalScopeQueryParam {
+		// If the scope is PermanentResidentCard but external auth url is not defined
+		// then proceed with trustbloc login service
+		if scope[0] == "PermanentResidentCard" && !strings.Contains(extAuthURL, "EXTERNAL") {
+			c.externalLogin = true
 			u = c.extTokenIssuer.AuthCodeURL(w)
-			u += "&scope=" + oidc.ScopeOpenID + " " + scope[0]
+			u += "&scope=" + oidc.ScopeOpenID + " " + externalScopeQueryParam
 		} else {
 			u = c.tokenIssuer.AuthCodeURL(w)
 			u += "&scope=" + scope[0]
@@ -336,9 +343,6 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-
-	scopeCookie := http.Cookie{Name: scopeCookie, Value: r.URL.Query()["scope"][0], Expires: expire}
-	http.SetCookie(w, &scopeCookie)
 
 	cookie := http.Cookie{Name: vcsProfileCookie, Value: r.URL.Query()["vcsProfile"][0], Expires: expire}
 	http.SetCookie(w, &cookie)
@@ -703,17 +707,8 @@ func (c *Operation) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	scopeCookie, err := r.Cookie(scopeCookie)
-	if err != nil {
-		logger.Errorf("failed to get scope cookie: %s", err.Error())
-		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to get scope cookie: %s", err.Error()))
-
-		return
-	}
-
-	if strings.Contains(scopeCookie.String(), externalScopeQueryParam) {
-		c.getDataFromExternalSource(w, r, scopeCookie.Value, vcsProfileCookie.Value)
+	if c.externalLogin {
+		c.getDataFromExternalSource(w, r, externalScopeQueryParam, vcsProfileCookie.Value)
 	} else {
 		c.getDataFromCms(w, r, vcsProfileCookie.Value)
 	}
@@ -2108,14 +2103,16 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, scope, vcs
 	// Todo ideally scope should be what need to passed as a type
 	// but from external data source the scope is subject_data. Need to revisit this logic
 	if strings.Contains(scope, externalScopeQueryParam) {
+		cred.Subject = subject["subjectData"]
+		customFields["name"] = "Permanent Resident Card"
 		cred.Context = []string{credentialContext, citizenshipContext}
 		cred.Types = []string{"VerifiableCredential", "PermanentResidentCard"}
 	} else {
 		cred.Types = []string{"VerifiableCredential", scope}
 		cred.Context = vcContext
+		cred.Subject = subject
 	}
 
-	cred.Subject = subject
 	cred.Issued = util.NewTime(time.Now().UTC())
 	cred.Issuer.ID = profileResponse.DID
 	cred.Issuer.CustomFields = make(verifiable.CustomFields)

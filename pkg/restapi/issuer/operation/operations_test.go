@@ -346,8 +346,10 @@ func TestController_New(t *testing.T) {
 
 func TestOperation_Login(t *testing.T) {
 	cfg := &Config{
-		TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		StoreProvider: &mockstorage.Provider{},
+		TokenIssuer:    &mockTokenIssuer{},
+		TokenResolver:  &mockTokenResolver{},
+		ExtTokenIssuer: &mockTokenIssuer{},
+		StoreProvider:  &mockstorage.Provider{},
 	}
 	handler := getHandlerWithConfig(t, login, cfg)
 
@@ -1234,7 +1236,8 @@ func TestOperation_settings(t *testing.T) {
 func TestOperation_Login3(t *testing.T) {
 	cfg := &Config{
 		TokenIssuer: &mockTokenIssuer{}, TokenResolver: &mockTokenResolver{},
-		StoreProvider: &mockstorage.Provider{},
+		ExtTokenIssuer: &mockTokenIssuer{},
+		StoreProvider:  &mockstorage.Provider{},
 	}
 	handler := getHandlerWithConfig(t, login, cfg)
 
