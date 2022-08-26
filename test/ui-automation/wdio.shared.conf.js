@@ -40,6 +40,7 @@ exports.config = {
         './test/specs/flight-boarding.js',
         './test/specs/vcs-flow.js',
         './test/specs/vcs-revocation.js',
+        './test/specs/uscis-login-flow.js',
     ],
     // Patterns to exclude.
     exclude: [

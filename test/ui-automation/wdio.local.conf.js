@@ -29,4 +29,6 @@ exports.config = {
     "flightBookingURL": "https://demo-issuer" + domain + "/flightbooking",
     "flightBoardingURL": "https://demo-rp" + domain + "/flightcheckin",
     "dutyFreeShop": "https://demo-rp" + domain + "/dutyfree",
+    "issuePrCardURL": "https://demo-issuer" + domain + "/issueprcard",
+    "local" : true,
 };
