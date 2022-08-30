@@ -29,7 +29,7 @@ $(document).ready(function () {
 
     $('#permanentResidentCard').on('click', function() {
         if (!$(this).data('clicked')) {
-            $('#scope').val("PermanentResidentCard");
+            $('#scope').val("subject_data");
             $(this).data('clicked', true);
         }
     });
