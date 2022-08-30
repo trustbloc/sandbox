@@ -115,6 +115,9 @@ jobs:
           export CLI_IMG=${CLI_PKG}:${EDGE_SANDBOX_TAG}
           echo $ISSUER_IMG $RP_IMG $ACE_RP_IMG $LOGIN_CONSENT_IMG $CLI_IMG
           make ci-setup-deploy
+      - name: Run BDD test
+        run: |
+          make bdd-test
       - name: Run UI-test
         run: |
           make automation-test-local
@@ -147,6 +150,9 @@ jobs:
           export CLI_IMG=ghcr.io/trustbloc/sandbox-cli:latest
           echo $ISSUER_IMG $RP_IMG $ACE_RP_IMG $LOGIN_CONSENT_IMG $CLI_IMG
           make ci-setup-deploy
+      - name: Run BDD test
+        run: |
+          make bdd-test
       - name: Run UI-test
         run: |
           make automation-test-local
