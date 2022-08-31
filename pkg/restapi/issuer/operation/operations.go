@@ -325,10 +325,10 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 	if len(scope) > 0 {
 		// If the scope is PermanentResidentCard but external auth url is not defined
 		// then proceed with trustbloc login service
-		if scope[0] == "PermanentResidentCard" && !strings.Contains(extAuthURL, "EXTERNAL") {
+		if scope[0] == externalScopeQueryParam && !strings.Contains(extAuthURL, "EXTERNAL") {
 			c.externalLogin = true
 			u = c.extTokenIssuer.AuthCodeURL(w)
-			u += "&scope=" + oidc.ScopeOpenID + " " + externalScopeQueryParam
+			u += "&scope=" + oidc.ScopeOpenID + " " + scope[0]
 		} else {
 			u = c.tokenIssuer.AuthCodeURL(w)
 			u += "&scope=" + scope[0]
@@ -795,9 +795,9 @@ func (c *Operation) getDataFromExternalSource(w http.ResponseWriter, r *http.Req
 func (c *Operation) getDataFromCms(w http.ResponseWriter, r *http.Request, vcsCookie string) { //nolint: funlen,gocyclo
 	tk, e := c.tokenIssuer.Exchange(r)
 	if e != nil {
-		logger.Errorf("failed to exchange code for token: %s", e.Error())
+		logger.Errorf("failed to exchange code for token while getting data from cms : %s ", e.Error())
 		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to exchange code for token: %s", e.Error()))
+			fmt.Sprintf("failed to exchange code for token while getting data from cms : %s", e.Error()))
 
 		return
 	}
@@ -2077,6 +2077,7 @@ func unmarshalSubject(data []byte) (map[string]interface{}, error) {
 func (c *Operation) prepareCredential(subject map[string]interface{}, scope, vcsProfile string) ([]byte, error) {
 	// will be replaced by DID auth response subject ID
 	subject["id"] = ""
+	defaultCredTypes := []string{"VerifiableCredential", "PermanentResidentCard"}
 	vcContext := []string{credentialContext, trustBlocExampleContext}
 	customFields := make(map[string]interface{})
 	// get custom vc data if available
@@ -2102,12 +2103,13 @@ func (c *Operation) prepareCredential(subject map[string]interface{}, scope, vcs
 	cred := &verifiable.Credential{}
 	// Todo ideally scope should be what need to passed as a type
 	// but from external data source the scope is subject_data. Need to revisit this logic
-	if strings.Contains(scope, externalScopeQueryParam) {
+	switch scope {
+	case externalScopeQueryParam:
+		cred.Types = defaultCredTypes
 		cred.Subject = subject["subjectData"]
 		customFields["name"] = "Permanent Resident Card"
 		cred.Context = []string{credentialContext, citizenshipContext}
-		cred.Types = []string{"VerifiableCredential", "PermanentResidentCard"}
-	} else {
+	default:
 		cred.Types = []string{"VerifiableCredential", scope}
 		cred.Context = vcContext
 		cred.Subject = subject
