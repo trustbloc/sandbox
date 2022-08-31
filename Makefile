@@ -172,6 +172,10 @@ automation-test-dev:
 automation-test:
 	@cd ./test/ui-automation && npm run test && npm run report
 
+.PHONY: bdd-test
+bdd-test:
+	@make all  -C ./test/bdd
+
 .PHONY: clean-build
 clean-build:
 	@rm -Rf ./.build
