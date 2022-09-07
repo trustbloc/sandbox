@@ -40,4 +40,5 @@ vault-kms
 vault-server
 verifier-vcs
 wallet
+vcwallet
 static-file-server
