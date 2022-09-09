@@ -178,10 +178,12 @@ SPDX-License-Identifier: Apache-2.0
         </p>
         <p class="text-lg font-sans text-gray-800 px-2 py-4">
         </p>
-           <input type="hidden" name="walletInitIssuanceURL" id="walletInitIssuanceURL"/>
-           <input type="hidden" id="credentialTypes" name="credentialTypes" value="https://w3id.org/citizenship/v1" size="50"/>
-            <textarea hidden id="credManifest"></textarea>
-            <textarea hidden  id="credToIssue"></textarea>
+        <div id="issuePrCardValues" style="display:none">
+           <input type="text" name="walletInitIssuanceURL" id="walletInitIssuanceURL"/>
+           <input type="text" id="credentialTypes" name="credentialTypes" value="https://w3id.org/citizenship/v1" size="50"/>
+            <textarea  id="credManifest"></textarea>
+            <textarea  id="credToIssue"></textarea>
+         </div>
         <a id="applyprc" class=" w-64 py-2 bg-green-500 hover:bg-green-700 hover:shadow hover:text-white  text-xl text-center text-gray-800 font-bold py-4 px-4 border rounded shadow-lg"
            onclick="javascript:issuePRC()"> Apply for your Digital Permanent Resident Card
         </a>
@@ -361,7 +363,7 @@ SPDX-License-Identifier: Apache-2.0
                              ]
                          }
         const oidcIssuanceRequest = JSON.stringify({
-            "walletInitIssuanceURL": "",
+            "walletInitIssuanceURL": document.getElementById("walletInitIssuanceURL").value,
             "credentialTypes": "https://w3id.org/citizenship/v1",
             "manifestIDs": "GE-PRC-2022-CLASS-A",
              "issuerURL": location.protocol + '//' + location.host,

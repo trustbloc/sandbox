@@ -121,6 +121,9 @@ jobs:
       - name: Run UI-test
         run: |
           make automation-test-local
+      - name: Run VC Wallet Test
+        run: |
+          make automation-test-vcwallet
 
   BuildDeployTest-PR:
     name: Build-Deploy-Test-PR
@@ -153,6 +156,10 @@ jobs:
       - name: Run BDD test
         run: |
           make bdd-test
+      - name: Run VC Wallet Test
+        run: |
+          make automation-test-vcwallet
       - name: Run UI-test
         run: |
           make automation-test-local
+

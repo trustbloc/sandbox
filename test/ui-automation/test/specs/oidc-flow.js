@@ -34,12 +34,22 @@ describe("TrustBloc - [PRC] Background Check Use Case (OIDC Share flow)", async 
         await browser.navigateTo(browser.config.walletURL);
 
         // 2. Initialize Wallet (register/sign-up/etc.)
-        await wallet.signUp(ctx);
+        await wallet.signUp(ctx, browser.config.isCHAPIEnabled);
     });
 
-    it('Save Permanent Resident Card (OIDC Issuance - Redirect)', async function () {
+      it('Save Permanent Resident Card (OIDC Issuance - Redirect)', async function () {
         // 1. Navigate to oidc Issuer Website
         await browser.newWindow(browser.config.applyPrCardURL);
+
+         if (!browser.config.isCHAPIEnabled){
+             let oidcInitiateDiv = await $('#issuePrCardValues');
+             let walletInitURL = await $('#walletInitIssuanceURL');
+             await browser.execute(function () {
+                 document.getElementById('issuePrCardValues').style.display = 'block';
+             });
+             await oidcInitiateDiv.waitForDisplayed();
+             await walletInitURL.addValue(browser.config.walletURL+ "/oidc/initiate")
+         }
 
         // 2. Click on applying pr card
         const applyPrc = await $('#applyprc');
@@ -84,6 +94,16 @@ describe("TrustBloc - [PRC] Background Check Use Case (OIDC Share flow)", async 
     it(`Present Permanent Resident Card at Background check (OIDC Share - Redirect)`, async function () {
         // 1. Navigate background check verifier
         await browser.navigateTo(browser.config.backgroundCheckURL);
+
+        if (!browser.config.isCHAPIEnabled){
+            let oidcVpRequestDiv = await $('#oidcVpRequest');
+            let walletRpURL = await $('#walletAuthURL');
+            await browser.execute(function () {
+                document.getElementById('oidcVpRequest').style.display = 'block';
+            });
+            await oidcVpRequestDiv.waitForDisplayed();
+            await walletRpURL.addValue(browser.config.walletURL+ "/oidc/share")
+        }
 
         // 2. click on share PRC button
         const getCredentialButton = await $('#prCard');

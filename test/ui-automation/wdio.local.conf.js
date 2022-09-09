@@ -12,6 +12,19 @@ const domain = ".local.trustbloc.dev"
 
 exports.config = {
     ...config,
+    // Test files
+    specs: [
+        './test/specs/ace.js',
+        './test/specs/credential-validations.js',
+        './test/specs/waci-flow.js',
+        './test/specs/oidc-flow.js',
+        './test/specs/new-bank-account.js',
+        './test/specs/flight-boarding.js',
+        './test/specs/vcs-flow.js',
+        './test/specs/vcs-revocation.js',
+        './test/specs/uscis-login-flow.js',
+    ],
+
     "walletName": "wallet" + domain,
     "walletURL": "https://wallet" + domain,
     "issuerURL": "https://demo-issuer" + domain,
@@ -31,4 +44,6 @@ exports.config = {
     "dutyFreeShop": "https://demo-rp" + domain + "/dutyfree",
     "issuePrCardURL": "https://demo-issuer" + domain + "/issueprcard",
     "local" : true,
+    // chapi
+    isCHAPIEnabled: true,
 };

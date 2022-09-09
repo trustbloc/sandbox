@@ -88,9 +88,10 @@ SPDX-License-Identifier: Apache-2.0
                 <div class="h-1 mx-auto gradient w-full opacity-10 my-0 py-0 rounded-t"></div>
             </div>
 
-
-            <input type="hidden" name="walletAuthURL" id="walletAuthURL" label="WalletAuthURL"></input>
-            <textarea type="hidden" name="pEx" id="pEx" label="pEx"></textarea>
+            <div id="oidcVpRequest" style="display:none">
+            <input type="text" name="walletAuthURL" id="walletAuthURL" label="WalletAuthURL"></input>
+            <textarea name="pEx" id="pEx" label="pEx"></textarea>
+            </div>
 
             <div class="container justify-center mx-auto flex flex-wrap">
                 <div class="w-full h-full fixed top-0 left-0 bg-black opacity-75 z-50" id="loading-screen"
@@ -194,10 +195,9 @@ SPDX-License-Identifier: Apache-2.0
             ]
         }
         oidcVpRequest = JSON.stringify({
-            "walletAuthURL": "",
+            "walletAuthURL": document.getElementById("walletAuthURL").value,
             "pEx": pExQuery
         })
-        document.getElementById("walletAuthURL").value = "";
         document.getElementById("pEx").innerHTML = JSON.stringify(pExQuery)
 
         // axios POST request

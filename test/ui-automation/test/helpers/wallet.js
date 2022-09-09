@@ -17,8 +17,11 @@ const timeout = 60000;
 exports.signUp = async ({ createDID, importDID, email }) => {
     // login and consent
     await _getSignUp(email);
-    // register chapi
-    await allow()
+
+    if (browser.config.isCHAPIEnabled) {
+        // register chapi
+        await allow();
+    }
 
     // wait for credentials
     await _waitForCredentials();
@@ -162,11 +165,13 @@ async function _getThirdPartyLogin(email) {
     await loginInButton.click();
 
     await browser.switchWindow(browser.config.walletURL)
+    if (browser.config.isCHAPIEnabled){
     await browser.waitUntil(async () => {
         let title = await $('iframe');
         await title.waitForExist({ timeout, interval: 1000 });
         return true;
     });
+    }
 }
 
 async function _waitForCredentials() {
