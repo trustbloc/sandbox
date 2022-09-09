@@ -330,8 +330,7 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 			u = c.extTokenIssuer.AuthCodeURL(w)
 			u += "&scope=" + oidc.ScopeOpenID + " " + scope[0]
 		} else {
-			u = c.tokenIssuer.AuthCodeURL(w)
-			u += "&scope=" + scope[0]
+			u = c.prepareAuthCodeURL(w, scope[0])
 		}
 	}
 
@@ -2501,4 +2500,15 @@ func (s *edd25519Signer) Sign(doc []byte) ([]byte, error) {
 
 func (s *edd25519Signer) Alg() string {
 	return ""
+}
+
+func (c *Operation) prepareAuthCodeURL(w http.ResponseWriter, scope string) string {
+	u := c.tokenIssuer.AuthCodeURL(w)
+	if scope == externalScopeQueryParam {
+		u += "&scope=" + "PermanentResidentCard"
+	} else {
+		u += "&scope=" + scope
+	}
+
+	return u
 }
