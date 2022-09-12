@@ -160,6 +160,10 @@ deploy-components:
 minikube-down:
 	@make minikube-down -C ./k8s
 
+.PHONY: automation-test-vcwallet
+automation-test-vcwallet:
+	@cd ./test/ui-automation && npm run test:vcwallet && npm run report
+
 .PHONY: automation-test-local
 automation-test-local:
 	@cd ./test/ui-automation && npm run test:local && npm run report

@@ -27,7 +27,7 @@ describe("TrustBloc - [PRC] Duty Free Shop Use Case (WACI Issuance + WACI Share 
         await browser.navigateTo(browser.config.walletURL);
 
         // 2. Sign Up
-        await wallet.signUp(ctx);
+        await wallet.signUp(ctx, browser.config.isCHAPIEnabled);
     });
 
     it('Save Permanent Resident Card (WACI Issuance - Redirect)', async function () {

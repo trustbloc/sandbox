@@ -31,17 +31,6 @@ exports.config = {
     // NPM script (see https://docs.npmjs.com/cli/run-script) then the current working
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
-    specs: [
-        './test/specs/ace.js',
-        './test/specs/credential-validations.js',
-        './test/specs/waci-flow.js',
-        './test/specs/oidc-flow.js',
-        './test/specs/new-bank-account.js',
-        './test/specs/flight-boarding.js',
-        './test/specs/vcs-flow.js',
-        './test/specs/vcs-revocation.js',
-        './test/specs/uscis-login-flow.js',
-    ],
     // Patterns to exclude.
     exclude: [
         // 'path/to/excluded/files'

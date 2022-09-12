@@ -5,6 +5,7 @@
   "author": "TrustBloc Committers",
   "license": "Apache-2.0",
   "scripts": {
+    "test:vcwallet": "rm -rf reports && npm install && wdio wdio.conf.vcwallet.js",
     "test": "rm -rf reports && npm install && wdio wdio.conf.js",
     "test:local": "rm -rf reports && npm install && wdio wdio.local.conf.js",
     "test:dev": "rm -rf reports && npm install && wdio wdio.dev.conf.js",
