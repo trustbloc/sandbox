@@ -18,6 +18,9 @@ commonLabels:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+#- files:
+#  - cms/strapi/user_data.sh
+#  name: strapi-user-data-script
 configMapGenerator:
 - files:
   - rp/register-tenant.sh
@@ -28,9 +31,6 @@ configMapGenerator:
 - files:
   - ace-rp/ace_rp_configure.sh
   name: ace-rp-profiles-script
-- files:
-  - cms/strapi/user_data.sh
-  name: strapi-user-data-script
 - files:
   - adapter-issuer/issuer_adapter_configure.sh
   name: adapter-issuer-add-profiles-config
@@ -44,8 +44,8 @@ configMapGenerator:
   - vcs/holder/vcs_holder_configure.sh
   name: holder-vcs-add-profiles-script
 
+#- cms/strapi/user-data.yml
 resources:
-- cms/strapi/user-data.yml
 - vcs/issuer/add-profiles.yml
 - vcs/verifier/add-profiles.yml
 - vcs/holder/add-profiles.yml
