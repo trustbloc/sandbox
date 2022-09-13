@@ -114,7 +114,7 @@ describe("TrustBloc - [PRC] Background Check Use Case (Third Party Login Flow)",
 
         // wait for any async operations to complete
         browser.executeAsync((done) => {
-            setTimeout(done, 5000)
+            setTimeout(done, 10000)
         })
 
     })

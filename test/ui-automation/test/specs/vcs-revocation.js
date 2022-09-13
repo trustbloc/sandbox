@@ -56,6 +56,10 @@ describe("TrustBloc - Verifiable Credential Service (VCS) revocation flow", () =
 
         // 5. Show success message at Issuer Website
         await issuer.finish(ctx);
+        // wait for any async operations to complete
+        browser.executeAsync((done) => {
+            setTimeout(done, 10000)
+        })
     });
 
     it(`Verify credential (Success)`, async function () {
@@ -72,6 +76,10 @@ describe("TrustBloc - Verifiable Credential Service (VCS) revocation flow", () =
 
         // 3. Show success message at Verifier Website
         await verifier.finish(ctx);
+        // wait for any async operations to complete
+        browser.executeAsync((done) => {
+            setTimeout(done, 10000)
+        })
     });
 
     it(`Revoke credential`, async function () {
@@ -92,6 +100,10 @@ describe("TrustBloc - Verifiable Credential Service (VCS) revocation flow", () =
         // 4. validate success msg
         const successMsg = await $('h3*=VC is revoked');
         await successMsg.waitForExist();
+        // wait for any async operations to complete
+        browser.executeAsync((done) => {
+            setTimeout(done, 5000)
+        })
     });
 
     it(`Verify revoked credential (Failure)`, async function () {

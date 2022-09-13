@@ -33,17 +33,7 @@ spec:
       containers:
         - name: strapi
           image: strapi:latest
-          command: [ "/bin/sh" ]
-          args:
-            - "-c"
-            - |
-              /usr/local/bin/docker-entrypoint.sh strapi;
-              mkdir -p /srv/tmp;
-              cp /srv/scripts/strapi_configure.sh /srv/tmp/;
-              chmod u+x /srv/tmp/strapi_configure.sh;
-              /srv/tmp/strapi_configure.sh;
-              cp /stash/bootstrap.js /srv/app/config/functions/;
-              strapi develop
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http-port
               protocol: TCP

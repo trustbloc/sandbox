@@ -1,0 +1,15 @@
+[
+  {
+    "userid":"100",
+    "vcmetadata":{
+      "name":"Student Card",
+      "description":"Student Card for Mr.Foo"
+    },
+    "studentid":"1234568",
+    "name":"John",
+    "email":"john.smith@example.com",
+    "university":"Faber College",
+    "semester":"3",
+    "type":"StudentCard"
+  }
+]

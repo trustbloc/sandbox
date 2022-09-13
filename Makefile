@@ -8,6 +8,7 @@ ISSUER_REST_PATH = cmd/issuer-rest
 RP_REST_PATH     = cmd/rp-rest
 ACE_RP_REST_PATH   = cmd/ace-rp-rest
 LOGIN_CONSENT_PATH = cmd/login-consent-server
+DEMO_CMS_PATH 		= test/cmd/cms
 DEMO_CLI_PATH       = test/cmd/demo
 
 DOCKER_OUTPUT_NS         ?= ghcr.io
@@ -19,6 +20,8 @@ RP_REST_IMAGE_NAME       ?= trustbloc/sandbox-rp
 ACE_RP_REST_IMAGE_NAME       ?= trustbloc/sandbox-ace-rp
 # Namespace for the login consent server image
 LOGIN_CONSENT_SEVER_IMAGE_NAME   ?= trustbloc/sandbox-login-consent-server
+# Namespace for the cm rest image
+DEMO_CMS_IMAGE_NAME   ?= trustbloc/sandbox-cms
 # ELEMENT API SIDETREE REQUEST URL
 DID_ELEMENT_SIDETREE_REQUEST_URL ?= https://element-did.com/api/v1/sidetree/requests
 # Namespace for the sandbox cli image
@@ -90,6 +93,13 @@ login-consent-server:
 	@cp -r ${LOGIN_CONSENT_PATH}/templates ./.build/bin/login-consent
 	@cd ${LOGIN_CONSENT_PATH} && go build -o ../../.build/bin/login-consent/server main.go
 
+.PHONY: sandbox-cms
+sandbox-cms:
+	@echo "Building sandbox-cms"
+	@mkdir -p ./.build/bin/cms
+	@cp -r ${DEMO_CMS_PATH}/testdata ./.build/bin/cms
+	@cd ${DEMO_CMS_PATH} && go build -o ../../../.build/bin/cms/cms main.go
+
 .PHONY: sandbox-issuer-docker
 sandbox-issuer-docker:
 	@echo "Building issuer rest docker image"
@@ -118,6 +128,13 @@ login-consent-server-docker:
 	--build-arg GO_VER=$(GO_VER) \
 	--build-arg ALPINE_VER=$(ALPINE_VER) .
 
+.PHONY: sandbox-cms-docker
+sandbox-cms-docker:
+	@echo "Building sandbox-cms docker image"
+	@docker build -f ./images/sandbox-cms/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(DEMO_CMS_IMAGE_NAME):latest \
+	--build-arg GO_VER=$(GO_VER) \
+	--build-arg ALPINE_VER=$(ALPINE_VER) .
+
 create-element-did: clean
 	@mkdir -p .build
 	@cp scripts/create-element-did.js .build/
@@ -128,7 +145,7 @@ clean: clean-build
 	@make clean -C ./k8s
 
 .PHONY: build-setup-deploy
-build-setup-deploy: clean sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker sandbox-cli-docker login-consent-server-docker
+build-setup-deploy: clean sandbox-issuer-docker sandbox-rp-docker sandbox-ace-rp-docker sandbox-cli-docker sandbox-cms-docker login-consent-server-docker
 	@TRUSTBLOC_CORE_K8S_COMMIT=$(TRUSTBLOC_CORE_K8S_COMMIT) \
 		make local-setup-deploy -C ./k8s
 
