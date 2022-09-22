@@ -38,6 +38,7 @@ ucis-rp
 uni-resolver-web
 vault-kms
 vault-server
+vcs
 verifier-vcs
 wallet
 vcwallet
