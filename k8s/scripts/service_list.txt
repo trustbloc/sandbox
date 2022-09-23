@@ -4,6 +4,8 @@ adapter-issuer
 adapter-issuer-didcomm
 adapter-rp
 adapter-rp-didcomm
+auth-hydra
+auth-hydra-admin
 benefits-dept-comparator
 benefits-dept-rp
 cbp-comparator
