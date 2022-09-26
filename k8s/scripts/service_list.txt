@@ -4,6 +4,7 @@ adapter-issuer
 adapter-issuer-didcomm
 adapter-rp
 adapter-rp-didcomm
+api-gateway
 auth-hydra
 auth-hydra-admin
 benefits-dept-comparator
