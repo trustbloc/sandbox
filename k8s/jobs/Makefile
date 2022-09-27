@@ -65,7 +65,7 @@ delete-jobs:
 	ace-rp-profiles \
 	adapter-issuer-add-profiles \
 	holder-vcs-add-profiles \
-	hub-hydra-create-client \
+	auth-hydra-create-client \
 	hydra-create-client \
 	issuer-register-tenant \
 	issuer-vcs-add-profiles \
