@@ -8,10 +8,10 @@
 kind: Job
 apiVersion: batch/v1
 metadata:
-  name: hub-hydra-create-client
+  name: auth-hydra-create-client
   labels:
     group: core
-    component: hub-auth
+    component: auth
 spec:
   template:
     spec:
@@ -24,7 +24,7 @@ spec:
           args:
             - "-c"
             - |
-              while [[ "$(wget -T 5 -S --spider http://hub-hydra-admin/health/ready 2>&1 | grep '200 OK')" == "" ]];
+              while [[ "$(wget -T 5 -S --spider http://auth-hydra-admin/health/ready 2>&1 | grep '200 OK')" == "" ]];
               do echo "waiting for endpoint";
               sleep 5;
               done;
@@ -36,6 +36,6 @@ spec:
         args:
           - "-c"
           - |
-            err_resp=$(hydra clients create --endpoint http://hub-hydra-admin --fake-tls-termination --id user-agent --secret user-agent-secret --grant-types authorization_code,refresh_token --response-types code,id_token --scope openid,profile,email --skip-tls-verify --callbacks https://wallet-support.||DOMAIN||/oidc/callback 2>&1 > /dev/null);
+            err_resp=$(hydra clients create --endpoint http://auth-hydra-admin --fake-tls-termination --id test-org --secret test-org-secret --grant-types client_credentials --response-types token,code --scope org_admin --skip-tls-verify 2>&1 > /dev/null);
             echo $err_resp;
             if [ -z "$err_resp" ] || [ -n "$(echo ${err_resp} | grep already )" ];then echo "hydra client add successful"; exit 0;else echo "hydra client add failed"; exit 1;fi

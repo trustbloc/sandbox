@@ -49,7 +49,7 @@ resources:
 - vcs/issuer/add-profiles.yml
 - vcs/verifier/add-profiles.yml
 - vcs/holder/add-profiles.yml
-- hub-auth/hydra/hydra-create-client.yml
+- auth-hydra/hydra/hydra-create-client.yml
 - adapter-issuer/add-profiles.yml
 - login-consent/hydra/hydra-create-client.yml
 - issuer/role.yml
