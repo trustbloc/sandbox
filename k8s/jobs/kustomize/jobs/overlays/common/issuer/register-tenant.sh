@@ -7,9 +7,21 @@
 echo "Adding curl and jq"
 apk --no-cache add curl jq
 
+# If necessary, convert the reported architecture name to the (equivalent) names that are used in the kubectl binary
+# filenames.
+ARCH=$( uname -m)
+case $ARCH in
+   x86_64)
+     ARCH="amd64"
+     ;;
+   aarch64)
+     ARCH="arm64"
+     ;;
+esac
+
 echo
 echo "fetching kubectl"
-curl -qL https://storage.googleapis.com/kubernetes-release/release/v1.20.0/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
+curl -qL https://storage.googleapis.com/kubernetes-release/release/v1.20.0/bin/linux/$ARCH/kubectl -o /usr/local/bin/kubectl
 chmod +x /usr/local/bin/kubectl
 
 rpAdapterURL=https://adapter-rp.||DOMAIN||/relyingparties

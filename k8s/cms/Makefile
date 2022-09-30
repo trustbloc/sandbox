@@ -49,10 +49,13 @@ setup: generate-test-certs
 setup-no-certs:
 	@echo setup-no-certs
 
+# TODO (#1539): frapsoft/openssl only has an amd64 version. While this does work when using Docker on arm64-based macOS
+#              currently thanks to the automatic built-in QEMU emulation, it would be better to use a
+#              native arm64 version.
 .PHONY: generate-test-certs
 generate-test-certs: clean-certs
 	@echo $(abspath .)
-	@$(CONTAINER_CMD) run ${CONTAINER_CMD_RUN_OPTS} -i --rm \
+	@$(CONTAINER_CMD) run ${CONTAINER_CMD_RUN_OPTS} -i --platform linux/amd64 --rm \
 		-v $(abspath .):/opt/workspace:Z \
 		-e DOMAIN=${DOMAIN} \
 		-e CERTS_OUTPUT_DIR=${CERTS_OUTPUT_DIR} \
