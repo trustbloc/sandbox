@@ -20,16 +20,6 @@ spec:
           configMap:
             name: access-rules-template
       initContainers:
-        - name: healthcheck-ready
-          image: busybox
-          imagePullPolicy: IfNotPresent
-          command: ["/bin/sh"]
-          args:
-            - "-c"
-            - |
-              while [ "$(wget http://strapi/admin -O- -S >/dev/null 2>&1; echo $?)" -ne 0 ];
-              do echo "waiting for strapi/admin endpoint";
-              done
         - name: process-oathkeeper-template
           image: "alpine:latest"
           imagePullPolicy: IfNotPresent

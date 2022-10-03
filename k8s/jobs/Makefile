@@ -72,7 +72,7 @@ delete-jobs:
 	orb-add-followers \
 	process-oathkeeper-template \
 	rp-register-tenant \
-	user-data \
+#	user-data \
 	verifier-vcs-add-profiles \
 	--ignore-not-found=true
 

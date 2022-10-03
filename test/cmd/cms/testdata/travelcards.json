@@ -1,0 +1,17 @@
+[
+  {
+    "userid":"100",
+    "vcmetadata":{
+      "name":"Travel Card",
+      "description":"Travel Card for Mr.John"
+    },
+    "travelcardid":"123-456-765",
+    "name":"John",
+    "sex":"M",
+    "country":"Canada",
+    "dob":"12-06-1989",
+    "issuedate":"01-06-2018",
+    "cardexpires":"01-06-2023",
+    "type":"TravelCard"
+  }
+]

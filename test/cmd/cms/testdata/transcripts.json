@@ -1,0 +1,16 @@
+[
+  {
+    "userid":"100",
+    "vcmetadata":{
+      "name":"Degree Transcript",
+      "description":"Degree Transcript for Mr.John"
+    },
+    "studentid":"323456898",
+    "name":"John",
+    "university":"Faber College",
+    "status":"graduated",
+    "totalcredits":"100",
+    "course":"Bachelors in Computing Science",
+    "type":"Transcript"
+  }
+]

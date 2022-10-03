@@ -1,0 +1,21 @@
+[
+  {
+    "userid":"100",
+    "metadata":{
+      "contexts":[
+        "https://trustbloc.github.io/context/vc/examples/credit-score-v1.jsonld"
+      ],
+      "scopes":[
+        "CreditScore"
+      ]
+    },
+    "data":{
+      "family_name":"Smith",
+      "given_name":"John",
+      "birthdate":"1990-01-01",
+      "address":"4726 Pine Street, Toronto - A1B 2C3",
+      "report_date":"2020-08-14",
+      "score":"737"
+    }
+  }
+]

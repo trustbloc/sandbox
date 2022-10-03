@@ -1,0 +1,17 @@
+[
+  {
+    "userid":"100",
+    "vcmetadata":{
+      "@context":[
+        "https://www.w3.org/2018/credentials/v1",
+        "https://trustbloc.github.io/context/vc/examples/booking-ref-v1.jsonld"
+      ],
+      "name":"Taylor Flights Booking Reference",
+      "description":"Booking Reference for Mr.Louis Pasteur"
+    },
+    "vccredentialsubject":{
+      "referenceNumber":"K1J 3XA",
+      "issuedBy":"Taylor Chartered Flights"
+    }
+  }
+]
