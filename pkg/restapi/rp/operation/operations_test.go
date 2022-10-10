@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -117,7 +118,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(config)
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 7, len(svc.GetRESTHandlers()))
+		require.Equal(t, 8, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error if oidc provider is invalid", func(t *testing.T) {
@@ -136,6 +137,51 @@ func TestNew(t *testing.T) {
 		}
 		_, err := New(config)
 		require.Error(t, err)
+	})
+}
+
+func TestWellKnownConfig(t *testing.T) {
+	t.Run("test error from get did config", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+		svc, err := New(config)
+		require.NoError(t, err)
+		svc.client = &mockHTTPClient{postErr: fmt.Errorf("error")}
+
+		rr := httptest.NewRecorder()
+		svc.wellKnownConfig(rr, &http.Request{Method: http.MethodGet})
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get did config")
+	})
+
+	t.Run("test error from get did config", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+		svc, err := New(config)
+		require.NoError(t, err)
+		svc.client = &mockHTTPClient{postValue: &http.Response{
+			StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader("error")),
+		}}
+
+		rr := httptest.NewRecorder()
+		svc.wellKnownConfig(rr, &http.Request{Method: http.MethodGet})
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "did config didn't return 200 status")
+	})
+
+	t.Run("test success", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+		svc, err := New(config)
+		require.NoError(t, err)
+		svc.client = &mockHTTPClient{postValue: &http.Response{
+			StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("{}")),
+		}}
+
+		rr := httptest.NewRecorder()
+		svc.wellKnownConfig(rr, &http.Request{Method: http.MethodGet})
+		require.Equal(t, http.StatusOK, rr.Code)
+		require.Contains(t, rr.Body.String(), "{}")
 	})
 }
 

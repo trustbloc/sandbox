@@ -46,6 +46,12 @@ const (
 	vcsURLFlagUsage = "VC Service URL. Format: HostName:Port."
 	vcsURLEnvKey    = "RP_VCS_URL"
 
+	// vc v1 service url config flags
+	vcsV1URLFlagName  = "vcs-v1-url"
+	vcsV1URLFlagUsage = "VC Service URL V1. Format: HostName:Port." +
+		" Alternatively, this can be set with the following environment variable: " + vcsV1URLEnvKey
+	vcsV1URLEnvKey = "RP_VCS_V1_URL"
+
 	tlsSystemCertPoolFlagName  = "tls-systemcertpool"
 	tlsSystemCertPoolFlagUsage = "Use system certificate pool." +
 		" Possible values [true] [false]. Defaults to false if not set." +
@@ -140,6 +146,7 @@ type rpParameters struct {
 	tlsCertFile        string
 	tlsKeyFile         string
 	vcServiceURL       string
+	vcV1ServiceURL     string
 	tlsSystemCertPool  bool
 	tlsCACerts         []string
 	requestTokens      map[string]string
@@ -173,7 +180,7 @@ func GetStartCmd(srv server) *cobra.Command {
 	return startCmd
 }
 
-func createStartCmd(srv server) *cobra.Command { // nolint: funlen
+func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo
 	return &cobra.Command{
 		Use:   "start",
 		Short: "Start rp",
@@ -185,6 +192,11 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen
 			}
 
 			vcServiceURL, err := cmdutils.GetUserSetVarFromString(cmd, vcsURLFlagName, vcsURLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
+			vcV1ServiceURL, err := cmdutils.GetUserSetVarFromString(cmd, vcsV1URLFlagName, vcsV1URLEnvKey, false)
 			if err != nil {
 				return err
 			}
@@ -230,6 +242,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen
 				tlsCertFile:        tlsConfg.certFile,
 				tlsKeyFile:         tlsConfg.keyFile,
 				vcServiceURL:       vcServiceURL,
+				vcV1ServiceURL:     vcV1ServiceURL,
 				tlsSystemCertPool:  tlsConfg.systemCertPool,
 				tlsCACerts:         tlsConfg.caCerts,
 				requestTokens:      requestTokens,
@@ -374,6 +387,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(tlsCertFileFlagName, "", "", tlsCertFileFlagUsage)
 	startCmd.Flags().StringP(tlsKeyFileFlagName, "", "", tlsKeyFileFlagUsage)
 	startCmd.Flags().StringP(vcsURLFlagName, "", "", vcsURLFlagUsage)
+	startCmd.Flags().StringP(vcsV1URLFlagName, "", "", vcsV1URLFlagUsage)
 	startCmd.Flags().StringP(tlsSystemCertPoolFlagName, "", "",
 		tlsSystemCertPoolFlagUsage)
 	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
@@ -410,6 +424,7 @@ func startRP(parameters *rpParameters) error {
 		DIDCOMMVPHTML:          "static/didcommvp.html",
 		OIDCShareVPHTML:        "static/oidcvp.html",
 		VCSURL:                 parameters.vcServiceURL,
+		VCSV1URL:               parameters.vcV1ServiceURL,
 		TLSConfig:              &tls.Config{RootCAs: rootCAs, MinVersion: tls.VersionTLS12},
 		RequestTokens:          parameters.requestTokens,
 		TransientStoreProvider: transientStore,

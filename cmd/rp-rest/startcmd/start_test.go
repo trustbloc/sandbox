@@ -142,6 +142,7 @@ func TestStartCmd(t *testing.T) {
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, tlsKeyFileArg()...)
 		args = append(args, vcsServiceURLArg()...)
+		args = append(args, vcsV1ServiceURLArg()...)
 		args = append(args, requestTokensArg()...)
 		args = append(args, oidcClientIDArg()...)
 		args = append(args, oidcClientSecretArg()...)
@@ -164,6 +165,7 @@ func TestStartCmd(t *testing.T) {
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, tlsKeyFileArg()...)
 		args = append(args, vcsServiceURLArg()...)
+		args = append(args, vcsV1ServiceURLArg()...)
 		args = append(args, requestTokensArg()...)
 		args = append(args, oidcClientIDArg()...)
 		args = append(args, oidcClientSecretArg()...)
@@ -186,6 +188,7 @@ func TestStartCmd(t *testing.T) {
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, tlsKeyFileArg()...)
 		args = append(args, vcsServiceURLArg()...)
+		args = append(args, vcsV1ServiceURLArg()...)
 		args = append(args, requestTokensArg()...)
 		args = append(args, oidcClientIDArg()...)
 		args = append(args, oidcClientSecretArg()...)
@@ -208,6 +211,7 @@ func TestStartCmd(t *testing.T) {
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, tlsKeyFileArg()...)
 		args = append(args, vcsServiceURLArg()...)
+		args = append(args, vcsV1ServiceURLArg()...)
 		args = append(args, requestTokensArg()...)
 		args = append(args, oidcClientIDArg()...)
 		args = append(args, oidcClientSecretArg()...)
@@ -244,6 +248,7 @@ func getValidArgs(logLevel, oidcProviderURL string) []string {
 	args = append(args, tlsCertFileArg()...)
 	args = append(args, tlsKeyFileArg()...)
 	args = append(args, vcsServiceURLArg()...)
+	args = append(args, vcsV1ServiceURLArg()...)
 	args = append(args, requestTokensArg()...)
 	args = append(args, oidcClientIDArg()...)
 	args = append(args, oidcClientSecretArg()...)
@@ -296,6 +301,9 @@ func setEnvVars(t *testing.T, oidcProviderURL string) {
 	err = os.Setenv(vcsURLEnvKey, "localhost:8081")
 	require.Nil(t, err)
 
+	err = os.Setenv(vcsV1URLEnvKey, "localhost:8082")
+	require.Nil(t, err)
+
 	err = os.Setenv(oidcProviderURLEnvKey, oidcProviderURL)
 	require.NoError(t, err)
 
@@ -324,6 +332,9 @@ func unsetEnvVars(t *testing.T) {
 	err = os.Unsetenv(vcsURLEnvKey)
 	require.Nil(t, err)
 
+	err = os.Unsetenv(vcsV1URLEnvKey)
+	require.Nil(t, err)
+
 	err = os.Unsetenv(oidcProviderURLEnvKey)
 	require.NoError(t, err)
 
@@ -348,6 +359,10 @@ func tlsKeyFileArg() []string {
 
 func vcsServiceURLArg() []string {
 	return []string{flag + vcsURLFlagName, "localhost:8081"}
+}
+
+func vcsV1ServiceURLArg() []string {
+	return []string{flag + vcsV1URLFlagName, "localhost:8082"}
 }
 
 func requestTokensArg() []string {
