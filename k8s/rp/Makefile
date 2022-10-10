@@ -80,6 +80,7 @@ set-images: kustomize
 
 .PHONY: deploy-rp
 deploy-rp: prechecks kustomize kubectl
+	@minikube image load $(RP_IMG)
 	$(KUSTOMIZE) build ${KUSTOMIZE_BUILD_OPTS} \
 	${KUSTOMIZE_DIR}/overlays/${DEPLOYMENT_ENV}/rp | $(KUBECTL) apply -f -
 

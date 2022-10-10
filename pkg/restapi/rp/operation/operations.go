@@ -38,13 +38,14 @@ const (
 	httpContentTypeJSON = "application/json"
 
 	// api paths
-	verifyVPPath           = "/verifyPresentation"
-	oauth2GetRequestPath   = "/oauth2/request"
-	oauth2CallbackPath     = "/oauth2/callback"
-	oidcShareRequestPath   = "/oidc/share/request"
-	oidcShareCallbackPath  = "/oidc/share/cb"
-	verifyPresentationPath = "/verify/presentation"
-	verifyCredentialPath   = "/verify/credential"
+	verifyVPPath                  = "/verifyPresentation"
+	oauth2GetRequestPath          = "/oauth2/request"
+	oauth2CallbackPath            = "/oauth2/callback"
+	oidcShareRequestPath          = "/oidc/share/request"
+	oidcShareCallbackPath         = "/oidc/share/cb"
+	verifyPresentationPath        = "/verify/presentation"
+	verifyCredentialPath          = "/verify/credential"
+	wellKnownConfigGetRequestPath = "/.well-known/did-configuration.json"
 
 	// api path params
 	scopeQueryParam    = "scope"
@@ -92,6 +93,7 @@ type Operation struct {
 	didCommVpHTML   string
 	oidcShareVpHTML string
 	vcsURL          string
+	vcsV1URL        string
 	client          httpClient
 	requestTokens   map[string]string
 	transientStore  storage.Store
@@ -107,6 +109,7 @@ type Config struct {
 	DIDCOMMVPHTML          string
 	OIDCShareVPHTML        string
 	VCSURL                 string
+	VCSV1URL               string
 	TLSConfig              *tls.Config
 	RequestTokens          map[string]string
 	OIDCProviderURL        string
@@ -140,6 +143,7 @@ func New(config *Config) (*Operation, error) {
 		didCommVpHTML:   config.DIDCOMMVPHTML,
 		oidcShareVpHTML: config.OIDCShareVPHTML,
 		vcsURL:          config.VCSURL,
+		vcsV1URL:        config.VCSV1URL,
 		client:          &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
 		requestTokens:   config.RequestTokens,
 		tlsConfig:       config.TLSConfig,
@@ -189,6 +193,8 @@ func (c *Operation) registerHandler() {
 
 		support.NewHTTPHandler(verifyPresentationPath, http.MethodPost, c.verifyPresentation),
 		support.NewHTTPHandler(verifyCredentialPath, http.MethodPost, c.verifyCredential),
+
+		support.NewHTTPHandler(wellKnownConfigGetRequestPath, http.MethodGet, c.wellKnownConfig),
 	}
 }
 
@@ -473,6 +479,48 @@ func (c *Operation) handleOIDCShareCallback(w http.ResponseWriter, r *http.Reque
 	}
 
 	c.oidcShareVpResult(w, "Successfully Received OIDC verifiable Presentation")
+}
+
+func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
+	// TODO make profile id configurable
+	resp, err := c.sendHTTPRequest(http.MethodGet,
+		fmt.Sprintf("%s/verifier/profiles/%s/well-known/did-config",
+			c.vcsV1URL, "jwt-web-ED25519-Ed25519Signature2020"), nil, httpContentTypeJSON, "")
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to get did config: %s", err.Error()))
+
+		return
+	}
+
+	respBytes, respErr := io.ReadAll(resp.Body)
+	if respErr != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to read did config resp : %s", err.Error()))
+
+		return
+	}
+
+	defer func() {
+		e := resp.Body.Close()
+		if e != nil {
+			logger.Errorf("closing response body failed: %v", e)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("did config didn't return 200 status: %s", string(respBytes)))
+
+		return
+	}
+
+	w.Header().Set("content-type", httpContentTypeJSON)
+
+	_, err = w.Write(respBytes)
+	if err != nil {
+		logger.Errorf("failed to write response : %s", err)
+	}
 }
 
 func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) { // nolint: funlen
