@@ -46,6 +46,7 @@ const (
 	verifyPresentationPath        = "/verify/presentation"
 	verifyCredentialPath          = "/verify/credential"
 	wellKnownConfigGetRequestPath = "/.well-known/did-configuration.json"
+	openID4VPGetQRPath            = "/verify/openid4vp/getQR"
 
 	// api path params
 	scopeQueryParam    = "scope"
@@ -136,6 +137,10 @@ type createOIDCRequestResponse struct {
 	FlowType string `json:"flowType"`
 }
 
+type openID4VPGetQRResponse struct {
+	QRText string `json:"qrText"`
+}
+
 // New returns rp operation instance
 func New(config *Config) (*Operation, error) {
 	svc := &Operation{
@@ -195,6 +200,7 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(verifyCredentialPath, http.MethodPost, c.verifyCredential),
 
 		support.NewHTTPHandler(wellKnownConfigGetRequestPath, http.MethodGet, c.wellKnownConfig),
+		support.NewHTTPHandler(openID4VPGetQRPath, http.MethodGet, c.openID4VPGetQR),
 	}
 }
 
@@ -518,6 +524,25 @@ func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", httpContentTypeJSON)
 
 	_, err = w.Write(respBytes)
+	if err != nil {
+		logger.Errorf("failed to write response : %s", err)
+	}
+}
+
+func (c *Operation) openID4VPGetQR(w http.ResponseWriter, r *http.Request) {
+	// TODO initiate OpenID4VP flow with vcs and get QR code
+	response, err := json.Marshal(&openID4VPGetQRResponse{
+		QRText: "http://example.com",
+	})
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to marshal response : %s", err))
+
+		return
+	}
+
+	w.Header().Set("content-type", httpContentTypeJSON)
+
+	_, err = w.Write(response)
 	if err != nil {
 		logger.Errorf("failed to write response : %s", err)
 	}

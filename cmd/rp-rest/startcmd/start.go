@@ -509,6 +509,9 @@ func pathPrefix() *mux.Router {
 	router.PathPrefix("/backgroundcheck").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/backgroundcheck.html")
 	})
+	router.PathPrefix("/verifierqr").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/verifierqr.html")
+	})
 
 	return router
 }
