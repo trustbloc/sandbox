@@ -120,6 +120,11 @@ const (
 		" Alternatively, this can be set with the following environment variable: " + accessTokenURLEnvKey
 	accessTokenURLEnvKey = "RP_ACCESS_TOKEN_URL"
 
+	apiGatewayURLFlagName  = "api-gateway-url"
+	apiGatewayURLFlagUsage = "Api gateway url" +
+		" Alternatively, this can be set with the following environment variable: " + apiGatewayURLEnvKey
+	apiGatewayURLEnvKey = "RP_API_GATEWAY_URL"
+
 	tokenLength2 = 2
 )
 
@@ -161,6 +166,7 @@ type rpParameters struct {
 	walletAuthURL      string
 	dbParams           *common.DBParameters
 	accessTokenURL     string
+	apiGatewayURL      string
 }
 
 type oidcParameters struct {
@@ -244,6 +250,8 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo
 
 			accessTokenURL := cmdutils.GetUserSetOptionalVarFromString(cmd, accessTokenURLFlagName, accessTokenURLEnvKey)
 
+			apiGatewayURL := cmdutils.GetUserSetOptionalVarFromString(cmd, apiGatewayURLFlagName, apiGatewayURLEnvKey)
+
 			parameters := &rpParameters{
 				srv:                srv,
 				hostURL:            strings.TrimSpace(hostURL),
@@ -260,6 +268,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo
 				walletAuthURL:      walletAuthURL,
 				dbParams:           dbParams,
 				accessTokenURL:     accessTokenURL,
+				apiGatewayURL:      apiGatewayURL,
 			}
 
 			return startRP(parameters)
@@ -412,9 +421,10 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(waciOIDCCallbackURLFlagName, "", "", waciOIDCCallbackURLFlagUsage)
 	startCmd.Flags().StringP(walletAuthURLFlagName, "", "", walletAuthURLFlagUsage)
 	startCmd.Flags().StringP(accessTokenURLFlagName, "", "", accessTokenURLFlagUsage)
+	startCmd.Flags().StringP(apiGatewayURLFlagName, "", "", apiGatewayURLFlagUsage)
 }
 
-func startRP(parameters *rpParameters) error {
+func startRP(parameters *rpParameters) error { //nolint:funlen
 	if parameters.logLevel != "" {
 		common.SetDefaultLogLevel(logger, parameters.logLevel)
 	}
@@ -448,6 +458,7 @@ func startRP(parameters *rpParameters) error {
 		WACIOIDCCallbackURL:    parameters.waciOIDCParameters.oidcCallbackURL,
 		WalletAuthURL:          parameters.walletAuthURL,
 		AccessTokenURL:         parameters.accessTokenURL,
+		APIGatewayURL:          parameters.apiGatewayURL,
 	}
 
 	rpService, err := rp.New(cfg)
