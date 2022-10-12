@@ -202,6 +202,64 @@ func TestOpenID4VPGetQR(t *testing.T) {
 		svc.openID4VPGetQR(rr, &http.Request{Method: http.MethodGet})
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 	})
+
+	t.Run("failed to initiate oidc", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+		testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			if req.RequestURI == "/oauth2/token" {
+				res.Header().Set("Content-Type", "application/json")
+				_, err := io.WriteString(res, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+
+				require.NoError(t, err)
+
+				return
+			}
+
+			res.WriteHeader(http.StatusInternalServerError)
+		}))
+
+		config.AccessTokenURL = testServer.URL
+		config.APIGatewayURL = testServer.URL
+
+		svc, err := New(config)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+		svc.openID4VPGetQR(rr, &http.Request{Method: http.MethodGet})
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "initiate oidc didn't return 200 status")
+	})
+
+	t.Run("success", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+		testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			if req.RequestURI == "/oauth2/token" {
+				res.Header().Set("Content-Type", "application/json")
+				_, err := io.WriteString(res, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+
+				require.NoError(t, err)
+
+				return
+			}
+
+			res.Header().Set("Content-Type", "application/json")
+			_, err := io.WriteString(res, `{"authorizationRequest": "data"}`)
+
+			require.NoError(t, err)
+		}))
+
+		config.AccessTokenURL = testServer.URL
+		config.APIGatewayURL = testServer.URL
+
+		svc, err := New(config)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+		svc.openID4VPGetQR(rr, &http.Request{Method: http.MethodGet})
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
 }
 
 func TestVerifyVP(t *testing.T) {

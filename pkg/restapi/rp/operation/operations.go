@@ -61,8 +61,12 @@ const (
 	// edge-service verifier endpoints
 	verifyCredentialURLFormat = "/%s" + "/verifier/credentials/verify"
 
+	initiateOidcInteractionURLFormat = "/verifier/profiles/%s/interactions/initiate-oidc"
+
 	// TODO https://github.com/trustbloc/sandbox/issues/352 Configure verifier profiles in Verifier page
 	verifierProfileID = "trustbloc-verifier"
+
+	verifierJWTProfileID = "jwt-web-ED25519-Ed25519Signature2020"
 
 	vcsVerifierRequestTokenName = "vcs_verifier" //nolint: gosec
 
@@ -89,6 +93,10 @@ type oidcClient interface {
 	HandleOIDCCallback(reqContext context.Context, code string) ([]byte, error)
 }
 
+type initiateOIDC4VPResponse struct {
+	AuthorizationRequest string `json:"authorizationRequest"`
+}
+
 // Operation defines handlers
 type Operation struct {
 	handlers        []Handler
@@ -105,6 +113,7 @@ type Operation struct {
 	waciOIDCClient  oidcClient
 	walletAuthURL   string
 	accessTokenURL  string
+	apiGatewayURL   string
 }
 
 // Config defines configuration for rp operations
@@ -127,6 +136,7 @@ type Config struct {
 	WACIOIDCCallbackURL    string
 	WalletAuthURL          string
 	AccessTokenURL         string
+	APIGatewayURL          string
 }
 
 // vc struct used to return vc data to html
@@ -158,6 +168,7 @@ func New(config *Config) (*Operation, error) {
 		tlsConfig:       config.TLSConfig,
 		walletAuthURL:   config.WalletAuthURL,
 		accessTokenURL:  config.AccessTokenURL,
+		apiGatewayURL:   config.APIGatewayURL,
 	}
 
 	var err error
@@ -496,7 +507,7 @@ func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
 	// TODO make profile id configurable
 	resp, err := c.sendHTTPRequest(http.MethodGet,
 		fmt.Sprintf("%s/verifier/profiles/%s/well-known/did-config",
-			c.vcsV1URL, "jwt-web-ED25519-Ed25519Signature2020"), nil, httpContentTypeJSON, "")
+			c.vcsV1URL, verifierJWTProfileID), nil, httpContentTypeJSON, "")
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get did config: %s", err.Error()))
@@ -534,7 +545,7 @@ func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *Operation) openID4VPGetQR(w http.ResponseWriter, r *http.Request) {
+func (c *Operation) openID4VPGetQR(w http.ResponseWriter, r *http.Request) { //nolint: funlen
 	// TODO make username and secret configurable
 	token, err := c.issueAccessToken(c.accessTokenURL, "test-org", "test-org-secret", []string{"org_admin"})
 	if err != nil {
@@ -543,11 +554,50 @@ func (c *Operation) openID4VPGetQR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Infof("access token %s:", token)
+	endpoint := fmt.Sprintf(initiateOidcInteractionURLFormat, verifierJWTProfileID)
 
-	// TODO initiate OpenID4VP flow with vcs and get QR code
+	resp, err := c.sendHTTPRequest(http.MethodPost,
+		c.apiGatewayURL+endpoint, nil, httpContentTypeJSON, token)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to initiate oidc: %s", err.Error()))
+
+		return
+	}
+
+	respBytes, respErr := io.ReadAll(resp.Body)
+	if respErr != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to read initiate oidc resp : %s", err.Error()))
+
+		return
+	}
+
+	defer func() {
+		e := resp.Body.Close()
+		if e != nil {
+			logger.Errorf("closing response body failed: %v", e)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("initiate oidc didn't return 200 status: %s", string(respBytes)))
+
+		return
+	}
+
+	result := &initiateOIDC4VPResponse{}
+
+	if err = json.Unmarshal(respBytes, result); err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to unmarshal initiate oidc response : %s", err))
+
+		return
+	}
+
 	response, err := json.Marshal(&openID4VPGetQRResponse{
-		QRText: "http://example.com",
+		QRText: result.AuthorizationRequest,
 	})
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to marshal response : %s", err))
@@ -820,6 +870,7 @@ func checkSubstrings(str string, subs ...string) bool {
 	return isCompleteMatch
 }
 
+// nolint: unparam
 func (c *Operation) sendHTTPRequest(method, reqURL string, body []byte, contentType,
 	token string) (*http.Response, error) {
 	logger.Infof("send http request : url=%s methdod=%s body=%s", reqURL, method, string(body))
@@ -830,6 +881,8 @@ func (c *Operation) sendHTTPRequest(method, reqURL string, body []byte, contentT
 	}
 
 	if token != "" {
+		req.Header.Add("Authorization", "Bearer "+token)
+	} else {
 		req.Header.Add("Authorization", "Bearer "+c.requestTokens[vcsVerifierRequestTokenName])
 	}
 
