@@ -29,6 +29,8 @@ import (
 	"github.com/square/go-jose/jwt"
 	"github.com/trustbloc/edge-core/pkg/log"
 	edgesvcops "github.com/trustbloc/vcs/pkg/restapi/verifier/operation"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
 
 	"github.com/trustbloc/sandbox/pkg/internal/common/support"
 	oidcclient "github.com/trustbloc/sandbox/pkg/restapi/internal/common/oidc"
@@ -102,6 +104,7 @@ type Operation struct {
 	oidcClient      oidcClient
 	waciOIDCClient  oidcClient
 	walletAuthURL   string
+	accessTokenURL  string
 }
 
 // Config defines configuration for rp operations
@@ -123,6 +126,7 @@ type Config struct {
 	WACIOIDCClientSecret   string
 	WACIOIDCCallbackURL    string
 	WalletAuthURL          string
+	AccessTokenURL         string
 }
 
 // vc struct used to return vc data to html
@@ -153,6 +157,7 @@ func New(config *Config) (*Operation, error) {
 		requestTokens:   config.RequestTokens,
 		tlsConfig:       config.TLSConfig,
 		walletAuthURL:   config.WalletAuthURL,
+		accessTokenURL:  config.AccessTokenURL,
 	}
 
 	var err error
@@ -530,6 +535,16 @@ func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Operation) openID4VPGetQR(w http.ResponseWriter, r *http.Request) {
+	// TODO make username and secret configurable
+	token, err := c.issueAccessToken(c.accessTokenURL, "test-org", "test-org-secret", []string{"org_admin"})
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to issue token : %s", err))
+
+		return
+	}
+
+	logger.Infof("access token %s:", token)
+
 	// TODO initiate OpenID4VP flow with vcs and get QR code
 	response, err := json.Marshal(&openID4VPGetQRResponse{
 		QRText: "http://example.com",
@@ -848,4 +863,28 @@ func (c *Operation) writeResponse(rw http.ResponseWriter, status int, data []byt
 	if _, err := rw.Write(data); err != nil {
 		logger.Errorf("Unable to send error message, %s", err)
 	}
+}
+
+// issueAccessToken issue token.
+func (c *Operation) issueAccessToken(oidcProviderURL, clientID, secret string, scopes []string) (string, error) {
+	conf := clientcredentials.Config{
+		TokenURL:     oidcProviderURL + "/oauth2/token",
+		ClientID:     clientID,
+		ClientSecret: secret,
+		Scopes:       scopes,
+		AuthStyle:    oauth2.AuthStyleInHeader,
+	}
+
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: c.tlsConfig,
+		},
+	})
+
+	token, err := conf.Token(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get token: %w", err)
+	}
+
+	return token.AccessToken, nil
 }
