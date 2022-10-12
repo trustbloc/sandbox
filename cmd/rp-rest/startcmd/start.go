@@ -115,6 +115,11 @@ const (
 		" Alternatively, this can be set with the following environment variable: " + walletAuthURLEnvKey
 	walletAuthURLEnvKey = "RP_WALLET_AUTH_URL"
 
+	accessTokenURLFlagName  = "access-token-url"
+	accessTokenURLFlagUsage = "Access token url" +
+		" Alternatively, this can be set with the following environment variable: " + accessTokenURLEnvKey
+	accessTokenURLEnvKey = "RP_ACCESS_TOKEN_URL"
+
 	tokenLength2 = 2
 )
 
@@ -155,6 +160,7 @@ type rpParameters struct {
 	waciOIDCParameters *oidcParameters
 	walletAuthURL      string
 	dbParams           *common.DBParameters
+	accessTokenURL     string
 }
 
 type oidcParameters struct {
@@ -236,6 +242,8 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo
 				return err
 			}
 
+			accessTokenURL := cmdutils.GetUserSetOptionalVarFromString(cmd, accessTokenURLFlagName, accessTokenURLEnvKey)
+
 			parameters := &rpParameters{
 				srv:                srv,
 				hostURL:            strings.TrimSpace(hostURL),
@@ -251,6 +259,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo
 				waciOIDCParameters: waciOIDCParams,
 				walletAuthURL:      walletAuthURL,
 				dbParams:           dbParams,
+				accessTokenURL:     accessTokenURL,
 			}
 
 			return startRP(parameters)
@@ -402,6 +411,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(waciOIDCClientSecretFlagName, "", "", waciOIDCClientSecretFlagUsage)
 	startCmd.Flags().StringP(waciOIDCCallbackURLFlagName, "", "", waciOIDCCallbackURLFlagUsage)
 	startCmd.Flags().StringP(walletAuthURLFlagName, "", "", walletAuthURLFlagUsage)
+	startCmd.Flags().StringP(accessTokenURLFlagName, "", "", accessTokenURLFlagUsage)
 }
 
 func startRP(parameters *rpParameters) error {
@@ -437,6 +447,7 @@ func startRP(parameters *rpParameters) error {
 		WACIOIDCClientSecret:   parameters.waciOIDCParameters.oidcClientSecret,
 		WACIOIDCCallbackURL:    parameters.waciOIDCParameters.oidcCallbackURL,
 		WalletAuthURL:          parameters.walletAuthURL,
+		AccessTokenURL:         parameters.accessTokenURL,
 	}
 
 	rpService, err := rp.New(cfg)

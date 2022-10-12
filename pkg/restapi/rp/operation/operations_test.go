@@ -186,15 +186,21 @@ func TestWellKnownConfig(t *testing.T) {
 }
 
 func TestOpenID4VPGetQR(t *testing.T) {
-	t.Run("test success", func(t *testing.T) {
+	t.Run("error get token", func(t *testing.T) {
 		config, cleanup := config(t)
 		defer cleanup()
+		testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(http.StatusInternalServerError)
+		}))
+
+		config.AccessTokenURL = testServer.URL
+
 		svc, err := New(config)
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 		svc.openID4VPGetQR(rr, &http.Request{Method: http.MethodGet})
-		require.Equal(t, http.StatusOK, rr.Code)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
 	})
 }
 
