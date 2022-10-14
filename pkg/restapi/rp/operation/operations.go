@@ -66,7 +66,7 @@ const (
 	// TODO https://github.com/trustbloc/sandbox/issues/352 Configure verifier profiles in Verifier page
 	verifierProfileID = "trustbloc-verifier"
 
-	verifierJWTProfileID = "jwt-web-ED25519-Ed25519Signature2020"
+	verifierJWTProfileID = "jwt-web-ED25519-JsonWebSignature2020"
 
 	vcsVerifierRequestTokenName = "vcs_verifier" //nolint: gosec
 
