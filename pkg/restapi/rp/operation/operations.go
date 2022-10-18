@@ -626,7 +626,7 @@ func (c *Operation) openID4VPGetQR(w http.ResponseWriter, r *http.Request) { //n
 	}
 }
 
-func (c *Operation) retrieveInteractionsClaim(w http.ResponseWriter, r *http.Request) { //nolint: funlen
+func (c *Operation) retrieveInteractionsClaim(w http.ResponseWriter, r *http.Request) {
 	// TODO make username and secret configurable
 	token, err := c.issueAccessToken(c.accessTokenURL, "test-org", "test-org-secret", []string{"org_admin"})
 	if err != nil {
@@ -933,7 +933,6 @@ func checkSubstrings(str string, subs ...string) bool {
 	return isCompleteMatch
 }
 
-// nolint: unparam
 func (c *Operation) sendHTTPRequest(method, reqURL string, body []byte, contentType,
 	token string) (*http.Response, error) {
 	logger.Infof("send http request : url=%s methdod=%s body=%s", reqURL, method, string(body))
