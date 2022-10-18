@@ -663,7 +663,8 @@ func (c *Operation) retrieveInteractionsClaim(w http.ResponseWriter, r *http.Req
 
 	if resp.StatusCode != http.StatusOK {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("retrieve interactions claim didn't return 200 status: %s", string(respBytes)))
+			fmt.Sprintf("retrieve interactions claim %s didn't return 200 status: %s",
+				c.apiGatewayURL+endpoint, string(respBytes)))
 
 		return
 	}
