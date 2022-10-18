@@ -12,10 +12,12 @@ const (
 	topicTimeout = 1000 * time.Millisecond
 )
 
+// EventsTopic event topic.
 type EventsTopic struct {
 	topics chan []byte
 }
 
+// NewEventsTopic return new event topic.
 func NewEventsTopic() *EventsTopic {
 	return &EventsTopic{
 		topics: make(chan []byte, topicsSize),
