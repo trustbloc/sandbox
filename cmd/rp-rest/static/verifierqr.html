@@ -38,7 +38,8 @@ SPDX-License-Identifier: Apache-2.0
 
 </head>
 
-<body class="leading-normal tracking-normal text-white gradient" style="font-family: 'Source Sans Pro', sans-serif;" onload="createQR()">
+<body class="leading-normal tracking-normal text-white gradient" style="font-family: 'Source Sans Pro', sans-serif;"
+      onload="createQR()">
 
 <!--Nav-->
 <div class="pt-12">
@@ -103,6 +104,13 @@ SPDX-License-Identifier: Apache-2.0
                     </div>
                 </div>
             </div>
+
+            <div class="w-full mb-8">
+            </div>
+
+            <h3 class="w-full my-2 text-2xl text-center text-gray-500" id="claims"></h3>
+
+        </div>
         </div>
     </section>
 
@@ -122,23 +130,45 @@ SPDX-License-Identifier: Apache-2.0
 
 <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 <script>
-    function createQR() {
-        axios({
+    async function createQR() {
+        let resp = await axios({
             method: "GET",
             url: "/verify/openid4vp/getQR"
-        }).then(
-            resp => {
-                new QRCode(document.getElementById("qrcode"), {
-                    text:  resp.data.qrText,
-                    width: 228,
-                    height: 228,
-                    colorDark : "#000000",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                });
-            },
-            err => console.error(err)
-        )
+        })
+        new QRCode(document.getElementById("qrcode"), {
+            text: resp.data.qrText,
+            width: 228,
+            height: 228,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        const txID =  resp.data.txID
+
+        while (true) {
+            let event = await axios({
+                method: "GET",
+                url: "/verify/openid4vp/webhook/check"
+            })
+
+            if (event.data.type === "oidc_interaction_succeeded") {
+                console.log(event);
+                if (event.data.data.txID === txID) {
+                    console.log("success");
+                    let claims = await axios({
+                        method: "GET",
+                        url: "/verify/openid4vp/retrieve"
+                    })
+
+                    document.getElementById("claims").innerText = JSON.stringify(claims.data)
+
+                    break;
+                }
+            }
+
+        }
+
     }
 </script>
 

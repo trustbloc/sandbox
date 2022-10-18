@@ -118,7 +118,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(config)
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 9, len(svc.GetRESTHandlers()))
+		require.Equal(t, 12, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error if oidc provider is invalid", func(t *testing.T) {

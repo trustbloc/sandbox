@@ -49,6 +49,9 @@ const (
 	verifyCredentialPath          = "/verify/credential"
 	wellKnownConfigGetRequestPath = "/.well-known/did-configuration.json"
 	openID4VPGetQRPath            = "/verify/openid4vp/getQR"
+	openID4VPRetrieveClaimsQRPath = "/verify/openid4vp/retrieve"
+	openID4VPWebhookPath          = "/verify/openid4vp/webhook"
+	openID4VPWebhookCheckPath     = "/verify/openid4vp/webhook/check"
 
 	// api path params
 	scopeQueryParam    = "scope"
@@ -61,7 +64,8 @@ const (
 	// edge-service verifier endpoints
 	verifyCredentialURLFormat = "/%s" + "/verifier/credentials/verify"
 
-	initiateOidcInteractionURLFormat = "/verifier/profiles/%s/interactions/initiate-oidc"
+	initiateOidcInteractionURLFormat   = "/verifier/profiles/%s/interactions/initiate-oidc"
+	retrieveInteractionsClaimURLFormat = "/verifier/interactions/%s/claim"
 
 	// TODO https://github.com/trustbloc/sandbox/issues/352 Configure verifier profiles in Verifier page
 	verifierProfileID = "trustbloc-verifier"
@@ -95,6 +99,7 @@ type oidcClient interface {
 
 type initiateOIDC4VPResponse struct {
 	AuthorizationRequest string `json:"authorizationRequest"`
+	TxID                 string `json:"txID"`
 }
 
 // Operation defines handlers
@@ -114,6 +119,7 @@ type Operation struct {
 	walletAuthURL   string
 	accessTokenURL  string
 	apiGatewayURL   string
+	eventsTopic     *EventsTopic
 }
 
 // Config defines configuration for rp operations
@@ -153,6 +159,7 @@ type createOIDCRequestResponse struct {
 
 type openID4VPGetQRResponse struct {
 	QRText string `json:"qrText"`
+	TxID   string `json:"txID"`
 }
 
 // New returns rp operation instance
@@ -169,6 +176,7 @@ func New(config *Config) (*Operation, error) {
 		walletAuthURL:   config.WalletAuthURL,
 		accessTokenURL:  config.AccessTokenURL,
 		apiGatewayURL:   config.APIGatewayURL,
+		eventsTopic:     NewEventsTopic(),
 	}
 
 	var err error
@@ -217,6 +225,10 @@ func (c *Operation) registerHandler() {
 
 		support.NewHTTPHandler(wellKnownConfigGetRequestPath, http.MethodGet, c.wellKnownConfig),
 		support.NewHTTPHandler(openID4VPGetQRPath, http.MethodGet, c.openID4VPGetQR),
+		support.NewHTTPHandler(openID4VPRetrieveClaimsQRPath, http.MethodGet, c.retrieveInteractionsClaim),
+
+		support.NewHTTPHandler(openID4VPWebhookPath, http.MethodPost, c.eventsTopic.receiveTopics),
+		support.NewHTTPHandler(openID4VPWebhookCheckPath, http.MethodGet, c.eventsTopic.checkTopics),
 	}
 }
 
@@ -598,6 +610,7 @@ func (c *Operation) openID4VPGetQR(w http.ResponseWriter, r *http.Request) { //n
 
 	response, err := json.Marshal(&openID4VPGetQRResponse{
 		QRText: result.AuthorizationRequest,
+		TxID:   result.TxID,
 	})
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to marshal response : %s", err))
@@ -608,6 +621,56 @@ func (c *Operation) openID4VPGetQR(w http.ResponseWriter, r *http.Request) { //n
 	w.Header().Set("content-type", httpContentTypeJSON)
 
 	_, err = w.Write(response)
+	if err != nil {
+		logger.Errorf("failed to write response : %s", err)
+	}
+}
+
+func (c *Operation) retrieveInteractionsClaim(w http.ResponseWriter, r *http.Request) { //nolint: funlen
+	// TODO make username and secret configurable
+	token, err := c.issueAccessToken(c.accessTokenURL, "test-org", "test-org-secret", []string{"org_admin"})
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("failed to issue token : %s", err))
+
+		return
+	}
+
+	endpoint := fmt.Sprintf(retrieveInteractionsClaimURLFormat, r.URL.Query().Get("tx"))
+
+	resp, err := c.sendHTTPRequest(http.MethodGet,
+		c.apiGatewayURL+endpoint, nil, "", token)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to initiate oidc: %s", err.Error()))
+
+		return
+	}
+
+	respBytes, respErr := io.ReadAll(resp.Body)
+	if respErr != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest,
+			fmt.Sprintf("failed to read initiate oidc resp : %s", err.Error()))
+
+		return
+	}
+
+	defer func() {
+		e := resp.Body.Close()
+		if e != nil {
+			logger.Errorf("closing response body failed: %v", e)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("retrieve interactions claim didn't return 200 status: %s", string(respBytes)))
+
+		return
+	}
+
+	w.Header().Set("content-type", httpContentTypeJSON)
+
+	_, err = w.Write(respBytes)
 	if err != nil {
 		logger.Errorf("failed to write response : %s", err)
 	}
