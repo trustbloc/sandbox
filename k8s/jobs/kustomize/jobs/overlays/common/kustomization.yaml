@@ -64,4 +64,4 @@ kind: Kustomization
 images:
 - name: sandbox-cli
   newName: ghcr.io/trustbloc-cicd/sandbox-cli
-  newTag: 0.1.9-snapshot-fbd61cc
+  newTag: 0.1.9-snapshot-c300e36
