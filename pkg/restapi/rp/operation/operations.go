@@ -120,6 +120,7 @@ type Operation struct {
 	accessTokenURL  string
 	apiGatewayURL   string
 	eventsTopic     *EventsTopic
+	didConfig       []byte
 }
 
 // Config defines configuration for rp operations
@@ -516,42 +517,46 @@ func (c *Operation) handleOIDCShareCallback(w http.ResponseWriter, r *http.Reque
 }
 
 func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
-	// TODO make profile id configurable
-	resp, err := c.sendHTTPRequest(http.MethodGet,
-		fmt.Sprintf("%s/verifier/profiles/%s/well-known/did-config",
-			c.vcsV1URL, verifierJWTProfileID), nil, httpContentTypeJSON, "")
-	if err != nil {
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to get did config: %s", err.Error()))
+	if len(c.didConfig) == 0 {
+		// TODO make profile id configurable
+		resp, err := c.sendHTTPRequest(http.MethodGet,
+			fmt.Sprintf("%s/verifier/profiles/%s/well-known/did-config",
+				c.vcsV1URL, verifierJWTProfileID), nil, httpContentTypeJSON, "")
+		if err != nil {
+			c.writeErrorResponse(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed to get did config: %s", err.Error()))
 
-		return
-	}
-
-	respBytes, respErr := io.ReadAll(resp.Body)
-	if respErr != nil {
-		c.writeErrorResponse(w, http.StatusBadRequest,
-			fmt.Sprintf("failed to read did config resp : %s", err.Error()))
-
-		return
-	}
-
-	defer func() {
-		e := resp.Body.Close()
-		if e != nil {
-			logger.Errorf("closing response body failed: %v", e)
+			return
 		}
-	}()
 
-	if resp.StatusCode != http.StatusOK {
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("did config didn't return 200 status: %s", string(respBytes)))
+		respBytes, respErr := io.ReadAll(resp.Body)
+		if respErr != nil {
+			c.writeErrorResponse(w, http.StatusBadRequest,
+				fmt.Sprintf("failed to read did config resp : %s", err.Error()))
 
-		return
+			return
+		}
+
+		defer func() {
+			e := resp.Body.Close()
+			if e != nil {
+				logger.Errorf("closing response body failed: %v", e)
+			}
+		}()
+
+		if resp.StatusCode != http.StatusOK {
+			c.writeErrorResponse(w, http.StatusInternalServerError,
+				fmt.Sprintf("did config didn't return 200 status: %s", string(respBytes)))
+
+			return
+		}
+
+		c.didConfig = respBytes
 	}
 
 	w.Header().Set("content-type", httpContentTypeJSON)
 
-	_, err = w.Write(respBytes)
+	_, err := w.Write(c.didConfig)
 	if err != nil {
 		logger.Errorf("failed to write response : %s", err)
 	}
