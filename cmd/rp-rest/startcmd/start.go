@@ -494,6 +494,7 @@ func pathPrefix() *mux.Router {
 	fs := http.FileServer(http.Dir("static"))
 	router.Handle("/", fs)
 	router.PathPrefix("/img/").Handler(fs)
+	router.PathPrefix("/schema/").Handler(fs)
 
 	router.PathPrefix("/bankaccount").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/bankaccount.html")
