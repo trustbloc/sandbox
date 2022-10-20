@@ -1,0 +1,47 @@
+{
+  "WorkplaceCredential": {
+    "locale": "en-US",
+    "card": {
+      "title": "Workplace Credential",
+      "subTitle": "Verified",
+      "backgroundColor": "#000000",
+      "textColor": "#ffffff",
+      "logo": {
+        "uri": "https://didcustomerplayground.blob.core.windows.net/public/VerifiedCredentialExpert_icon.png",
+        "description": "Verified Credential Interop Expert Logo"
+      }
+    },
+    "claims": {
+      "$.subjectData[*].givenName": {
+        "type": "String",
+        "label": "First name"
+      },
+      "$.subjectData[*].surname": {
+        "type": "String",
+        "label": "Last name"
+      },
+      "$.subjectData[*].email": {
+        "type": "String",
+        "label": "Email"
+      },
+      "$.subjectData[*].displayName": {
+        "type": "String",
+        "label": "Display name"
+      }
+    },
+    "id": "display"
+  },
+  "Default": {
+    "locale": "en-US",
+    "card": {
+      "title": "Verifiable Credential",
+      "subTitle": "Verified",
+      "backgroundColor": "#e5e5e5",
+      "textColor": "#000000",
+      "logo": {
+        "uri": "img/logo.png",
+        "description": "TrustBloc Verifier Logo"
+      }
+    }
+  }
+}
