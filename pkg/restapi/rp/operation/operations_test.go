@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -110,6 +111,8 @@ const presDefQuery = `{
                 }
             ]
         }`
+
+const OAuth2TokenPath = "/oauth2/token" //nolint:gosec
 
 func TestNew(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
@@ -207,7 +210,7 @@ func TestOpenID4VPGetQR(t *testing.T) {
 		config, cleanup := config(t)
 		defer cleanup()
 		testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-			if req.RequestURI == "/oauth2/token" {
+			if req.RequestURI == OAuth2TokenPath {
 				res.Header().Set("Content-Type", "application/json")
 				_, err := io.WriteString(res, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
 
@@ -235,7 +238,7 @@ func TestOpenID4VPGetQR(t *testing.T) {
 		config, cleanup := config(t)
 		defer cleanup()
 		testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-			if req.RequestURI == "/oauth2/token" {
+			if req.RequestURI == OAuth2TokenPath {
 				res.Header().Set("Content-Type", "application/json")
 				_, err := io.WriteString(res, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
 
@@ -258,6 +261,91 @@ func TestOpenID4VPGetQR(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 		svc.openID4VPGetQR(rr, &http.Request{Method: http.MethodGet})
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+}
+
+func TestRetrieveInteractionsClaim(t *testing.T) {
+	t.Run("error get token", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+		testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(http.StatusInternalServerError)
+		}))
+
+		config.AccessTokenURL = testServer.URL
+
+		svc, err := New(config)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+		svc.retrieveInteractionsClaim(rr, &http.Request{Method: http.MethodGet})
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+	})
+
+	t.Run("failed to retrieve interactions claim", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+		testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			if req.RequestURI == OAuth2TokenPath {
+				res.Header().Set("Content-Type", "application/json")
+				_, err := io.WriteString(res, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+
+				require.NoError(t, err)
+
+				return
+			}
+
+			res.WriteHeader(http.StatusInternalServerError)
+		}))
+
+		config.AccessTokenURL = testServer.URL
+		config.APIGatewayURL = testServer.URL
+
+		svc, err := New(config)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+		retrieveURL, err := url.Parse(
+			"https://demo-rp.local.trustbloc.dev/verify/openid4vp/retrieve?tx=634ea4335a473f9444471279")
+		require.NoError(t, err)
+
+		svc.retrieveInteractionsClaim(rr, &http.Request{Method: http.MethodGet, URL: retrieveURL})
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "claim didn't return 200 status")
+	})
+
+	t.Run("success", func(t *testing.T) {
+		config, cleanup := config(t)
+		defer cleanup()
+		testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			if req.RequestURI == OAuth2TokenPath {
+				res.Header().Set("Content-Type", "application/json")
+				_, err := io.WriteString(res, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+
+				require.NoError(t, err)
+
+				return
+			}
+
+			res.Header().Set("Content-Type", "application/json")
+			_, err := io.WriteString(res, `{"authorizationRequest": "data"}`)
+
+			require.NoError(t, err)
+		}))
+
+		config.AccessTokenURL = testServer.URL
+		config.APIGatewayURL = testServer.URL
+
+		svc, err := New(config)
+		require.NoError(t, err)
+
+		retrieveURL, err := url.Parse(
+			"https://demo-rp.local.trustbloc.dev/verify/openid4vp/retrieve?tx=634ea4335a473f9444471279")
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+		svc.retrieveInteractionsClaim(rr, &http.Request{Method: http.MethodGet, URL: retrieveURL})
 		require.Equal(t, http.StatusOK, rr.Code)
 	})
 }
