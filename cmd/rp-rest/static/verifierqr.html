@@ -141,9 +141,10 @@ SPDX-License-Identifier: Apache-2.0
                 You have successfully presented your Verifiable Credential.
             </div>
 
-            <div class="w-full mb-8">
+            <div class="w-full mb-2">
                 <div class="h-1 mx-auto gradient w-full opacity-10 my-0 py-0 rounded-t"></div>
             </div>
+            <h3 class="w-full my-2 text-2xl text-center text-gray-500" id="status">Start</h3>
 
             <div class="container justify-center mx-auto flex flex-wrap">
                 <div class="w-full h-full fixed top-0 left-0 bg-black opacity-75 z-50" id="loading-screen"
@@ -169,8 +170,7 @@ SPDX-License-Identifier: Apache-2.0
             <h3 class="w-full my-2 text-2xl text-center text-gray-500" id="claims"></h3>
 
         </div>
-</div>
-</section>
+    </section>
 
 </section>
 <footer>
@@ -210,9 +210,24 @@ SPDX-License-Identifier: Apache-2.0
                 url: "/verify/openid4vp/webhook/check"
             })
 
-            if (event.data.type === "oidc_interaction_succeeded") {
-                console.log(event);
+            const status = document.getElementById("status")
+
+            if (event.data.type === "oidc_interaction_initiated") {
                 if (event.data.data.txID === txID) {
+                    status.innerText = "Initiated"
+                }
+            }
+
+            if (event.data.type === "oidc_interaction_qr_scanned") {
+                if (event.data.data.txID === txID) {
+                    status.innerText = "QR Scanned"
+                }
+            }
+
+            if (event.data.type === "oidc_interaction_succeeded") {
+                if (event.data.data.txID === txID) {
+                    status.innerText = "Succeeded";
+
                     console.log("success");
                     let claims = await axios({
                         method: "GET",
