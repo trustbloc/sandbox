@@ -26,6 +26,7 @@ SPDX-License-Identifier: Apache-2.0
     <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
     <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/jsonpath@1.1.1/jsonpath.js"></script>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
@@ -33,6 +34,56 @@ SPDX-License-Identifier: Apache-2.0
     <style>
         .gradient {
             background: linear-gradient(90deg, #44403c 60%, #57534e 100%);
+        }
+
+        .vc-card {
+            border-radius: 25px;
+            width: 500px;
+            height: 250px
+        }
+
+        .vc-card .logo {
+            width: 100px;
+            padding: 10px;
+            float: left
+        }
+
+        .vc-card .title {
+            float: right;
+            padding: 25px
+        }
+
+        .vc-card .sub-title {
+            float: right;
+            clear: left;
+            padding: 100px 25px 0 0
+        }
+
+        .vc-card .sub-title .check-img {
+            float: left;
+            padding-right: 5px
+        }
+
+        .claims-data {
+            font-family: sans-serif;
+            position: relative;
+        }
+
+        .claims-data .break {
+            clear: left;
+            height: 20px;
+            position: relative;
+        }
+
+        .claims-data .header {
+            color: #7d8492;
+            float: left;
+            clear: left;
+        }
+
+        .claims-data .value {
+            float: left;
+            clear: left;
         }
     </style>
 
@@ -79,10 +130,16 @@ SPDX-License-Identifier: Apache-2.0
 
     <section class="bg-white border-b py-48" id="verify-prc" style="display:block">
         <div class="container mx-auto flex  flex-wrap pt-1 pb-4">
-            <h1 class="w-full my-2 text-3xl text-center text-black">Present your credentials.</h1>
-            <h3 class="w-full my-2 text-2xl text-center text-gray-500">Please scan the QR code with your mobile
+
+            <h1 class="w-full my-2 text-3xl text-center text-black" id="present-cred">Present your credentials.</h1>
+            <h3 class="w-full my-2 text-2xl text-center text-gray-500" id="scan-ur-qr">Please scan the QR code with your
+                mobile
                 wallet and follow the prompts.</h3>
 
+            <div class="w-full my-2 w-full text-2xl text-center text-gray-500" id="show-success" style="display: none">
+                <img src="img/success.png" style="width: 100px" class="mx-auto" id="success"/>
+                You have successfully presented your Verifiable Credential.
+            </div>
 
             <div class="w-full mb-8">
                 <div class="h-1 mx-auto gradient w-full opacity-10 my-0 py-0 rounded-t"></div>
@@ -101,6 +158,7 @@ SPDX-License-Identifier: Apache-2.0
                 <div class="grid grid-cols-1 md:grid-cols-1 gap-8 md:gap-8 text-center text-black mt-8">
                     <div class="bg-white rounded-lg shadow-lg">
                         <div id="qrcode"></div>
+                        <div id="claims-data" style="display: none; position: relative; padding: 20px;"></div>
                     </div>
                 </div>
             </div>
@@ -111,18 +169,18 @@ SPDX-License-Identifier: Apache-2.0
             <h3 class="w-full my-2 text-2xl text-center text-gray-500" id="claims"></h3>
 
         </div>
+</div>
+</section>
+
+</section>
+<footer>
+    <section class="container mx-auto text-center py-2 mb-12">
+        <div class="text-lg text-white font py-1">
+            Copyright &copy; <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> and the
+            TrustBloc Contributors.
         </div>
     </section>
-
-    </section>
-    <footer>
-        <section class="container mx-auto text-center py-2 mb-12">
-            <div class="text-lg text-white font py-1">
-                Copyright &copy; <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> and the
-                TrustBloc Contributors.
-            </div>
-        </section>
-    </footer>
+</footer>
 </div>
 </body>
 </html>
@@ -144,7 +202,7 @@ SPDX-License-Identifier: Apache-2.0
             correctLevel: QRCode.CorrectLevel.H
         });
 
-        const txID =  resp.data.txID
+        const txID = resp.data.txID
 
         while (true) {
             let event = await axios({
@@ -158,10 +216,10 @@ SPDX-License-Identifier: Apache-2.0
                     console.log("success");
                     let claims = await axios({
                         method: "GET",
-                        url: "/verify/openid4vp/retrieve?tx="+txID
+                        url: "/verify/openid4vp/retrieve?tx=" + txID
                     })
 
-                    document.getElementById("claims").innerText = JSON.stringify(claims.data)
+                    displayClaimsData(claims.data)
 
                     break;
                 }
@@ -170,5 +228,115 @@ SPDX-License-Identifier: Apache-2.0
         }
 
     }
+
+    <!-- display claim data -->
+    const getCredentialType = (types) =>
+        types.filter((type) => type != 'VerifiableCredential')[0];
+
+    async function displayClaimsData(data) {
+        const schemas = await fetch('schema/credSchemas.json')
+            .then(function (response) {
+                return response.json();
+            })
+            .catch(function (err) {
+                console.log('error: ' + err);
+            });
+
+
+        document.getElementById('claims-data').style.display = ""
+        document.getElementById('show-success').style.display = ""
+        document.getElementById('present-cred').style.display = "none"
+        document.getElementById('scan-ur-qr').style.display = "none"
+
+        Object.keys(data).forEach(k => {
+            let schema = schemas[getCredentialType(data[k].type)]
+            schema = schema ? schema : schemas.Default
+            console.log("schema found", JSON.stringify(schema, null, 2))
+
+            const parentDiv = document.createElement('div')
+
+            const cardDiv = document.createElement('div')
+            cardDiv.className = 'vc-card'
+            cardDiv.style = `background: ${schema.card.backgroundColor}; color: ${schema.card.textColor}`
+
+            const cardLogo = document.createElement('img')
+            cardLogo.className = 'logo'
+            cardLogo.src = schema.card.logo.uri
+            cardLogo.alt = schema.card.logo.description
+
+            const cardTitle = document.createElement('div')
+            cardTitle.className = 'title'
+            cardTitle.innerText = schema.card.title
+
+            const cardSubTitle = document.createElement('div')
+            cardSubTitle.className = 'sub-title'
+
+            const cardSubTitleLogo = document.createElement('img')
+            cardSubTitleLogo.src = 'img/checkmark-16.png'
+            cardSubTitleLogo.className = 'check-img'
+
+            cardSubTitle.appendChild(cardSubTitleLogo)
+            cardSubTitle.appendChild(document.createTextNode(schema.card.subTitle))
+
+            cardDiv.appendChild(cardLogo)
+            cardDiv.appendChild(cardTitle)
+            cardDiv.appendChild(cardSubTitle)
+            parentDiv.appendChild(cardDiv)
+
+            var cdDiv = document.createElement('div')
+            cdDiv.className = 'claims-data'
+
+            if (schema.claims && Object.keys(schema.claims).length > 0) {
+                Object.keys(schema.claims).forEach(c => {
+                    let result = jsonpath.query(data[k], c)
+                    let val = result && result.length > 0 ? result[0] : ""
+
+                    const cdBreak = document.createElement('div')
+                    cdBreak.className = 'break'
+
+                    const cdHeader = document.createElement('div')
+                    cdHeader.className = 'header'
+                    cdHeader.innerText = schema.claims[c].label
+
+                    const cdValue = document.createElement('div')
+                    cdValue.className = 'value'
+                    cdValue.innerText = val
+
+                    cdDiv.appendChild(cdBreak)
+                    cdDiv.appendChild(cdHeader)
+                    cdDiv.appendChild(cdValue)
+                })
+            } else {
+                // when no claim in schema - display all.
+                Object.keys(data[k].subjectData[0]).forEach(s => {
+                    let result = jsonpath.query(data[k], "c")
+                    let val = result && result.length > 0 ? result[0] : ""
+
+                    const cdBreak = document.createElement('div')
+                    cdBreak.className = 'break'
+
+                    const cdHeader = document.createElement('div')
+                    cdHeader.className = 'header'
+                    cdHeader.innerText = s
+
+                    const cdValue = document.createElement('div')
+                    cdValue.className = 'value'
+                    cdValue.innerText = data[k].subjectData[0][s]
+
+                    cdDiv.appendChild(cdBreak)
+                    cdDiv.appendChild(cdHeader)
+                    cdDiv.appendChild(cdValue)
+                })
+            }
+
+            const cdBreak = document.createElement('div')
+            cdBreak.className = 'break'
+            cdDiv.appendChild(cdBreak)
+
+            parentDiv.appendChild(cdDiv)
+            document.getElementById('claims-data').appendChild(parentDiv)
+        })
+    }
+
 </script>
 
