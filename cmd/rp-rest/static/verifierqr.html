@@ -262,6 +262,7 @@ SPDX-License-Identifier: Apache-2.0
         document.getElementById('show-success').style.display = ""
         document.getElementById('present-cred').style.display = "none"
         document.getElementById('scan-ur-qr').style.display = "none"
+        document.getElementById('qrcode').style.display = "none"
 
         Object.keys(data).forEach(k => {
             let schema = schemas[getCredentialType(data[k].type)]
