@@ -100,7 +100,7 @@ SPDX-License-Identifier: Apache-2.0
 
             <div class="py-2 flex items-center">
                 <a class="toggleColour text-white no-underline hover:no-underline font-bold text-xl lg:text-2xl"
-                   href="/">
+                   href="/verifierqr">
                     <i class="fa fa-cloud" style="font-size:24px;color:white"></i>
                     Utopian Background Check
                 </a>
@@ -159,7 +159,7 @@ SPDX-License-Identifier: Apache-2.0
                 <div class="grid grid-cols-1 md:grid-cols-1 gap-8 md:gap-8 text-center text-black mt-8">
                     <div class="bg-white rounded-lg shadow-lg">
                         <div id="qrcode"></div>
-                        <div id="claims-data" style="display: none; position: relative; padding: 20px;"></div>
+                        <div id="claims-data" style="display: none; position: relative; padding: 20px; width: 100% !important;"></div>
                     </div>
                 </div>
             </div>
@@ -188,6 +188,7 @@ SPDX-License-Identifier: Apache-2.0
 
 <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 <script>
+
     async function createQR() {
         let resp = await axios({
             method: "GET",
@@ -211,6 +212,7 @@ SPDX-License-Identifier: Apache-2.0
             })
 
             const status = document.getElementById("status")
+            console.log('event received', event.data)
 
             if (event.data.type === "oidc_interaction_initiated") {
                 if (event.data.data.txID === txID) {
