@@ -208,7 +208,7 @@ SPDX-License-Identifier: Apache-2.0
         while (true) {
             let event = await axios({
                 method: "GET",
-                url: "/verify/openid4vp/webhook/check"
+                url: "/verify/openid4vp/webhook/check?tx=" + txID
             })
 
             const status = document.getElementById("status")
