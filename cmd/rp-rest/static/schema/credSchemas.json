@@ -34,9 +34,9 @@
   "VerifiedEmployee": {
     "locale": "en-US",
     "card": {
-      "title": "Verified Employee Credential",
+      "title": "Verified Employee",
       "subTitle": "Verified",
-      "backgroundColor": "#000000",
+      "backgroundColor": "#0000FF",
       "textColor": "#ffffff",
       "logo": {
         "uri": "https://didcustomerplayground.blob.core.windows.net/public/VerifiedCredentialExpert_icon.png",
