@@ -4,10 +4,10 @@
     "card": {
       "title": "Workplace Credential",
       "subTitle": "Verified",
-      "backgroundColor": "#000000",
+      "backgroundColor": "#44bcd8",
       "textColor": "#ffffff",
       "logo": {
-        "uri": "https://didcustomerplayground.blob.core.windows.net/public/VerifiedCredentialExpert_icon.png",
+        "uri": "img/icon-home-8.png",
         "description": "Verified Credential Interop Expert Logo"
       }
     },
@@ -36,10 +36,10 @@
     "card": {
       "title": "Verified Employee",
       "subTitle": "Verified",
-      "backgroundColor": "#0000FF",
+      "backgroundColor": "#44bcd8",
       "textColor": "#ffffff",
       "logo": {
-        "uri": "https://didcustomerplayground.blob.core.windows.net/public/VerifiedCredentialExpert_icon.png",
+        "uri": "img/icon-home-8.png",
         "description": "Verified Credential Interop Expert Logo"
       }
     },
