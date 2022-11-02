@@ -20,7 +20,7 @@
         "type": "String",
         "label": "Last name"
       },
-      "$.subjectData[*].email": {
+      "$.subjectData[*].mail": {
         "type": "String",
         "label": "Email"
       },
