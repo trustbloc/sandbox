@@ -630,6 +630,7 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 		DIDAuthHTML:              "static/didAuth.html",
 		ReceiveVCHTML:            "static/receiveVC.html",
 		VCHTML:                   "static/vc.html",
+		PreAuthorizeHTML:         "static/preAuthorize.html",
 		DIDCommHTML:              "static/didcomm.html",
 		DIDCOMMVPHTML:            "static/didcommvp.html",
 		TLSConfig:                tlsConfig,

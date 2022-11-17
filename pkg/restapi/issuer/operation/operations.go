@@ -38,6 +38,7 @@ import (
 	edgesvcops "github.com/trustbloc/vcs/pkg/restapi/issuer/operation"
 	vcprofile "github.com/trustbloc/vcs/pkg/storage"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
 
 	"github.com/trustbloc/sandbox/pkg/internal/common/support"
 	oidcclient "github.com/trustbloc/sandbox/pkg/restapi/internal/common/oidc"
@@ -63,6 +64,7 @@ const (
 	verifyDIDAuthPath      = "/verify/didauth"
 	createCredentialPath   = "/credential"
 	authPath               = "/auth"
+	preAuthorizePath       = "/pre-authorize"
 	searchPath             = "/search"
 	generateCredentialPath = createCredentialPath + "/generate"
 	oidcRedirectPath       = "/oidc/redirect" + "/{id}"
@@ -153,6 +155,7 @@ type Operation struct {
 	assuranceScopes          map[string]string
 	tlsConfig                *tls.Config
 	externalLogin            bool
+	preAuthorizeHTML         string
 }
 
 // Config defines configuration for issuer operations
@@ -167,6 +170,7 @@ type Config struct {
 	ReceiveVCHTML            string
 	DIDAuthHTML              string
 	VCHTML                   string
+	PreAuthorizeHTML         string
 	DIDCommHTML              string
 	DIDCOMMVPHTML            string
 	TLSConfig                *tls.Config
@@ -190,6 +194,10 @@ type Config struct {
 type vc struct {
 	Msg  string `json:"msg"`
 	Data string `json:"data"`
+}
+
+type initiate struct {
+	URL string `json:"url"`
 }
 
 type clientCredentialsTokenResponseStruct struct {
@@ -231,6 +239,7 @@ func New(config *Config) (*Operation, error) {
 		didAuthHTML:              config.DIDAuthHTML,
 		receiveVCHTML:            config.ReceiveVCHTML,
 		vcHTML:                   config.VCHTML,
+		preAuthorizeHTML:         config.PreAuthorizeHTML,
 		didCommHTML:              config.DIDCommHTML,
 		didCommVpHTML:            config.DIDCOMMVPHTML,
 		httpClient:               &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
@@ -293,6 +302,9 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(revoke, http.MethodPost, c.revokeVC),
 		support.NewHTTPHandler(generate, http.MethodPost, c.generateVC),
 
+		// authorize & pre-authorize
+		support.NewHTTPHandler(preAuthorizePath, http.MethodGet, c.preAuthorize),
+
 		// didcomm
 		support.NewHTTPHandler(didcommToken, http.MethodPost, c.didcommTokenHandler),
 		support.NewHTTPHandler(didcommCallback, http.MethodGet, c.didcommCallbackHandler),
@@ -349,6 +361,109 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{Name: callbackURLCookie, Value: "", Expires: expire})
 
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+}
+
+func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) {
+	accessToken, err := c.issueAccessToken(
+		"https://auth-hydra.local.trustbloc.dev",
+		"test-org",
+		"test-org-secret",
+		[]string{"org_admin"},
+	)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to get access token: %s", err.Error()))
+
+		return
+	}
+
+	t, err := template.ParseFiles(c.preAuthorizeHTML)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to load html: %s", err.Error()))
+
+		return
+	}
+	req := map[string]interface{}{
+		"credential_template_id": "templateID",
+		"user_pin_required":      false,
+		"claim_data": map[string]interface{}{
+			"claim1": "value1",
+			"claim2": "value2",
+		},
+	}
+	b, err := json.Marshal(req)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to marshal: %s", err.Error()))
+
+		return
+	}
+
+	httpReq, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"https://api-gateway.local.trustbloc.dev/issuer/profiles/%v/interactions/initiate-oidc",
+			"ldp-web-P256-JsonWebSignature2020"),
+		bytes.NewBuffer(b),
+	)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("can not prepare http request: %s", err.Error()))
+
+		return
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %v", accessToken))
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to send requrest for initiate: %s", err.Error()))
+
+		return
+	}
+
+	var parsedResp initiateResponse
+	if err = json.NewDecoder(resp.Body).Decode(&parsedResp); err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to decode initiate response: %s", err.Error()))
+
+		return
+	}
+
+	if err := t.Execute(w, initiate{URL: parsedResp.InitiateIssuanceURL}); err != nil {
+		logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
+	}
+}
+
+func (c *Operation) issueAccessToken(oidcProviderURL, clientID, secret string, scopes []string) (string, error) {
+	conf := clientcredentials.Config{
+		TokenURL:     oidcProviderURL + "/oauth2/token",
+		ClientID:     clientID,
+		ClientSecret: secret,
+		Scopes:       scopes,
+		AuthStyle:    oauth2.AuthStyleInHeader,
+	}
+
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: c.tlsConfig,
+		},
+	})
+
+	token, err := conf.Token(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get token: %w", err)
+	}
+
+	return token.AccessToken, nil
 }
 
 func (c *Operation) auth(w http.ResponseWriter, r *http.Request) {

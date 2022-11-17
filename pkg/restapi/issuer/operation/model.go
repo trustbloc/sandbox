@@ -59,3 +59,8 @@ type issuerConfiguration struct {
 	TokenEndpoint         string          `json:"token_endpoint"`
 	CredentialManifests   json.RawMessage `json:"credential_manifests"`
 }
+
+type initiateResponse struct {
+	InitiateIssuanceURL string `json:"initiate_issuance_url"`
+	TxID                string `json:"tx_id"`
+}
