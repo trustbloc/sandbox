@@ -187,21 +187,21 @@ const (
 		" Alternatively, this can be set with the following environment variable: " + walletInitURLEnvKey
 	walletInitURLEnvKey = "ISSUER_WALLET_INIT_URL"
 
-	vcsAPIAccessTokenHostFlagName  = "vcs-api-access-token-host"
-	vcsAPIAccessTokenHostFlagUsage = "Host to retrieve access token for VCS service. Format: https://HostName:Port."
-	vcsAPIAccessTokenHostEnvKey    = "VCS_API_ACCESS_TOKEN_HOST"
+	vcsAPIAccessTokenHostFlagName  = "vcs-api-access-token-host"                                                     //nolint:gosec
+	vcsAPIAccessTokenHostFlagUsage = "Host to retrieve access token for VCS service. Format: https://HostName:Port." //nolint:gosec
+	vcsAPIAccessTokenHostEnvKey    = "VCS_API_ACCESS_TOKEN_HOST"                                                     //nolint:gosec
 
-	vcsAPIAccessTokenClientIDFlagName  = "vcs-api-access-token-client-id"
-	vcsAPIAccessTokenClientIDFlagUsage = "VCS client ID"
-	vcsAPIAccessTokenClientIDEnvKey    = "VCS_API_ACCESS_TOKEN_CLIENT_ID"
+	vcsAPIAccessTokenClientIDFlagName  = "vcs-api-access-token-client-id" //nolint:gosec
+	vcsAPIAccessTokenClientIDFlagUsage = "VCS client ID"                  //nolint:gosec
+	vcsAPIAccessTokenClientIDEnvKey    = "VCS_API_ACCESS_TOKEN_CLIENT_ID" //nolint:gosec
 
-	vcsAPIAccessTokenClientSecretFlagName  = "vcs-api-access-token-client-secret"
-	vcsAPIAccessTokenClientSecretFlagUsage = "VCS client secret"
-	vcsAPIAccessTokenClientSecretEnvKey    = "VCS_API_ACCESS_TOKEN_SECRET_KEY"
+	vcsAPIAccessTokenClientSecretFlagName  = "vcs-api-access-token-client-secret" //nolint:gosec
+	vcsAPIAccessTokenClientSecretFlagUsage = "VCS client secret"                  //nolint:gosec
+	vcsAPIAccessTokenClientSecretEnvKey    = "VCS_API_ACCESS_TOKEN_SECRET_KEY"    //nolint:gosec
 
-	vcsAPIAccessTokenClaimFlagName  = "vcs-api-access-token-claim"
-	vcsAPIAccessTokenClaimFlagUsage = "VCS access token claim"
-	vcsAPIAccessTokenClaimEnvKey    = "VCS_API_ACCESS_TOKEN_CLAIM"
+	vcsAPIAccessTokenClaimFlagName  = "vcs-api-access-token-claim" //nolint:gosec
+	vcsAPIAccessTokenClaimFlagUsage = "VCS access token claim"     //nolint:gosec
+	vcsAPIAccessTokenClaimEnvKey    = "VCS_API_ACCESS_TOKEN_CLAIM" //nolint:gosec
 
 	vcsAPIURLFlagName  = "vcs-api-url"
 	vcsAPIURLFlagUsage = "VCS api url. Format: https://HostName:Port."
