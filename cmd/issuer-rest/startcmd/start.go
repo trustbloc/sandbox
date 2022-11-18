@@ -677,9 +677,12 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 	}
 
 	cfg := &operation.Config{
-		TokenIssuer:                   tokenIssuer.New(parameters.oauth2Config, tokenIssuer.WithTLSConfig(tlsConfig)),
-		ExtTokenIssuer:                tokenIssuer.New(parameters.extOauth2Config, tokenIssuer.WithTLSConfig(tlsConfig)),
-		TokenResolver:                 tokenResolver.New(parameters.tokenIntrospectionURL, tokenResolver.WithTLSConfig(tlsConfig)),
+		TokenIssuer: tokenIssuer.New(parameters.oauth2Config,
+			tokenIssuer.WithTLSConfig(tlsConfig)),
+		ExtTokenIssuer: tokenIssuer.New(parameters.extOauth2Config,
+			tokenIssuer.WithTLSConfig(tlsConfig)),
+		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL,
+			tokenResolver.WithTLSConfig(tlsConfig)),
 		DocumentLoader:                documentLoader,
 		CMSURL:                        parameters.cmsURL,
 		VCSURL:                        parameters.vcsURL,

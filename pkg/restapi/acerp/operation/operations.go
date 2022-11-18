@@ -90,7 +90,7 @@ const (
 	accountLinkURLFormat     = "%s/link?client_id=%s&callback=%s/callback&state=%s"
 
 	// json-ld
-	credentialContext = "https://www.w3.org/2018/credentials/v1" //nolint:gosec
+	credentialContext = "https://www.w3.org/2018/credentials/v1"
 
 	nationalIDVCPath = "$.credentialSubject." + nationalID
 

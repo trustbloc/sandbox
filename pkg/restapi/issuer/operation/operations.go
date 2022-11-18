@@ -55,14 +55,14 @@ const (
 	didcommInit            = "/didcomm/init"
 	didcommToken           = "/didcomm/token"
 	didcommCallback        = "/didcomm/cb"
-	didcommCredential      = "/didcomm/data" //nolint:gosec
+	didcommCredential      = "/didcomm/data"
 	didcommAssuranceData   = "/didcomm/assurance"
 	didcommUserEndpoint    = "/didcomm/uid"
 	oauth2GetRequestPath   = "/oauth2/request"
 	oauth2CallbackPath     = "/oauth2/callback"
 	oauth2TokenRequestPath = "oauth2/token" //nolint:gosec
 	verifyDIDAuthPath      = "/verify/didauth"
-	createCredentialPath   = "/credential" //nolint:gosec
+	createCredentialPath   = "/credential"
 	authPath               = "/auth"
 	preAuthorizePath       = "/pre-authorize"
 	searchPath             = "/search"
@@ -76,12 +76,12 @@ const (
 	oidcIssuanceAuthorizeRequest = "/oidc/authorize-request"
 	//nolint: gosec
 	oidcIssuanceToken      = "/{id}/oidc/token"
-	oidcIssuanceCredential = "/{id}/oidc/credential" //nolint:gosec
+	oidcIssuanceCredential = "/{id}/oidc/credential"
 
 	// http query params
 	stateQueryParam = "state"
 
-	credentialContext = "https://www.w3.org/2018/credentials/v1" //nolint:gosec
+	credentialContext = "https://www.w3.org/2018/credentials/v1"
 
 	vcsUpdateStatusURLFormat = "%s/%s" + "/credentials/status"
 
@@ -406,14 +406,16 @@ func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) { //nol
 
 		return
 	}
-	req := map[string]interface{}{
-		"credential_template_id": "templateID",
-		"user_pin_required":      false,
-		"claim_data": map[string]interface{}{
+
+	req := initiateOIDC4CIRequest{
+		CredentialTemplateID: "templateID",
+		UserPinRequired:      false,
+		ClaimData: &map[string]interface{}{
 			"claim1": "value1",
 			"claim2": "value2",
 		},
 	}
+
 	b, err := json.Marshal(req)
 	if err != nil {
 		logger.Errorf(err.Error())
@@ -438,6 +440,7 @@ func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) { //nol
 
 		return
 	}
+
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %v", accessToken))
 
@@ -456,7 +459,7 @@ func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) { //nol
 		}()
 	}
 
-	var parsedResp initiateResponse
+	var parsedResp initiateOIDC4CIResponse
 	if err = json.NewDecoder(resp.Body).Decode(&parsedResp); err != nil {
 		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -485,12 +488,12 @@ func (c *Operation) issueAccessToken(oidcProviderURL, clientID, secret string, s
 		},
 	})
 
-	token, err := conf.Token(ctx)
+	tokenResult, err := conf.Token(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to get token: %w", err)
 	}
 
-	return token.AccessToken, nil
+	return tokenResult.AccessToken, nil
 }
 
 func (c *Operation) auth(w http.ResponseWriter, r *http.Request) {

@@ -45,7 +45,7 @@ const (
 	oidcShareRequestPath          = "/oidc/share/request"
 	oidcShareCallbackPath         = "/oidc/share/cb"
 	verifyPresentationPath        = "/verify/presentation"
-	verifyCredentialPath          = "/verify/credential" //nolint:gosec
+	verifyCredentialPath          = "/verify/credential"
 	wellKnownConfigGetRequestPath = "/.well-known/did-configuration.json"
 	openID4VPGetQRPath            = "/verify/openid4vp/getQR"
 	openID4VPRetrieveClaimsQRPath = "/verify/openid4vp/retrieve"
