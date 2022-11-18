@@ -13,7 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sort"
 	"strings"
@@ -90,7 +90,7 @@ const (
 	accountLinkURLFormat     = "%s/link?client_id=%s&callback=%s/callback&state=%s"
 
 	// json-ld
-	credentialContext = "https://www.w3.org/2018/credentials/v1"
+	credentialContext = "https://www.w3.org/2018/credentials/v1" //nolint:gosec
 
 	nationalIDVCPath = "$.credentialSubject." + nationalID
 
@@ -1545,7 +1545,7 @@ func (o *Operation) sendHTTPRequest(method, endpoint string, reqBody []byte, sta
 		}
 	}()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		logger.Warnf("failed to read response body for status: %d", resp.StatusCode)
 	}

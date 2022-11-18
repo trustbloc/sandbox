@@ -87,6 +87,24 @@ linters:
     - paralleltest
     - exhaustivestruct
     - tparallel
+    - tagliatelle
+    - varnamelen
+    - nolintlint
+    - tenv
+    - usestdlibvars
+    - ireturn
+    - gomnd
+    - forcetypeassert
+    - exhaustruct
+    - nonamedreturns
+    - contextcheck
+    - wsl
+    - maintidx
+    - nilnil
+    - dupword
+    - gci
+    - gocritic
+    - revive
 
 issues:
   exclude-use-default: false

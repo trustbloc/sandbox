@@ -13,7 +13,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -370,7 +369,7 @@ func TestVerifyVP(t *testing.T) {
 		svc, err := New(config)
 		require.NoError(t, err)
 		svc.client = &mockHTTPClient{postValue: &http.Response{
-			StatusCode: http.StatusOK, Body: ioutil.NopCloser(strings.NewReader("data")),
+			StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("data")),
 		}}
 
 		rr := httptest.NewRecorder()
@@ -407,7 +406,7 @@ func TestVerifyVP(t *testing.T) {
 		})
 		require.NoError(t, err)
 		svc.client = &mockHTTPClient{postValue: &http.Response{
-			StatusCode: http.StatusBadRequest, Body: ioutil.NopCloser(strings.NewReader(string(b))),
+			StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(string(b))),
 		}}
 
 		rr := httptest.NewRecorder()
@@ -915,7 +914,7 @@ func TestVerifyDIDAuthHandler(t *testing.T) {
 		require.Contains(t, rr.Body.String(), "failed to decode request")
 
 		svc.client = &mockHTTPClient{postValue: &http.Response{
-			StatusCode: http.StatusBadRequest, Body: ioutil.NopCloser(strings.NewReader("invalid signature")),
+			StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader("invalid signature")),
 		}}
 
 		req, err = http.NewRequest(http.MethodPost, verifyPresentationPath, bytes.NewReader(reqBytes))
@@ -1008,7 +1007,7 @@ func TestVerifyCredential(t *testing.T) {
 		require.Contains(t, rr.Body.String(), "failed to decode request")
 
 		svc.client = &mockHTTPClient{postValue: &http.Response{
-			StatusCode: http.StatusBadRequest, Body: ioutil.NopCloser(strings.NewReader("invalid signature")),
+			StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader("invalid signature")),
 		}}
 
 		req, err = http.NewRequest(http.MethodPost, verifyCredentialPath, bytes.NewReader(reqBytes))
@@ -1052,7 +1051,7 @@ func newOIDCShareCallback(state, idToken, vpToken string) (req *http.Request) {
 func tmpFile(t *testing.T) (string, func()) {
 	t.Helper()
 
-	file, err := ioutil.TempFile("", "*.html")
+	file, err := os.CreateTemp("", "*.html")
 	require.NoError(t, err)
 
 	return file.Name(), func() { require.NoError(t, os.Remove(file.Name())) }

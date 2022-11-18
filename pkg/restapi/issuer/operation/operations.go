@@ -15,7 +15,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -55,14 +55,14 @@ const (
 	didcommInit            = "/didcomm/init"
 	didcommToken           = "/didcomm/token"
 	didcommCallback        = "/didcomm/cb"
-	didcommCredential      = "/didcomm/data"
+	didcommCredential      = "/didcomm/data" //nolint:gosec
 	didcommAssuranceData   = "/didcomm/assurance"
 	didcommUserEndpoint    = "/didcomm/uid"
 	oauth2GetRequestPath   = "/oauth2/request"
 	oauth2CallbackPath     = "/oauth2/callback"
 	oauth2TokenRequestPath = "oauth2/token" //nolint:gosec
 	verifyDIDAuthPath      = "/verify/didauth"
-	createCredentialPath   = "/credential"
+	createCredentialPath   = "/credential" //nolint:gosec
 	authPath               = "/auth"
 	preAuthorizePath       = "/pre-authorize"
 	searchPath             = "/search"
@@ -76,12 +76,12 @@ const (
 	oidcIssuanceAuthorizeRequest = "/oidc/authorize-request"
 	//nolint: gosec
 	oidcIssuanceToken      = "/{id}/oidc/token"
-	oidcIssuanceCredential = "/{id}/oidc/credential"
+	oidcIssuanceCredential = "/{id}/oidc/credential" //nolint:gosec
 
 	// http query params
 	stateQueryParam = "state"
 
-	credentialContext = "https://www.w3.org/2018/credentials/v1"
+	credentialContext = "https://www.w3.org/2018/credentials/v1" //nolint:gosec
 
 	vcsUpdateStatusURLFormat = "%s/%s" + "/credentials/status"
 
@@ -236,7 +236,7 @@ type createOIDCRequestResponse struct {
 }
 
 // New returns authorization instance
-func New(config *Config) (*Operation, error) {
+func New(config *Config) (*Operation, error) { //nolint:funlen
 	store, err := getTxnStore(config.StoreProvider)
 	if err != nil {
 		return nil, fmt.Errorf("issuer store provider : %w", err)
@@ -383,7 +383,7 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 }
 
-func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) {
+func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) { //nolint:funlen
 	accessToken, err := c.issueAccessToken(
 		c.vcsAPIAccessTokenHost,
 		c.vcsAPIAccessTokenClientID,
@@ -448,6 +448,12 @@ func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) {
 			fmt.Sprintf("unable to send requrest for initiate: %s", err.Error()))
 
 		return
+	}
+
+	if resp.Body != nil {
+		defer func() {
+			_ = resp.Body.Close() // nolint
+		}()
 	}
 
 	var parsedResp initiateResponse
@@ -2520,7 +2526,7 @@ func sendHTTPRequest(req *http.Request, client *http.Client, status int, httpTok
 	}()
 
 	if resp.StatusCode != status {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			logger.Warnf("failed to read response body for status: %d", resp.StatusCode)
 		}
@@ -2528,7 +2534,7 @@ func sendHTTPRequest(req *http.Request, client *http.Client, status int, httpTok
 		return nil, fmt.Errorf("%s: %s", resp.Status, string(body))
 	}
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }
 
 // getFormValue reads form url value by key

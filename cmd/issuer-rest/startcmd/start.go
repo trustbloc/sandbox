@@ -187,9 +187,9 @@ const (
 		" Alternatively, this can be set with the following environment variable: " + walletInitURLEnvKey
 	walletInitURLEnvKey = "ISSUER_WALLET_INIT_URL"
 
-	vcsAPIAccessTokenHostFlagName  = "vcs-api-access-token-host"                                                     //nolint:gosec
-	vcsAPIAccessTokenHostFlagUsage = "Host to retrieve access token for VCS service. Format: https://HostName:Port." //nolint:gosec
-	vcsAPIAccessTokenHostEnvKey    = "VCS_API_ACCESS_TOKEN_HOST"                                                     //nolint:gosec
+	vcsAPIAccessTokenHostFlagName  = "vcs-api-access-token-host"                                                     //nolint
+	vcsAPIAccessTokenHostFlagUsage = "Host to retrieve access token for VCS service. Format: https://HostName:Port." //nolint
+	vcsAPIAccessTokenHostEnvKey    = "VCS_API_ACCESS_TOKEN_HOST"                                                     //nolint
 
 	vcsAPIAccessTokenClientIDFlagName  = "vcs-api-access-token-client-id" //nolint:gosec
 	vcsAPIAccessTokenClientIDFlagUsage = "VCS client ID"                  //nolint:gosec
