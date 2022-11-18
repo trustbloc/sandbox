@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -73,7 +73,7 @@ func TestNew(t *testing.T) {
 // nolint: bodyclose
 func TestRegister(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -105,7 +105,7 @@ func TestRegister(t *testing.T) {
 	})
 
 	t.Run("user exists", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -164,7 +164,7 @@ func TestRegister(t *testing.T) {
 	})
 
 	t.Run("parse form error", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -220,7 +220,7 @@ func TestRegister(t *testing.T) {
 
 		svc.httpClient = &mockHTTPClient{
 			respValue: &http.Response{
-				StatusCode: http.StatusInternalServerError, Body: ioutil.NopCloser(strings.NewReader("vault error")),
+				StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader("vault error")),
 			},
 		}
 		svc.vClient = &mockVaultClient{CreateVaultErr: errors.New("vault error")}
@@ -236,7 +236,7 @@ func TestRegister(t *testing.T) {
 	})
 
 	t.Run("missing national id", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -265,7 +265,7 @@ func TestRegister(t *testing.T) {
 	})
 
 	t.Run("failed to create vc", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -324,7 +324,7 @@ func TestRegister(t *testing.T) {
 
 func TestLogin(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -357,7 +357,7 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("success for linking mode", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -408,7 +408,7 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("invalid username", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -487,7 +487,7 @@ func TestLogin(t *testing.T) {
 
 func TestLogout(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -606,7 +606,7 @@ func TestConnect(t *testing.T) {
 
 func TestAccountLink(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -1204,7 +1204,7 @@ func TestConsent(t *testing.T) {
 
 func TestAccountLinkCallback(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -2650,7 +2650,7 @@ func mockHTTPResponse(t *testing.T, vcResp,
 
 		resp := &http.Response{
 			StatusCode: status,
-			Body:       ioutil.NopCloser(bytes.NewReader(respByes)),
+			Body:       io.NopCloser(bytes.NewReader(respByes)),
 		}
 
 		defer func() {

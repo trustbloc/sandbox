@@ -15,7 +15,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -38,6 +38,7 @@ import (
 	edgesvcops "github.com/trustbloc/vcs/pkg/restapi/issuer/operation"
 	vcprofile "github.com/trustbloc/vcs/pkg/storage"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
 
 	"github.com/trustbloc/sandbox/pkg/internal/common/support"
 	oidcclient "github.com/trustbloc/sandbox/pkg/restapi/internal/common/oidc"
@@ -63,6 +64,7 @@ const (
 	verifyDIDAuthPath      = "/verify/didauth"
 	createCredentialPath   = "/credential"
 	authPath               = "/auth"
+	preAuthorizePath       = "/pre-authorize"
 	searchPath             = "/search"
 	generateCredentialPath = createCredentialPath + "/generate"
 	oidcRedirectPath       = "/oidc/redirect" + "/{id}"
@@ -153,6 +155,14 @@ type Operation struct {
 	assuranceScopes          map[string]string
 	tlsConfig                *tls.Config
 	externalLogin            bool
+	preAuthorizeHTML         string
+
+	vcsAPIAccessTokenHost         string
+	vcsAPIAccessTokenClientID     string
+	vcsAPIAccessTokenClientSecret string
+	vcsAPIAccessTokenClaim        string
+	vcsAPIURL                     string
+	vcsDemoIssuer                 string
 }
 
 // Config defines configuration for issuer operations
@@ -167,6 +177,7 @@ type Config struct {
 	ReceiveVCHTML            string
 	DIDAuthHTML              string
 	VCHTML                   string
+	PreAuthorizeHTML         string
 	DIDCommHTML              string
 	DIDCOMMVPHTML            string
 	TLSConfig                *tls.Config
@@ -184,12 +195,23 @@ type Config struct {
 	didcommScopes            map[string]struct{}
 	assuranceScopes          map[string]string
 	externalLogin            bool
+
+	VcsAPIAccessTokenHost         string
+	VcsAPIAccessTokenClientID     string
+	VcsAPIAccessTokenClientSecret string
+	VcsAPIAccessTokenClaim        string
+	VcsAPIURL                     string
+	VcsDemoIssuer                 string
 }
 
 // vc struct used to return vc data to html
 type vc struct {
 	Msg  string `json:"msg"`
 	Data string `json:"data"`
+}
+
+type initiate struct {
+	URL string `json:"url"`
 }
 
 type clientCredentialsTokenResponseStruct struct {
@@ -214,38 +236,45 @@ type createOIDCRequestResponse struct {
 }
 
 // New returns authorization instance
-func New(config *Config) (*Operation, error) {
+func New(config *Config) (*Operation, error) { //nolint:funlen
 	store, err := getTxnStore(config.StoreProvider)
 	if err != nil {
 		return nil, fmt.Errorf("issuer store provider : %w", err)
 	}
 
 	svc := &Operation{
-		tokenIssuer:              config.TokenIssuer,
-		tokenResolver:            config.TokenResolver,
-		extTokenIssuer:           config.ExtTokenIssuer,
-		documentLoader:           config.DocumentLoader,
-		cmsURL:                   config.CMSURL,
-		vcsURL:                   config.VCSURL,
-		walletURL:                config.WalletURL,
-		didAuthHTML:              config.DIDAuthHTML,
-		receiveVCHTML:            config.ReceiveVCHTML,
-		vcHTML:                   config.VCHTML,
-		didCommHTML:              config.DIDCommHTML,
-		didCommVpHTML:            config.DIDCOMMVPHTML,
-		httpClient:               &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
-		requestTokens:            config.RequestTokens,
-		issuerAdapterURL:         config.IssuerAdapterURL,
-		store:                    store,
-		homePage:                 config.OIDCCallbackURL,
-		externalDataSourceURL:    config.ExternalDataSourceURL,
-		externalAuthProviderURL:  config.ExternalAuthProviderURL,
-		externalAuthClientID:     config.ExternalAuthClientID,
-		externalAuthClientSecret: config.ExternalAuthClientSecret,
-		tlsConfig:                config.TLSConfig,
-		didcommScopes:            map[string]struct{}{},
-		assuranceScopes:          map[string]string{},
-		externalLogin:            config.externalLogin,
+		tokenIssuer:                   config.TokenIssuer,
+		extTokenIssuer:                config.ExtTokenIssuer,
+		tokenResolver:                 config.TokenResolver,
+		documentLoader:                config.DocumentLoader,
+		cmsURL:                        config.CMSURL,
+		vcsURL:                        config.VCSURL,
+		walletURL:                     config.WalletURL,
+		receiveVCHTML:                 config.ReceiveVCHTML,
+		didAuthHTML:                   config.DIDAuthHTML,
+		vcHTML:                        config.VCHTML,
+		didCommHTML:                   config.DIDCommHTML,
+		didCommVpHTML:                 config.DIDCOMMVPHTML,
+		httpClient:                    &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
+		requestTokens:                 config.RequestTokens,
+		issuerAdapterURL:              config.IssuerAdapterURL,
+		store:                         store,
+		externalDataSourceURL:         config.ExternalDataSourceURL,
+		externalAuthClientID:          config.ExternalAuthClientID,
+		externalAuthClientSecret:      config.ExternalAuthClientSecret,
+		externalAuthProviderURL:       config.ExternalAuthProviderURL,
+		homePage:                      config.OIDCCallbackURL,
+		didcommScopes:                 map[string]struct{}{},
+		assuranceScopes:               map[string]string{},
+		tlsConfig:                     config.TLSConfig,
+		externalLogin:                 config.externalLogin,
+		preAuthorizeHTML:              config.PreAuthorizeHTML,
+		vcsAPIAccessTokenHost:         config.VcsAPIAccessTokenHost,
+		vcsAPIAccessTokenClientID:     config.VcsAPIAccessTokenClientID,
+		vcsAPIAccessTokenClientSecret: config.VcsAPIAccessTokenClientSecret,
+		vcsAPIAccessTokenClaim:        config.VcsAPIAccessTokenClaim,
+		vcsAPIURL:                     config.VcsAPIURL,
+		vcsDemoIssuer:                 config.VcsDemoIssuer,
 	}
 
 	if config.didcommScopes != nil {
@@ -292,6 +321,9 @@ func (c *Operation) registerHandler() {
 		// chapi
 		support.NewHTTPHandler(revoke, http.MethodPost, c.revokeVC),
 		support.NewHTTPHandler(generate, http.MethodPost, c.generateVC),
+
+		// authorize & pre-authorize
+		support.NewHTTPHandler(preAuthorizePath, http.MethodGet, c.preAuthorize),
 
 		// didcomm
 		support.NewHTTPHandler(didcommToken, http.MethodPost, c.didcommTokenHandler),
@@ -349,6 +381,119 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{Name: callbackURLCookie, Value: "", Expires: expire})
 
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+}
+
+func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) { //nolint:funlen
+	accessToken, err := c.issueAccessToken(
+		c.vcsAPIAccessTokenHost,
+		c.vcsAPIAccessTokenClientID,
+		c.vcsAPIAccessTokenClientSecret,
+		[]string{c.vcsAPIAccessTokenClaim},
+	)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to get access token: %s", err.Error()))
+
+		return
+	}
+
+	t, err := template.ParseFiles(c.preAuthorizeHTML)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to load html: %s", err.Error()))
+
+		return
+	}
+
+	req := initiateOIDC4CIRequest{
+		CredentialTemplateID: "templateID",
+		UserPinRequired:      false,
+		ClaimData: &map[string]interface{}{
+			"claim1": "value1",
+			"claim2": "value2",
+		},
+	}
+
+	b, err := json.Marshal(req)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to marshal: %s", err.Error()))
+
+		return
+	}
+
+	httpReq, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"%v/issuer/profiles/%v/interactions/initiate-oidc",
+			c.vcsAPIURL,
+			c.vcsDemoIssuer),
+		bytes.NewBuffer(b),
+	)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("can not prepare http request: %s", err.Error()))
+
+		return
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %v", accessToken))
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to send requrest for initiate: %s", err.Error()))
+
+		return
+	}
+
+	if resp.Body != nil {
+		defer func() {
+			_ = resp.Body.Close() // nolint
+		}()
+	}
+
+	var parsedResp initiateOIDC4CIResponse
+	if err = json.NewDecoder(resp.Body).Decode(&parsedResp); err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to decode initiate response: %s", err.Error()))
+
+		return
+	}
+
+	if err := t.Execute(w, initiate{URL: parsedResp.InitiateIssuanceURL}); err != nil {
+		logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
+	}
+}
+
+func (c *Operation) issueAccessToken(oidcProviderURL, clientID, secret string, scopes []string) (string, error) {
+	conf := clientcredentials.Config{
+		TokenURL:     oidcProviderURL + "/oauth2/token",
+		ClientID:     clientID,
+		ClientSecret: secret,
+		Scopes:       scopes,
+		AuthStyle:    oauth2.AuthStyleInHeader,
+	}
+
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: c.tlsConfig,
+		},
+	})
+
+	tokenResult, err := conf.Token(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get token: %w", err)
+	}
+
+	return tokenResult.AccessToken, nil
 }
 
 func (c *Operation) auth(w http.ResponseWriter, r *http.Request) {
@@ -2384,7 +2529,7 @@ func sendHTTPRequest(req *http.Request, client *http.Client, status int, httpTok
 	}()
 
 	if resp.StatusCode != status {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			logger.Warnf("failed to read response body for status: %d", resp.StatusCode)
 		}
@@ -2392,7 +2537,7 @@ func sendHTTPRequest(req *http.Request, client *http.Client, status int, httpTok
 		return nil, fmt.Errorf("%s: %s", resp.Status, string(body))
 	}
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }
 
 // getFormValue reads form url value by key

@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -267,7 +266,7 @@ func (c *Operation) verifyPresentation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		respBytes, respErr := ioutil.ReadAll(resp.Body)
+		respBytes, respErr := io.ReadAll(resp.Body)
 		if respErr != nil {
 			c.writeErrorResponse(w, http.StatusBadRequest,
 				fmt.Sprintf("failed to read verify presentation resp : %s", err.Error()))
@@ -317,7 +316,7 @@ func (c *Operation) verifyCredential(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		respBytes, respErr := ioutil.ReadAll(resp.Body)
+		respBytes, respErr := io.ReadAll(resp.Body)
 		if respErr != nil {
 			c.writeErrorResponse(w, http.StatusBadRequest,
 				fmt.Sprintf("failed to read verify credentail resp : %s", err.Error()))
@@ -861,7 +860,7 @@ func (c *Operation) verify(verifyReq interface{}, inputData, htmlTemplate string
 	if resp.StatusCode != http.StatusOK { //nolint:nestif
 		var failedMsg string
 
-		respBytes, respErr := ioutil.ReadAll(resp.Body)
+		respBytes, respErr := io.ReadAll(resp.Body)
 		if respErr != nil {
 			failedMsg = fmt.Sprintf("failed to read response body: %s", respErr)
 		} else {

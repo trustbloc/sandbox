@@ -9,7 +9,7 @@ package common
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -229,7 +229,7 @@ func TestCreateJSONLDDocumentLoader(t *testing.T) {
 		DoFunc: func(req *http.Request) (*http.Response, error) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
-				Body:       ioutil.NopCloser(bytes.NewReader([]byte(sampleJSONLDContext))),
+				Body:       io.NopCloser(bytes.NewReader([]byte(sampleJSONLDContext))),
 			}, nil
 		},
 	}
