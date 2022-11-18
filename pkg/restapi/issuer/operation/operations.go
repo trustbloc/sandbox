@@ -156,6 +156,13 @@ type Operation struct {
 	tlsConfig                *tls.Config
 	externalLogin            bool
 	preAuthorizeHTML         string
+
+	vcsAPIAccessTokenHost         string
+	vcsAPIAccessTokenClientID     string
+	vcsAPIAccessTokenClientSecret string
+	vcsAPIAccessTokenClaim        string
+	vcsAPIURL                     string
+	vcsDemoIssuer                 string
 }
 
 // Config defines configuration for issuer operations
@@ -188,6 +195,13 @@ type Config struct {
 	didcommScopes            map[string]struct{}
 	assuranceScopes          map[string]string
 	externalLogin            bool
+
+	VcsAPIAccessTokenHost         string
+	VcsAPIAccessTokenClientID     string
+	VcsAPIAccessTokenClientSecret string
+	VcsAPIAccessTokenClaim        string
+	VcsAPIURL                     string
+	VcsDemoIssuer                 string
 }
 
 // vc struct used to return vc data to html
@@ -229,32 +243,38 @@ func New(config *Config) (*Operation, error) {
 	}
 
 	svc := &Operation{
-		tokenIssuer:              config.TokenIssuer,
-		tokenResolver:            config.TokenResolver,
-		extTokenIssuer:           config.ExtTokenIssuer,
-		documentLoader:           config.DocumentLoader,
-		cmsURL:                   config.CMSURL,
-		vcsURL:                   config.VCSURL,
-		walletURL:                config.WalletURL,
-		didAuthHTML:              config.DIDAuthHTML,
-		receiveVCHTML:            config.ReceiveVCHTML,
-		vcHTML:                   config.VCHTML,
-		preAuthorizeHTML:         config.PreAuthorizeHTML,
-		didCommHTML:              config.DIDCommHTML,
-		didCommVpHTML:            config.DIDCOMMVPHTML,
-		httpClient:               &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
-		requestTokens:            config.RequestTokens,
-		issuerAdapterURL:         config.IssuerAdapterURL,
-		store:                    store,
-		homePage:                 config.OIDCCallbackURL,
-		externalDataSourceURL:    config.ExternalDataSourceURL,
-		externalAuthProviderURL:  config.ExternalAuthProviderURL,
-		externalAuthClientID:     config.ExternalAuthClientID,
-		externalAuthClientSecret: config.ExternalAuthClientSecret,
-		tlsConfig:                config.TLSConfig,
-		didcommScopes:            map[string]struct{}{},
-		assuranceScopes:          map[string]string{},
-		externalLogin:            config.externalLogin,
+		tokenIssuer:                   config.TokenIssuer,
+		extTokenIssuer:                config.ExtTokenIssuer,
+		tokenResolver:                 config.TokenResolver,
+		documentLoader:                config.DocumentLoader,
+		cmsURL:                        config.CMSURL,
+		vcsURL:                        config.VCSURL,
+		walletURL:                     config.WalletURL,
+		receiveVCHTML:                 config.ReceiveVCHTML,
+		didAuthHTML:                   config.DIDAuthHTML,
+		vcHTML:                        config.VCHTML,
+		didCommHTML:                   config.DIDCommHTML,
+		didCommVpHTML:                 config.DIDCOMMVPHTML,
+		httpClient:                    &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
+		requestTokens:                 config.RequestTokens,
+		issuerAdapterURL:              config.IssuerAdapterURL,
+		store:                         store,
+		externalDataSourceURL:         config.ExternalDataSourceURL,
+		externalAuthClientID:          config.ExternalAuthClientID,
+		externalAuthClientSecret:      config.ExternalAuthClientSecret,
+		externalAuthProviderURL:       config.ExternalAuthProviderURL,
+		homePage:                      config.OIDCCallbackURL,
+		didcommScopes:                 map[string]struct{}{},
+		assuranceScopes:               map[string]string{},
+		tlsConfig:                     config.TLSConfig,
+		externalLogin:                 config.externalLogin,
+		preAuthorizeHTML:              config.PreAuthorizeHTML,
+		vcsAPIAccessTokenHost:         config.VcsAPIAccessTokenHost,
+		vcsAPIAccessTokenClientID:     config.VcsAPIAccessTokenClientID,
+		vcsAPIAccessTokenClientSecret: config.VcsAPIAccessTokenClientSecret,
+		vcsAPIAccessTokenClaim:        config.VcsAPIAccessTokenClaim,
+		vcsAPIURL:                     config.VcsAPIURL,
+		vcsDemoIssuer:                 config.VcsDemoIssuer,
 	}
 
 	if config.didcommScopes != nil {
@@ -365,10 +385,10 @@ func (c *Operation) login(w http.ResponseWriter, r *http.Request) {
 
 func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) {
 	accessToken, err := c.issueAccessToken(
-		"https://auth-hydra.local.trustbloc.dev",
-		"test-org",
-		"test-org-secret",
-		[]string{"org_admin"},
+		c.vcsAPIAccessTokenHost,
+		c.vcsAPIAccessTokenClientID,
+		c.vcsAPIAccessTokenClientSecret,
+		[]string{c.vcsAPIAccessTokenClaim},
 	)
 	if err != nil {
 		logger.Errorf(err.Error())
@@ -406,8 +426,9 @@ func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) {
 	httpReq, err := http.NewRequest(
 		"POST",
 		fmt.Sprintf(
-			"https://api-gateway.local.trustbloc.dev/issuer/profiles/%v/interactions/initiate-oidc",
-			"ldp-web-P256-JsonWebSignature2020"),
+			"%v/issuer/profiles/%v/interactions/initiate-oidc",
+			c.vcsAPIURL,
+			c.vcsDemoIssuer),
 		bytes.NewBuffer(b),
 	)
 	if err != nil {
