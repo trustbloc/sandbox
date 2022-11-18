@@ -83,16 +83,16 @@ SPDX-License-Identifier: Apache-2.0
             });
     });
     $("#requestCredentialsButton").on('click', function() {
-        let bodyFormData = new URLSearchParams();
-        bodyFormData.append('did', 'some-did');
-        bodyFormData.append('format', 'ldp');
-
         window.axios({
             method: "post",
             url: "https://vcs.local.trustbloc.dev/oidc/credential",
-            data: bodyFormData,
+            data: {
+                did: "some-did",
+                format: "ldp_vc",
+                type: "PermanentResidentCard",
+            },
             headers: {
-                Authorization: `Bearer ${window.accessToken}`,
+                authorization: `Bearer ${window.accessToken}`,
             }
         })
             .then(function (response) {
