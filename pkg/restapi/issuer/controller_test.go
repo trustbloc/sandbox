@@ -39,5 +39,5 @@ func TestController_GetOperations(t *testing.T) {
 	require.NotNil(t, controller)
 
 	ops := controller.GetOperations()
-	require.Equal(t, 27, len(ops))
+	require.Equal(t, 30, len(ops))
 }
