@@ -131,7 +131,7 @@ SPDX-License-Identifier: Apache-2.0
     window.setState = function () {
         window.axios({
             method: "get",
-            url: "https://demo-issuer.local.trustbloc.dev/verify/openid4ci/webhook/check?tx="+window.txId,
+            url: "/verify/openid4ci/webhook/check?tx="+window.txId,
         }).then(function (stateResp) {
             if (!stateResp.data.type){
                 return
