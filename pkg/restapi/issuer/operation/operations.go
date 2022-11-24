@@ -65,6 +65,7 @@ const (
 	createCredentialPath   = "/credential"
 	authPath               = "/auth"
 	preAuthorizePath       = "/pre-authorize"
+	credentialProofPath    = "/credential-proof"
 	searchPath             = "/search"
 	generateCredentialPath = createCredentialPath + "/generate"
 	oidcRedirectPath       = "/oidc/redirect" + "/{id}"
@@ -211,7 +212,9 @@ type vc struct {
 }
 
 type initiate struct {
-	URL string `json:"url"`
+	URL         string `json:"url"`
+	TxID        string `json:"txID"`
+	SuccessText string `json:"successText"`
 }
 
 type clientCredentialsTokenResponseStruct struct {
@@ -324,6 +327,7 @@ func (c *Operation) registerHandler() {
 
 		// authorize & pre-authorize
 		support.NewHTTPHandler(preAuthorizePath, http.MethodGet, c.preAuthorize),
+		support.NewHTTPHandler(credentialProofPath, http.MethodPost, c.createProofForCredentials),
 
 		// didcomm
 		support.NewHTTPHandler(didcommToken, http.MethodPost, c.didcommTokenHandler),
@@ -416,6 +420,15 @@ func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) { //nol
 		},
 	}
 
+	var successText strings.Builder
+	successText.WriteString(fmt.Sprintf("Credentials with template [%v] and type [%v] and claims: ",
+		req.CredentialTemplateID, "PermanentResidentCard"))
+
+	for k, v := range *req.ClaimData {
+		successText.WriteString(fmt.Sprintf("%v:%v ", k, v))
+	}
+	successText.WriteString(fmt.Sprintf("was successfully issued by [%v]", c.vcsAPIAccessTokenClientID))
+
 	b, err := json.Marshal(req)
 	if err != nil {
 		logger.Errorf(err.Error())
@@ -468,9 +481,74 @@ func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) { //nol
 		return
 	}
 
-	if err := t.Execute(w, initiate{URL: parsedResp.InitiateIssuanceURL}); err != nil {
+	if err := t.Execute(w, initiate{
+		URL:         parsedResp.InitiateIssuanceURL,
+		TxID:        parsedResp.TxID,
+		SuccessText: successText.String(),
+	}); err != nil {
 		logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
+}
+
+func (c *Operation) createProofForCredentials(w http.ResponseWriter, r *http.Request) {
+	//didDID, privateKey, err := c.createLongVDR()
+	//if err != nil {
+	//	logger.Errorf(err.Error())
+	//	c.writeErrorResponse(w, http.StatusInternalServerError,
+	//		fmt.Sprintf("unable to create long did: %s", err.Error()))
+	//
+	//	return
+	//}
+
+	didDID, privateKey, err := c.createDidVDR(c.httpClient)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to create orb did: %s", err.Error()))
+
+		return
+	}
+
+	if err = r.ParseForm(); err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to parse form: %s", err.Error()))
+
+		return
+	}
+
+	jws, err := c.createProof(
+		*privateKey,
+		didDID.DIDDocument.VerificationMethod[0].ID,
+		r.Form.Get("cNonce"),
+		"oidc4vc_client", /// todo dynamic client registration in future
+	)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to create proof: %s", err.Error()))
+
+		return
+	}
+
+	b, err := json.Marshal(credentialRequest{
+		DID:    didDID.DIDDocument.ID,
+		Format: "jwt_vc",
+		Type:   "PermanentResidentCard",
+		Proof: jwtProof{
+			ProofType: "jwt",
+			JWT:       jws,
+		},
+	})
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to create marshal: %s", err.Error()))
+
+		return
+	}
+
+	c.writeResponse(w, http.StatusOK, b)
 }
 
 func (c *Operation) issueAccessToken(oidcProviderURL, clientID, secret string, scopes []string) (string, error) {

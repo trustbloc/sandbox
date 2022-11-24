@@ -77,3 +77,22 @@ type initiateOIDC4CIRequest struct {
 	Scope                     []string                `json:"scope,omitempty"`
 	UserPinRequired           bool                    `json:"user_pin_required,omitempty"`
 }
+
+type jwtProofClaims struct {
+	Issuer   string `json:"iss,omitempty"`
+	Audience string `json:"aud,omitempty"`
+	IssuedAt int64  `json:"iat,omitempty"`
+	Nonce    string `json:"nonce,omitempty"`
+}
+
+type credentialRequest struct {
+	DID    string   `json:"did"`
+	Format string   `json:"format,omitempty"`
+	Type   string   `json:"type"`
+	Proof  jwtProof `json:"proof,omitempty"`
+}
+
+type jwtProof struct {
+	JWT       string `json:"jwt"`
+	ProofType string `json:"proof_type"`
+}

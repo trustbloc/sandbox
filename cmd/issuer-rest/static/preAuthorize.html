@@ -22,8 +22,13 @@ SPDX-License-Identifier: Apache-2.0
 <body>
 <div class="flex flex-wrap py-2 shadow-lg bg-white">
     <div class="w-full p-4">
-        <div class="grid place-items-center">
+        <div class="grid place-items-center debug">
             <label>[test-org] wants to issue [PermanentResidentCard]</label>
+        </div>
+    </div>
+    <div class="w-full p-4">
+        <div class="grid place-items-center">
+            <label id="txState">State: awaiting QR code scan</label>
         </div>
     </div>
     <div class="w-full p-4">
@@ -31,81 +36,147 @@ SPDX-License-Identifier: Apache-2.0
             <div id="qrCode"></div>
         </div>
     </div>
-    <div class="w-full p-4">
+    <div class="w-full p-4 debug">
         <label>{{.URL}}</label>
     </div>
-    <div class="w-full p-4">
+    <div class="w-full p-4 debug">
         <div class="grid place-items-center">
             <button id="scanButton"
                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">SCAN
             </button>
         </div>
     </div>
-    <div class="w-full p-4">
+    <div class="w-full p-4 debug">
         <label id="accessToken"></label>
     </div>
-    <div class="w-full p-4" id="requestCredentials" style="display: none">
+    <div class="w-full p-4 debug">
+        <label id="cNonce"></label>
+    </div>
+    <div class="w-full p-4 debug">
+        <label id="wellKnown"></label>
+    </div>
+    <div class="w-full p-4 debug" id="requestCredentials" style="display: none">
         <div class="grid place-items-center">
             <button id="requestCredentialsButton"
                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Request Credentials
             </button>
         </div>
     </div>
-    <div class="w-full p-4" id="credentialsBlock" style="display: none">
+    <div class="w-full p-4 debug">
+        <label id="proof"></label>
+    </div>
+    <div class="w-full p-4 debug" id="credentialsBlock" style="display: none">
         <label id="credentials"></label>
+    </div>
+    <div class="w-full p-4">
+        <div class="grid place-items-center" id="successBlock" style="display: none">
+            <label>{{.SuccessText}}</label>
+        </div>
     </div>
 </div>
 </body>
 <script>
-    window.rawURL = {{.URL}}
-    parsedUrl = new URL(window.rawURL)
+    $(".debug").hide()
 
+    window.rawURL = {{.URL}}
+    window.txId = {{.TxID}}
+
+    parsedUrl = new URL(window.rawURL)
     new QRCode(document.getElementById("qrCode"),window.rawURL);
     $("#scanButton").on('click', function() {
+        window.axios({
+            method: "get",
+            url: `${parsedUrl.searchParams.get("issuer")}/.well-known/openid-configuration`
+        }).then(function (wellKnown){
+            $("#wellKnown").text(`well-known token endpoint: ${wellKnown.data.token_endpoint}`)
+            let bodyFormData = new URLSearchParams();
+            bodyFormData.append('grant_type', 'urn:ietf:params:oauth:grant-type:pre-authorized_code');
+            bodyFormData.append('pre-authorized_code', parsedUrl.searchParams.get("pre-authorized_code"));
+
+            window.axios({
+                method: "post",
+                url: wellKnown.data.token_endpoint,
+                data: bodyFormData,
+            })
+                .then(function (response) {
+                    //handle success
+                    console.log(response)
+                    window.accessToken = response.data.access_token;
+                    window.cNonce = response.data.c_nonce;
+                    $("#accessToken").text(`Got token : ${response.data.access_token}`);
+                    $("#cNonce").text(`Got c_nonce : ${response.data.c_nonce}`);
+                    $("#requestCredentials").show();
+                })
+                .catch(function (response) {
+                    //handle error
+                    console.log(response);
+                });
+        });
+        })
+
+    window.setState = function() {
+        window.axios({
+            method: "get",
+            url: `${parsedUrl.searchParams.get("issuer")}/issuance-state/${window.txId}`
+        }).then(function (stateResp){
+            console.log(stateResp)
+            let text = "State: "
+            switch(+stateResp.data.state) {
+                case 1:
+                    text += "awaiting QR code scan"
+                    break
+                case 5:
+                    text += "issued successfully"
+                    $("#qrCode").hide()
+                    $("#successBlock").show()
+                    break
+                default:
+                    text += "QR code scanned"
+                    break
+            }
+            $("#txState").text(text)
+        });
+    }
+    window.setState()
+    setInterval(window.setState,1000)
+
+    $("#requestCredentialsButton").on('click', function() {
         let bodyFormData = new URLSearchParams();
-        bodyFormData.append('grant_type', 'urn:ietf:params:oauth:grant-type:pre-authorized_code');
+        bodyFormData.append('cNonce', window.cNonce);
         bodyFormData.append('pre-authorized_code', parsedUrl.searchParams.get("pre-authorized_code"));
 
         window.axios({
             method: "post",
-            url: parsedUrl.searchParams.get("issuer"),
+            url: "/credential-proof",
             data: bodyFormData,
-        })
-            .then(function (response) {
-                //handle success
-                window.accessToken = response.data.access_token;
-                $("#accessToken").text(`Got token : ${response.data.access_token}`);
-                $("#requestCredentials").show();
+        }).then(function(proofResp) {
+            $("#proof").text(`Credentials request : ` + JSON.stringify(proofResp.data))
+            console.log(proofResp)
+            window.axios({
+                method: "post",
+                url: "https://vcs.local.trustbloc.dev/oidc/credential",
+                data: {
+                    did: proofResp.data.did,
+                    format: proofResp.data.format,
+                    proof: proofResp.data.proof,
+                    type: "PermanentResidentCard",
+                },
+                headers: {
+                    authorization: `Bearer ${window.accessToken}`,
+                }
             })
-            .catch(function (response) {
-                //handle error
-                console.log(response);
-            });
-    });
-    $("#requestCredentialsButton").on('click', function() {
-        window.axios({
-            method: "post",
-            url: "https://vcs.local.trustbloc.dev/oidc/credential",
-            data: {
-                did: "some-did",
-                format: "ldp_vc",
-                type: "PermanentResidentCard",
-            },
-            headers: {
-                authorization: `Bearer ${window.accessToken}`,
-            }
+                .then(function (response) {
+                    //handle success
+                    console.log(response);
+                    $("#credentialsBlock").show();
+                    $("#credentials").text(JSON.stringify(response.data))
+                })
+                .catch(function (response) {
+                    //handle error
+                    console.log(response);
+                });
         })
-            .then(function (response) {
-                //handle success
-                console.log(response);
-                $("#accessToken").text(`Got token : ${response.data.access_token}`);
-                $("#requestCredentials").show();
-            })
-            .catch(function (response) {
-                //handle error
-                console.log(response);
-            });
-    })
+        })
 
     // // Construct the WebCredential wrapper around the credential to be stored
     // const webCredentialWrapper = new WebCredential('VerifiablePresentation', vp);
