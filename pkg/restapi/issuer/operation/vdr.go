@@ -24,8 +24,11 @@ import (
 	"github.com/hyperledger/aries-framework-go-ext/component/vdr/longform"
 )
 
-func (c *Operation) createLongVDR() (*ariesdid.DocResolution, *ed25519.PrivateKey, error) {
+func (c *Operation) createLongVDR() (*ariesdid.DocResolution, *ed25519.PrivateKey, error) { //nolint:funlen
 	vdr, err := longform.New()
+	if err != nil {
+		return nil, nil, err
+	}
 
 	recoveryKey, _, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {

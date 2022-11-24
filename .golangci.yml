@@ -89,6 +89,11 @@ linters:
     - tparallel
     - tagliatelle
     - gomnd
+    - gocritic
+    - wsl
+    - unused
+    - gci
+    - stylecheck
 
 issues:
   exclude-use-default: false
