@@ -87,6 +87,8 @@ linters:
     - paralleltest
     - exhaustivestruct
     - tparallel
+    - tagliatelle
+    - gomnd
 
 issues:
   exclude-use-default: false
