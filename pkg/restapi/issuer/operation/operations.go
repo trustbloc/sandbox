@@ -46,29 +46,31 @@ import (
 )
 
 const (
-	login                  = "/login"
-	settings               = "/settings"
-	getCreditScore         = "/getCreditScore"
-	callback               = "/callback"
-	generate               = "/generate"
-	revoke                 = "/revoke"
-	didcommInit            = "/didcomm/init"
-	didcommToken           = "/didcomm/token"
-	didcommCallback        = "/didcomm/cb"
-	didcommCredential      = "/didcomm/data"
-	didcommAssuranceData   = "/didcomm/assurance"
-	didcommUserEndpoint    = "/didcomm/uid"
-	oauth2GetRequestPath   = "/oauth2/request"
-	oauth2CallbackPath     = "/oauth2/callback"
-	oauth2TokenRequestPath = "oauth2/token" //nolint:gosec
-	verifyDIDAuthPath      = "/verify/didauth"
-	createCredentialPath   = "/credential"
-	authPath               = "/auth"
-	preAuthorizePath       = "/pre-authorize"
-	credentialProofPath    = "/credential-proof"
-	searchPath             = "/search"
-	generateCredentialPath = createCredentialPath + "/generate"
-	oidcRedirectPath       = "/oidc/redirect" + "/{id}"
+	login                     = "/login"
+	settings                  = "/settings"
+	getCreditScore            = "/getCreditScore"
+	callback                  = "/callback"
+	generate                  = "/generate"
+	revoke                    = "/revoke"
+	didcommInit               = "/didcomm/init"
+	didcommToken              = "/didcomm/token"
+	didcommCallback           = "/didcomm/cb"
+	didcommCredential         = "/didcomm/data"
+	didcommAssuranceData      = "/didcomm/assurance"
+	didcommUserEndpoint       = "/didcomm/uid"
+	oauth2GetRequestPath      = "/oauth2/request"
+	oauth2CallbackPath        = "/oauth2/callback"
+	oauth2TokenRequestPath    = "oauth2/token" //nolint:gosec
+	verifyDIDAuthPath         = "/verify/didauth"
+	createCredentialPath      = "/credential"
+	authPath                  = "/auth"
+	preAuthorizePath          = "/pre-authorize"
+	openID4CIWebhookCheckPath = "/verify/openid4ci/webhook/check"
+	openID4CIWebhookPath      = "/verify/openid4ci/webhook"
+	credentialProofPath       = "/credential-proof"
+	searchPath                = "/search"
+	generateCredentialPath    = createCredentialPath + "/generate"
+	oidcRedirectPath          = "/oidc/redirect" + "/{id}"
 
 	oidcIssuanceLogin            = "/oidc/login"
 	oidcIssuerIssuance           = "/oidc/issuance"
@@ -164,6 +166,7 @@ type Operation struct {
 	vcsAPIAccessTokenClaim        string
 	vcsAPIURL                     string
 	vcsDemoIssuer                 string
+	eventsTopic                   *EventsTopic
 }
 
 // Config defines configuration for issuer operations
@@ -278,6 +281,7 @@ func New(config *Config) (*Operation, error) { //nolint:funlen
 		vcsAPIAccessTokenClaim:        config.VcsAPIAccessTokenClaim,
 		vcsAPIURL:                     config.VcsAPIURL,
 		vcsDemoIssuer:                 config.VcsDemoIssuer,
+		eventsTopic:                   NewEventsTopic(),
 	}
 
 	if config.didcommScopes != nil {
@@ -328,6 +332,10 @@ func (c *Operation) registerHandler() {
 		// authorize & pre-authorize
 		support.NewHTTPHandler(preAuthorizePath, http.MethodGet, c.preAuthorize),
 		support.NewHTTPHandler(credentialProofPath, http.MethodPost, c.createProofForCredentials),
+
+		// webhooks
+		support.NewHTTPHandler(openID4CIWebhookPath, http.MethodPost, c.eventsTopic.receiveTopics),
+		support.NewHTTPHandler(openID4CIWebhookCheckPath, http.MethodGet, c.eventsTopic.checkTopics),
 
 		// didcomm
 		support.NewHTTPHandler(didcommToken, http.MethodPost, c.didcommTokenHandler),
@@ -413,7 +421,7 @@ func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) { //nol
 
 	req := initiateOIDC4CIRequest{
 		CredentialTemplateID: "templateID",
-		UserPinRequired:      false,
+		UserPinRequired:      true,
 		ClaimData: &map[string]interface{}{
 			"claim1": "value1",
 			"claim2": "value2",

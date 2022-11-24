@@ -36,6 +36,16 @@ SPDX-License-Identifier: Apache-2.0
             <div id="qrCode"></div>
         </div>
     </div>
+    <div class="w-full p-4">
+        <div class="grid place-items-center">
+            <div>
+                <label for="pin" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PIN</label>
+                <input type="text" id="pin"
+                       class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                       placeholder="123" readonly>
+            </div>
+        </div>
+    </div>
     <div class="w-full p-4 debug">
         <label>{{.URL}}</label>
     </div>
@@ -58,7 +68,8 @@ SPDX-License-Identifier: Apache-2.0
     <div class="w-full p-4 debug" id="requestCredentials" style="display: none">
         <div class="grid place-items-center">
             <button id="requestCredentialsButton"
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Request Credentials
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Request
+                Credentials
             </button>
         </div>
     </div>
@@ -82,16 +93,19 @@ SPDX-License-Identifier: Apache-2.0
     window.txId = {{.TxID}}
 
     parsedUrl = new URL(window.rawURL)
-    new QRCode(document.getElementById("qrCode"),window.rawURL);
-    $("#scanButton").on('click', function() {
+    new QRCode(document.getElementById("qrCode"), window.rawURL);
+    $("#scanButton").on('click', function () {
         window.axios({
             method: "get",
             url: `${parsedUrl.searchParams.get("issuer")}/.well-known/openid-configuration`
-        }).then(function (wellKnown){
+        }).then(function (wellKnown) {
             $("#wellKnown").text(`well-known token endpoint: ${wellKnown.data.token_endpoint}`)
             let bodyFormData = new URLSearchParams();
             bodyFormData.append('grant_type', 'urn:ietf:params:oauth:grant-type:pre-authorized_code');
             bodyFormData.append('pre-authorized_code', parsedUrl.searchParams.get("pre-authorized_code"));
+            bodyFormData.append('user_pin', "123");
+
+            window.wellKnown = wellKnown.data
 
             window.axios({
                 method: "post",
@@ -112,25 +126,29 @@ SPDX-License-Identifier: Apache-2.0
                     console.log(response);
                 });
         });
-        })
+    })
 
-    window.setState = function() {
+    window.setState = function () {
         window.axios({
             method: "get",
-            url: `${parsedUrl.searchParams.get("issuer")}/issuance-state/${window.txId}`
-        }).then(function (stateResp){
+            url: "https://demo-issuer.local.trustbloc.dev/verify/openid4ci/webhook/check?tx="+window.txId,
+        }).then(function (stateResp) {
+            if (!stateResp.data.type){
+                return
+            }
+
             console.log(stateResp)
             let text = "State: "
-            switch(+stateResp.data.state) {
-                case 1:
+            switch (stateResp.data.type) {
+                case "oidc_interaction_initiated":
                     text += "awaiting QR code scan"
                     break
-                case 5:
+                case "oidc_interaction_succeeded":
                     text += "issued successfully"
                     $("#qrCode").hide()
                     $("#successBlock").show()
                     break
-                default:
+                case "oidc_interaction_qr_scanned":
                     text += "QR code scanned"
                     break
             }
@@ -138,9 +156,9 @@ SPDX-License-Identifier: Apache-2.0
         });
     }
     window.setState()
-    setInterval(window.setState,1000)
+    setInterval(window.setState, 1000)
 
-    $("#requestCredentialsButton").on('click', function() {
+    $("#requestCredentialsButton").on('click', function () {
         let bodyFormData = new URLSearchParams();
         bodyFormData.append('cNonce', window.cNonce);
         bodyFormData.append('pre-authorized_code', parsedUrl.searchParams.get("pre-authorized_code"));
@@ -149,12 +167,12 @@ SPDX-License-Identifier: Apache-2.0
             method: "post",
             url: "/credential-proof",
             data: bodyFormData,
-        }).then(function(proofResp) {
+        }).then(function (proofResp) {
             $("#proof").text(`Credentials request : ` + JSON.stringify(proofResp.data))
             console.log(proofResp)
             window.axios({
                 method: "post",
-                url: "https://vcs.local.trustbloc.dev/oidc/credential",
+                url: window.wellKnown.credential_endpoint,
                 data: {
                     did: proofResp.data.did,
                     format: proofResp.data.format,
@@ -176,7 +194,7 @@ SPDX-License-Identifier: Apache-2.0
                     console.log(response);
                 });
         })
-        })
+    })
 
     // // Construct the WebCredential wrapper around the credential to be stored
     // const webCredentialWrapper = new WebCredential('VerifiablePresentation', vp);
