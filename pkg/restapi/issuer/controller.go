@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package issuer
 
 import (
-	operation "github.com/trustbloc/sandbox/pkg/restapi/issuer/operation"
+	"github.com/trustbloc/sandbox/pkg/restapi/issuer/operation"
 )
 
 // New returns new controller instance.

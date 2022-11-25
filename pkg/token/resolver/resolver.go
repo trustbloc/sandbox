@@ -10,7 +10,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -73,7 +73,7 @@ func getTokenInfo(resp *http.Response) (*token.Introspection, error) {
 		return nil, errors.New("http status code is not ok")
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -36,7 +35,7 @@ import (
 
 const authHeader = "Bearer ABC"
 
-const testCredentialRequest = `{
+const testCredentialRequest = `{ 
    "@context": [
 		"https://www.w3.org/2018/credentials/v1", 
 		"https://www.w3.org/2018/credentials/examples/v1"
@@ -1754,7 +1753,7 @@ func TestOperation_Callback(t *testing.T) {
 
 		defer vcs.Close()
 
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -1934,7 +1933,7 @@ func TestOperation_GenerateVC(t *testing.T) {
 		headers := make(map[string]string)
 		headers["Authorization"] = authHeader
 
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -2104,7 +2103,7 @@ func TestOperation_GenerateVC(t *testing.T) {
 		headers := make(map[string]string)
 		headers["Authorization"] = authHeader
 
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -2633,7 +2632,7 @@ func TestHandleOIDCCallback(t *testing.T) {
 		state := uuid.New().String()
 		code := uuid.New().String()
 
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -2661,7 +2660,7 @@ func TestHandleOIDCCallback(t *testing.T) {
 		state := uuid.New().String()
 		code := uuid.New().String()
 
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -2686,7 +2685,7 @@ func TestHandleOIDCCallback(t *testing.T) {
 	})
 
 	t.Run("error missing state", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -2699,7 +2698,7 @@ func TestHandleOIDCCallback(t *testing.T) {
 	})
 
 	t.Run("error missing code", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -2712,7 +2711,7 @@ func TestHandleOIDCCallback(t *testing.T) {
 	})
 
 	t.Run("error invalid state parameter", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -2727,7 +2726,7 @@ func TestHandleOIDCCallback(t *testing.T) {
 	t.Run("generic transient store error", func(t *testing.T) {
 		state := uuid.New().String()
 
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -2842,7 +2841,7 @@ func TestRevokeVC(t *testing.T) {
 	})
 
 	t.Run("test success", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()
@@ -2938,7 +2937,7 @@ func TestDIDCommCallbackHandler(t *testing.T) {
 	urlFmt := didcommCallback + "?" + stateQueryParam + "=%s"
 
 	t.Run("test didcomm callback handler - success", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "*.html")
+		file, err := os.CreateTemp("", "*.html")
 		require.NoError(t, err)
 
 		defer func() { require.NoError(t, os.Remove(file.Name())) }()

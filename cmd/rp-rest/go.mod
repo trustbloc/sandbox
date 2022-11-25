@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/spf13/cobra v1.3.0
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.8.1
 	github.com/trustbloc/edge-core v0.1.9-0.20220718150010-aa7941986372
 	github.com/trustbloc/sandbox v0.0.0
 )
@@ -33,14 +33,13 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/go-cmp v0.5.7 // indirect
-	github.com/google/tink/go v1.6.1 // indirect
-	github.com/hyperledger/aries-framework-go v0.1.9-0.20220816070605-5fa4db149935 // indirect
+	github.com/google/tink/go v1.7.0 // indirect
+	github.com/hyperledger/aries-framework-go v0.1.9-0.20221104133505-b2cd6a82a8e4 // indirect
 	github.com/hyperledger/aries-framework-go-ext/component/storage/couchdb v0.0.0-20220428163625-96d8261511e1 // indirect
 	github.com/hyperledger/aries-framework-go-ext/component/storage/mongodb v0.0.0-20220728172020-0a8903e45149 // indirect
 	github.com/hyperledger/aries-framework-go-ext/component/storage/mysql v0.0.0-20220330151152-6bbd64bde42e // indirect
-	github.com/hyperledger/aries-framework-go/component/storageutil v0.0.0-20220526205258-18d510d84955 // indirect
-	github.com/hyperledger/aries-framework-go/spi v0.0.0-20220728221432-bc126d50cdf9 // indirect
+	github.com/hyperledger/aries-framework-go/component/storageutil v0.0.0-20220610133818-119077b0ec85 // indirect
+	github.com/hyperledger/aries-framework-go/spi v0.0.0-20221025204933-b807371b6f1e // indirect
 	github.com/hyperledger/ursa-wrapper-go v0.3.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kawamuray/jsonpath v0.0.0-20201211160320-7483bafabd7e // indirect
@@ -48,11 +47,11 @@ require (
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/montanaflynn/stats v0.6.6 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
-	github.com/multiformats/go-base32 v0.0.4 // indirect
+	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.1.0 // indirect
-	github.com/multiformats/go-multibase v0.0.3 // indirect
+	github.com/multiformats/go-multibase v0.1.1 // indirect
 	github.com/otiai10/copy v1.2.0 // indirect
-	github.com/piprate/json-gold v0.4.1 // indirect
+	github.com/piprate/json-gold v0.4.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/pquerna/cachecontrol v0.1.0 // indirect
@@ -75,15 +74,15 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.mongodb.org/mongo-driver v1.10.0 // indirect
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
-	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
-	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
+	golang.org/x/crypto v0.1.0 // indirect
+	golang.org/x/net v0.1.0 // indirect
+	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

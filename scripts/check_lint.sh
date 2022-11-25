@@ -16,7 +16,7 @@ if [ ! $(command -v ${DOCKER_CMD}) ]; then
 fi
 
 
-golangci_image="golangci/golangci-lint:v1.39"
+golangci_image="golangci/golangci-lint:v1.42.1"
 
 # these are useful for adjusting the linter's root directory, to allow linting while using local replaces
 root_dir=$(pwd)

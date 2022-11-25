@@ -187,6 +187,30 @@ const (
 		" Alternatively, this can be set with the following environment variable: " + walletInitURLEnvKey
 	walletInitURLEnvKey = "ISSUER_WALLET_INIT_URL"
 
+	vcsAPIAccessTokenHostFlagName  = "vcs-api-access-token-host"                                                     //nolint
+	vcsAPIAccessTokenHostFlagUsage = "Host to retrieve access token for VCS service. Format: https://HostName:Port." //nolint
+	vcsAPIAccessTokenHostEnvKey    = "VCS_API_ACCESS_TOKEN_HOST"                                                     //nolint
+
+	vcsAPIAccessTokenClientIDFlagName  = "vcs-api-access-token-client-id" //nolint:gosec
+	vcsAPIAccessTokenClientIDFlagUsage = "VCS client ID"                  //nolint:gosec
+	vcsAPIAccessTokenClientIDEnvKey    = "VCS_API_ACCESS_TOKEN_CLIENT_ID" //nolint:gosec
+
+	vcsAPIAccessTokenClientSecretFlagName  = "vcs-api-access-token-client-secret" //nolint:gosec
+	vcsAPIAccessTokenClientSecretFlagUsage = "VCS client secret"                  //nolint:gosec
+	vcsAPIAccessTokenClientSecretEnvKey    = "VCS_API_ACCESS_TOKEN_SECRET_KEY"    //nolint:gosec
+
+	vcsAPIAccessTokenClaimFlagName  = "vcs-api-access-token-claim" //nolint:gosec
+	vcsAPIAccessTokenClaimFlagUsage = "VCS access token claim"     //nolint:gosec
+	vcsAPIAccessTokenClaimEnvKey    = "VCS_API_ACCESS_TOKEN_CLAIM" //nolint:gosec
+
+	vcsAPIURLFlagName  = "vcs-api-url"
+	vcsAPIURLFlagUsage = "VCS api url. Format: https://HostName:Port."
+	vcsAPIURLEnvKey    = "VCS_API_URL"
+
+	vcsDemoIssuerFlagName  = "vcs-demo-issuer"
+	vcsDemoIssuerFlagUsage = "VCS demo issuer name"
+	vcsDemoIssuerEnvKey    = "VCS_DEMO_ISSUER"
+
 	tokenLength2 = 2
 )
 
@@ -211,26 +235,32 @@ func (s *HTTPServer) ListenAndServe(host, certFile, keyFile string, router http.
 }
 
 type issuerParameters struct {
-	srv                   server
-	hostURL               string
-	oauth2Config          *oauth2.Config
-	extOauth2Config       *oauth2.Config
-	tokenIntrospectionURL string
-	tlsCertFile           string
-	tlsKeyFile            string
-	cmsURL                string
-	vcsURL                string
-	walletURL             string
-	tlsSystemCertPool     bool
-	tlsCACerts            []string
-	requestTokens         map[string]string
-	issuerAdapterURL      string
-	logLevel              string
-	dbParameters          *common.DBParameters
-	oidcParameters        *oidcParameters
-	externalDataSourceURL string
-	externalAuthParameter *externalAuthParameters
-	contextProviderURLs   []string
+	srv                           server
+	hostURL                       string
+	oauth2Config                  *oauth2.Config
+	extOauth2Config               *oauth2.Config
+	tokenIntrospectionURL         string
+	tlsCertFile                   string
+	tlsKeyFile                    string
+	cmsURL                        string
+	vcsURL                        string
+	walletURL                     string
+	tlsSystemCertPool             bool
+	tlsCACerts                    []string
+	requestTokens                 map[string]string
+	issuerAdapterURL              string
+	logLevel                      string
+	dbParameters                  *common.DBParameters
+	oidcParameters                *oidcParameters
+	externalDataSourceURL         string
+	externalAuthParameter         *externalAuthParameters
+	contextProviderURLs           []string
+	vcsAPIAccessTokenHost         string
+	vcsAPIAccessTokenClientID     string
+	vcsAPIAccessTokenClientSecret string
+	vcsAPIAccessTokenClaim        string
+	vcsAPIURL                     string
+	vcsDemoIssuer                 string
 }
 
 type tlsConfig struct {
@@ -395,27 +425,46 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo,gocog
 				return err
 			}
 
+			vcsAPIAccessTokenHost := cmdutils.GetUserSetOptionalVarFromString(cmd,
+				vcsAPIAccessTokenHostFlagName, vcsAPIAccessTokenHostEnvKey)
+			vcsAPIAccessTokenClientID := cmdutils.GetUserSetOptionalVarFromString(cmd,
+				vcsAPIAccessTokenClientIDFlagName, vcsAPIAccessTokenClientIDEnvKey)
+			vcsAPIAccessTokenClientSecret := cmdutils.GetUserSetOptionalVarFromString(cmd,
+				vcsAPIAccessTokenClientSecretFlagName, vcsAPIAccessTokenClientSecretEnvKey)
+			vcsAPIAccessTokenClaim := cmdutils.GetUserSetOptionalVarFromString(cmd,
+				vcsAPIAccessTokenClaimFlagName, vcsAPIAccessTokenClaimEnvKey)
+			vcsAPIURL := cmdutils.GetUserSetOptionalVarFromString(cmd,
+				vcsAPIURLFlagName, vcsAPIURLEnvKey)
+			vcsDemoIssuer := cmdutils.GetUserSetOptionalVarFromString(cmd,
+				vcsDemoIssuerFlagName, vcsDemoIssuerEnvKey)
+
 			parameters := &issuerParameters{
-				srv:                   srv,
-				hostURL:               strings.TrimSpace(hostURL),
-				oauth2Config:          oauth2Config,
-				extOauth2Config:       extOauth2Config,
-				externalDataSourceURL: strings.TrimSpace(externalDataSourceURL),
-				tokenIntrospectionURL: strings.TrimSpace(tokenIntrospectionURL),
-				tlsCertFile:           tlsConfg.certFile,
-				tlsKeyFile:            tlsConfg.keyFile,
-				cmsURL:                strings.TrimSpace(cmsURL),
-				vcsURL:                strings.TrimSpace(vcsURL),
-				walletURL:             strings.TrimSpace(walletInitURL),
-				tlsSystemCertPool:     tlsConfg.systemCertPool,
-				tlsCACerts:            tlsConfg.caCerts,
-				requestTokens:         requestTokens,
-				issuerAdapterURL:      issuerAdapterURL,
-				logLevel:              loggingLevel,
-				dbParameters:          dbParams,
-				oidcParameters:        oidcParams,
-				externalAuthParameter: externalAuthParams,
-				contextProviderURLs:   contextProviderURLs,
+				srv:                           srv,
+				hostURL:                       strings.TrimSpace(hostURL),
+				oauth2Config:                  oauth2Config,
+				extOauth2Config:               extOauth2Config,
+				externalDataSourceURL:         strings.TrimSpace(externalDataSourceURL),
+				tokenIntrospectionURL:         strings.TrimSpace(tokenIntrospectionURL),
+				tlsCertFile:                   tlsConfg.certFile,
+				tlsKeyFile:                    tlsConfg.keyFile,
+				cmsURL:                        strings.TrimSpace(cmsURL),
+				vcsURL:                        strings.TrimSpace(vcsURL),
+				walletURL:                     strings.TrimSpace(walletInitURL),
+				tlsSystemCertPool:             tlsConfg.systemCertPool,
+				tlsCACerts:                    tlsConfg.caCerts,
+				requestTokens:                 requestTokens,
+				issuerAdapterURL:              issuerAdapterURL,
+				logLevel:                      loggingLevel,
+				dbParameters:                  dbParams,
+				oidcParameters:                oidcParams,
+				externalAuthParameter:         externalAuthParams,
+				contextProviderURLs:           contextProviderURLs,
+				vcsAPIAccessTokenHost:         vcsAPIAccessTokenHost,
+				vcsAPIAccessTokenClientID:     vcsAPIAccessTokenClientID,
+				vcsAPIAccessTokenClientSecret: vcsAPIAccessTokenClientSecret,
+				vcsAPIAccessTokenClaim:        vcsAPIAccessTokenClaim,
+				vcsAPIURL:                     vcsAPIURL,
+				vcsDemoIssuer:                 vcsDemoIssuer,
 			}
 
 			return startIssuer(parameters)
@@ -584,6 +633,14 @@ func createFlags(startCmd *cobra.Command) {
 
 	startCmd.Flags().StringArrayP(contextProviderFlagName, "", []string{}, contextProviderFlagUsage)
 	startCmd.Flags().StringP(walletInitURLFlagName, "", "", walletInitURLFlagUsage)
+
+	// VCS
+	startCmd.Flags().StringP(vcsAPIAccessTokenHostFlagName, "", "", vcsAPIAccessTokenHostFlagUsage)
+	startCmd.Flags().StringP(vcsAPIAccessTokenClientIDFlagName, "", "", vcsAPIAccessTokenClientIDFlagUsage)
+	startCmd.Flags().StringP(vcsAPIAccessTokenClientSecretFlagName, "", "", vcsAPIAccessTokenClientSecretFlagUsage)
+	startCmd.Flags().StringP(vcsAPIAccessTokenClaimFlagName, "", "", vcsAPIAccessTokenClaimFlagUsage)
+	startCmd.Flags().StringP(vcsAPIURLFlagName, "", "", vcsAPIURLFlagUsage)
+	startCmd.Flags().StringP(vcsDemoIssuerFlagName, "", "", vcsDemoIssuerFlagUsage)
 }
 
 func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
@@ -620,30 +677,40 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 	}
 
 	cfg := &operation.Config{
-		TokenIssuer:              tokenIssuer.New(parameters.oauth2Config, tokenIssuer.WithTLSConfig(tlsConfig)),
-		ExtTokenIssuer:           tokenIssuer.New(parameters.extOauth2Config, tokenIssuer.WithTLSConfig(tlsConfig)),
-		TokenResolver:            tokenResolver.New(parameters.tokenIntrospectionURL, tokenResolver.WithTLSConfig(tlsConfig)),
-		DocumentLoader:           documentLoader,
-		CMSURL:                   parameters.cmsURL,
-		VCSURL:                   parameters.vcsURL,
-		WalletURL:                parameters.walletURL,
-		DIDAuthHTML:              "static/didAuth.html",
-		ReceiveVCHTML:            "static/receiveVC.html",
-		VCHTML:                   "static/vc.html",
-		DIDCommHTML:              "static/didcomm.html",
-		DIDCOMMVPHTML:            "static/didcommvp.html",
-		TLSConfig:                tlsConfig,
-		RequestTokens:            parameters.requestTokens,
-		IssuerAdapterURL:         parameters.issuerAdapterURL,
-		StoreProvider:            storeProvider,
-		OIDCProviderURL:          parameters.oidcParameters.oidcProviderURL,
-		OIDCClientID:             parameters.oidcParameters.oidcClientID,
-		OIDCClientSecret:         parameters.oidcParameters.oidcClientSecret,
-		OIDCCallbackURL:          parameters.oidcParameters.oidcCallbackURL,
-		ExternalDataSourceURL:    parameters.externalDataSourceURL,
-		ExternalAuthProviderURL:  parameters.externalAuthParameter.ExternalAuthProviderURL,
-		ExternalAuthClientID:     parameters.externalAuthParameter.ExternalAuthClientID,
-		ExternalAuthClientSecret: parameters.externalAuthParameter.ExternalAuthClientSecret,
+		TokenIssuer: tokenIssuer.New(parameters.oauth2Config,
+			tokenIssuer.WithTLSConfig(tlsConfig)),
+		ExtTokenIssuer: tokenIssuer.New(parameters.extOauth2Config,
+			tokenIssuer.WithTLSConfig(tlsConfig)),
+		TokenResolver: tokenResolver.New(parameters.tokenIntrospectionURL,
+			tokenResolver.WithTLSConfig(tlsConfig)),
+		DocumentLoader:                documentLoader,
+		CMSURL:                        parameters.cmsURL,
+		VCSURL:                        parameters.vcsURL,
+		WalletURL:                     parameters.walletURL,
+		ReceiveVCHTML:                 "static/receiveVC.html",
+		DIDAuthHTML:                   "static/didAuth.html",
+		VCHTML:                        "static/vc.html",
+		PreAuthorizeHTML:              "static/preAuthorize.html",
+		DIDCommHTML:                   "static/didcomm.html",
+		DIDCOMMVPHTML:                 "static/didcommvp.html",
+		TLSConfig:                     tlsConfig,
+		RequestTokens:                 parameters.requestTokens,
+		IssuerAdapterURL:              parameters.issuerAdapterURL,
+		StoreProvider:                 storeProvider,
+		OIDCProviderURL:               parameters.oidcParameters.oidcProviderURL,
+		OIDCClientID:                  parameters.oidcParameters.oidcClientID,
+		OIDCClientSecret:              parameters.oidcParameters.oidcClientSecret,
+		OIDCCallbackURL:               parameters.oidcParameters.oidcCallbackURL,
+		ExternalDataSourceURL:         parameters.externalDataSourceURL,
+		ExternalAuthProviderURL:       parameters.externalAuthParameter.ExternalAuthProviderURL,
+		ExternalAuthClientID:          parameters.externalAuthParameter.ExternalAuthClientID,
+		ExternalAuthClientSecret:      parameters.externalAuthParameter.ExternalAuthClientSecret,
+		VcsAPIAccessTokenHost:         parameters.vcsAPIAccessTokenHost,
+		VcsAPIAccessTokenClientID:     parameters.vcsAPIAccessTokenClientID,
+		VcsAPIAccessTokenClientSecret: parameters.vcsAPIAccessTokenClientSecret,
+		VcsAPIAccessTokenClaim:        parameters.vcsAPIAccessTokenClaim,
+		VcsAPIURL:                     parameters.vcsAPIURL,
+		VcsDemoIssuer:                 parameters.vcsDemoIssuer,
 	}
 
 	issuerService, err := issuer.New(cfg)

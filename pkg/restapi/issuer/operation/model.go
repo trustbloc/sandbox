@@ -59,3 +59,40 @@ type issuerConfiguration struct {
 	TokenEndpoint         string          `json:"token_endpoint"`
 	CredentialManifests   json.RawMessage `json:"credential_manifests"`
 }
+
+type initiateOIDC4CIResponse struct {
+	InitiateIssuanceURL string `json:"initiate_issuance_url"`
+	TxID                string `json:"tx_id"`
+}
+
+type initiateOIDC4CIRequest struct {
+	ClaimData                 *map[string]interface{} `json:"claim_data,omitempty"`
+	ClaimEndpoint             string                  `json:"claim_endpoint,omitempty"`
+	ClientInitiateIssuanceURL string                  `json:"client_initiate_issuance_url,omitempty"`
+	ClientWellknown           string                  `json:"client_wellknown,omitempty"`
+	CredentialTemplateID      string                  `json:"credential_template_id,omitempty"`
+	GrantType                 string                  `json:"grant_type,omitempty"`
+	OpState                   string                  `json:"op_state,omitempty"`
+	ResponseType              string                  `json:"response_type,omitempty"`
+	Scope                     []string                `json:"scope,omitempty"`
+	UserPinRequired           bool                    `json:"user_pin_required,omitempty"`
+}
+
+type jwtProofClaims struct {
+	Issuer   string `json:"iss,omitempty"`
+	Audience string `json:"aud,omitempty"`
+	IssuedAt int64  `json:"iat,omitempty"`
+	Nonce    string `json:"nonce,omitempty"`
+}
+
+type credentialRequest struct {
+	DID    string   `json:"did"`
+	Format string   `json:"format,omitempty"`
+	Type   string   `json:"type"`
+	Proof  jwtProof `json:"proof,omitempty"`
+}
+
+type jwtProof struct {
+	JWT       string `json:"jwt"`
+	ProofType string `json:"proof_type"`
+}
