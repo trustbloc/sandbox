@@ -173,15 +173,15 @@ SPDX-License-Identifier: Apache-2.0
         </div>
     </section>
 
-</section>
-<footer>
-    <section class="container mx-auto text-center py-2 mb-12">
-        <div class="text-lg text-white font py-1">
-            Copyright &copy; <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> and the
-            TrustBloc Contributors.
-        </div>
     </section>
-</footer>
+    <footer>
+        <section class="container mx-auto text-center py-2 mb-12">
+            <div class="text-lg text-white font py-1">
+                Copyright &copy; <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> and the
+                TrustBloc Contributors.
+            </div>
+        </section>
+    </footer>
 </div>
 </body>
 </html>
@@ -215,33 +215,26 @@ SPDX-License-Identifier: Apache-2.0
             console.log('event received', event.data)
 
             if (event.data.type === "oidc_interaction_initiated") {
-                if (event.data.data.txID === txID) {
-                    status.innerText = "Initiated"
-                }
+                status.innerText = "Initiated"
             }
 
             if (event.data.type === "oidc_interaction_qr_scanned") {
-                if (event.data.data.txID === txID) {
-                    status.innerText = "QR Scanned"
-                }
+                status.innerText = "QR Scanned"
             }
 
             if (event.data.type === "oidc_interaction_succeeded") {
-                if (event.data.data.txID === txID) {
-                    status.innerText = "Succeeded";
+                status.innerText = "Succeeded";
 
-                    console.log("success");
-                    let claims = await axios({
-                        method: "GET",
-                        url: "/verify/openid4vp/retrieve?tx=" + txID
-                    })
+                console.log("success");
+                let claims = await axios({
+                    method: "GET",
+                    url: "/verify/openid4vp/retrieve?tx=" + txID
+                })
 
-                    displayClaimsData(claims.data)
+                displayClaimsData(claims.data)
 
-                    break;
-                }
+                break;
             }
-
         }
 
     }

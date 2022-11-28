@@ -14,12 +14,8 @@ const (
 )
 
 type event struct {
-	// Data defines message(required).
-	Data eventData `json:"data"`
-}
-
-type eventData struct {
-	TXID string `json:"txID"`
+	// TransactionID defines transaction ID(optional).
+	TransactionID string `json:"txnid,omitempty"`
 }
 
 // EventsTopic event topic.
@@ -43,15 +39,15 @@ func (e *EventsTopic) receiveTopics(w http.ResponseWriter, r *http.Request) {
 	logger.Infof("received topic message: %s", string(msg))
 
 	d := &event{}
-	if err := json.Unmarshal(msg, d); err != nil {
+	if err = json.Unmarshal(msg, d); err != nil {
 		fmt.Fprintf(w, `{"error":"failed unmarshal event, cause: %s"}`, err)
 	}
 
-	if e.topics[d.Data.TXID] == nil {
-		e.topics[d.Data.TXID] = make(chan []byte, topicsSize)
+	if e.topics[d.TransactionID] == nil {
+		e.topics[d.TransactionID] = make(chan []byte, topicsSize)
 	}
 
-	e.topics[d.Data.TXID] <- msg
+	e.topics[d.TransactionID] <- msg
 }
 
 func (e *EventsTopic) checkTopics(w http.ResponseWriter, r *http.Request) {
