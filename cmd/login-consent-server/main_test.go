@@ -506,6 +506,54 @@ func TestConsentServer_Consent(t *testing.T) {
 	}
 }
 
+func TestConsentServer_ClaimData(t *testing.T) {
+	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		if strings.HasPrefix(req.RequestURI, "/oauth2/auth/requests/consent/") {
+			fmt.Fprint(res, `{"redirect_to":"sampleURL"}`)
+		}
+		res.WriteHeader(http.StatusOK)
+	}))
+
+	defer func() { testServer.Close() }()
+
+	tests := []struct {
+		name           string
+		method         string
+		responseStatus int
+	}{
+		{
+			name:           "/claim-data Method not allowed",
+			method:         http.MethodGet,
+			responseStatus: http.StatusMethodNotAllowed,
+		},
+		{
+			name:           "/claim-data POST SUCCESS",
+			method:         http.MethodPost,
+			responseStatus: http.StatusOK,
+		},
+	}
+
+	t.Parallel()
+
+	for _, test := range tests {
+		tc := test
+		t.Run(tc.name, func(t *testing.T) {
+			server, err := newConsentServer(testServer.URL, false, []string{})
+			require.NotNil(t, server)
+			require.NoError(t, err)
+
+			req, err := http.NewRequest(tc.method, "/claim-data", http.NoBody)
+			require.NoError(t, err)
+
+			res := httptest.NewRecorder()
+
+			server.claimData(res, req)
+
+			require.Equal(t, tc.responseStatus, res.Code, res.Body.String())
+		})
+	}
+}
+
 type mockTemplate struct {
 	executeErr error
 }

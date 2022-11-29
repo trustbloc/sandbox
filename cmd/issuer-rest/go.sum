@@ -879,8 +879,6 @@ github.com/hyperledger/aries-framework-go-ext/component/storage/mysql v0.0.0-202
 github.com/hyperledger/aries-framework-go-ext/component/storage/mysql v0.0.0-20220330151152-6bbd64bde42e h1:wBblDEArmEpwYFivc5mnniI+5IkT2gXvbn0Cc90W1jE=
 github.com/hyperledger/aries-framework-go-ext/component/storage/mysql v0.0.0-20220330151152-6bbd64bde42e/go.mod h1:0VNWYQ937z51P4usiHUPz0MImh8tsKEVsHVmAx2z5zA=
 github.com/hyperledger/aries-framework-go-ext/component/storage/postgresql v0.0.0-20220428163625-96d8261511e1/go.mod h1:35iXtsPH1PImVDq8xFHETtrcvyHhJXKcvf82YJ6/z4k=
-github.com/hyperledger/aries-framework-go-ext/component/vdr/longform v0.0.0-20221111130946-12fe918c98bb h1:C2IcMVo5d9HUHZ6LfmOagTwV1cogUm80hvLOrgStlKE=
-github.com/hyperledger/aries-framework-go-ext/component/vdr/longform v0.0.0-20221111130946-12fe918c98bb/go.mod h1:zsDgr14l+lbdN0XmWIbIH7RstCZKxJcH68si2tbY8RI=
 github.com/hyperledger/aries-framework-go-ext/component/vdr/orb v1.0.0-rc2.0.20220811162145-47649b185a56 h1:b7BLv+CnYVaBrOgrv0zxUgMeilfrK/Z0Yw/fG4GQbAA=
 github.com/hyperledger/aries-framework-go-ext/component/vdr/orb v1.0.0-rc2.0.20220811162145-47649b185a56/go.mod h1:5ZDdDP1oCcjR8T7+uxOs0JF3PsY8h18pMfylqwjieII=
 github.com/hyperledger/aries-framework-go-ext/component/vdr/sidetree v1.0.0-rc2.0.20220729203359-da1de2fa21ce/go.mod h1:mmoE3SQsM0WYLweUmBCQJE2abf73iO4LxpP/e0NONYI=
@@ -1575,7 +1573,6 @@ github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1
 github.com/tmc/grpc-websocket-proxy v0.0.0-20200427203606-3cfed13b9966/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/tomasen/realip v0.0.0-20180522021738-f0c99a92ddce/go.mod h1:o8v6yHRoik09Xen7gje4m9ERNah1d1PPsVq1VEx9vE4=
 github.com/transparency-dev/merkle v0.0.0-20220208131541-728dc2de1344/go.mod h1:B8FIw5LTq6DaULoHsVFRzYIUDkl8yuSwCdZnOZGKL/A=
-github.com/trustbloc/ace v0.0.0-20220816135721-0e28b5a0e9b5 h1:cXuvxxmWMfYrErzII/e02ZMm9LZolHV/yAyQ/SSGQTs=
 github.com/trustbloc/ace v0.0.0-20220816135721-0e28b5a0e9b5/go.mod h1:Rw//hnSnqxEu+OZ/p8ga4W3MRm7SQHGEFKt6Niv4gfU=
 github.com/trustbloc/edge-core v0.1.7/go.mod h1:nQnH3CcEHTRXsWZe/vgj+J0JxxjwFK9IvY3u0Sr/2XY=
 github.com/trustbloc/edge-core v0.1.8/go.mod h1:gfoyG/xquRXyHkww0ldM2jwOTuKKZpHYn+87f+TBQ8M=
