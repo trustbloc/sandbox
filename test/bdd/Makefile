@@ -8,7 +8,9 @@ all: clean bdd-test
 .PHONY: bdd-test
 bdd-test:
 	@make bdd-test -C ./ace
+	@make bdd-test -C ./issuer
 
 .PHONY: clean
 clean:
-	make clean -C ./ace
+	@make clean -C ./ace
+	@make clean -c ./issuer

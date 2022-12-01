@@ -67,7 +67,6 @@ const (
 	preAuthorizePath          = "/pre-authorize"
 	openID4CIWebhookCheckPath = "/verify/openid4ci/webhook/check"
 	openID4CIWebhookPath      = "/verify/openid4ci/webhook"
-	credentialProofPath       = "/credential-proof"
 	searchPath                = "/search"
 	generateCredentialPath    = createCredentialPath + "/generate"
 	oidcRedirectPath          = "/oidc/redirect" + "/{id}"
@@ -331,7 +330,6 @@ func (c *Operation) registerHandler() {
 
 		// authorize & pre-authorize
 		support.NewHTTPHandler(preAuthorizePath, http.MethodGet, c.preAuthorize),
-		support.NewHTTPHandler(credentialProofPath, http.MethodPost, c.createProofForCredentials),
 
 		// webhooks
 		support.NewHTTPHandler(openID4CIWebhookPath, http.MethodPost, c.eventsTopic.receiveTopics),
@@ -501,67 +499,6 @@ func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) { //nol
 	}); err != nil {
 		logger.Errorf(fmt.Sprintf("failed execute html template: %s", err.Error()))
 	}
-}
-
-func (c *Operation) createProofForCredentials(w http.ResponseWriter, r *http.Request) {
-	//didDID, privateKey, err := c.createLongVDR()
-	//if err != nil {
-	//	logger.Errorf(err.Error())
-	//	c.writeErrorResponse(w, http.StatusInternalServerError,
-	//		fmt.Sprintf("unable to create long did: %s", err.Error()))
-	//
-	//	return
-	//}
-
-	didDID, privateKey, err := c.createDidVDR(c.httpClient)
-	if err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("unable to create orb did: %s", err.Error()))
-
-		return
-	}
-
-	if err = r.ParseForm(); err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("unable to parse form: %s", err.Error()))
-
-		return
-	}
-
-	jws, err := c.createProof(
-		*privateKey,
-		didDID.DIDDocument.VerificationMethod[0].ID,
-		r.Form.Get("cNonce"),
-		"oidc4vc_client", /// todo dynamic client registration in future
-	)
-	if err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("unable to create proof: %s", err.Error()))
-
-		return
-	}
-
-	b, err := json.Marshal(credentialRequest{
-		DID:    didDID.DIDDocument.ID,
-		Format: "jwt_vc",
-		Type:   "PermanentResidentCard",
-		Proof: jwtProof{
-			ProofType: "jwt",
-			JWT:       jws,
-		},
-	})
-	if err != nil {
-		logger.Errorf(err.Error())
-		c.writeErrorResponse(w, http.StatusInternalServerError,
-			fmt.Sprintf("unable to create marshal: %s", err.Error()))
-
-		return
-	}
-
-	c.writeResponse(w, http.StatusOK, b)
 }
 
 func (c *Operation) issueAccessToken(oidcProviderURL, clientID, secret string, scopes []string) (string, error) {
