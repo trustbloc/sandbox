@@ -207,6 +207,10 @@ const (
 	vcsAPIURLFlagUsage = "VCS api url. Format: https://HostName:Port."
 	vcsAPIURLEnvKey    = "VCS_API_URL"
 
+	vcsClaimDataURLFlagName  = "vcs-claim-data-url"
+	vcsClaimDataURLFlagUsage = "VCS claim data url. Format: https://HostName:Port."
+	vcsClaimDataURLEnvKey    = "VCS_CLAIM_DATA_URL"
+
 	vcsDemoIssuerFlagName  = "vcs-demo-issuer"
 	vcsDemoIssuerFlagUsage = "VCS demo issuer name"
 	vcsDemoIssuerEnvKey    = "VCS_DEMO_ISSUER"
@@ -260,6 +264,7 @@ type issuerParameters struct {
 	vcsAPIAccessTokenClientSecret string
 	vcsAPIAccessTokenClaim        string
 	vcsAPIURL                     string
+	vcsClaimDataURL               string
 	vcsDemoIssuer                 string
 }
 
@@ -435,6 +440,8 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo,gocog
 				vcsAPIAccessTokenClaimFlagName, vcsAPIAccessTokenClaimEnvKey)
 			vcsAPIURL := cmdutils.GetUserSetOptionalVarFromString(cmd,
 				vcsAPIURLFlagName, vcsAPIURLEnvKey)
+			vcsClaimDataURL := cmdutils.GetUserSetOptionalVarFromString(cmd,
+				vcsClaimDataURLFlagName, vcsClaimDataURLEnvKey)
 			vcsDemoIssuer := cmdutils.GetUserSetOptionalVarFromString(cmd,
 				vcsDemoIssuerFlagName, vcsDemoIssuerEnvKey)
 
@@ -464,6 +471,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo,gocog
 				vcsAPIAccessTokenClientSecret: vcsAPIAccessTokenClientSecret,
 				vcsAPIAccessTokenClaim:        vcsAPIAccessTokenClaim,
 				vcsAPIURL:                     vcsAPIURL,
+				vcsClaimDataURL:               vcsClaimDataURL,
 				vcsDemoIssuer:                 vcsDemoIssuer,
 			}
 
@@ -640,6 +648,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(vcsAPIAccessTokenClientSecretFlagName, "", "", vcsAPIAccessTokenClientSecretFlagUsage)
 	startCmd.Flags().StringP(vcsAPIAccessTokenClaimFlagName, "", "", vcsAPIAccessTokenClaimFlagUsage)
 	startCmd.Flags().StringP(vcsAPIURLFlagName, "", "", vcsAPIURLFlagUsage)
+	startCmd.Flags().StringP(vcsClaimDataURLFlagName, "", "", vcsClaimDataURLFlagUsage)
 	startCmd.Flags().StringP(vcsDemoIssuerFlagName, "", "", vcsDemoIssuerFlagUsage)
 }
 
@@ -711,6 +720,7 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 		VcsAPIAccessTokenClientSecret: parameters.vcsAPIAccessTokenClientSecret,
 		VcsAPIAccessTokenClaim:        parameters.vcsAPIAccessTokenClaim,
 		VcsAPIURL:                     parameters.vcsAPIURL,
+		VcsClaimDataURL:               parameters.vcsClaimDataURL,
 		VcsDemoIssuer:                 parameters.vcsDemoIssuer,
 	}
 

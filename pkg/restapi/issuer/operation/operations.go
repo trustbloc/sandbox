@@ -166,6 +166,7 @@ type Operation struct {
 	vcsAPIAccessTokenClientSecret string
 	vcsAPIAccessTokenClaim        string
 	vcsAPIURL                     string
+	vcsClaimDataURL               string
 	vcsDemoIssuer                 string
 	eventsTopic                   *EventsTopic
 }
@@ -207,6 +208,7 @@ type Config struct {
 	VcsAPIAccessTokenClientSecret string
 	VcsAPIAccessTokenClaim        string
 	VcsAPIURL                     string
+	VcsClaimDataURL               string
 	VcsDemoIssuer                 string
 }
 
@@ -283,6 +285,7 @@ func New(config *Config) (*Operation, error) { //nolint:funlen
 		vcsAPIAccessTokenClientSecret: config.VcsAPIAccessTokenClientSecret,
 		vcsAPIAccessTokenClaim:        config.VcsAPIAccessTokenClaim,
 		vcsAPIURL:                     config.VcsAPIURL,
+		vcsClaimDataURL:               config.VcsClaimDataURL,
 		vcsDemoIssuer:                 config.VcsDemoIssuer,
 		eventsTopic:                   NewEventsTopic(),
 	}
@@ -405,7 +408,7 @@ func (c *Operation) authCodeFlowHandler(w http.ResponseWriter, r *http.Request) 
 		ResponseType:         "code",
 		Scope:                []string{"openid", "profile"},
 		OpState:              uuid.New().String(),
-		ClaimEndpoint:        "TODO",
+		ClaimEndpoint:        c.vcsClaimDataURL,
 	}
 
 	c.buildInitiateOIDC4CIFlowPage(w, initiateReq, c.authCodeFlowHTML)
