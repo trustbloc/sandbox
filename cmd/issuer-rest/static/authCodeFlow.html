@@ -1,0 +1,78 @@
+<!--
+Copyright Avast Software. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+ -->
+
+<!doctype html>
+<html lang="en">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css">
+    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+            integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Verified Employee [Auth Code Flow]</title>
+</head>
+<body>
+<div class="flex flex-wrap py-2 shadow-lg bg-white">
+    <div class="w-full p-4">
+        <div class="grid place-items-center">
+            <label id="txState">State: awaiting QR code scan</label>
+        </div>
+    </div>
+    <div class="w-full p-4">
+        <div class="grid place-items-center">
+            <div id="qrCode"></div>
+        </div>
+    </div>
+    <div class="w-full p-4">
+        <div class="grid place-items-center" id="successBlock" style="display: none">
+            <label>{{.SuccessText}}</label>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    window.rawURL = {{.URL}}
+    window.txId = {{.TxID}}
+
+    new QRCode(document.getElementById("qrCode"), window.rawURL);
+
+    window.setState = function () {
+        window.axios({
+            method: "get",
+            url: "/verify/openid4ci/webhook/check?tx="+window.txId,
+        }).then(function (stateResp) {
+            if (!stateResp.data.type){
+                return
+            }
+
+            console.log(stateResp)
+            let text = "State: "
+            switch (stateResp.data.type) {
+                case "oidc_interaction_initiated":
+                    text += "awaiting QR code scan"
+                    break
+                case "oidc_interaction_succeeded":
+                    text += "issued successfully"
+                    $("#qrCode").hide()
+                    $("#successBlock").show()
+                    break
+                case "oidc_interaction_qr_scanned":
+                    text += "QR code scanned"
+                    break
+            }
+            $("#txState").text(text)
+        });
+    }
+
+    window.setState()
+    setInterval(window.setState, 1000)
+</script>
+</html>

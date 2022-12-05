@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -33,7 +34,10 @@ import (
 	"github.com/trustbloc/sandbox/pkg/token"
 )
 
-const authHeader = "Bearer ABC"
+const (
+	authHeader      = "Bearer ABC"
+	oauth2TokenPath = "/oauth2/token" //nolint:gosec
+)
 
 const testCredentialRequest = `{ 
    "@context": [
@@ -3623,4 +3627,246 @@ func TestGenerateCredentialHandler(t *testing.T) {
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to sign credential")
 	})
+}
+
+func TestAuthCodeFlowHandler(t *testing.T) {
+	template, createErr := os.CreateTemp("", "*.html")
+	require.NoError(t, createErr)
+
+	t.Cleanup(func() {
+		require.NoError(t, template.Close())
+	})
+
+	t.Run("success", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider:    memstore.NewProvider(),
+			AuthCodeFlowHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Body:       io.NopCloser(bytes.NewBufferString(`{"access_token":"token"}`)),
+						}, nil
+					}
+
+					b, marshalErr := json.Marshal(initiateOIDC4CIResponse{})
+					require.NoError(t, marshalErr)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(bytes.NewReader(b)),
+					}, nil
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, authCodeFlowPath, http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.authCodeFlowHandler(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("fail to issue access token", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider:    memstore.NewProvider(),
+			AuthCodeFlowHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusInternalServerError,
+							Body:       io.NopCloser(bytes.NewBufferString("")),
+						}, nil
+					}
+
+					b, marshalErr := json.Marshal(initiateOIDC4CIResponse{})
+					require.NoError(t, marshalErr)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(bytes.NewReader(b)),
+					}, nil
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, authCodeFlowPath, http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.authCodeFlowHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to get access token")
+	})
+
+	t.Run("unable to send request for initiate", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider:    memstore.NewProvider(),
+			AuthCodeFlowHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Body:       io.NopCloser(bytes.NewBufferString(`{"access_token":"token"}`)),
+						}, nil
+					}
+
+					return nil, fmt.Errorf("failed to send request")
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, authCodeFlowPath, http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.authCodeFlowHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to send request for initiate")
+	})
+
+	t.Run("unable to decode initiate response", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider:    memstore.NewProvider(),
+			AuthCodeFlowHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Body:       io.NopCloser(bytes.NewBufferString(`{"access_token":"token"}`)),
+						}, nil
+					}
+
+					return &http.Response{
+						StatusCode: http.StatusInternalServerError,
+						Body:       io.NopCloser(bytes.NewBufferString("")),
+					}, nil
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, authCodeFlowPath, http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.authCodeFlowHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to decode initiate response")
+	})
+
+	t.Run("unable to load template html", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Body:       io.NopCloser(bytes.NewBufferString(`{"access_token":"token"}`)),
+						}, nil
+					}
+
+					b, marshalErr := json.Marshal(initiateOIDC4CIResponse{})
+					require.NoError(t, marshalErr)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(bytes.NewReader(b)),
+					}, nil
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, authCodeFlowPath, http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.authCodeFlowHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to load html")
+	})
+}
+
+func TestPreAuthorizeHandler(t *testing.T) {
+	template, createErr := os.CreateTemp("", "*.html")
+	require.NoError(t, createErr)
+
+	t.Cleanup(func() {
+		require.NoError(t, template.Close())
+	})
+
+	t.Run("success", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider:    memstore.NewProvider(),
+			PreAuthorizeHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Body:       io.NopCloser(bytes.NewBufferString(`{"access_token":"token"}`)),
+						}, nil
+					}
+
+					b, marshalErr := json.Marshal(initiateOIDC4CIResponse{})
+					require.NoError(t, marshalErr)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(bytes.NewReader(b)),
+					}, nil
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, authCodeFlowPath, http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.preAuthorize(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+}
+
+type mockTransport struct {
+	roundTrip func(req *http.Request) (*http.Response, error)
+}
+
+func (t *mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	return t.roundTrip(req)
 }
