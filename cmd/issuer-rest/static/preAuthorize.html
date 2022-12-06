@@ -31,15 +31,18 @@ SPDX-License-Identifier: Apache-2.0
             <div id="qrCode"></div>
         </div>
     </div>
-    <div class="w-full p-4">
+    <div class="w-full p-4" id="pinBox">
         <div class="grid place-items-center">
             <div>
-                <label for="pin" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PIN</label>
-                <input type="text" id="pin"
+                <label for="pin2" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PIN</label>
+                <input type="text" id="pin2"
                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                       placeholder="123" readonly>
+                       placeholder="{{.Pin}}" readonly>
             </div>
         </div>
+    </div>
+    <div style="display: none">
+        <div id="pin">{{.Pin}}</div>
     </div>
     <div class="w-full p-4 debug">
         <label>{{.URL}}</label>
@@ -56,6 +59,11 @@ SPDX-License-Identifier: Apache-2.0
 
     window.rawURL = {{.URL}}
     window.txId = {{.TxID}}
+    window.requiredPin = {{.Pin}}
+
+    if (!window.requiredPin) {
+        $("#pinBox").hide()
+    }
 
     parsedUrl = new URL(window.rawURL)
     new QRCode(document.getElementById("qrCode"), window.rawURL);

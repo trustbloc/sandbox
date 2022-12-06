@@ -222,6 +222,7 @@ type initiate struct {
 	URL         string `json:"url"`
 	TxID        string `json:"txID"`
 	SuccessText string `json:"successText"`
+	Pin         string `json:"pin"`
 }
 
 type clientCredentialsTokenResponseStruct struct {
@@ -429,6 +430,10 @@ func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
+	if strings.EqualFold(r.URL.Query().Get("require_pin"), "false") {
+		initiateReq.UserPinRequired = false
+	}
+
 	c.buildInitiateOIDC4CIFlowPage(w, initiateReq, c.preAuthorizeHTML)
 }
 
@@ -504,6 +509,11 @@ func (c *Operation) buildInitiateOIDC4CIFlowPage( //nolint:funlen,gocyclo
 		return
 	}
 
+	pin := ""
+	if parsedResp.UserPin != nil {
+		pin = *parsedResp.UserPin
+	}
+
 	var successText strings.Builder
 	successText.WriteString(fmt.Sprintf("Credentials with template [%v] and type [%v] ",
 		initiateReq.CredentialTemplateID, "VerifiedEmployee"))
@@ -529,6 +539,7 @@ func (c *Operation) buildInitiateOIDC4CIFlowPage( //nolint:funlen,gocyclo
 		URL:         parsedResp.InitiateIssuanceURL,
 		TxID:        parsedResp.TxID,
 		SuccessText: successText.String(),
+		Pin:         pin,
 	}); err != nil {
 		logger.Errorf(fmt.Sprintf("execute html template: %s", err.Error()))
 	}
