@@ -59,13 +59,26 @@ SPDX-License-Identifier: Apache-2.0
                 case "oidc_interaction_initiated":
                     text += "awaiting QR code scan"
                     break
+                case "oidc_interaction_qr_scanned":
+                    text += "QR code scanned"
+                    break
+                case "oidc_interaction_authorization_request_prepared":
+                    text += "authorization request prepared"
+                    break
+                case "oidc_interaction_authorization_code_stored":
+                    text += "authorization code stored"
+                    break
+                case "oidc_interaction_authorization_code_exchanged":
+                    text += "authorization code exchanged for access token"
+                    break
                 case "oidc_interaction_succeeded":
                     text += "issued successfully"
                     $("#qrCode").hide()
                     $("#successBlock").show()
                     break
-                case "oidc_interaction_qr_scanned":
-                    text += "QR code scanned"
+                case "oidc_interaction_failed":
+                    text += "issuance failed"
+                    $("#qrCode").hide()
                     break
             }
             $("#txState").text(text)
