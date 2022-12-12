@@ -75,10 +75,12 @@ SPDX-License-Identifier: Apache-2.0
                     text += "issued successfully"
                     $("#qrCode").hide()
                     $("#successBlock").show()
+                    clearTimeout(handle)
                     break
                 case "oidc_interaction_failed":
                     text += "issuance failed"
                     $("#qrCode").hide()
+                    clearTimeout(handle)
                     break
             }
             $("#txState").text(text)
@@ -86,6 +88,6 @@ SPDX-License-Identifier: Apache-2.0
     }
 
     window.setState()
-    setInterval(window.setState, 1000)
+    let handle = setInterval(window.setState, 1000);
 </script>
 </html>
