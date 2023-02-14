@@ -61,9 +61,9 @@ type issuerConfiguration struct {
 }
 
 type initiateOIDC4CIResponse struct {
-	InitiateIssuanceURL string  `json:"initiate_issuance_url"`
-	TxID                string  `json:"tx_id"`
-	UserPin             *string `json:"user_pin"`
+	OfferCredentialURL string  `json:"offer_credential_URL"`
+	TxID               string  `json:"tx_id"`
+	UserPin            *string `json:"user_pin"`
 }
 
 type initiateOIDC4CIRequest struct {
