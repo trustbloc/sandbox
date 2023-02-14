@@ -536,7 +536,7 @@ func (c *Operation) buildInitiateOIDC4CIFlowPage( //nolint:funlen,gocyclo
 	}
 
 	if err = t.Execute(w, initiate{
-		URL:         parsedResp.InitiateIssuanceURL,
+		URL:         parsedResp.OfferCredentialURL,
 		TxID:        parsedResp.TxID,
 		SuccessText: successText.String(),
 		Pin:         pin,
