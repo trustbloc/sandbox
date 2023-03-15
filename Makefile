@@ -31,8 +31,8 @@ SANDBOX_CLI_IMAGE_NAME       ?= trustbloc/sandbox-cli
 TRUSTBLOC_CORE_K8S_COMMIT=f661b79f28619edc55182a2a783525ddb7e25c4a
 
 # Tool commands (overridable)
-ALPINE_VER ?= 3.13
-GO_VER     ?= 1.17
+ALPINE_VER ?= 3.16
+GO_VER     ?= 1.19
 
 .PHONY: all
 all: checks unit-test
