@@ -4,7 +4,7 @@
 
 module github.com/trustbloc/sandbox/cmd/rp-rest
 
-go 1.17
+go 1.19
 
 replace github.com/trustbloc/sandbox => ../..
 

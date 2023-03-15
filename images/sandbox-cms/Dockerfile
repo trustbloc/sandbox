@@ -29,9 +29,5 @@ LABEL org.opencontainers.image.source https://github.com/trustbloc/sandbox
 # copy build artifacts from build container
 COPY --from=sandbox /opt/workspace/sandbox/.build/bin/cms /usr/local/bin
 
-# set up nsswitch.conf for Go's "netgo" implementation
-# - https://github.com/golang/go/blob/go1.9.1/src/net/conf.go#L194-L275
-RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
-
 WORKDIR /usr/local/bin
 ENTRYPOINT ["cms"]
