@@ -13,4 +13,4 @@ bdd-test:
 .PHONY: clean
 clean:
 	@make clean -C ./ace
-	@make clean -c ./issuer
+	@make clean -C ./issuer
