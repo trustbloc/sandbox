@@ -95,7 +95,7 @@ jobs:
   DeployTest:
     name: Deploy-Test
     needs: [ Publish ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v1
@@ -132,7 +132,7 @@ jobs:
     name: Build-Deploy-Test-PR
     needs: [ UnitTest ]
     if: github.event_name == 'pull_request' && github.repository == 'trustbloc/sandbox'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v1
