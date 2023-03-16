@@ -54,6 +54,12 @@ func (s *PreAuthorizeStep) executeCmd(_ context.Context) error {
 		return fmt.Errorf("env: UNI_RESOLVER_URL should not be empty")
 	}
 
+	insecureTLS := os.Getenv("INSECURE_TLS")
+	vcFormat := os.Getenv("VC_FORMAT")
+	vcType := os.Getenv("VC_TYPE")
+	didMethod := os.Getenv("DID_METHOD")
+	didKeyType := os.Getenv("DID_KEY_TYPE")
+
 	oidc4CICmd := cmd.NewOIDC4CICommand()
 	oidc4CICmd.SetArgs([]string{
 		"--grant-type", "urn:ietf:params:oauth:grant-type:pre-authorized_code",
@@ -62,8 +68,13 @@ func (s *PreAuthorizeStep) executeCmd(_ context.Context) error {
 		"--credential-type", s.credentialType,
 		"--context-provider-url", contextProviderUrl,
 		"--did-domain", didDomain,
+		"--did-method", didMethod,
+		"--did-key-type", didKeyType,
 		"--did-service-auth-token", didServiceAuthToken,
 		"--uni-resolver-url", uniResolverUrl,
+		"--insecure", insecureTLS,
+		"--credential-type", vcType,
+		"--credential-format", vcFormat,
 	})
 	s.finalResult = oidc4CICmd.Execute()
 
