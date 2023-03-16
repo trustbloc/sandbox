@@ -142,7 +142,7 @@ require (
 	github.com/trustbloc/logutil-go v1.0.0-rc1 // indirect
 	github.com/trustbloc/orb v1.0.0-rc4.0.20221129223433-07e05f2f6e0a // indirect
 	github.com/trustbloc/sidetree-core-go v1.0.0-rc4 // indirect
-	github.com/trustbloc/vcs v0.1.9-0.20230210204445-f2870a36f0ea // indirect
+	github.com/trustbloc/vcs v1.0.0-rc3 // indirect
 	github.com/trustbloc/vct v1.0.0-rc4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
