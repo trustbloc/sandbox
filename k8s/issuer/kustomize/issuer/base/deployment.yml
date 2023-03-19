@@ -1,5 +1,6 @@
 #
 # Copyright SecureKey Technologies Inc. All Rights Reserved.
+# Copyright Avast Software. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -19,6 +20,10 @@ spec:
       labels:
         app: issuer
     spec:
+      volumes:
+        - name: config
+          configMap:
+            name: issuer-profiles-mapping-config
       containers:
       - name: issuer
         envFrom:
@@ -33,6 +38,9 @@ spec:
           - containerPort: 8081
             protocol: TCP
             name: http-port
+        volumeMounts:
+          - name: config
+            mountPath: /etc/issuer/config
         livenessProbe:
           httpGet:
             path: /healthcheck

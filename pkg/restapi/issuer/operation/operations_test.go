@@ -1,5 +1,6 @@
 /*
 Copyright SecureKey Technologies Inc. All Rights Reserved.
+Copyright Avast Software. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
@@ -39,7 +40,8 @@ const (
 	oauth2TokenPath = "/oauth2/token" //nolint:gosec
 )
 
-const testCredentialRequest = `{ 
+const (
+	testCredentialRequest = `{ 
    "@context": [
 		"https://www.w3.org/2018/credentials/v1", 
 		"https://www.w3.org/2018/credentials/examples/v1"
@@ -63,6 +65,9 @@ const testCredentialRequest = `{
       "spouse":"did:example:c276e12ec21ebfeb1f712ebc6f1"
    }
 }`
+	issuer = "bank_issuer"
+)
+
 const credManifest = `[{
                              "output_descriptors":[
                                 {
@@ -2403,7 +2408,7 @@ func TestOperation_CreateCredential_Errors(t *testing.T) {
 		DocumentLoader: createTestDocumentLoader(t),
 	}
 
-	var subject = make(map[string]interface{})
+	subject := make(map[string]interface{})
 	subject["id"] = "1"
 
 	t.Run("unsupported protocol scheme", func(t *testing.T) {
@@ -2832,8 +2837,10 @@ func TestRevokeVC(t *testing.T) {
 		}))
 		defer serv.Close()
 
-		svc, err := New(&Config{VCHTML: "", VCSURL: serv.URL, StoreProvider: &mockstorage.Provider{},
-			DocumentLoader: createTestDocumentLoader(t)})
+		svc, err := New(&Config{
+			VCHTML: "", VCSURL: serv.URL, StoreProvider: &mockstorage.Provider{},
+			DocumentLoader: createTestDocumentLoader(t),
+		})
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
@@ -2854,8 +2861,10 @@ func TestRevokeVC(t *testing.T) {
 		}))
 		defer serv.Close()
 
-		svc, err := New(&Config{VCHTML: file.Name(), VCSURL: serv.URL, StoreProvider: &mockstorage.Provider{},
-			DocumentLoader: createTestDocumentLoader(t)})
+		svc, err := New(&Config{
+			VCHTML: file.Name(), VCSURL: serv.URL, StoreProvider: &mockstorage.Provider{},
+			DocumentLoader: createTestDocumentLoader(t),
+		})
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
@@ -3637,8 +3646,16 @@ func TestAuthCodeFlowHandler(t *testing.T) {
 		require.NoError(t, template.Close())
 	})
 
+	profiles := []Profile{
+		{
+			ID:                   issuer,
+			CredentialTemplateID: "templateID",
+		},
+	}
+
 	t.Run("success", func(t *testing.T) {
 		svc, err := New(&Config{
+			Profiles:         profiles,
 			StoreProvider:    memstore.NewProvider(),
 			AuthCodeFlowHTML: template.Name(),
 		})
@@ -3676,6 +3693,7 @@ func TestAuthCodeFlowHandler(t *testing.T) {
 
 	t.Run("fail to issue access token", func(t *testing.T) {
 		svc, err := New(&Config{
+			Profiles:         profiles,
 			StoreProvider:    memstore.NewProvider(),
 			AuthCodeFlowHTML: template.Name(),
 		})
@@ -3714,6 +3732,7 @@ func TestAuthCodeFlowHandler(t *testing.T) {
 
 	t.Run("unable to send request for initiate", func(t *testing.T) {
 		svc, err := New(&Config{
+			Profiles:         profiles,
 			StoreProvider:    memstore.NewProvider(),
 			AuthCodeFlowHTML: template.Name(),
 		})
@@ -3746,6 +3765,7 @@ func TestAuthCodeFlowHandler(t *testing.T) {
 
 	t.Run("unable to decode initiate response", func(t *testing.T) {
 		svc, err := New(&Config{
+			Profiles:         profiles,
 			StoreProvider:    memstore.NewProvider(),
 			AuthCodeFlowHTML: template.Name(),
 		})
@@ -3781,6 +3801,7 @@ func TestAuthCodeFlowHandler(t *testing.T) {
 
 	t.Run("unable to load template html", func(t *testing.T) {
 		svc, err := New(&Config{
+			Profiles:      profiles,
 			StoreProvider: memstore.NewProvider(),
 		})
 		require.NoError(t, err)
@@ -3825,8 +3846,16 @@ func TestPreAuthorizeHandler(t *testing.T) {
 		require.NoError(t, template.Close())
 	})
 
+	profiles := []Profile{
+		{
+			ID:                   issuer,
+			CredentialTemplateID: "templateID",
+		},
+	}
+
 	t.Run("success", func(t *testing.T) {
 		svc, err := New(&Config{
+			Profiles:         profiles,
 			StoreProvider:    memstore.NewProvider(),
 			PreAuthorizeHTML: template.Name(),
 		})
@@ -3853,13 +3882,42 @@ func TestPreAuthorizeHandler(t *testing.T) {
 			},
 		}
 
-		req, err := http.NewRequest(http.MethodGet, authCodeFlowPath, http.NoBody)
+		req, err := http.NewRequest(http.MethodGet, preAuthorizePath, http.NoBody)
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
 
 		svc.preAuthorize(rr, req)
 		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("profile not found", func(t *testing.T) {
+		router := mux.NewRouter()
+
+		router.HandleFunc(fmt.Sprintf("/issuer/profiles/%v/interactions/initiate-oidc", issuer),
+			func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+		)
+
+		srv := httptest.NewServer(router)
+		defer srv.Close()
+
+		svc, err := New(&Config{
+			Profiles:         profiles,
+			StoreProvider:    memstore.NewProvider(),
+			PreAuthorizeHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, preAuthorizePath+"?profile_id=invalid", nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.preAuthorize(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "profile invalid was not found")
 	})
 }
 
