@@ -1,5 +1,6 @@
 #
 # Copyright SecureKey Technologies Inc. All Rights Reserved.
+# Copyright Avast Software. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -24,6 +25,10 @@ configMapGenerator:
   envs:
   - config.env
   name: issuer-env
+- behavior: replace
+  files:
+  - profiles-mapping.json
+  name: issuer-profiles-mapping-config
 
 secretGenerator:
 - behavior: merge

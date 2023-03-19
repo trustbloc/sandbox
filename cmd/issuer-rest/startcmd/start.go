@@ -1,5 +1,6 @@
 /*
 Copyright SecureKey Technologies Inc. All Rights Reserved.
+Copyright Avast Software. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
@@ -8,7 +9,10 @@ package startcmd
 
 import (
 	"crypto/tls"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -126,6 +130,10 @@ const (
 	requestTokensEnvKey    = "ISSUER_REQUEST_TOKENS"
 	requestTokensFlagUsage = "Tokens used for http request " +
 		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
+
+	profilesFilePathFlagName  = "profiles-mapping-file-path"
+	profilesFilePathFlagUsage = "Path to file with issuer profiles."
+	profilesFilePathEnvKey    = "ISSUER_PROFILES_MAPPING_FILE_PATH"
 
 	// issuer adapter url
 	issuerAdapterURLFlagName  = "issuer-adapter-url"
@@ -253,6 +261,7 @@ type issuerParameters struct {
 	tlsCACerts                    []string
 	requestTokens                 map[string]string
 	issuerAdapterURL              string
+	profilesFilePath              string
 	logLevel                      string
 	dbParameters                  *common.DBParameters
 	oidcParameters                *oidcParameters
@@ -392,6 +401,12 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo,gocog
 				return err
 			}
 
+			profilesFilePath, err := cmdutils.GetUserSetVarFromString(cmd,
+				profilesFilePathFlagName, profilesFilePathEnvKey, false)
+			if err != nil {
+				return err
+			}
+
 			issuerAdapterURL, err := cmdutils.GetUserSetVarFromString(cmd, issuerAdapterURLFlagName,
 				issuerAdapterURLEnvKey, false)
 			if err != nil {
@@ -442,8 +457,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo,gocog
 				vcsAPIURLFlagName, vcsAPIURLEnvKey)
 			vcsClaimDataURL := cmdutils.GetUserSetOptionalVarFromString(cmd,
 				vcsClaimDataURLFlagName, vcsClaimDataURLEnvKey)
-			vcsDemoIssuer := cmdutils.GetUserSetOptionalVarFromString(cmd,
-				vcsDemoIssuerFlagName, vcsDemoIssuerEnvKey)
+			vcsDemoIssuer := cmdutils.GetUserSetOptionalVarFromString(cmd, vcsDemoIssuerFlagName, vcsDemoIssuerEnvKey)
 
 			parameters := &issuerParameters{
 				srv:                           srv,
@@ -462,6 +476,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo,gocog
 				requestTokens:                 requestTokens,
 				issuerAdapterURL:              issuerAdapterURL,
 				logLevel:                      loggingLevel,
+				profilesFilePath:              profilesFilePath,
 				dbParameters:                  dbParams,
 				oidcParameters:                oidcParams,
 				externalAuthParameter:         externalAuthParams,
@@ -591,8 +606,10 @@ func getTLS(cmd *cobra.Command) (*tlsConfig, error) {
 		return nil, err
 	}
 
-	return &tlsConfig{certFile: tlsCertFile,
-		keyFile: tlsKeyFile, systemCertPool: tlsSystemCertPool, caCerts: tlsCACerts}, nil
+	return &tlsConfig{
+		certFile: tlsCertFile,
+		keyFile:  tlsKeyFile, systemCertPool: tlsSystemCertPool, caCerts: tlsCACerts,
+	}, nil
 }
 
 func createFlags(startCmd *cobra.Command) {
@@ -626,6 +643,8 @@ func createFlags(startCmd *cobra.Command) {
 
 	// default log level
 	startCmd.Flags().StringP(common.LogLevelFlagName, common.LogLevelFlagShorthand, "", common.LogLevelPrefixFlagUsage)
+
+	startCmd.Flags().StringP(profilesFilePathFlagName, "", "", profilesFilePathFlagUsage)
 
 	// OIDC
 	startCmd.Flags().StringP(oidcProviderURLFlagName, "", "", oidcProviderURLFlagUsage)
@@ -680,6 +699,15 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 		},
 	}
 
+	profiles, err := readProfiles(parameters.profilesFilePath)
+	if err != nil {
+		return fmt.Errorf("read profiles: %w", err)
+	}
+
+	if len(profiles) == 0 {
+		return fmt.Errorf("at least one profile must be specified")
+	}
+
 	documentLoader, err := common.CreateJSONLDDocumentLoader(ldStore, httpClient, parameters.contextProviderURLs)
 	if err != nil {
 		return err
@@ -699,6 +727,7 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 		ReceiveVCHTML:                 "static/receiveVC.html",
 		DIDAuthHTML:                   "static/didAuth.html",
 		VCHTML:                        "static/vc.html",
+		Profiles:                      profiles,
 		PreAuthorizeHTML:              "static/preAuthorize.html",
 		AuthCodeFlowHTML:              "static/authCodeFlow.html",
 		DIDCommHTML:                   "static/didcomm.html",
@@ -825,4 +854,26 @@ func getOauth2Config(authURL, tokenURL, redirectURL, clientID, secret string) *o
 	}
 
 	return config
+}
+
+func readProfiles(path string) ([]operation.Profile, error) {
+	f, err := os.Open(path) //nolint:gosec // user-defined path required
+	if err != nil {
+		return nil, fmt.Errorf("open file: %w", err)
+	}
+
+	defer func() {
+		err = f.Close()
+		if err != nil {
+			panic(fmt.Errorf("failed to close file: %w", err))
+		}
+	}()
+
+	var profiles []operation.Profile
+
+	if err = json.NewDecoder(f).Decode(&profiles); err != nil {
+		return nil, fmt.Errorf("decode profiles: %w", err)
+	}
+
+	return profiles, nil
 }

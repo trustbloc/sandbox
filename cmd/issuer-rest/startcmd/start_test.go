@@ -1,5 +1,7 @@
 /*
 Copyright SecureKey Technologies Inc. All Rights Reserved.
+Copyright Avast Software. All Rights Reserved.
+
 SPDX-License-Identifier: Apache-2.0
 */
 
@@ -108,6 +110,16 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 	t.Run("test blank issuer-adapter url arg", func(t *testing.T) {
 		startCmd := GetStartCmd(&mockServer{})
 
+		f, err := os.CreateTemp("", "profiles-mapping.json")
+		require.NoError(t, err)
+
+		_, err = f.Write([]byte(`[{}]`))
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			require.NoError(t, os.Remove(f.Name()))
+		})
+
 		var args []string
 		args = append(args, hostURLArg()...)
 		args = append(args, endpointAuthURLArg()...)
@@ -118,12 +130,13 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 		args = append(args, tokenIntrospectionURLArg()...)
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, tlsKeyFileArg()...)
+		args = append(args, profilesFilePathArg(f.Name())...)
 		args = append(args, cmsURLArg()...)
 		args = append(args, vcsURLArg()...)
 		args = append(args, []string{flag + issuerAdapterURLFlagName, ""}...)
 		startCmd.SetArgs(args)
 
-		err := startCmd.Execute()
+		err = startCmd.Execute()
 		require.Error(t, err)
 		require.Equal(t, "issuer-adapter-url value is empty", err.Error())
 	})
@@ -132,9 +145,34 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 func TestStartCmdWithMissingHostArg(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
+	startCmd.SetArgs(profilesFilePathArg("profiles-mapping.json"))
+
 	err := startCmd.Execute()
 	require.Equal(t,
 		"Neither host-url (command line flag) nor ISSUER_HOST_URL (environment variable) have been set.",
+		err.Error())
+}
+
+func TestStartCmdWithMissingProfilesFilePathArg(t *testing.T) {
+	startCmd := GetStartCmd(&mockServer{})
+
+	var args []string
+	args = append(args, hostURLArg()...)
+	args = append(args, endpointAuthURLArg()...)
+	args = append(args, endpointTokenURLArg()...)
+	args = append(args, clientRedirectURLArg()...)
+	args = append(args, clientIDArg()...)
+	args = append(args, clientSecretArg()...)
+	args = append(args, tokenIntrospectionURLArg()...)
+	args = append(args, cmsURLArg()...)
+	args = append(args, vcsURLArg()...)
+
+	startCmd.SetArgs(args)
+
+	err := startCmd.Execute()
+	require.Equal(t,
+		"Neither profiles-mapping-file-path (command line flag) nor "+
+			"ISSUER_PROFILES_MAPPING_FILE_PATH (environment variable) have been set.",
 		err.Error())
 }
 
@@ -229,6 +267,16 @@ func TestDatabaseTypeArg(t *testing.T) {
 	t.Run("test database url - missing arg", func(t *testing.T) {
 		startCmd := GetStartCmd(&mockServer{})
 
+		f, err := os.CreateTemp("", "profiles-mapping.json")
+		require.NoError(t, err)
+
+		_, err = f.Write([]byte(`[{}]`))
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			require.NoError(t, os.Remove(f.Name()))
+		})
+
 		var args []string
 		args = append(args, hostURLArg()...)
 		args = append(args, endpointAuthURLArg()...)
@@ -239,12 +287,13 @@ func TestDatabaseTypeArg(t *testing.T) {
 		args = append(args, tokenIntrospectionURLArg()...)
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, tlsKeyFileArg()...)
+		args = append(args, profilesFilePathArg(f.Name())...)
 		args = append(args, cmsURLArg()...)
 		args = append(args, vcsURLArg()...)
 		args = append(args, issuerAdapterURLArg()...)
 		startCmd.SetArgs(args)
 
-		err := startCmd.Execute()
+		err = startCmd.Execute()
 		require.Contains(t, err.Error(),
 			"Neither database-url (command line flag) nor DATABASE_URL (environment variable) have been set.")
 	})
@@ -252,6 +301,16 @@ func TestDatabaseTypeArg(t *testing.T) {
 	t.Run("test database type - invalid driver", func(t *testing.T) {
 		startCmd := GetStartCmd(&mockServer{})
 
+		f, err := os.CreateTemp("", "profiles-mapping.json")
+		require.NoError(t, err)
+
+		_, err = f.Write([]byte(`[{}]`))
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			require.NoError(t, os.Remove(f.Name()))
+		})
+
 		var args []string
 		args = append(args, hostURLArg()...)
 		args = append(args, endpointAuthURLArg()...)
@@ -262,6 +321,7 @@ func TestDatabaseTypeArg(t *testing.T) {
 		args = append(args, tokenIntrospectionURLArg()...)
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, tlsKeyFileArg()...)
+		args = append(args, profilesFilePathArg(f.Name())...)
 		args = append(args, cmsURLArg()...)
 		args = append(args, vcsURLArg()...)
 		args = append(args, issuerAdapterURLArg()...)
@@ -269,7 +329,7 @@ func TestDatabaseTypeArg(t *testing.T) {
 		args = append(args, []string{flag + common.DatabaseURLFlagName, "invalid-driver://test"}...)
 		startCmd.SetArgs(args)
 
-		err := startCmd.Execute()
+		err = startCmd.Execute()
 		require.Contains(t, err.Error(), "unsupported storage driver: invalid-driver")
 	})
 }
@@ -281,6 +341,17 @@ func TestGetCertPool(t *testing.T) {
 func TestOIDCParam(t *testing.T) {
 	t.Run("test oidc param - error", func(t *testing.T) {
 		startCmd := GetStartCmd(&mockServer{})
+
+		f, err := os.CreateTemp("", "profiles-mapping.json")
+		require.NoError(t, err)
+
+		_, err = f.Write([]byte(`[{}]`))
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			require.NoError(t, os.Remove(f.Name()))
+		})
+
 		temp := getOIDCParametersFunc
 		getOIDCParametersFunc = func(cmd *cobra.Command) (*oidcParameters, error) {
 			return nil, fmt.Errorf("oidc param error")
@@ -297,6 +368,7 @@ func TestOIDCParam(t *testing.T) {
 		args = append(args, tokenIntrospectionURLArg()...)
 		args = append(args, tlsCertFileArg()...)
 		args = append(args, tlsKeyFileArg()...)
+		args = append(args, profilesFilePathArg(f.Name())...)
 		args = append(args, cmsURLArg()...)
 		args = append(args, vcsURLArg()...)
 		args = append(args, issuerAdapterURLArg()...)
@@ -304,7 +376,7 @@ func TestOIDCParam(t *testing.T) {
 		args = append(args, databasePrefixArg()...)
 		startCmd.SetArgs(args)
 
-		err := startCmd.Execute()
+		err = startCmd.Execute()
 		require.Contains(t, err.Error(), "oidc param error")
 	})
 }
@@ -312,10 +384,20 @@ func TestOIDCParam(t *testing.T) {
 func TestStartCmdValidArgs(t *testing.T) {
 	startCmd := GetStartCmd(&mockServer{})
 
-	args := getValidArgs(log.ParseString(log.ERROR))
+	f, err := os.CreateTemp("", "profiles-mapping.json")
+	require.NoError(t, err)
+
+	_, err = f.Write([]byte(`[{}]`))
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		require.NoError(t, os.Remove(f.Name()))
+	})
+
+	args := getValidArgs(log.ParseString(log.ERROR), f.Name())
 	startCmd.SetArgs(args)
 
-	err := startCmd.Execute()
+	err = startCmd.Execute()
 	require.Nil(t, err)
 	require.Equal(t, log.ERROR, log.GetLevel(""))
 }
@@ -339,12 +421,64 @@ func TestTLSSystemCertPoolInvalidArgsEnvVar(t *testing.T) {
 	err := startCmd.Execute()
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid syntax")
+
+	require.NoError(t, os.Unsetenv(tlsSystemCertPoolEnvKey))
+}
+
+func TestStartCmdReadProfiles(t *testing.T) {
+	tests := []struct {
+		name    string
+		content string
+		wantErr string
+	}{
+		{
+			name:    "empty file",
+			content: "",
+			wantErr: "decode profiles",
+		},
+		{
+			name:    "no profiles",
+			content: "[]",
+			wantErr: "at least one profile must be specified",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			startCmd := GetStartCmd(&mockServer{})
+
+			f, err := os.CreateTemp("", "profiles-mapping.json")
+			require.NoError(t, err)
+
+			_, err = f.Write([]byte(tt.content))
+			require.NoError(t, err)
+
+			t.Cleanup(func() {
+				require.NoError(t, os.Remove(f.Name()))
+			})
+
+			args := getValidArgs(log.ParseString(log.ERROR), f.Name())
+			startCmd.SetArgs(args)
+
+			err = startCmd.Execute()
+			require.ErrorContains(t, err, tt.wantErr)
+		})
+	}
 }
 
 func setEnvVars(t *testing.T) {
 	t.Helper()
 
-	err := os.Setenv(hostURLEnvKey, "localhost:8080")
+	f, err := os.CreateTemp("", "profiles-mapping.json")
+	require.NoError(t, err)
+
+	_, err = f.Write([]byte(`[{}]`))
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		require.NoError(t, os.Remove(f.Name()))
+	})
+
+	err = os.Setenv(hostURLEnvKey, "localhost:8080")
 	require.Nil(t, err)
 
 	err = os.Setenv(endpointAuthURLEnvKey, "endpoint/auth")
@@ -377,6 +511,9 @@ func setEnvVars(t *testing.T) {
 	err = os.Setenv(tlsKeyFileEnvKey, "key")
 	require.Nil(t, err)
 
+	err = os.Setenv(profilesFilePathEnvKey, f.Name())
+	require.Nil(t, err)
+
 	err = os.Setenv(issuerAdapterURLEnvKey, "issuer-adapter")
 	require.Nil(t, err)
 
@@ -402,7 +539,7 @@ func checkFlagPropertiesCorrect(t *testing.T, cmd *cobra.Command, flagName, flag
 	require.Nil(t, flagAnnotations)
 }
 
-func getValidArgs(logLevel string) []string {
+func getValidArgs(logLevel string, profilesFilePath string) []string {
 	var args []string
 	args = append(args, hostURLArg()...)
 	args = append(args, endpointAuthURLArg()...)
@@ -419,6 +556,7 @@ func getValidArgs(logLevel string) []string {
 	args = append(args, issuerAdapterURLArg()...)
 	args = append(args, databaseURLArg()...)
 	args = append(args, databasePrefixArg()...)
+	args = append(args, profilesFilePathArg(profilesFilePath)...)
 
 	if logLevel != "" {
 		args = append(args, logLevelArg(logLevel)...)
@@ -489,4 +627,8 @@ func databaseURLArg() []string {
 
 func databasePrefixArg() []string {
 	return []string{flag + common.DatabasePrefixFlagName, "database-prefix"}
+}
+
+func profilesFilePathArg(path string) []string {
+	return []string{flag + profilesFilePathFlagName, path}
 }
