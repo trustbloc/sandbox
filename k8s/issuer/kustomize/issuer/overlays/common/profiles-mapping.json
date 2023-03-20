@@ -1,6 +1,6 @@
 [
   {
-    "name": "Verified Employee Profile",
+    "name": "Verified Employee Issuer",
     "id": "bank_issuer",
     "credential_template_id": "templateID",
     "claims": {
