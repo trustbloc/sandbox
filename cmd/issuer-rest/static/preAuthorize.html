@@ -23,6 +23,19 @@ SPDX-License-Identifier: Apache-2.0
 <div class="flex flex-wrap py-2 shadow-lg bg-white">
     <div class="w-full p-4">
         <div class="grid place-items-center">
+            <select id="select-profile">
+                {{range .Profiles}}
+                {{ if .IsSelected }}
+                <option value="{{.ID}}" selected="selected">{{.Name}}</option>
+                {{else}}
+                <option value="{{.ID}}">{{.Name}}</option>
+                {{end}}
+                {{end}}
+            </select>
+        </div>
+    </div>
+    <div class="w-full p-4">
+        <div class="grid place-items-center">
             <label id="txState">State: awaiting QR code scan</label>
         </div>
     </div>
@@ -56,6 +69,14 @@ SPDX-License-Identifier: Apache-2.0
 </body>
 <script>
     $(".debug").hide()
+
+    const profileSelectList = document.getElementById("select-profile")
+    profileSelectList.addEventListener("change", function () {
+        const profile = profileSelectList.value
+        if (profile) {
+            window.location.href = "?profile_id=" + profile
+        }
+    })
 
     window.rawURL = {{.URL}}
     window.txId = {{.TxID}}

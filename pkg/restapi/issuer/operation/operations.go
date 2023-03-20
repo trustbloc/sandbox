@@ -169,7 +169,6 @@ type Operation struct {
 	vcsAPIAccessTokenClaim        string
 	vcsAPIURL                     string
 	vcsClaimDataURL               string
-	vcsDemoIssuer                 string
 	eventsTopic                   *EventsTopic
 }
 
@@ -212,7 +211,6 @@ type Config struct {
 	VcsAPIAccessTokenClaim        string
 	VcsAPIURL                     string
 	VcsClaimDataURL               string
-	VcsDemoIssuer                 string
 }
 
 // vc struct used to return vc data to html
@@ -292,7 +290,6 @@ func New(config *Config) (*Operation, error) { //nolint:funlen
 		vcsAPIAccessTokenClaim:        config.VcsAPIAccessTokenClaim,
 		vcsAPIURL:                     config.VcsAPIURL,
 		vcsClaimDataURL:               config.VcsClaimDataURL,
-		vcsDemoIssuer:                 config.VcsDemoIssuer,
 		eventsTopic:                   NewEventsTopic(),
 	}
 

@@ -132,7 +132,7 @@ const (
 		" Alternatively, this can be set with the following environment variable: " + requestTokensEnvKey
 
 	profilesFilePathFlagName  = "profiles-mapping-file-path"
-	profilesFilePathFlagUsage = "Path to file with issuer profiles."
+	profilesFilePathFlagUsage = "Path to file with issuer profiles mapping."
 	profilesFilePathEnvKey    = "ISSUER_PROFILES_MAPPING_FILE_PATH"
 
 	// issuer adapter url
@@ -219,10 +219,6 @@ const (
 	vcsClaimDataURLFlagUsage = "VCS claim data url. Format: https://HostName:Port."
 	vcsClaimDataURLEnvKey    = "VCS_CLAIM_DATA_URL"
 
-	vcsDemoIssuerFlagName  = "vcs-demo-issuer"
-	vcsDemoIssuerFlagUsage = "VCS demo issuer name"
-	vcsDemoIssuerEnvKey    = "VCS_DEMO_ISSUER"
-
 	tokenLength2 = 2
 )
 
@@ -274,7 +270,6 @@ type issuerParameters struct {
 	vcsAPIAccessTokenClaim        string
 	vcsAPIURL                     string
 	vcsClaimDataURL               string
-	vcsDemoIssuer                 string
 }
 
 type tlsConfig struct {
@@ -457,7 +452,6 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo,gocog
 				vcsAPIURLFlagName, vcsAPIURLEnvKey)
 			vcsClaimDataURL := cmdutils.GetUserSetOptionalVarFromString(cmd,
 				vcsClaimDataURLFlagName, vcsClaimDataURLEnvKey)
-			vcsDemoIssuer := cmdutils.GetUserSetOptionalVarFromString(cmd, vcsDemoIssuerFlagName, vcsDemoIssuerEnvKey)
 
 			parameters := &issuerParameters{
 				srv:                           srv,
@@ -487,7 +481,6 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo,gocog
 				vcsAPIAccessTokenClaim:        vcsAPIAccessTokenClaim,
 				vcsAPIURL:                     vcsAPIURL,
 				vcsClaimDataURL:               vcsClaimDataURL,
-				vcsDemoIssuer:                 vcsDemoIssuer,
 			}
 
 			return startIssuer(parameters)
@@ -668,7 +661,6 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(vcsAPIAccessTokenClaimFlagName, "", "", vcsAPIAccessTokenClaimFlagUsage)
 	startCmd.Flags().StringP(vcsAPIURLFlagName, "", "", vcsAPIURLFlagUsage)
 	startCmd.Flags().StringP(vcsClaimDataURLFlagName, "", "", vcsClaimDataURLFlagUsage)
-	startCmd.Flags().StringP(vcsDemoIssuerFlagName, "", "", vcsDemoIssuerFlagUsage)
 }
 
 func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
@@ -750,7 +742,6 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 		VcsAPIAccessTokenClaim:        parameters.vcsAPIAccessTokenClaim,
 		VcsAPIURL:                     parameters.vcsAPIURL,
 		VcsClaimDataURL:               parameters.vcsClaimDataURL,
-		VcsDemoIssuer:                 parameters.vcsDemoIssuer,
 	}
 
 	issuerService, err := issuer.New(cfg)
