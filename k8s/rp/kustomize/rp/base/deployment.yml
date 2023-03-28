@@ -1,5 +1,6 @@
 #
 # Copyright SecureKey Technologies Inc. All Rights Reserved.
+# Copyright Gen Digital Inc. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -19,6 +20,10 @@ spec:
       labels:
         app: rp
     spec:
+      volumes:
+        - name: config
+          configMap:
+            name: rp-profiles-mapping-config
       containers:
       - name: rp
         envFrom:
@@ -33,6 +38,9 @@ spec:
           - containerPort: 8081
             protocol: TCP
             name: http-port
+        volumeMounts:
+          - name: config
+            mountPath: /etc/rp/config
         livenessProbe:
           httpGet:
             path: /healthcheck

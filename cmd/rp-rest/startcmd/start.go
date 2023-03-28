@@ -1,5 +1,6 @@
 /*
 Copyright SecureKey Technologies Inc. All Rights Reserved.
+Copyright Gen Digital Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
@@ -8,7 +9,10 @@ package startcmd
 
 import (
 	"crypto/tls"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -125,6 +129,10 @@ const (
 		" Alternatively, this can be set with the following environment variable: " + apiGatewayURLEnvKey
 	apiGatewayURLEnvKey = "RP_API_GATEWAY_URL"
 
+	profilesMappingFilePathFlagName  = "profiles-mapping-file-path"
+	profilesMappingFilePathFlagUsage = "Path to file with verifier profiles mapping."
+	profilesMappingFilePathEnvKey    = "RP_PROFILES_MAPPING_FILE_PATH"
+
 	tokenLength2 = 2
 )
 
@@ -151,22 +159,23 @@ func (s *HTTPServer) ListenAndServe(host, certFile, keyFile string, router http.
 }
 
 type rpParameters struct {
-	srv                server
-	hostURL            string
-	tlsCertFile        string
-	tlsKeyFile         string
-	vcServiceURL       string
-	vcV1ServiceURL     string
-	tlsSystemCertPool  bool
-	tlsCACerts         []string
-	requestTokens      map[string]string
-	logLevel           string
-	oidcParameters     *oidcParameters
-	waciOIDCParameters *oidcParameters
-	walletAuthURL      string
-	dbParams           *common.DBParameters
-	accessTokenURL     string
-	apiGatewayURL      string
+	srv                     server
+	hostURL                 string
+	tlsCertFile             string
+	tlsKeyFile              string
+	vcServiceURL            string
+	vcV1ServiceURL          string
+	tlsSystemCertPool       bool
+	tlsCACerts              []string
+	requestTokens           map[string]string
+	logLevel                string
+	oidcParameters          *oidcParameters
+	waciOIDCParameters      *oidcParameters
+	walletAuthURL           string
+	dbParams                *common.DBParameters
+	accessTokenURL          string
+	apiGatewayURL           string
+	profilesMappingFilePath string
 }
 
 type oidcParameters struct {
@@ -252,23 +261,30 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo
 
 			apiGatewayURL := cmdutils.GetUserSetOptionalVarFromString(cmd, apiGatewayURLFlagName, apiGatewayURLEnvKey)
 
+			profilesMappingFilePath, err := cmdutils.GetUserSetVarFromString(cmd,
+				profilesMappingFilePathFlagName, profilesMappingFilePathEnvKey, false)
+			if err != nil {
+				return err
+			}
+
 			parameters := &rpParameters{
-				srv:                srv,
-				hostURL:            strings.TrimSpace(hostURL),
-				tlsCertFile:        tlsConfg.certFile,
-				tlsKeyFile:         tlsConfg.keyFile,
-				vcServiceURL:       vcServiceURL,
-				vcV1ServiceURL:     vcV1ServiceURL,
-				tlsSystemCertPool:  tlsConfg.systemCertPool,
-				tlsCACerts:         tlsConfg.caCerts,
-				requestTokens:      requestTokens,
-				logLevel:           loggingLevel,
-				oidcParameters:     oidcParams,
-				waciOIDCParameters: waciOIDCParams,
-				walletAuthURL:      walletAuthURL,
-				dbParams:           dbParams,
-				accessTokenURL:     accessTokenURL,
-				apiGatewayURL:      apiGatewayURL,
+				srv:                     srv,
+				hostURL:                 strings.TrimSpace(hostURL),
+				tlsCertFile:             tlsConfg.certFile,
+				tlsKeyFile:              tlsConfg.keyFile,
+				vcServiceURL:            vcServiceURL,
+				vcV1ServiceURL:          vcV1ServiceURL,
+				tlsSystemCertPool:       tlsConfg.systemCertPool,
+				tlsCACerts:              tlsConfg.caCerts,
+				requestTokens:           requestTokens,
+				logLevel:                loggingLevel,
+				oidcParameters:          oidcParams,
+				waciOIDCParameters:      waciOIDCParams,
+				walletAuthURL:           walletAuthURL,
+				dbParams:                dbParams,
+				accessTokenURL:          accessTokenURL,
+				apiGatewayURL:           apiGatewayURL,
+				profilesMappingFilePath: profilesMappingFilePath,
 			}
 
 			return startRP(parameters)
@@ -395,8 +411,10 @@ func getTLS(cmd *cobra.Command) (*tlsConfig, error) {
 		return nil, err
 	}
 
-	return &tlsConfig{certFile: tlsCertFile,
-		keyFile: tlsKeyFile, systemCertPool: tlsSystemCertPool, caCerts: tlsCACerts}, nil
+	return &tlsConfig{
+		certFile: tlsCertFile,
+		keyFile:  tlsKeyFile, systemCertPool: tlsSystemCertPool, caCerts: tlsCACerts,
+	}, nil
 }
 
 func createFlags(startCmd *cobra.Command) {
@@ -422,6 +440,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(walletAuthURLFlagName, "", "", walletAuthURLFlagUsage)
 	startCmd.Flags().StringP(accessTokenURLFlagName, "", "", accessTokenURLFlagUsage)
 	startCmd.Flags().StringP(apiGatewayURLFlagName, "", "", apiGatewayURLFlagUsage)
+	startCmd.Flags().StringP(profilesMappingFilePathFlagName, "", "", profilesMappingFilePathFlagUsage)
 }
 
 func startRP(parameters *rpParameters) error { //nolint:funlen
@@ -434,15 +453,26 @@ func startRP(parameters *rpParameters) error { //nolint:funlen
 		return err
 	}
 
+	profiles, err := readProfiles(parameters.profilesMappingFilePath)
+	if err != nil {
+		return fmt.Errorf("read profiles: %w", err)
+	}
+
+	if len(profiles) == 0 {
+		return fmt.Errorf("at least one profile must be specified")
+	}
+
 	transientStore, err := common.InitStore(parameters.dbParams, logger)
 	if err != nil {
 		return err
 	}
 
 	cfg := &operation.Config{
+		VerifierHTML:           "static/verifierqr.html",
 		VPHTML:                 "static/vp.html",
 		DIDCOMMVPHTML:          "static/didcommvp.html",
 		OIDCShareVPHTML:        "static/oidcvp.html",
+		Profiles:               profiles,
 		VCSURL:                 parameters.vcServiceURL,
 		VCSV1URL:               parameters.vcV1ServiceURL,
 		TLSConfig:              &tls.Config{RootCAs: rootCAs, MinVersion: tls.VersionTLS12},
@@ -532,9 +562,28 @@ func pathPrefix() *mux.Router {
 	router.PathPrefix("/backgroundcheck").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/backgroundcheck.html")
 	})
-	router.PathPrefix("/verifierqr").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/verifierqr.html")
-	})
 
 	return router
+}
+
+func readProfiles(path string) ([]operation.Profile, error) {
+	f, err := os.Open(path) //nolint:gosec // user-defined path required
+	if err != nil {
+		return nil, fmt.Errorf("open file: %w", err)
+	}
+
+	defer func() {
+		err = f.Close()
+		if err != nil {
+			panic(fmt.Errorf("failed to close file: %w", err))
+		}
+	}()
+
+	var profiles []operation.Profile
+
+	if err = json.NewDecoder(f).Decode(&profiles); err != nil {
+		return nil, fmt.Errorf("decode profiles: %w", err)
+	}
+
+	return profiles, nil
 }

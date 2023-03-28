@@ -1,5 +1,6 @@
 /*
 Copyright SecureKey Technologies Inc. All Rights Reserved.
+Copyright Gen Digital Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
@@ -48,7 +49,7 @@ func TestController_GetOperations(t *testing.T) {
 	require.NotNil(t, controller)
 
 	ops := controller.GetOperations()
-	require.Equal(t, 12, len(ops))
+	require.Equal(t, 13, len(ops))
 }
 
 func config() (*operation.Config, func()) {

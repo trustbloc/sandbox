@@ -1,5 +1,6 @@
 /*
 Copyright SecureKey Technologies Inc. All Rights Reserved.
+Copyright Gen Digital Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
@@ -43,4 +44,16 @@ type oidcTokenClaims struct {
 
 type vpTokenClaim struct {
 	PresSub *presexch.PresentationSubmission `json:"presentation_submission"`
+}
+
+// Profile represents metadata about verifier profile.
+type Profile struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type profileView struct {
+	ID         string
+	Name       string
+	IsSelected bool
 }

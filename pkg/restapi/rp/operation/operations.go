@@ -1,5 +1,6 @@
 /*
 Copyright SecureKey Technologies Inc. All Rights Reserved.
+Copyright Gen Digital Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
@@ -51,6 +52,7 @@ const (
 	openID4VPRetrieveClaimsQRPath = "/verify/openid4vp/retrieve"
 	openID4VPWebhookPath          = "/verify/openid4vp/webhook"
 	openID4VPWebhookCheckPath     = "/verify/openid4vp/webhook/check"
+	verifierQRPath                = "/verifierqr"
 
 	// api path params
 	scopeQueryParam    = "scope"
@@ -68,8 +70,6 @@ const (
 
 	// TODO https://github.com/trustbloc/sandbox/issues/352 Configure verifier profiles in Verifier page
 	verifierProfileID = "trustbloc-verifier"
-
-	verifierJWTProfileID = "jwt-web-ED25519-JsonWebSignature2020"
 
 	vcsVerifierRequestTokenName = "vcs_verifier" //nolint: gosec
 
@@ -104,6 +104,8 @@ type initiateOIDC4VPResponse struct {
 // Operation defines handlers
 type Operation struct {
 	handlers        []Handler
+	profiles        []Profile
+	verifierHTML    string
 	vpHTML          string
 	didCommVpHTML   string
 	oidcShareVpHTML string
@@ -124,9 +126,11 @@ type Operation struct {
 
 // Config defines configuration for rp operations
 type Config struct {
+	VerifierHTML           string
 	VPHTML                 string
 	DIDCOMMVPHTML          string
 	OIDCShareVPHTML        string
+	Profiles               []Profile
 	VCSURL                 string
 	VCSV1URL               string
 	TLSConfig              *tls.Config
@@ -152,6 +156,10 @@ type vc struct {
 	FlowType string `json:"flowType"`
 }
 
+type templateData struct {
+	Profiles []profileView
+}
+
 type createOIDCRequestResponse struct {
 	Request  string `json:"request"`
 	FlowType string `json:"flowType"`
@@ -165,6 +173,8 @@ type openID4VPGetQRResponse struct {
 // New returns rp operation instance
 func New(config *Config) (*Operation, error) {
 	svc := &Operation{
+		profiles:        config.Profiles,
+		verifierHTML:    config.VerifierHTML,
 		vpHTML:          config.VPHTML,
 		didCommVpHTML:   config.DIDCOMMVPHTML,
 		oidcShareVpHTML: config.OIDCShareVPHTML,
@@ -226,6 +236,7 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(wellKnownConfigGetRequestPath, http.MethodGet, c.wellKnownConfig),
 		support.NewHTTPHandler(openID4VPGetQRPath, http.MethodGet, c.openID4VPGetQR),
 		support.NewHTTPHandler(openID4VPRetrieveClaimsQRPath, http.MethodGet, c.retrieveInteractionsClaim),
+		support.NewHTTPHandler(verifierQRPath, http.MethodGet, c.initiateVerification),
 
 		support.NewHTTPHandler(openID4VPWebhookPath, http.MethodPost, c.eventsTopic.receiveTopics),
 		support.NewHTTPHandler(openID4VPWebhookCheckPath, http.MethodGet, c.eventsTopic.checkTopics),
@@ -517,35 +528,16 @@ func (c *Operation) handleOIDCShareCallback(w http.ResponseWriter, r *http.Reque
 
 func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
 	if len(c.didConfig) == 0 {
-		// TODO make profile id configurable
-		resp, err := c.sendHTTPRequest(http.MethodGet,
-			fmt.Sprintf("%s/verifier/profiles/%s/well-known/did-config",
-				c.vcsV1URL, verifierJWTProfileID), nil, httpContentTypeJSON, "")
+		profile, err := c.determineProfile(r.URL.Query())
 		if err != nil {
-			c.writeErrorResponse(w, http.StatusInternalServerError,
-				fmt.Sprintf("failed to get did config: %s", err.Error()))
+			c.writeErrorResponse(w, http.StatusBadRequest, err.Error())
 
 			return
 		}
 
-		respBytes, respErr := io.ReadAll(resp.Body)
-		if respErr != nil {
-			c.writeErrorResponse(w, http.StatusBadRequest,
-				fmt.Sprintf("failed to read did config resp : %s", err.Error()))
-
-			return
-		}
-
-		defer func() {
-			e := resp.Body.Close()
-			if e != nil {
-				logger.Errorf("closing response body failed: %v", e)
-			}
-		}()
-
-		if resp.StatusCode != http.StatusOK {
-			c.writeErrorResponse(w, http.StatusInternalServerError,
-				fmt.Sprintf("did config didn't return 200 status: %s", string(respBytes)))
+		respBytes, err := c.getOIDCConfig(profile.ID)
+		if err != nil {
+			c.writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 
 			return
 		}
@@ -561,7 +553,40 @@ func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (c *Operation) getOIDCConfig(profileID string) ([]byte, error) {
+	resp, err := c.sendHTTPRequest(http.MethodGet,
+		fmt.Sprintf("%s/verifier/profiles/%s/well-known/did-config",
+			c.vcsV1URL, profileID), nil, httpContentTypeJSON, "")
+	if err != nil {
+		return nil, fmt.Errorf(fmt.Sprintf("failed to get did config: %s", err.Error()))
+	}
+
+	respBytes, respErr := io.ReadAll(resp.Body)
+	if respErr != nil {
+		return nil, fmt.Errorf(fmt.Sprintf("failed to read did config resp: %s", err.Error()))
+	}
+
+	defer func() {
+		e := resp.Body.Close()
+		if e != nil {
+			logger.Errorf("closing response body failed: %s", e.Error())
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("did config didn't return 200 status: %s", string(respBytes))
+	}
+
+	return respBytes, nil
+}
+
 func (c *Operation) openID4VPGetQR(w http.ResponseWriter, r *http.Request) { //nolint: funlen
+	profile, err := c.determineProfile(r.URL.Query())
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	// TODO make username and secret configurable
 	token, err := c.issueAccessToken(c.accessTokenURL, "test-org", "test-org-secret", []string{"org_admin"})
 	if err != nil {
@@ -570,7 +595,7 @@ func (c *Operation) openID4VPGetQR(w http.ResponseWriter, r *http.Request) { //n
 		return
 	}
 
-	endpoint := fmt.Sprintf(initiateOidcInteractionURLFormat, verifierJWTProfileID)
+	endpoint := fmt.Sprintf(initiateOidcInteractionURLFormat, profile.ID)
 
 	resp, err := c.sendHTTPRequest(http.MethodPost,
 		c.apiGatewayURL+endpoint, nil, httpContentTypeJSON, token)
@@ -679,6 +704,44 @@ func (c *Operation) retrieveInteractionsClaim(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		logger.Errorf("failed to write response : %s", err)
 	}
+}
+
+func (c *Operation) initiateVerification(w http.ResponseWriter, r *http.Request) {
+	profile, err := c.determineProfile(r.URL.Query())
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	t, err := template.ParseFiles(c.verifierHTML)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to load HTML: %s", err.Error()))
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	if err = t.Execute(w, templateData{Profiles: c.buildProfileList(profile.ID)}); err != nil {
+		logger.Errorf("failed to execute HTML template: %s", err.Error())
+	}
+}
+
+func (c *Operation) buildProfileList(currentProfile string) []profileView {
+	var profileList []profileView
+
+	for _, p := range c.profiles {
+		profileList = append(profileList,
+			profileView{
+				ID:         p.ID,
+				Name:       p.Name,
+				IsSelected: p.ID == currentProfile,
+			},
+		)
+	}
+
+	return profileList
 }
 
 func (c *Operation) createOIDCRequest(w http.ResponseWriter, r *http.Request) { // nolint: funlen
@@ -836,7 +899,8 @@ func (c *Operation) didcommDemoResult(w http.ResponseWriter, data, flowType stri
 
 // verify function verifies the input data and parse the response to provided template
 func (c *Operation) verify(verifyReq interface{}, inputData, htmlTemplate string,
-	w http.ResponseWriter, r *http.Request) {
+	w http.ResponseWriter, r *http.Request,
+) {
 	t, err := template.ParseFiles(htmlTemplate)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
@@ -939,7 +1003,8 @@ func checkSubstrings(str string, subs ...string) bool {
 }
 
 func (c *Operation) sendHTTPRequest(method, reqURL string, body []byte, contentType,
-	token string) (*http.Response, error) {
+	token string,
+) (*http.Response, error) {
 	logger.Infof("send http request : url=%s methdod=%s body=%s", reqURL, method, string(body))
 
 	req, err := http.NewRequest(method, reqURL, bytes.NewBuffer(body))
@@ -1007,4 +1072,39 @@ func (c *Operation) issueAccessToken(oidcProviderURL, clientID, secret string, s
 	}
 
 	return token.AccessToken, nil
+}
+
+func (c *Operation) determineProfile(query url.Values) (*Profile, error) {
+	var profile *Profile
+
+	profileID := getProfileID(query)
+
+	if profileID != "" {
+		profile = c.getProfile(profileID)
+		if profile == nil {
+			return nil, fmt.Errorf("profile %s was not found", profileID)
+		}
+	} else {
+		profile = c.getDefaultProfile()
+	}
+
+	return profile, nil
+}
+
+func (c *Operation) getProfile(profileID string) *Profile {
+	for _, p := range c.profiles {
+		if p.ID == profileID {
+			return &p
+		}
+	}
+
+	return nil
+}
+
+func (c *Operation) getDefaultProfile() *Profile {
+	return &c.profiles[0]
+}
+
+func getProfileID(query url.Values) string {
+	return query.Get("profile_id")
 }
