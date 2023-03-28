@@ -1,5 +1,6 @@
 <!--
 Copyright SecureKey Technologies Inc. All Rights Reserved.
+Copyright Gen Digital Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
  -->
@@ -28,8 +29,10 @@ SPDX-License-Identifier: Apache-2.0
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/jsonpath@1.1.1/jsonpath.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 
     <style>
         .gradient {
@@ -123,6 +126,17 @@ SPDX-License-Identifier: Apache-2.0
                            href="https://github.com/trustbloc/sandbox">
                             <i class="fa fa-github"></i></a>
                     </li>
+                    <li>
+                        <select id="select-profile">
+                            {{range .Profiles}}
+                            {{ if .IsSelected }}
+                            <option value="{{.ID}}" selected="selected">{{.Name}}</option>
+                            {{else}}
+                            <option value="{{.ID}}">{{.Name}}</option>
+                            {{end}}
+                            {{end}}
+                        </select>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -183,16 +197,26 @@ SPDX-License-Identifier: Apache-2.0
         </section>
     </footer>
 </div>
-</body>
-</html>
-
-
-<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 <script>
+    const profileSelectList = document.getElementById("select-profile")
+    profileSelectList.addEventListener("change", function () {
+        const profile = profileSelectList.value
+        if (profile) {
+            window.location.href = "?profile_id=" + profile
+        }
+    })
+
     async function createQR() {
+        let url = "/verify/openid4vp/getQR"
+        const params = new URLSearchParams(window.location.search)
+        const profileID = params.get('profile_id')
+        if (profileID) {
+            url = url + "?profile_id=" + profileID
+        }
+
         let resp = await axios({
             method: "GET",
-            url: "/verify/openid4vp/getQR"
+            url: url
         })
         new QRCode(document.getElementById("qrcode"), {
             text: resp.data.qrText,
@@ -350,6 +374,7 @@ SPDX-License-Identifier: Apache-2.0
             document.getElementById('claims-data').appendChild(parentDiv)
         })
     }
-
 </script>
+</body>
+</html>
 

@@ -1,5 +1,6 @@
 /*
 Copyright SecureKey Technologies Inc. All Rights Reserved.
+Copyright Gen Digital Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
@@ -120,7 +121,7 @@ func TestNew(t *testing.T) {
 		svc, err := New(config)
 		require.NoError(t, err)
 		require.NotNil(t, svc)
-		require.Equal(t, 12, len(svc.GetRESTHandlers()))
+		require.Equal(t, 13, len(svc.GetRESTHandlers()))
 	})
 
 	t.Run("error if oidc provider is invalid", func(t *testing.T) {
@@ -151,7 +152,7 @@ func TestWellKnownConfig(t *testing.T) {
 		svc.client = &mockHTTPClient{postErr: fmt.Errorf("error")}
 
 		rr := httptest.NewRecorder()
-		svc.wellKnownConfig(rr, &http.Request{Method: http.MethodGet})
+		svc.wellKnownConfig(rr, &http.Request{URL: &url.URL{}, Method: http.MethodGet})
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "failed to get did config")
 	})
@@ -166,7 +167,7 @@ func TestWellKnownConfig(t *testing.T) {
 		}}
 
 		rr := httptest.NewRecorder()
-		svc.wellKnownConfig(rr, &http.Request{Method: http.MethodGet})
+		svc.wellKnownConfig(rr, &http.Request{URL: &url.URL{}, Method: http.MethodGet})
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "did config didn't return 200 status")
 	})
@@ -181,7 +182,7 @@ func TestWellKnownConfig(t *testing.T) {
 		}}
 
 		rr := httptest.NewRecorder()
-		svc.wellKnownConfig(rr, &http.Request{Method: http.MethodGet})
+		svc.wellKnownConfig(rr, &http.Request{URL: &url.URL{}, Method: http.MethodGet})
 		require.Equal(t, http.StatusOK, rr.Code)
 		require.Contains(t, rr.Body.String(), "{}")
 	})
@@ -201,7 +202,7 @@ func TestOpenID4VPGetQR(t *testing.T) {
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
-		svc.openID4VPGetQR(rr, &http.Request{Method: http.MethodGet})
+		svc.openID4VPGetQR(rr, &http.Request{URL: &url.URL{}, Method: http.MethodGet})
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 	})
 
@@ -228,7 +229,7 @@ func TestOpenID4VPGetQR(t *testing.T) {
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
-		svc.openID4VPGetQR(rr, &http.Request{Method: http.MethodGet})
+		svc.openID4VPGetQR(rr, &http.Request{URL: &url.URL{}, Method: http.MethodGet})
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "initiate oidc didn't return 200 status")
 	})
@@ -259,7 +260,7 @@ func TestOpenID4VPGetQR(t *testing.T) {
 		require.NoError(t, err)
 
 		rr := httptest.NewRecorder()
-		svc.openID4VPGetQR(rr, &http.Request{Method: http.MethodGet})
+		svc.openID4VPGetQR(rr, &http.Request{URL: &url.URL{}, Method: http.MethodGet})
 		require.Equal(t, http.StatusOK, rr.Code)
 	})
 }
@@ -699,7 +700,8 @@ func TestCreateOIDCShareRequest(t *testing.T) {
 	t.Run("returns oidc request", func(t *testing.T) {
 		vpRequest := oidcVpRequest{
 			PresentationDefinition: json.RawMessage(presDefQuery),
-			WalletAuthURL:          "https://testingwallet/oidc/share"}
+			WalletAuthURL:          "https://testingwallet/oidc/share",
+		}
 		vpRequestBytes, err := json.Marshal(vpRequest)
 		require.NoError(t, err)
 		config, cleanup := config(t)
@@ -727,7 +729,8 @@ func TestCreateOIDCShareRequest(t *testing.T) {
 	t.Run("internal server error if transient store fails", func(t *testing.T) {
 		vpRequest := oidcVpRequest{
 			PresentationDefinition: json.RawMessage(presDefQuery),
-			WalletAuthURL:          "https://testingwallet/oidc/share"}
+			WalletAuthURL:          "https://testingwallet/oidc/share",
+		}
 		vpRequestBytes, err := json.Marshal(vpRequest)
 		require.NoError(t, err)
 		config, cleanup := config(t)
@@ -1083,6 +1086,13 @@ func config(t *testing.T) (*Config, func()) {
 	path, oidcCleanup := newTestOIDCProvider()
 	file, fileCleanup := tmpFile(t)
 
+	profiles := []Profile{
+		{
+			ID:   "profile_id",
+			Name: "test",
+		},
+	}
+
 	return &Config{
 			OIDCProviderURL:        path,
 			OIDCClientID:           uuid.New().String(),
@@ -1096,6 +1106,7 @@ func config(t *testing.T) (*Config, func()) {
 			VPHTML:                 file,
 			DIDCOMMVPHTML:          file,
 			OIDCShareVPHTML:        file,
+			Profiles:               profiles,
 		}, func() {
 			oidcCleanup()
 			fileCleanup()
