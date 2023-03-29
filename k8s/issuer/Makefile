@@ -20,7 +20,7 @@ OS 				= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
-ISSUER_IMG			?=   ghcr.io/trustbloc-cicd/sandbox-issuer:0.1.9-snapshot-1e4667d
+ISSUER_IMG			?=   ghcr.io/trustbloc-cicd/sandbox-issuer:0.1.9-snapshot-bb3a40f
 
 # do not modify
 KUSTOMIZE_DIR       	= kustomize/issuer
