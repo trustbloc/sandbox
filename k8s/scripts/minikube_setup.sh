@@ -10,8 +10,8 @@ set -e
 : ${DOMAIN:=trustbloc.dev}
 : ${MEMORY:=6g}
 : ${CPUS:=4}
-: ${ADDONS:=ingress,ingress-dns,dashboard}
-: ${KUBERNETES_VERSION:=v1.21.2}
+: ${ADDONS:=ingress,ingress-dns,metrics-server,dashboard}
+: ${KUBERNETES_VERSION:=v1.25.8}
 
 OS=$( uname -s | tr '[:upper:]' '[:lower:]' )
 
