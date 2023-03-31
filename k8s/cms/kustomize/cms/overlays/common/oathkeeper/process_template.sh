@@ -22,7 +22,7 @@ esac
 
 echo
 echo "fetching kubectl"
-curl -qL https://storage.googleapis.com/kubernetes-release/release/v1.20.0/bin/linux/$ARCH/kubectl -o /usr/local/bin/kubectl
+curl -qL https://storage.googleapis.com/kubernetes-release/release/v1.25.8/bin/linux/$ARCH/kubectl -o /usr/local/bin/kubectl
 chmod +x /usr/local/bin/kubectl
 
 token=TOKEN
