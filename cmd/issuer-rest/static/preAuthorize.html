@@ -1,5 +1,6 @@
 <!--
 Copyright SecureKey Technologies Inc. All Rights Reserved.
+Copyright Gen Digital Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
  -->
@@ -8,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 <html lang="en">
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
     <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
 
@@ -16,14 +17,44 @@ SPDX-License-Identifier: Apache-2.0
             integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
     <meta charset="UTF-8">
-    <title>VerifiedEmployee [Pre Auth]</title>
+    <title>OpenID4CI PreAuth - TrustBloc Issuer</title>
+
+    <style>
+        .oval {
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            filter: blur(50px);
+            height: 5.875rem; /* 94px */
+            top: -4rem;
+        }
+        .bg-gradient-full {
+            background-image: linear-gradient(153deg,#ec857c,#cc3566 26%,#df7f75 47%,#90399e 66%,#5d5cbd 83%,#2f97d9);
+        }
+        .bg-gradient-dark {
+            background-image: linear-gradient(-135deg,#261131,#100716);
+        }
+    </style>
 </head>
 <body>
-<div class="flex flex-wrap py-2 shadow-lg bg-white">
-    <div class="w-full p-4">
-        <div class="grid place-items-center">
-            <select id="select-profile">
+<div class="flex h-screen w-screen flex-col justify-start items-center bg-white">
+    <!-- Header -->
+    <div class="relative flex h-auto w-full flex-col items-center justify-center bg-gradient-dark p-6 pr-16">
+        <div class="oval absolute h-14 w-full bg-gradient-full"></div>
+        <h1 class="text-2xl text-white font-semibold">TrustBloc Demo Issuer (OpenID4CI Pre-Auth Code Flow)</h1>
+        <div class="absolute right-0 mr-6">
+            <a class="text-3xl text-white" href="https://github.com/trustbloc/sandbox">
+                <i class="fa-brands fa-github-square"></i>
+            </a>
+        </div>
+    </div>
+    <!-- Main Content -->
+    <div class="w-full w-full z-10 grow flex-col items-center justify-start bg-slate-100 p-8 overflow-scroll">
+        <div class="w-full p-4 grid place-items-center">
+            <label for="select-profile" class="font-semibold text-xl mb-3">PROFILE</label>
+            <select id="select-profile" class="bg-transparent">
                 {{range .Profiles}}
                 {{ if .IsSelected }}
                 <option value="{{.ID}}" selected="selected">{{.Name}}</option>
@@ -33,42 +64,42 @@ SPDX-License-Identifier: Apache-2.0
                 {{end}}
             </select>
         </div>
-    </div>
-    <div class="w-full p-4">
-        <div class="grid place-items-center">
+        <div class="w-full p-4 grid place-items-center">
             <label id="txState">State: awaiting QR code scan</label>
         </div>
-    </div>
-    <div class="w-full p-4">
-        <div class="grid place-items-center">
+        <div class="w-full p-4 grid place-items-center">
             <div id="qrCode"></div>
         </div>
-    </div>
-    <div class="w-full p-4" id="pinBox">
-        <div class="grid place-items-center">
-            <div>
-                <label for="pin2" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PIN</label>
+        <div class="w-full p-4 flex flex-row justify-center items-center" id="pinBox">
+            <label for="pin2" class="mx-2 text-lg font-semibold text-gray-900">PIN</label>
+            <button class="relative flex flex-row items-center mx-2" onclick="copyToClipboard('pin2')">
                 <input type="text" id="pin2"
-                       class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                       placeholder="{{.Pin}}" readonly>
+                       class="cursor-pointer bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg text-center w-full p-2"
+                       value="{{.Pin}}" readonly disabled>
+                <i class="fa-solid fa-copy text-gray-900 text-2xl mx-2"></i>
+                <span id="pin2-helper" class="absolute -right-16 ml-4 text-center hidden">Copied!</span>
+            </button>
+        </div>
+        <div style="display: none">
+            <div id="pin">{{.Pin}}</div>
+        </div>
+        <div class="w-full p-4 debug">
+            <label>{{.URL}}</label>
+        </div>
+        <div class="w-full pt-8">
+            <div class="flex flex-col justify-start items-center px-12" id="successBlock" style="display: none">
+                <textarea cols=100 rows=400 class="max-w-full break-all bg-slate-100 overflow-hidden">{{.SuccessText}}</textarea>
             </div>
         </div>
     </div>
-    <div style="display: none">
-        <div id="pin">{{.Pin}}</div>
-    </div>
-    <div class="w-full p-4 debug">
-        <label>{{.URL}}</label>
-    </div>
-    <div class="w-full p-4">
-        <div class="grid place-items-center" id="successBlock" style="display: none">
-            <label>{{.SuccessText}}</label>
-        </div>
-    </div>
+
+    <div id="demo-issuer-footer" class="mx-6 w-full py-6 px-15 text-center sticky bottom-0 z-20 border-t border-grey bg-white"></div>
 </div>
 </body>
 <script>
     $(".debug").hide()
+
+    $("#demo-issuer-footer").html("<p class='text-md'>Copyright © " + new Date().getFullYear() + " <a href=\"https://www.gendigital.com/\" rel=\"nofollow\">Gen Digital Inc.</a></p>");
 
     const profileSelectList = document.getElementById("select-profile")
     profileSelectList.addEventListener("change", function () {
@@ -118,5 +149,13 @@ SPDX-License-Identifier: Apache-2.0
     }
     window.setState()
     let handle = setInterval(window.setState, 1000)
+
+    function copyToClipboard(id) {
+        const copyText = document.getElementById(id);
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(copyText.value);
+        $("#pin2-helper").css("display", "block");
+    }
 </script>
 </html>
