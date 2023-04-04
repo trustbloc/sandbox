@@ -4,377 +4,364 @@ Copyright Gen Digital Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
  -->
+
+<!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <meta charset="utf-8">
+        <link rel="icon" type="images/x-icon" href="img/logo.png">
+        <title>TrustBloc - Verify Identity</title>
+        <meta name="description" content="">
+        <meta name="keywords" content="">
+        <meta name="author" content="">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta charset="utf-8">
-    <link rel="icon" type="images/x-icon" href="img/logo.png">
-    <title>TrustBloc - Verify Identity</title>
-    <meta name="description" content="">
-    <meta name="keywords" content="">
-    <meta name="author" content="">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css">
-    <!--Replace with your tailwind.css once created-->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
+        <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script src="https://unpkg.com/jsonpath@1.1.1/jsonpath.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+        <style>
+            .oval {
+                left: 50%;
+                transform: translateX(-50%);
+                border-radius: 50%;
+                filter: blur(50px);
+                height: 5.875rem; /* 94px */
+                top: -4rem;
+            }
+            .bg-gradient-full {
+                background-image: linear-gradient(153deg,#ec857c,#cc3566 26%,#df7f75 47%,#90399e 66%,#5d5cbd 83%,#2f97d9);
+            }
+            .bg-gradient-dark {
+                background-image: linear-gradient(-135deg,#261131,#100716);
+            }
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+            .button-gradient {
+                background: linear-gradient(#8631a0 0%, #360b4c 100%);
+            }
 
-    <script src="https://unpkg.com/credential-handler-polyfill@2.1.1/dist/credential-handler-polyfill.min.js"></script>
-    <script src="https://unpkg.com/web-credential-handler@1.0.1/dist/web-credential-handler.min.js"></script>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/jsonpath@1.1.1/jsonpath.js"></script>
+            .gradient {
+                background: linear-gradient(90deg, #44403c 60%, #57534e 100%);
+            }
 
-    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+            .vc-card {
+                border-radius: 25px;
+                width: 500px;
+                height: 250px
+            }
 
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+            .vc-card .logo {
+                width: 100px;
+                padding: 10px;
+                float: left
+            }
 
-    <style>
-        .gradient {
-            background: linear-gradient(90deg, #44403c 60%, #57534e 100%);
-        }
+            .vc-card .title {
+                float: right;
+                padding: 25px
+            }
 
-        .vc-card {
-            border-radius: 25px;
-            width: 500px;
-            height: 250px
-        }
+            .vc-card .sub-title {
+                float: right;
+                clear: left;
+                padding: 100px 25px 0 0
+            }
 
-        .vc-card .logo {
-            width: 100px;
-            padding: 10px;
-            float: left
-        }
+            .vc-card .sub-title .check-img {
+                float: left;
+                padding-right: 5px
+            }
 
-        .vc-card .title {
-            float: right;
-            padding: 25px
-        }
+            .claims-data {
+                font-family: sans-serif;
+                position: relative;
+            }
 
-        .vc-card .sub-title {
-            float: right;
-            clear: left;
-            padding: 100px 25px 0 0
-        }
+            .claims-data .break {
+                clear: left;
+                height: 20px;
+                position: relative;
+            }
 
-        .vc-card .sub-title .check-img {
-            float: left;
-            padding-right: 5px
-        }
+            .claims-data .header {
+                color: #7d8492;
+                float: left;
+                clear: left;
+            }
 
-        .claims-data {
-            font-family: sans-serif;
-            position: relative;
-        }
+            .claims-data .value {
+                float: left;
+                clear: left;
+            }
+        </style>
 
-        .claims-data .break {
-            clear: left;
-            height: 20px;
-            position: relative;
-        }
+    </head>
 
-        .claims-data .header {
-            color: #7d8492;
-            float: left;
-            clear: left;
-        }
-
-        .claims-data .value {
-            float: left;
-            clear: left;
-        }
-    </style>
-
-</head>
-
-<body class="leading-normal tracking-normal text-white gradient" style="font-family: 'Source Sans Pro', sans-serif;"
-      onload="createQR()">
-
-<!--Nav-->
-<div class="pt-12">
-    <nav id="header" class="fixed w-full z-30 top-0 text-white ">
-
-        <div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0">
-
-            <div class="py-2 flex items-center">
-                <a class="toggleColour text-white no-underline hover:no-underline font-bold text-xl lg:text-2xl"
-                   href="/verifierqr">
-                    <i class="fa fa-cloud" style="font-size:24px;color:white"></i>
-                    Utopian Background Check
-                </a>
-            </div>
-
-            <div class="block lg:hidden pr-4">
-                <button id="nav-toggle" class="flex items-center p-1 text-gray-300 hover:text-gray-900">
-                    <svg class="fill-current h-6 w-6" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>
-                        Menu</title>
-                        <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden lg:block mt-2 lg:mt-0 bg-white lg:bg-transparent text-black p-4 lg:p-0 z-20"
-                 id="nav-content">
-                <ul class="list-reset lg:flex justify-end flex-1 items-center">
-                    <li class="mr-3">
-                        <a class="inline-block text-gray-400 no-underline hover:text-green hover:text-underline py-2 px-4"
-                           href="https://github.com/trustbloc/sandbox">
-                            <i class="fa fa-github"></i></a>
-                    </li>
-                    <li>
-                        <select id="select-profile">
-                            {{range .Profiles}}
-                            {{ if .IsSelected }}
-                            <option value="{{.ID}}" selected="selected">{{.Name}}</option>
-                            {{else}}
-                            <option value="{{.ID}}">{{.Name}}</option>
-                            {{end}}
-                            {{end}}
-                        </select>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <section class="bg-white border-b py-48" id="verify-prc" style="display:block">
-        <div class="container mx-auto flex  flex-wrap pt-1 pb-4">
-
-            <h1 class="w-full my-2 text-3xl text-center text-black" id="present-cred">Present your credentials.</h1>
-            <h3 class="w-full my-2 text-2xl text-center text-gray-500" id="scan-ur-qr">Please scan the QR code with your
-                mobile
-                wallet and follow the prompts.</h3>
-
-            <div class="w-full my-2 w-full text-2xl text-center text-gray-500" id="show-success" style="display: none">
-                <img src="img/success.png" style="width: 100px" class="mx-auto" id="success"/>
-                You have successfully presented your Verifiable Credential.
-            </div>
-
-            <div class="w-full mb-2">
-                <div class="h-1 mx-auto gradient w-full opacity-10 my-0 py-0 rounded-t"></div>
-            </div>
-            <h3 class="w-full my-2 text-2xl text-center text-gray-500" id="status">Start</h3>
-
-            <div class="container justify-center mx-auto flex flex-wrap">
-                <div class="w-full h-full fixed top-0 left-0 bg-black opacity-75 z-50" id="loading-screen"
-                     style="display:none">
-
-        <span class="text-green-500 opacity-75 top-1/2 my-0 mx-auto block relative w-0 h-0" style="top: 50%;">
-         <i class="fas fa-circle-notch fa-spin fa-5x"></i>
-       </span>
+    <body onload="createQR()">
+        <div class="flex h-screen w-screen flex-col justify-start items-center bg-white">
+            <header id="header" class="relative flex h-auto w-full flex-col items-center justify-center bg-gradient-dark p-6 lg:pr-16">
+                <div class="oval absolute h-14 w-full bg-gradient-full"></div>
+                <h1 class="text-2xl text-white font-semibold text-center">TrustBloc Demo Verifier (OpenID4VP)</h1>
+                <div class="mt-6 lg:absolute lg:right-0 lg:mr-6 lg:mt-0 flex flex-row justify-end items-center">
+                    <a class="text-3xl text-white focus:outline outline-white outline-offset-2" href="https://github.com/trustbloc/sandbox">
+                        <i class="fa-brands fa-github-square"></i>
+                    </a>
+                    <select id="select-profile" class="ml-4 bg-transparent text-white focus:outline outline-white outline-offset-4">
+                        {{range .Profiles}}
+                        {{ if .IsSelected }}
+                        <option value="{{.ID}}" selected="selected">{{.Name}}</option>
+                        {{else}}
+                        <option value="{{.ID}}">{{.Name}}</option>
+                        {{end}}
+                        {{end}}
+                    </select>
                 </div>
-                <h1 class="w-full my-2 text-5xl text-center text-red-500" id="msg-board"></h1>
+            </header>
+            <!-- Main Content -->
+            <div id="verify-prc" class="w-full w-full z-10 grow flex-col items-center justify-start bg-slate-100 px-8 py-2 overflow-scroll">
+                <div class="container mx-auto flex flex-wrap pt-1 pb-4">
+                    <h1 class="w-full my-2 text-3xl text-center text-black" id="present-cred">Present your credentials.</h1>
+                    <h3 class="w-full my-2 text-2xl text-center text-gray-500" id="scan-ur-qr">
+                        Please scan the QR code with your mobile wallet and follow the prompts.
+                    </h3>
 
-                <div class="grid grid-cols-1 md:grid-cols-1 gap-8 md:gap-8 text-center text-black mt-8">
-                    <div>
-                        <div id="qrcode"></div>
-                        <div id="claims-data" class="bg-white rounded-lg shadow-lg"
-                             style="display: none; position: relative; padding: 20px; width: 540px"></div>
+                    <div class="w-full my-2 w-full text-2xl text-center text-gray-500" id="show-success" style="display: none">
+                        <img src="img/success.png" style="width: 100px" class="mx-auto" id="success"/>
+                        You have successfully presented your Verifiable Credential.
                     </div>
+
+                    <div class="w-full mb-2">
+                        <div class="h-1 mx-auto gradient w-full opacity-10 my-0 py-0 rounded-t"></div>
+                    </div>
+                    <h3 class="w-full my-2 text-2xl text-center text-gray-500" id="status">Start</h3>
+
+                    <div class="container justify-center mx-auto flex flex-wrap">
+                        <div class="w-full h-full fixed top-0 left-0 bg-black opacity-75 z-50" id="loading-screen" style="display:none">
+                            <span class="text-green-500 opacity-75 top-1/2 my-0 mx-auto block relative w-0 h-0" style="top: 50%;">
+                                <i class="fas fa-circle-notch fa-spin fa-5x"></i>
+                            </span>
+                        </div>
+                        <h1 class="w-full my-2 text-5xl text-center text-red-500" id="msg-board"></h1>
+
+                        <div class="grid grid-cols-1 md:grid-cols-1 gap-8 md:gap-8 text-center text-black mt-8">
+                            <div>
+                                <div id="qrcode"></div>
+                                <div id="claims-data" class="bg-white rounded-lg shadow-lg"
+                                     style="display: none; position: relative; padding: 20px; width: 540px"></div>
+                            </div>
+                            <button id="copy-initiate-url-button" class="relative rounded-md border border-black flex flex-row justify-center py-2 items-center mx-2 button-gradient text-white" onclick="copyToClipboard()">
+                                <span class="mx-2 text-lg text-white">Copy Initiate URL</span>
+                                <i class="fa-solid fa-copy text-white text-2xl mx-2"></i>
+                                <span id="initiate-url-helper" class="absolute -right-16 ml-4 text-center text-black hidden">Copied!</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="w-full mb-8"></div>
+
+                    <h3 class="w-full my-2 text-2xl text-center text-gray-500" id="claims"></h3>
                 </div>
             </div>
-
-            <div class="w-full mb-8">
-            </div>
-
-            <h3 class="w-full my-2 text-2xl text-center text-gray-500" id="claims"></h3>
-
+            <footer id="demo-verifier-footer" class="mx-6 w-full py-6 px-15 text-center sticky bottom-0 z-20 border-t border-grey bg-white"></footer>
         </div>
-    </section>
-
-    </section>
-    <footer>
-        <section class="container mx-auto text-center py-2 mb-12">
-            <div class="text-lg text-white font py-1">
-                Copyright &copy; <a href="https://securekey.com/" rel="nofollow">SecureKey Technologies</a> and the
-                TrustBloc Contributors.
-            </div>
-        </section>
-    </footer>
-</div>
-<script>
-    const profileSelectList = document.getElementById("select-profile")
-    profileSelectList.addEventListener("change", function () {
-        const profile = profileSelectList.value
-        if (profile) {
-            window.location.href = "?profile_id=" + profile
-        }
-    })
-
-    async function createQR() {
-        let url = "/verify/openid4vp/getQR"
-        const params = new URLSearchParams(window.location.search)
-        const profileID = params.get('profile_id')
-        if (profileID) {
-            url = url + "?profile_id=" + profileID
-        }
-
-        let resp = await axios({
-            method: "GET",
-            url: url
+    </body>
+    <script>
+        const profileSelectList = document.getElementById("select-profile")
+        profileSelectList.addEventListener("change", function () {
+            const profile = profileSelectList.value
+            if (profile) {
+                window.location.href = "?profile_id=" + profile
+            }
         })
-        new QRCode(document.getElementById("qrcode"), {
-            text: resp.data.qrText,
-            width: 228,
-            height: 228,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
 
-        const txID = resp.data.txID
+        $("#demo-verifier-footer").html("<p class='text-md'>Copyright © " + new Date().getFullYear() + " <a href=\"https://www.gendigital.com/\" rel=\"nofollow\">Gen Digital Inc.</a></p>");
 
-        while (true) {
-            let event = await axios({
+        let initiateUrl
+        async function createQR() {
+            let url = "/verify/openid4vp/getQR"
+            const params = new URLSearchParams(window.location.search)
+            const profileID = params.get('profile_id')
+            if (profileID) {
+                url = url + "?profile_id=" + profileID
+            }
+
+            let resp = await axios({
                 method: "GET",
-                url: "/verify/openid4vp/webhook/check?tx=" + txID
+                url: url
             })
+            initiateUrl = resp.data.qrText
 
-            const status = document.getElementById("status")
-            console.log('event received', event.data)
-
-            if (event.data.type === "oidc_interaction_initiated") {
-                status.innerText = "Initiated"
-            }
-
-            if (event.data.type === "oidc_interaction_qr_scanned") {
-                status.innerText = "QR Scanned"
-            }
-
-            if (event.data.type === "oidc_interaction_succeeded") {
-                status.innerText = "Succeeded";
-
-                console.log("success");
-                let claims = await axios({
-                    method: "GET",
-                    url: "/verify/openid4vp/retrieve?tx=" + txID
-                })
-
-                displayClaimsData(claims.data)
-
-                break;
-            }
-        }
-
-    }
-
-    <!-- display claim data -->
-    const getCredentialType = (types) =>
-        types.filter((type) => type != 'VerifiableCredential')[0];
-
-    async function displayClaimsData(data) {
-        const schemas = await fetch('schema/credSchemas.json')
-            .then(function (response) {
-                return response.json();
-            })
-            .catch(function (err) {
-                console.log('error: ' + err);
+            new QRCode(document.getElementById("qrcode"), {
+                text: initiateUrl,
+                width: 228,
+                height: 228,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
             });
 
+            const txID = resp.data.txID
 
-        document.getElementById('claims-data').style.display = ""
-        document.getElementById('show-success').style.display = ""
-        document.getElementById('present-cred').style.display = "none"
-        document.getElementById('scan-ur-qr').style.display = "none"
-        document.getElementById('qrcode').style.display = "none"
-        document.getElementById('status').style.display = "none"
-
-
-        Object.keys(data).forEach(k => {
-            let schema = schemas[getCredentialType(data[k].type)]
-            schema = schema ? schema : schemas.Default
-            console.log("schema found", JSON.stringify(schema, null, 2))
-
-            const parentDiv = document.createElement('div')
-
-            const cardDiv = document.createElement('div')
-            cardDiv.className = 'vc-card'
-            cardDiv.style = `background: ${schema.card.backgroundColor}; color: ${schema.card.textColor}`
-
-            const cardLogo = document.createElement('img')
-            cardLogo.className = 'logo'
-            cardLogo.src = schema.card.logo.uri
-            cardLogo.alt = schema.card.logo.description
-
-            const cardTitle = document.createElement('div')
-            cardTitle.className = 'title'
-            cardTitle.innerText = schema.card.title
-
-            const cardSubTitle = document.createElement('div')
-            cardSubTitle.className = 'sub-title'
-
-            const cardSubTitleLogo = document.createElement('img')
-            cardSubTitleLogo.src = 'img/checkmark-16.png'
-            cardSubTitleLogo.className = 'check-img'
-
-            cardSubTitle.appendChild(cardSubTitleLogo)
-            cardSubTitle.appendChild(document.createTextNode(schema.card.subTitle))
-
-            cardDiv.appendChild(cardLogo)
-            cardDiv.appendChild(cardTitle)
-            cardDiv.appendChild(cardSubTitle)
-            parentDiv.appendChild(cardDiv)
-
-            var cdDiv = document.createElement('div')
-            cdDiv.className = 'claims-data'
-
-            if (schema.claims && Object.keys(schema.claims).length > 0) {
-                Object.keys(schema.claims).forEach(c => {
-                    let result = jsonpath.query(data[k], c)
-                    let val = result && result.length > 0 ? result[0] : ""
-
-                    const cdBreak = document.createElement('div')
-                    cdBreak.className = 'break'
-
-                    const cdHeader = document.createElement('div')
-                    cdHeader.className = 'header'
-                    cdHeader.innerText = schema.claims[c].label
-
-                    const cdValue = document.createElement('div')
-                    cdValue.className = 'value'
-                    cdValue.innerText = val
-
-                    cdDiv.appendChild(cdBreak)
-                    cdDiv.appendChild(cdHeader)
-                    cdDiv.appendChild(cdValue)
+            while (true) {
+                let event = await axios({
+                    method: "GET",
+                    url: "/verify/openid4vp/webhook/check?tx=" + txID
                 })
-            } else {
-                // when no claim in schema - display all.
-                Object.keys(data[k].subjectData[0]).forEach(s => {
-                    let result = jsonpath.query(data[k], "c")
-                    let val = result && result.length > 0 ? result[0] : ""
 
-                    const cdBreak = document.createElement('div')
-                    cdBreak.className = 'break'
+                const status = document.getElementById("status")
+                console.log('event received', event.data)
 
-                    const cdHeader = document.createElement('div')
-                    cdHeader.className = 'header'
-                    cdHeader.innerText = s
+                if (event.data.type === "oidc_interaction_initiated") {
+                    status.innerText = "Initiated"
+                }
 
-                    const cdValue = document.createElement('div')
-                    cdValue.className = 'value'
-                    cdValue.innerText = data[k].subjectData[0][s]
+                if (event.data.type === "oidc_interaction_qr_scanned") {
+                    status.innerText = "QR Scanned"
+                }
 
-                    cdDiv.appendChild(cdBreak)
-                    cdDiv.appendChild(cdHeader)
-                    cdDiv.appendChild(cdValue)
-                })
+                if (event.data.type === "oidc_interaction_succeeded") {
+                    status.innerText = "Succeeded";
+
+                    console.log("success");
+                    let claims = await axios({
+                        method: "GET",
+                        url: "/verify/openid4vp/retrieve?tx=" + txID
+                    })
+
+                    displayClaimsData(claims.data)
+
+                    break;
+                }
             }
 
-            const cdBreak = document.createElement('div')
-            cdBreak.className = 'break'
-            cdDiv.appendChild(cdBreak)
+        }
 
-            parentDiv.appendChild(cdDiv)
-            document.getElementById('claims-data').appendChild(parentDiv)
-        })
-    }
-</script>
-</body>
+        function copyToClipboard() {
+            navigator.clipboard.writeText(initiateUrl);
+            $("#initiate-url-helper").css("display", "block");
+        }
+
+        <!-- display claim data -->
+        const getCredentialType = (types) =>
+            types.filter((type) => type != 'VerifiableCredential')[0];
+
+        async function displayClaimsData(data) {
+            const schemas = await fetch('schema/credSchemas.json')
+                .then(function (response) {
+                    return response.json();
+                })
+                .catch(function (err) {
+                    console.log('error: ' + err);
+                });
+
+
+            document.getElementById('claims-data').style.display = ""
+            document.getElementById('show-success').style.display = ""
+            document.getElementById('present-cred').style.display = "none"
+            document.getElementById('scan-ur-qr').style.display = "none"
+            document.getElementById('qrcode').style.display = "none"
+            document.getElementById('status').style.display = "none"
+            document.getElementById('copy-initiate-url-button').style.display = "none"
+
+
+            Object.keys(data).forEach(k => {
+                let schema = schemas[getCredentialType(data[k].type)]
+                schema = schema ? schema : schemas.Default
+                console.log("schema found", JSON.stringify(schema, null, 2))
+
+                const parentDiv = document.createElement('div')
+
+                const cardDiv = document.createElement('div')
+                cardDiv.className = 'vc-card'
+                cardDiv.style = `background: ${schema.card.backgroundColor}; color: ${schema.card.textColor}`
+
+                const cardLogo = document.createElement('img')
+                cardLogo.className = 'logo'
+                cardLogo.src = schema.card.logo.uri
+                cardLogo.alt = schema.card.logo.description
+
+                const cardTitle = document.createElement('div')
+                cardTitle.className = 'title'
+                cardTitle.innerText = schema.card.title
+
+                const cardSubTitle = document.createElement('div')
+                cardSubTitle.className = 'sub-title'
+
+                const cardSubTitleLogo = document.createElement('img')
+                cardSubTitleLogo.src = 'img/checkmark-16.png'
+                cardSubTitleLogo.className = 'check-img'
+
+                cardSubTitle.appendChild(cardSubTitleLogo)
+                cardSubTitle.appendChild(document.createTextNode(schema.card.subTitle))
+
+                cardDiv.appendChild(cardLogo)
+                cardDiv.appendChild(cardTitle)
+                cardDiv.appendChild(cardSubTitle)
+                parentDiv.appendChild(cardDiv)
+
+                var cdDiv = document.createElement('div')
+                cdDiv.className = 'claims-data'
+
+                if (schema.claims && Object.keys(schema.claims).length > 0) {
+                    Object.keys(schema.claims).forEach(c => {
+                        let result = jsonpath.query(data[k], c)
+                        let val = result && result.length > 0 ? result[0] : ""
+
+                        const cdBreak = document.createElement('div')
+                        cdBreak.className = 'break'
+
+                        const cdHeader = document.createElement('div')
+                        cdHeader.className = 'header'
+                        cdHeader.innerText = schema.claims[c].label
+
+                        const cdValue = document.createElement('div')
+                        cdValue.className = 'value'
+                        cdValue.innerText = val
+
+                        cdDiv.appendChild(cdBreak)
+                        cdDiv.appendChild(cdHeader)
+                        cdDiv.appendChild(cdValue)
+                    })
+                } else {
+                    // when no claim in schema - display all.
+                    Object.keys(data[k].subjectData[0]).forEach(s => {
+                        let result = jsonpath.query(data[k], "c")
+                        let val = result && result.length > 0 ? result[0] : ""
+
+                        const cdBreak = document.createElement('div')
+                        cdBreak.className = 'break'
+
+                        const cdHeader = document.createElement('div')
+                        cdHeader.className = 'header'
+                        cdHeader.innerText = s
+
+                        const cdValue = document.createElement('div')
+                        cdValue.className = 'value'
+                        cdValue.innerText = data[k].subjectData[0][s]
+
+                        cdDiv.appendChild(cdBreak)
+                        cdDiv.appendChild(cdHeader)
+                        cdDiv.appendChild(cdValue)
+                    })
+                }
+
+                const cdBreak = document.createElement('div')
+                cdBreak.className = 'break'
+                cdDiv.appendChild(cdBreak)
+
+                parentDiv.appendChild(cdDiv)
+                document.getElementById('claims-data').appendChild(parentDiv)
+            })
+        }
+    </script>
 </html>
 
