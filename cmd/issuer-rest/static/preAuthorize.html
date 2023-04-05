@@ -43,21 +43,14 @@ SPDX-License-Identifier: Apache-2.0
     </head>
     <body>
         <div class="flex h-screen w-screen flex-col justify-start items-center bg-white">
-            <!-- Header -->
-            <div class="relative flex h-auto w-full flex-col items-center justify-center bg-gradient-dark p-6 pr-16">
+            <header id="header" class="relative flex h-auto w-full flex-col items-center justify-center bg-gradient-dark p-6 lg:pr-16">
                 <div class="oval absolute h-14 w-full bg-gradient-full"></div>
-                <h1 class="text-2xl text-white font-semibold">TrustBloc Demo Issuer (OpenID4CI Pre-Auth Code Flow)</h1>
-                <div class="absolute right-0 mr-6">
-                    <a class="text-3xl text-white" href="https://github.com/trustbloc/sandbox">
+                <h1 class="text-2xl text-white font-semibold text-center">TrustBloc Demo Issuer (OpenID4CI Pre-Auth Code Flow)</h1>
+                <div class="mt-6 lg:absolute lg:right-0 lg:mr-6 lg:mt-0 flex flex-row justify-end items-center">
+                    <a class="text-3xl text-white focus:outline outline-white outline-offset-2" href="https://github.com/trustbloc/sandbox">
                         <i class="fa-brands fa-github-square"></i>
                     </a>
-                </div>
-            </div>
-            <!-- Main Content -->
-            <div class="w-full w-full z-10 grow flex-col items-center justify-start bg-slate-100 p-8 overflow-scroll">
-                <div class="w-full p-4 grid place-items-center">
-                    <label for="select-profile" class="font-semibold text-xl mb-3">PROFILE</label>
-                    <select id="select-profile" class="bg-transparent">
+                    <select id="select-profile" class="ml-4 bg-transparent text-white focus:outline outline-white outline-offset-4">
                         {{range .Profiles}}
                         {{ if .IsSelected }}
                         <option value="{{.ID}}" selected="selected">{{.Name}}</option>
@@ -67,12 +60,16 @@ SPDX-License-Identifier: Apache-2.0
                         {{end}}
                     </select>
                 </div>
+            </header>
+            <!-- Main Content -->
+            <div class="w-full w-full z-10 grow flex-col items-center justify-start bg-slate-100 p-8 overflow-scroll">
                 <div class="w-full p-4 grid place-items-center">
                     <label id="txState">State: awaiting QR code scan</label>
                 </div>
                 <div id="qr-code-box" class="w-full p-4 grid place-items-center">
                     <div id="qrCode"></div>
-                    <button id="copy-initiate-url-button" class="relative rounded-md border border-black flex flex-row justify-center p-2 items-center mx-2 my-8 button-gradient text-white" onclick="copyInitiateUrl()">
+                    <span class="mt-8 w-full max-w-4xl text-center overflow-scroll">{{.URL}}</span>
+                    <button id="copy-initiate-url-button" class="relative rounded-md border border-black flex flex-row justify-center p-2 items-center mx-2 mb-8 mt-2 button-gradient text-white" onclick="copyInitiateUrl()">
                         <span class="mx-2 text-lg text-white">Copy Initiate URL</span>
                         <i class="fa-solid fa-copy text-white text-2xl mx-2"></i>
                         <span id="initiate-url-helper" class="absolute -right-16 ml-4 text-center text-black hidden">Copied!</span>
@@ -101,7 +98,7 @@ SPDX-License-Identifier: Apache-2.0
                 </div>
             </div>
 
-            <div id="demo-issuer-footer" class="mx-6 w-full py-6 px-15 text-center sticky bottom-0 z-20 border-t border-grey bg-white"></div>
+            <footer id="demo-issuer-footer" class="mx-6 w-full py-6 px-15 text-center sticky bottom-0 z-20 border-t border-grey bg-white"></footer>
         </div>
     </body>
     <script>
