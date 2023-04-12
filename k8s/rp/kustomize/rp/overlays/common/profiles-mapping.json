@@ -2,5 +2,9 @@
   {
     "name": "Verified Employee Verifier",
     "id": "jwt-web-ED25519-JsonWebSignature2020"
+  },
+  {
+    "name": "PR Card Verifier",
+    "id": "pr-card-jwtsd-verifier"
   }
 ]

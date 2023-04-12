@@ -122,7 +122,6 @@ SPDX-License-Identifier: Apache-2.0
             $("#pinBox").hide()
         }
 
-        parsedUrl = new URL(window.rawURL)
         new QRCode(document.getElementById("qrCode"), window.rawURL);
 
         window.setState = function () {
