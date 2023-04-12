@@ -319,20 +319,22 @@ SPDX-License-Identifier: Apache-2.0
                         let result = jsonpath.query(data[k], c)
                         let val = result && result.length > 0 ? result[0] : ""
 
-                        const cdBreak = document.createElement('div')
-                        cdBreak.className = 'break'
+                        if (val) {
+                            const cdBreak = document.createElement('div')
+                            cdBreak.className = 'break'
 
-                        const cdHeader = document.createElement('div')
-                        cdHeader.className = 'header'
-                        cdHeader.innerText = schema.claims[c].label
+                            const cdHeader = document.createElement('div')
+                            cdHeader.className = 'header'
+                            cdHeader.innerText = schema.claims[c].label
 
-                        const cdValue = document.createElement('div')
-                        cdValue.className = 'value'
-                        cdValue.innerText = val
+                            const cdValue = document.createElement('div')
+                            cdValue.className = 'value max-w-lg overflow-scroll'
+                            cdValue.innerText = val
 
-                        cdDiv.appendChild(cdBreak)
-                        cdDiv.appendChild(cdHeader)
-                        cdDiv.appendChild(cdValue)
+                            cdDiv.appendChild(cdBreak)
+                            cdDiv.appendChild(cdHeader)
+                            cdDiv.appendChild(cdValue)
+                        }
                     })
                 } else {
                     // when no claim in schema - display all.
@@ -348,7 +350,7 @@ SPDX-License-Identifier: Apache-2.0
                         cdHeader.innerText = s
 
                         const cdValue = document.createElement('div')
-                        cdValue.className = 'value'
+                        cdValue.className = 'value max-w-lg overflow-scroll'
                         cdValue.innerText = data[k].subjectData[0][s]
 
                         cdDiv.appendChild(cdBreak)

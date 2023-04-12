@@ -6,5 +6,9 @@
   {
     "name": "PR Card Verifier",
     "id": "pr-card-jwtsd-verifier"
+  },
+  {
+    "name": "Medical Clinic Verifier",
+    "id": "medical-clinic-verifier"
   }
 ]
