@@ -519,8 +519,8 @@ func (c *Operation) buildInitiateOIDC4CIFlowPage( //nolint:funlen,gocyclo
 	}
 
 	var successText strings.Builder
-	successText.WriteString(fmt.Sprintf("Credentials with template [%v] and type [%v] ",
-		initiateReq.CredentialTemplateID, "VerifiedEmployee"))
+	successText.WriteString(fmt.Sprintf("Credentials with template [%v] ",
+		initiateReq.CredentialTemplateID))
 
 	if initiateReq.ClaimData != nil {
 		successText.WriteString("and claims: ")

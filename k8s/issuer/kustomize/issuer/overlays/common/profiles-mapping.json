@@ -19,7 +19,7 @@
   {
     "name": "PR Card Issuer (SD)",
     "id": "pr_card_issuer_jwtsd",
-    "credential_template_id": "templateID",
+    "credential_template_id": "permanent-resident-card-template-id",
     "claims": {
       "type": [
         "PermanentResidentCard"
@@ -31,6 +31,29 @@
       "birthdate": "1958-07-17",
       "country": "Bahamas",
       "issue_date": "2016-01-01"
+    }
+  },
+  {
+    "name": "Vaccination Certificate Issuer",
+    "id": "vaccination_certificate_issuer",
+    "credential_template_id": "vaccination-certificate-template-id",
+    "claims": {
+      "type": [
+        "VaccinationCertificate"
+      ],
+      "givenName": "John",
+      "familyName": "Doe",
+      "birthDate": "1958-07-17",
+      "gender": "Male",
+      "medicinalProductName": "COVID-19 Vaccine Moderna",
+      "marketingAuthorizationHolder": "Moderna Biotech",
+      "disease": "COVID-19",
+      "atcCode": "J07BX03",
+      "countryOfVaccination": "Canada",
+      "dateOfVaccination": "2021-01-03",
+      "administeringCentre": "FEMA",
+      "batchNumber": "1183738569",
+      "healthProfessional": "FEMA"
     }
   }
 ]

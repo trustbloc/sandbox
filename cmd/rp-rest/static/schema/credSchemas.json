@@ -63,6 +63,114 @@
     },
     "id": "display"
   },
+  "PermanentResidentCard": {
+    "locale": "en-US",
+    "card": {
+      "title": "Permanent Resident Card",
+      "subTitle": "Verified",
+      "backgroundColor": "#2b5283",
+      "textColor": "#ffffff",
+      "logo": {
+        "uri": "img/uscis-icon.svg",
+        "description": "Permanent Resident Card Issuer Logo"
+      }
+    },
+    "claims": {
+      "$.subjectData[*].given_name": {
+        "type": "String",
+        "label": "First Name"
+      },
+      "$.subjectData[*].family_name": {
+        "type": "String",
+        "label": "Last Name"
+      },
+      "$.subjectData[*].doc_number": {
+        "type": "String",
+        "label": "Document Number"
+      },
+      "$.subjectData[*].birthdate": {
+        "type": "String",
+        "label": "Date of Birth"
+      },
+      "$.subjectData[*].country": {
+        "type": "String",
+        "label": "Country"
+      },
+      "$.subjectData[*].issue_date": {
+        "type": "String",
+        "label": "Issue Date"
+      }
+    },
+    "id": "display"
+  },
+  "VaccinationCertificate": {
+    "locale": "en-US",
+    "card": {
+      "title": "Vaccination Certificate",
+      "subTitle": "Verified",
+      "backgroundColor": "#277B3E",
+      "textColor": "#ffffff",
+      "logo": {
+        "uri": "img/vaccination-icon.svg",
+        "description": "Vaccination Certificate Issuer Logo"
+      }
+    },
+    "claims": {
+      "$.subjectData[*].givenName": {
+        "type": "String",
+        "label": "Given Name"
+      },
+      "$.subjectData[*].familyName": {
+        "type": "String",
+        "label": "Family Name"
+      },
+      "$.subjectData[*].birthdate": {
+        "type": "String",
+        "label": "Date of Birth"
+      },
+      "$.subjectData[*].gender": {
+        "type": "String",
+        "label": "Gender"
+      },
+      "$.subjectData[*].medicinalProductName": {
+        "type": "String",
+        "label": "Product Name"
+      },
+      "$.subjectData[*].marketingAuthorizationHolder": {
+        "type": "String",
+        "label": "Product By"
+      },
+      "$.subjectData[*].disease": {
+        "type": "String",
+        "label": "Protection Against"
+      },
+      "$.subjectData[*].atcCode": {
+        "type": "String",
+        "label": "Vaccination Code"
+      },
+      "$.subjectData[*].countryOfVaccination": {
+        "type": "String",
+        "label": "Vaccination Country"
+      },
+      "$.subjectData[*].dateOfVaccination": {
+        "type": "String",
+        "label": "Date of Vaccination"
+      },
+      "$.subjectData[*].administeringCentre": {
+        "type": "String",
+        "label": "Administering Centre"
+      },
+      "$.subjectData[*].batchNumber": {
+        "type": "String",
+        "label": "Batch Number"
+      },
+      "$.subjectData[*].healthProfessional": {
+        "type": "String",
+        "label": "Health Professional"
+      }
+    },
+    "id": "display"
+  },
   "Default": {
     "locale": "en-US",
     "card": {
