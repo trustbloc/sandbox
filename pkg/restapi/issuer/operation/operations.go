@@ -72,10 +72,11 @@ const (
 	searchPath                = "/search"
 	generateCredentialPath    = createCredentialPath + "/generate"
 	oidcRedirectPath          = "/oidc/redirect" + "/{id}"
+	defaultProfileVersion     = "latest"
 
 	oidcIssuanceLogin            = "/oidc/login"
 	oidcIssuerIssuance           = "/oidc/issuance"
-	oidcIssuanceOpenID           = "/{id}/.well-known/openid-configuration"
+	oidcIssuanceOpenID           = "/{id}/" + defaultProfileVersion + "/.well-known/openid-configuration"
 	oidcIssuanceAuthorize        = "/{id}/oidc/authorize"
 	oidcIssuanceAuthorizeRequest = "/oidc/authorize-request"
 	//nolint: gosec
@@ -87,7 +88,7 @@ const (
 
 	credentialContext = "https://www.w3.org/2018/credentials/v1"
 
-	vcsUpdateStatusURLFormat = "%s/%s" + "/credentials/status"
+	vcsUpdateStatusURLFormat = "%s" + "/issuer/credentials/status"
 
 	vcsProfileCookie     = "vcsProfile"
 	scopeCookie          = "scopeCookie"
@@ -95,7 +96,7 @@ const (
 	assuranceScopeCookie = "assuranceScope"
 	callbackURLCookie    = "callbackURL"
 
-	issueCredentialURLFormat = "%s/%s" + "/credentials/issue"
+	issueCredentialURLFormat = "%s/%s/%s" + "/credentials/issue"
 
 	// contexts
 	trustBlocExampleContext = "https://trustbloc.github.io/context/vc/examples-ext-v1.jsonld"
@@ -474,7 +475,7 @@ func (c *Operation) buildInitiateOIDC4CIFlowPage( //nolint:funlen,gocyclo
 
 	req, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("%v/issuer/profiles/%v/interactions/initiate-oidc", c.vcsAPIURL, profileID),
+		fmt.Sprintf("%v/issuer/profiles/%v/%v/interactions/initiate-oidc", c.vcsAPIURL, profileID, defaultProfileVersion),
 		bytes.NewBuffer(b),
 	)
 	if err != nil {
@@ -1585,7 +1586,7 @@ func (c *Operation) revokeVC(w http.ResponseWriter, r *http.Request) { //nolint:
 			return
 		}
 
-		endpointURL := fmt.Sprintf(vcsUpdateStatusURLFormat, c.vcsURL, vc.Issuer.CustomFields["name"].(string))
+		endpointURL := fmt.Sprintf(vcsUpdateStatusURLFormat, c.vcsURL)
 
 		req, errReq := http.NewRequest("POST", endpointURL,
 			bytes.NewBuffer(reqBytes))
@@ -2472,7 +2473,7 @@ func (c *Operation) issueCredential(profileID, holder string, cred []byte) ([]by
 		return nil, fmt.Errorf("failed to marshal credential")
 	}
 
-	endpointURL := fmt.Sprintf(issueCredentialURLFormat, c.vcsURL, profileID)
+	endpointURL := fmt.Sprintf(issueCredentialURLFormat, c.vcsURL, profileID, defaultProfileVersion)
 
 	req, err := http.NewRequest("POST", endpointURL, bytes.NewBuffer(body))
 	if err != nil {

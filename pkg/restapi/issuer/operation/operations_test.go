@@ -1927,7 +1927,7 @@ func TestOperation_GenerateVC(t *testing.T) {
 			writer.WriteHeader(http.StatusOK)
 		})
 
-		router.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
+		router.HandleFunc("/{id}/{version}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusCreated)
 			_, err := writer.Write([]byte(testCredentialRequest))
 			if err != nil {
@@ -2097,7 +2097,7 @@ func TestOperation_GenerateVC(t *testing.T) {
 			writer.WriteHeader(http.StatusInternalServerError)
 		})
 
-		router.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
+		router.HandleFunc("/{id}/{version}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusCreated)
 			_, err := writer.Write([]byte(testCredentialRequest))
 			if err != nil {
@@ -2161,7 +2161,7 @@ func TestOperation_GenerateVC(t *testing.T) {
 			writer.WriteHeader(http.StatusOK)
 		})
 
-		router.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
+		router.HandleFunc("/{id}/{version}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusCreated)
 			_, err := writer.Write([]byte(testCredentialRequest))
 			if err != nil {
@@ -3261,7 +3261,7 @@ func TestCreateCredentialHandler(t *testing.T) {
 				panic(err)
 			}
 		})
-		vcsRouter.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
+		vcsRouter.HandleFunc("/{id}/{version}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusCreated)
 			_, err := writer.Write([]byte(testCredentialRequest))
 			if err != nil {
@@ -3407,7 +3407,7 @@ func TestGenerateCredentialHandler(t *testing.T) {
 				panic(err)
 			}
 		})
-		vcsRouter.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
+		vcsRouter.HandleFunc("/{id}/{version}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusCreated)
 			_, err := writer.Write([]byte(testCredentialRequest))
 			if err != nil {
@@ -3589,7 +3589,7 @@ func TestGenerateCredentialHandler(t *testing.T) {
 				panic(err)
 			}
 		})
-		vcsRouter.HandleFunc("/{id}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
+		vcsRouter.HandleFunc("/{id}/{version}/credentials/issue", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusInternalServerError)
 			_, err := writer.Write([]byte(testCredentialRequest))
 			if err != nil {
@@ -3894,7 +3894,7 @@ func TestPreAuthorizeHandler(t *testing.T) {
 	t.Run("profile not found", func(t *testing.T) {
 		router := mux.NewRouter()
 
-		router.HandleFunc(fmt.Sprintf("/issuer/profiles/%v/interactions/initiate-oidc", issuer),
+		router.HandleFunc(fmt.Sprintf("/issuer/profiles/%v/latest/interactions/initiate-oidc", issuer),
 			func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			},
