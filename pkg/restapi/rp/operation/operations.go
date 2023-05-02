@@ -65,11 +65,13 @@ const (
 	// edge-service verifier endpoints
 	verifyCredentialURLFormat = "/%s" + "/verifier/credentials/verify"
 
-	initiateOidcInteractionURLFormat   = "/verifier/profiles/%s/interactions/initiate-oidc"
+	initiateOidcInteractionURLFormat   = "/verifier/profiles/%s/%s/interactions/initiate-oidc"
 	retrieveInteractionsClaimURLFormat = "/verifier/interactions/%s/claim"
 
 	// TODO https://github.com/trustbloc/sandbox/issues/352 Configure verifier profiles in Verifier page
 	verifierProfileID = "trustbloc-verifier"
+
+	defaultVerifierProfileOption = "latest"
 
 	vcsVerifierRequestTokenName = "vcs_verifier" //nolint: gosec
 
@@ -595,7 +597,7 @@ func (c *Operation) openID4VPGetQR(w http.ResponseWriter, r *http.Request) { //n
 		return
 	}
 
-	endpoint := fmt.Sprintf(initiateOidcInteractionURLFormat, profile.ID)
+	endpoint := fmt.Sprintf(initiateOidcInteractionURLFormat, profile.ID, defaultVerifierProfileOption)
 
 	resp, err := c.sendHTTPRequest(http.MethodPost,
 		c.apiGatewayURL+endpoint, nil, httpContentTypeJSON, token)

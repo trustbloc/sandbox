@@ -56,28 +56,28 @@ SPDX-License-Identifier: Apache-2.0
             console.log(stateResp)
             let text = "State: "
             switch (stateResp.data.type) {
-                case "oidc_interaction_initiated":
+                case "issuer.oidc-interaction-initiated.v1":
                     text += "awaiting QR code scan"
                     break
-                case "oidc_interaction_qr_scanned":
+                case "issuer.oidc-interaction-qr-scanned.v1":
                     text += "QR code scanned"
                     break
-                case "oidc_interaction_authorization_request_prepared":
+                case "issuer.oidc-interaction-authorization-request-prepared.v1":
                     text += "authorization request prepared"
                     break
-                case "oidc_interaction_authorization_code_stored":
+                case "issuer.oidc-interaction-authorization-code-stored.v1":
                     text += "authorization code stored"
                     break
-                case "oidc_interaction_authorization_code_exchanged":
+                case "issuer.oidc-interaction-authorization-code-exchanged.v1":
                     text += "authorization code exchanged for access token"
                     break
-                case "oidc_interaction_succeeded":
+                case "issuer.oidc-interaction-succeeded.v1":
                     text += "issued successfully"
                     $("#qrCode").hide()
                     $("#successBlock").show()
                     clearTimeout(handle)
                     break
-                case "oidc_interaction_failed":
+                case "issuer.oidc-interaction-failed.v1":
                     text += "issuance failed"
                     $("#qrCode").hide()
                     clearTimeout(handle)

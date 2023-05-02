@@ -135,10 +135,10 @@ SPDX-License-Identifier: Apache-2.0
 
                 let text = "State: "
                 switch (stateResp.data.type) {
-                    case "oidc_interaction_initiated":
+                    case "issuer.oidc-interaction-initiated.v1":
                         text += "awaiting QR code scan"
                         break
-                    case "oidc_interaction_succeeded":
+                    case "issuer.oidc-interaction-succeeded.v1":
                         text += "issued successfully"
                         $("#qr-code-box").hide()
                         $("#copy-initiate-url-button").hide()
@@ -146,7 +146,7 @@ SPDX-License-Identifier: Apache-2.0
                         $("#successBlock").show()
                         clearTimeout(handle)
                         break
-                    case "oidc_interaction_qr_scanned":
+                    case "issuer.oidc-interaction-qr-scanned.v1":
                         text += "QR code scanned"
                         break
                 }

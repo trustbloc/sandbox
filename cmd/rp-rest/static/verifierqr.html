@@ -222,15 +222,15 @@ SPDX-License-Identifier: Apache-2.0
                 const status = document.getElementById("status")
                 console.log('event received', event.data)
 
-                if (event.data.type === "oidc_interaction_initiated") {
+                if (event.data.type === "verifier.oidc-interaction-initiated.v1") {
                     status.innerText = "Initiated"
                 }
 
-                if (event.data.type === "oidc_interaction_qr_scanned") {
+                if (event.data.type === "verifier.oidc-interaction-qr-scanned.v1") {
                     status.innerText = "QR Scanned"
                 }
 
-                if (event.data.type === "oidc_interaction_succeeded") {
+                if (event.data.type === "verifier.oidc-interaction-succeeded.v1") {
                     status.innerText = "Succeeded";
 
                     console.log("success");
