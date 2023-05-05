@@ -47,41 +47,44 @@ import (
 )
 
 const (
-	login                     = "/login"
-	settings                  = "/settings"
-	getCreditScore            = "/getCreditScore"
-	callback                  = "/callback"
-	generate                  = "/generate"
-	revoke                    = "/revoke"
-	didcommInit               = "/didcomm/init"
-	didcommToken              = "/didcomm/token"
-	didcommCallback           = "/didcomm/cb"
-	didcommCredential         = "/didcomm/data"
-	didcommAssuranceData      = "/didcomm/assurance"
-	didcommUserEndpoint       = "/didcomm/uid"
-	oauth2GetRequestPath      = "/oauth2/request"
-	oauth2CallbackPath        = "/oauth2/callback"
-	oauth2TokenRequestPath    = "oauth2/token" //nolint:gosec
-	verifyDIDAuthPath         = "/verify/didauth"
-	createCredentialPath      = "/credential"
-	authPath                  = "/auth"
-	preAuthorizePath          = "/pre-authorize"
-	authCodeFlowPath          = "/auth-code-flow"
-	openID4CIWebhookCheckPath = "/verify/openid4ci/webhook/check"
-	openID4CIWebhookPath      = "/verify/openid4ci/webhook"
-	searchPath                = "/search"
-	generateCredentialPath    = createCredentialPath + "/generate"
-	oidcRedirectPath          = "/oidc/redirect" + "/{id}"
-	defaultProfileVersion     = "latest"
+	httpContentTypeJSON = "application/json"
+
+	login                       = "/login"
+	settings                    = "/settings"
+	getCreditScore              = "/getCreditScore"
+	callback                    = "/callback"
+	generate                    = "/generate"
+	revoke                      = "/revoke"
+	didcommInit                 = "/didcomm/init"
+	didcommToken                = "/didcomm/token"
+	didcommCallback             = "/didcomm/cb"
+	didcommCredential           = "/didcomm/data"
+	didcommAssuranceData        = "/didcomm/assurance"
+	didcommUserEndpoint         = "/didcomm/uid"
+	oauth2GetRequestPath        = "/oauth2/request"
+	oauth2CallbackPath          = "/oauth2/callback"
+	oauth2TokenRequestPath      = "oauth2/token" //nolint:gosec
+	verifyDIDAuthPath           = "/verify/didauth"
+	createCredentialPath        = "/credential"
+	authPath                    = "/auth"
+	preAuthorizePath            = "/pre-authorize"
+	authCodeFlowPath            = "/auth-code-flow"
+	openID4CIWebhookCheckPath   = "/verify/openid4ci/webhook/check"
+	openID4CIWebhookPath        = "/verify/openid4ci/webhook"
+	searchPath                  = "/search"
+	generateCredentialPath      = createCredentialPath + "/generate"
+	oidcRedirectPath            = "/oidc/redirect" + "/{id}"
+	defaultIssuerProfileVersion = "latest"
 
 	oidcIssuanceLogin            = "/oidc/login"
 	oidcIssuerIssuance           = "/oidc/issuance"
-	oidcIssuanceOpenID           = "/{id}/" + defaultProfileVersion + "/.well-known/openid-configuration"
+	oidcIssuanceOpenID           = "/{id}/" + defaultIssuerProfileVersion + "/.well-known/openid-configuration"
 	oidcIssuanceAuthorize        = "/{id}/oidc/authorize"
 	oidcIssuanceAuthorizeRequest = "/oidc/authorize-request"
 	//nolint: gosec
-	oidcIssuanceToken      = "/{id}/oidc/token"
-	oidcIssuanceCredential = "/{id}/oidc/credential"
+	oidcIssuanceToken             = "/{id}/oidc/token"
+	oidcIssuanceCredential        = "/{id}/oidc/credential"
+	wellKnownConfigGetRequestPath = "/.well-known/did-configuration.json"
 
 	// http query params
 	stateQueryParam = "state"
@@ -126,6 +129,10 @@ type Handler interface {
 	Handle() http.HandlerFunc
 }
 
+type httpClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 type oidcClient interface {
 	CreateOIDCRequest(state, scope string) (string, error)
 	HandleOIDCCallback(reqContext context.Context, code string) ([]byte, error)
@@ -141,6 +148,8 @@ type Operation struct {
 	documentLoader           ld.DocumentLoader
 	cmsURL                   string
 	vcsURL                   string
+	vcsV1URL                 string
+	client                   httpClient
 	walletURL                string
 	receiveVCHTML            string
 	didAuthHTML              string
@@ -171,6 +180,7 @@ type Operation struct {
 	vcsAPIURL                     string
 	vcsClaimDataURL               string
 	eventsTopic                   *EventsTopic
+	didConfig                     []byte
 }
 
 // Config defines configuration for issuer operations
@@ -182,6 +192,7 @@ type Config struct {
 	DocumentLoader           ld.DocumentLoader
 	CMSURL                   string
 	VCSURL                   string
+	VCSV1URL                 string
 	WalletURL                string
 	ReceiveVCHTML            string
 	DIDAuthHTML              string
@@ -264,6 +275,8 @@ func New(config *Config) (*Operation, error) { //nolint:funlen
 		documentLoader:                config.DocumentLoader,
 		cmsURL:                        config.CMSURL,
 		vcsURL:                        config.VCSURL,
+		vcsV1URL:                      config.VCSV1URL,
+		client:                        &http.Client{Transport: &http.Transport{TLSClientConfig: config.TLSConfig}},
 		walletURL:                     config.WalletURL,
 		receiveVCHTML:                 config.ReceiveVCHTML,
 		didAuthHTML:                   config.DIDAuthHTML,
@@ -334,6 +347,7 @@ func (c *Operation) registerHandler() {
 		support.NewHTTPHandler(verifyDIDAuthPath, http.MethodPost, c.verifyDIDAuthHandler),
 		support.NewHTTPHandler(createCredentialPath, http.MethodPost, c.createCredentialHandler),
 		support.NewHTTPHandler(generateCredentialPath, http.MethodPost, c.generateCredentialHandler),
+		support.NewHTTPHandler(wellKnownConfigGetRequestPath, http.MethodGet, c.wellKnownConfig),
 
 		// chapi
 		support.NewHTTPHandler(revoke, http.MethodPost, c.revokeVC),
@@ -475,7 +489,8 @@ func (c *Operation) buildInitiateOIDC4CIFlowPage( //nolint:funlen,gocyclo
 
 	req, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("%v/issuer/profiles/%v/%v/interactions/initiate-oidc", c.vcsAPIURL, profileID, defaultProfileVersion),
+		fmt.Sprintf("%v/issuer/profiles/%v/%v/interactions/initiate-oidc", c.vcsAPIURL,
+			profileID, defaultIssuerProfileVersion),
 		bytes.NewBuffer(b),
 	)
 	if err != nil {
@@ -1406,6 +1421,62 @@ func (c *Operation) generateCredentialHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	c.writeResponse(w, http.StatusOK, signedVC)
+}
+
+func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
+	if len(c.didConfig) == 0 {
+		profile, err := c.determineProfile(r.URL.Query())
+		if err != nil {
+			c.writeErrorResponse(w, http.StatusBadRequest, err.Error())
+
+			return
+		}
+
+		respBytes, err := c.getOIDCConfig(profile.ID, defaultIssuerProfileVersion)
+		if err != nil {
+			c.writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+
+			return
+		}
+
+		logger.Errorf("retrieved oidc config: %s", string(respBytes))
+
+		c.didConfig = respBytes
+	}
+
+	w.Header().Set("content-type", httpContentTypeJSON)
+
+	_, err := w.Write(c.didConfig)
+	if err != nil {
+		logger.Errorf("failed to write response : %s", err)
+	}
+}
+
+func (c *Operation) getOIDCConfig(profileID, profileVersion string) ([]byte, error) {
+	resp, err := c.sendHTTPRequest(http.MethodGet,
+		fmt.Sprintf("%s/issuer/profiles/%s/%s/well-known/did-config",
+			c.vcsV1URL, profileID, profileVersion), nil, httpContentTypeJSON, "")
+	if err != nil {
+		return nil, fmt.Errorf(fmt.Sprintf("failed to get did config: %s", err.Error()))
+	}
+
+	respBytes, respErr := io.ReadAll(resp.Body)
+	if respErr != nil {
+		return nil, fmt.Errorf(fmt.Sprintf("failed to read did config resp: %s", err.Error()))
+	}
+
+	defer func() {
+		e := resp.Body.Close()
+		if e != nil {
+			logger.Errorf("closing response body failed: %s", e.Error())
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("did config didn't return 200 status: %s", string(respBytes))
+	}
+
+	return respBytes, nil
 }
 
 func (c *Operation) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
@@ -2473,7 +2544,7 @@ func (c *Operation) issueCredential(profileID, holder string, cred []byte) ([]by
 		return nil, fmt.Errorf("failed to marshal credential")
 	}
 
-	endpointURL := fmt.Sprintf(issueCredentialURLFormat, c.vcsURL, profileID, defaultProfileVersion)
+	endpointURL := fmt.Sprintf(issueCredentialURLFormat, c.vcsURL, profileID, defaultIssuerProfileVersion)
 
 	req, err := http.NewRequest("POST", endpointURL, bytes.NewBuffer(body))
 	if err != nil {
@@ -2697,6 +2768,29 @@ func (c *Operation) writeResponse(rw http.ResponseWriter, status int, data []byt
 // GetRESTHandlers get all controller API handler available for this service
 func (c *Operation) GetRESTHandlers() []Handler {
 	return c.handlers
+}
+
+func (c *Operation) sendHTTPRequest(method, reqURL string, body []byte, contentType,
+	token string,
+) (*http.Response, error) {
+	logger.Infof("send http request : url=%s methdod=%s body=%s", reqURL, method, string(body))
+
+	req, err := http.NewRequest(method, reqURL, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create http request: %w", err)
+	}
+
+	if token != "" {
+		req.Header.Add("Authorization", "Bearer "+token)
+	} else {
+		req.Header.Add("Authorization", "Bearer "+c.requestTokens[vcsIssuerRequestTokenName])
+	}
+
+	if contentType != "" {
+		req.Header.Add("Content-Type", contentType)
+	}
+
+	return c.client.Do(req)
 }
 
 func getTxnStore(prov storage.Provider) (storage.Store, error) {

@@ -115,6 +115,12 @@ const (
 	vcsURLFlagUsage     = "VC Service URL. Format: HostName:Port."
 	vcsURLEnvKey        = "ISSUER_VCS_URL"
 
+	// vc v1 service url config flags
+	vcsV1URLFlagName  = "vcs-v1-url"
+	vcsV1URLFlagUsage = "VC Service URL V1. Format: HostName:Port." +
+		" Alternatively, this can be set with the following environment variable: " + vcsV1URLEnvKey
+	vcsV1URLEnvKey = "ISSUER_VCS_V1_URL"
+
 	tlsSystemCertPoolFlagName  = "tls-systemcertpool"
 	tlsSystemCertPoolFlagUsage = "Use system certificate pool." +
 		" Possible values [true] [false]. Defaults to false if not set." +
@@ -252,6 +258,7 @@ type issuerParameters struct {
 	tlsKeyFile                    string
 	cmsURL                        string
 	vcsURL                        string
+	vcsV1URL                      string
 	walletURL                     string
 	tlsSystemCertPool             bool
 	tlsCACerts                    []string
@@ -380,6 +387,11 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo,gocog
 				return err
 			}
 
+			vcV1URL, err := cmdutils.GetUserSetVarFromString(cmd, vcsV1URLFlagName, vcsV1URLEnvKey, false)
+			if err != nil {
+				return err
+			}
+
 			externalDataSourceURL, err := cmdutils.GetUserSetVarFromString(cmd,
 				externalDataSourceURLFlagName, externalDataSourceURLEnvKey, true)
 			if err != nil {
@@ -464,6 +476,7 @@ func createStartCmd(srv server) *cobra.Command { // nolint: funlen,gocyclo,gocog
 				tlsKeyFile:                    tlsConfg.keyFile,
 				cmsURL:                        strings.TrimSpace(cmsURL),
 				vcsURL:                        strings.TrimSpace(vcsURL),
+				vcsV1URL:                      strings.TrimSpace(vcV1URL),
 				walletURL:                     strings.TrimSpace(walletInitURL),
 				tlsSystemCertPool:             tlsConfg.systemCertPool,
 				tlsCACerts:                    tlsConfg.caCerts,
@@ -626,6 +639,7 @@ func createFlags(startCmd *cobra.Command) {
 	startCmd.Flags().StringP(tlsKeyFileFlagName, tlsKeyFileFlagShorthand, "", tlsKeyFileFlagUsage)
 	startCmd.Flags().StringP(cmsURLFlagName, cmsURLFlagShorthand, "", cmsURLFlagUsage)
 	startCmd.Flags().StringP(vcsURLFlagName, vcsURLFlagShorthand, "", vcsURLFlagUsage)
+	startCmd.Flags().StringP(vcsV1URLFlagName, "", "", vcsV1URLFlagUsage)
 	startCmd.Flags().StringP(tlsSystemCertPoolFlagName, "", "",
 		tlsSystemCertPoolFlagUsage)
 	startCmd.Flags().StringArrayP(tlsCACertsFlagName, "", []string{}, tlsCACertsFlagUsage)
@@ -715,6 +729,7 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 		DocumentLoader:                documentLoader,
 		CMSURL:                        parameters.cmsURL,
 		VCSURL:                        parameters.vcsURL,
+		VCSV1URL:                      parameters.vcsV1URL,
 		WalletURL:                     parameters.walletURL,
 		ReceiveVCHTML:                 "static/receiveVC.html",
 		DIDAuthHTML:                   "static/didAuth.html",
