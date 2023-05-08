@@ -48,8 +48,9 @@ type vpTokenClaim struct {
 
 // Profile represents metadata about verifier profile.
 type Profile struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID                     string `json:"id"`
+	Name                   string `json:"name"`
+	SupportWellKnownConfig bool   `json:"support_well_known_config"`
 }
 
 type profileView struct {

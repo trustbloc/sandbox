@@ -1,6 +1,7 @@
 /*
 Copyright SecureKey Technologies Inc. All Rights Reserved.
 Copyright Avast Software. All Rights Reserved.
+Copyright Gen Digital Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
@@ -223,6 +224,11 @@ type Config struct {
 	VcsAPIAccessTokenClaim        string
 	VcsAPIURL                     string
 	VcsClaimDataURL               string
+}
+
+type oidcConfig struct {
+	Context    string   `json:"@context"`
+	LinkedDIDs []string `json:"linked_dids,omitempty"`
 }
 
 // vc struct used to return vc data to html
@@ -615,6 +621,29 @@ func (c *Operation) getDefaultProfile() *Profile {
 
 func getProfileID(query url.Values) string {
 	return query.Get("profile_id")
+}
+
+func (c *Operation) getLinkedDIDs() ([]string, error) {
+	var linkedDIDs []string
+	for i := 0; i < len(c.profiles); i++ {
+		if c.profiles[i].SupportWellKnownConfig {
+			respBytes, err := c.getOIDCConfig(c.profiles[i].ID, defaultIssuerProfileVersion)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get oidc config: %w", err)
+			}
+			logger.Debugf("retrieved oidc config: %s", string(respBytes))
+			var config oidcConfig
+			err = json.Unmarshal(respBytes, &config)
+			if err != nil {
+				return nil, fmt.Errorf("failed to unmarshal oidc config bytes: %w", err)
+			}
+
+			for j := 0; j < len(config.LinkedDIDs); j++ {
+				linkedDIDs = append(linkedDIDs, config.LinkedDIDs[j])
+			}
+		}
+	}
+	return linkedDIDs, nil
 }
 
 func (c *Operation) issueAccessToken(oidcProviderURL, clientID, secret string, scopes []string) (string, error) {
@@ -1425,23 +1454,20 @@ func (c *Operation) generateCredentialHandler(w http.ResponseWriter, r *http.Req
 
 func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
 	if len(c.didConfig) == 0 {
-		profile, err := c.determineProfile(r.URL.Query())
-		if err != nil {
-			c.writeErrorResponse(w, http.StatusBadRequest, err.Error())
-
-			return
-		}
-
-		respBytes, err := c.getOIDCConfig(profile.ID, defaultIssuerProfileVersion)
+		linkedDIDs, err := c.getLinkedDIDs()
 		if err != nil {
 			c.writeErrorResponse(w, http.StatusInternalServerError, err.Error())
-
 			return
 		}
-
-		logger.Errorf("retrieved oidc config: %s", string(respBytes))
-
-		c.didConfig = respBytes
+		didConfigBytes, err := json.Marshal(oidcConfig{
+			Context:    "https://identity.foundation/.well-known/did-configuration/v1",
+			LinkedDIDs: linkedDIDs,
+		})
+		if err != nil {
+			c.writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		c.didConfig = didConfigBytes
 	}
 
 	w.Header().Set("content-type", httpContentTypeJSON)

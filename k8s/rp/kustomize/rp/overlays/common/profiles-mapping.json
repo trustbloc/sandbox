@@ -1,14 +1,17 @@
 [
   {
     "name": "Verified Employee Verifier",
-    "id": "jwt-web-ED25519-JsonWebSignature2020"
+    "id": "jwt-web-ED25519-JsonWebSignature2020",
+    "support_well_known_config": true
   },
   {
     "name": "PR Card Verifier",
-    "id": "pr-card-jwtsd-verifier"
+    "id": "pr-card-jwtsd-verifier",
+    "support_well_known_config": true
   },
   {
     "name": "Medical Clinic Verifier",
-    "id": "medical-clinic-verifier"
+    "id": "medical-clinic-verifier",
+    "support_well_known_config": false
   }
 ]
