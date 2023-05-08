@@ -133,6 +133,7 @@ func TestStartCmdWithBlankArg(t *testing.T) {
 		args = append(args, profilesFilePathArg(f.Name())...)
 		args = append(args, cmsURLArg()...)
 		args = append(args, vcsURLArg()...)
+		args = append(args, vcsV1URLArg()...)
 		args = append(args, []string{flag + issuerAdapterURLFlagName, ""}...)
 		startCmd.SetArgs(args)
 
@@ -166,6 +167,7 @@ func TestStartCmdWithMissingProfilesFilePathArg(t *testing.T) {
 	args = append(args, tokenIntrospectionURLArg()...)
 	args = append(args, cmsURLArg()...)
 	args = append(args, vcsURLArg()...)
+	args = append(args, vcsV1URLArg()...)
 
 	startCmd.SetArgs(args)
 
@@ -290,6 +292,7 @@ func TestDatabaseTypeArg(t *testing.T) {
 		args = append(args, profilesFilePathArg(f.Name())...)
 		args = append(args, cmsURLArg()...)
 		args = append(args, vcsURLArg()...)
+		args = append(args, vcsV1URLArg()...)
 		args = append(args, issuerAdapterURLArg()...)
 		startCmd.SetArgs(args)
 
@@ -324,6 +327,7 @@ func TestDatabaseTypeArg(t *testing.T) {
 		args = append(args, profilesFilePathArg(f.Name())...)
 		args = append(args, cmsURLArg()...)
 		args = append(args, vcsURLArg()...)
+		args = append(args, vcsV1URLArg()...)
 		args = append(args, issuerAdapterURLArg()...)
 		args = append(args, []string{flag + common.DatabasePrefixFlagName, "test"}...)
 		args = append(args, []string{flag + common.DatabaseURLFlagName, "invalid-driver://test"}...)
@@ -371,6 +375,7 @@ func TestOIDCParam(t *testing.T) {
 		args = append(args, profilesFilePathArg(f.Name())...)
 		args = append(args, cmsURLArg()...)
 		args = append(args, vcsURLArg()...)
+		args = append(args, vcsV1URLArg()...)
 		args = append(args, issuerAdapterURLArg()...)
 		args = append(args, databaseURLArg()...)
 		args = append(args, databasePrefixArg()...)
@@ -508,6 +513,9 @@ func setEnvVars(t *testing.T) {
 	err = os.Setenv(vcsURLEnvKey, "vcs")
 	require.Nil(t, err)
 
+	err = os.Setenv(vcsV1URLEnvKey, "vcs-v1")
+	require.Nil(t, err)
+
 	err = os.Setenv(tlsKeyFileEnvKey, "key")
 	require.Nil(t, err)
 
@@ -552,6 +560,7 @@ func getValidArgs(logLevel string, profilesFilePath string) []string {
 	args = append(args, tlsKeyFileArg()...)
 	args = append(args, cmsURLArg()...)
 	args = append(args, vcsURLArg()...)
+	args = append(args, vcsV1URLArg()...)
 	args = append(args, requestTokensArg()...)
 	args = append(args, issuerAdapterURLArg()...)
 	args = append(args, databaseURLArg()...)
@@ -607,6 +616,10 @@ func cmsURLArg() []string {
 
 func vcsURLArg() []string {
 	return []string{flag + vcsURLFlagName, "vcs"}
+}
+
+func vcsV1URLArg() []string {
+	return []string{flag + vcsV1URLFlagName, "vcs-v1"}
 }
 
 func requestTokensArg() []string {

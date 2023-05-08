@@ -352,6 +352,69 @@ func TestController_New(t *testing.T) {
 	})
 }
 
+func TestWellKnownConfig(t *testing.T) {
+	t.Run("test error from get did config", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+			Profiles: []Profile{
+				{
+					ID:   "profile_id",
+					Name: "test",
+				},
+			},
+		})
+		require.NoError(t, err)
+		svc.client = &mockHTTPClient{postErr: fmt.Errorf("error")}
+
+		rr := httptest.NewRecorder()
+		svc.wellKnownConfig(rr, &http.Request{URL: &url.URL{}, Method: http.MethodGet})
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "failed to get did config")
+	})
+
+	t.Run("test error from get did config", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+			Profiles: []Profile{
+				{
+					ID:   "profile_id",
+					Name: "test",
+				},
+			},
+		})
+		require.NoError(t, err)
+		svc.client = &mockHTTPClient{postValue: &http.Response{
+			StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader("error")),
+		}}
+
+		rr := httptest.NewRecorder()
+		svc.wellKnownConfig(rr, &http.Request{URL: &url.URL{}, Method: http.MethodGet})
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "did config didn't return 200 status")
+	})
+
+	t.Run("test success", func(t *testing.T) {
+		svc, err := New(&Config{
+			StoreProvider: &mockstorage.Provider{},
+			Profiles: []Profile{
+				{
+					ID:   "profile_id",
+					Name: "test",
+				},
+			},
+		})
+		require.NoError(t, err)
+		svc.client = &mockHTTPClient{postValue: &http.Response{
+			StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("{}")),
+		}}
+
+		rr := httptest.NewRecorder()
+		svc.wellKnownConfig(rr, &http.Request{URL: &url.URL{}, Method: http.MethodGet})
+		require.Equal(t, http.StatusOK, rr.Code)
+		require.Contains(t, rr.Body.String(), "{}")
+	})
+}
+
 func TestOperation_Login(t *testing.T) {
 	cfg := &Config{
 		TokenIssuer:    &mockTokenIssuer{},
@@ -3927,4 +3990,13 @@ type mockTransport struct {
 
 func (t *mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return t.roundTrip(req)
+}
+
+type mockHTTPClient struct {
+	postValue *http.Response
+	postErr   error
+}
+
+func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
+	return m.postValue, m.postErr
 }

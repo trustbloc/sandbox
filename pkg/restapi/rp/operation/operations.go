@@ -537,7 +537,7 @@ func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		respBytes, err := c.getOIDCConfig(profile.ID)
+		respBytes, err := c.getOIDCConfig(profile.ID, defaultVerifierProfileOption)
 		if err != nil {
 			c.writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 
@@ -555,10 +555,10 @@ func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *Operation) getOIDCConfig(profileID string) ([]byte, error) {
+func (c *Operation) getOIDCConfig(profileID, profileVersion string) ([]byte, error) {
 	resp, err := c.sendHTTPRequest(http.MethodGet,
-		fmt.Sprintf("%s/verifier/profiles/%s/well-known/did-config",
-			c.vcsV1URL, profileID), nil, httpContentTypeJSON, "")
+		fmt.Sprintf("%s/verifier/profiles/%s/%s/well-known/did-config",
+			c.vcsV1URL, profileID, profileVersion), nil, httpContentTypeJSON, "")
 	if err != nil {
 		return nil, fmt.Errorf(fmt.Sprintf("failed to get did config: %s", err.Error()))
 	}
