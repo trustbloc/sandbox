@@ -1,6 +1,7 @@
 /*
 Copyright SecureKey Technologies Inc. All Rights Reserved.
 Copyright Avast Software. All Rights Reserved.
+Copyright Gen Digital Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
@@ -358,8 +359,9 @@ func TestWellKnownConfig(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{},
 			Profiles: []Profile{
 				{
-					ID:   "profile_id",
-					Name: "test",
+					ID:                     "profile_id",
+					Name:                   "test",
+					SupportWellKnownConfig: true,
 				},
 			},
 		})
@@ -377,8 +379,9 @@ func TestWellKnownConfig(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{},
 			Profiles: []Profile{
 				{
-					ID:   "profile_id",
-					Name: "test",
+					ID:                     "profile_id",
+					Name:                   "test",
+					SupportWellKnownConfig: true,
 				},
 			},
 		})
@@ -398,8 +401,9 @@ func TestWellKnownConfig(t *testing.T) {
 			StoreProvider: &mockstorage.Provider{},
 			Profiles: []Profile{
 				{
-					ID:   "profile_id",
-					Name: "test",
+					ID:                     "profile_id",
+					Name:                   "test",
+					SupportWellKnownConfig: true,
 				},
 			},
 		})
@@ -411,7 +415,8 @@ func TestWellKnownConfig(t *testing.T) {
 		rr := httptest.NewRecorder()
 		svc.wellKnownConfig(rr, &http.Request{URL: &url.URL{}, Method: http.MethodGet})
 		require.Equal(t, http.StatusOK, rr.Code)
-		require.Contains(t, rr.Body.String(), "{}")
+		require.Contains(t, rr.Body.String(),
+			"{\"@context\":\"https://identity.foundation/.well-known/did-configuration/v1\"}")
 	})
 }
 

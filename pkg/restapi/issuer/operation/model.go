@@ -1,5 +1,6 @@
 /*
 Copyright SecureKey Technologies Inc. All Rights Reserved.
+Copyright Gen Digital Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
@@ -81,10 +82,11 @@ type initiateOIDC4CIRequest struct {
 
 // Profile represents issuer profile in demo app.
 type Profile struct {
-	ID                   string                 `json:"id"`
-	Name                 string                 `json:"name"`
-	CredentialTemplateID string                 `json:"credential_template_id"`
-	Claims               map[string]interface{} `json:"claims"`
+	ID                     string                 `json:"id"`
+	Name                   string                 `json:"name"`
+	CredentialTemplateID   string                 `json:"credential_template_id"`
+	Claims                 map[string]interface{} `json:"claims"`
+	SupportWellKnownConfig bool                   `json:"support_well_known_config"`
 }
 
 type profileView struct {

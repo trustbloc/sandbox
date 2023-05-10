@@ -71,7 +71,7 @@ const (
 	// TODO https://github.com/trustbloc/sandbox/issues/352 Configure verifier profiles in Verifier page
 	verifierProfileID = "trustbloc-verifier"
 
-	defaultVerifierProfileOption = "latest"
+	defaultVerifierProfileVersion = "latest"
 
 	vcsVerifierRequestTokenName = "vcs_verifier" //nolint: gosec
 
@@ -149,6 +149,11 @@ type Config struct {
 	WalletAuthURL          string
 	AccessTokenURL         string
 	APIGatewayURL          string
+}
+
+type oidcConfig struct {
+	Context    string   `json:"@context"`
+	LinkedDIDs []string `json:"linked_dids,omitempty"`
 }
 
 // vc struct used to return vc data to html
@@ -530,21 +535,20 @@ func (c *Operation) handleOIDCShareCallback(w http.ResponseWriter, r *http.Reque
 
 func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
 	if len(c.didConfig) == 0 {
-		profile, err := c.determineProfile(r.URL.Query())
-		if err != nil {
-			c.writeErrorResponse(w, http.StatusBadRequest, err.Error())
-
-			return
-		}
-
-		respBytes, err := c.getOIDCConfig(profile.ID, defaultVerifierProfileOption)
+		linkedDIDs, err := c.getLinkedDIDs()
 		if err != nil {
 			c.writeErrorResponse(w, http.StatusInternalServerError, err.Error())
-
 			return
 		}
-
-		c.didConfig = respBytes
+		didConfigBytes, err := json.Marshal(oidcConfig{
+			Context:    "https://identity.foundation/.well-known/did-configuration/v1",
+			LinkedDIDs: linkedDIDs,
+		})
+		if err != nil {
+			c.writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		c.didConfig = didConfigBytes
 	}
 
 	w.Header().Set("content-type", httpContentTypeJSON)
@@ -597,7 +601,7 @@ func (c *Operation) openID4VPGetQR(w http.ResponseWriter, r *http.Request) { //n
 		return
 	}
 
-	endpoint := fmt.Sprintf(initiateOidcInteractionURLFormat, profile.ID, defaultVerifierProfileOption)
+	endpoint := fmt.Sprintf(initiateOidcInteractionURLFormat, profile.ID, defaultVerifierProfileVersion)
 
 	resp, err := c.sendHTTPRequest(http.MethodPost,
 		c.apiGatewayURL+endpoint, nil, httpContentTypeJSON, token)
@@ -1109,4 +1113,27 @@ func (c *Operation) getDefaultProfile() *Profile {
 
 func getProfileID(query url.Values) string {
 	return query.Get("profile_id")
+}
+
+func (c *Operation) getLinkedDIDs() ([]string, error) {
+	var linkedDIDs []string
+	for i := 0; i < len(c.profiles); i++ {
+		if c.profiles[i].SupportWellKnownConfig {
+			respBytes, err := c.getOIDCConfig(c.profiles[i].ID, defaultVerifierProfileVersion)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get oidc config: %w", err)
+			}
+			logger.Debugf("retrieved oidc config: %s", string(respBytes))
+			var config oidcConfig
+			err = json.Unmarshal(respBytes, &config)
+			if err != nil {
+				return nil, fmt.Errorf("failed to unmarshal oidc config bytes: %w", err)
+			}
+
+			for j := 0; j < len(config.LinkedDIDs); j++ {
+				linkedDIDs = append(linkedDIDs, config.LinkedDIDs[j])
+			}
+		}
+	}
+	return linkedDIDs, nil
 }

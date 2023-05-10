@@ -3,6 +3,7 @@
     "name": "Verified Employee Issuer",
     "id": "bank_issuer",
     "credential_template_id": "templateID",
+    "support_well_known_config": true,
     "claims": {
       "type": [
         "VerifiedEmployee"
@@ -20,6 +21,7 @@
     "name": "PR Card Issuer (SD)",
     "id": "pr_card_issuer_jwtsd",
     "credential_template_id": "permanent-resident-card-template-id",
+    "support_well_known_config": true,
     "claims": {
       "type": [
         "PermanentResidentCard"
@@ -37,6 +39,7 @@
     "name": "Vaccination Certificate Issuer",
     "id": "vaccination_certificate_issuer",
     "credential_template_id": "vaccination-certificate-template-id",
+    "support_well_known_config": false,
     "claims": {
       "type": [
         "VaccinationCertificate"
