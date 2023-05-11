@@ -113,6 +113,8 @@ const (
 
 	scopeQueryParam         = "scope"
 	externalScopeQueryParam = "subject_data"
+
+	didConfigExpiryDuration = time.Minute * 10
 )
 
 // Mock signer for signing VCs.
@@ -182,6 +184,7 @@ type Operation struct {
 	vcsClaimDataURL               string
 	eventsTopic                   *EventsTopic
 	didConfig                     []byte
+	didConfigExpiry               time.Time
 }
 
 // Config defines configuration for issuer operations
@@ -1453,7 +1456,7 @@ func (c *Operation) generateCredentialHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
-	if len(c.didConfig) == 0 {
+	if len(c.didConfig) == 0 || c.didConfigExpiry.Before(time.Now()) {
 		linkedDIDs, err := c.getLinkedDIDs()
 		if err != nil {
 			c.writeErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -1468,6 +1471,7 @@ func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		c.didConfig = didConfigBytes
+		c.didConfigExpiry = time.Now().Add(didConfigExpiryDuration)
 	}
 
 	w.Header().Set("content-type", httpContentTypeJSON)
