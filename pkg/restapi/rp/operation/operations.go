@@ -78,6 +78,8 @@ const (
 	transientStoreName = "rp-rest-transient"
 	flowTypeCookie     = "flowType"
 	waciDemoType       = "waci"
+
+	didConfigExpiryDuration = time.Minute * 10
 )
 
 var logger = log.New("sandbox-rp-restapi")
@@ -124,6 +126,7 @@ type Operation struct {
 	apiGatewayURL   string
 	eventsTopic     *EventsTopic
 	didConfig       []byte
+	didConfigExpiry time.Time
 }
 
 // Config defines configuration for rp operations
@@ -534,7 +537,7 @@ func (c *Operation) handleOIDCShareCallback(w http.ResponseWriter, r *http.Reque
 }
 
 func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
-	if len(c.didConfig) == 0 {
+	if len(c.didConfig) == 0 || c.didConfigExpiry.Before(time.Now()) {
 		linkedDIDs, err := c.getLinkedDIDs()
 		if err != nil {
 			c.writeErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -549,6 +552,7 @@ func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		c.didConfig = didConfigBytes
+		c.didConfigExpiry = time.Now().Add(didConfigExpiryDuration)
 	}
 
 	w.Header().Set("content-type", httpContentTypeJSON)
