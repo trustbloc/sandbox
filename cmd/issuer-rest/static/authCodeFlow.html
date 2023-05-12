@@ -42,7 +42,10 @@ SPDX-License-Identifier: Apache-2.0
     window.rawURL = {{.URL}}
     window.txId = {{.TxID}}
 
-    new QRCode(document.getElementById("qrCode"), window.rawURL);
+    new QRCode(document.getElementById("qrCode"), {
+        text: window.rawURL,
+        correctLevel : QRCode.CorrectLevel.M
+    });
 
     window.setState = function () {
         window.axios({
