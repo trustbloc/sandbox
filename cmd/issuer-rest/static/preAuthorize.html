@@ -122,7 +122,10 @@ SPDX-License-Identifier: Apache-2.0
             $("#pinBox").hide()
         }
 
-        new QRCode(document.getElementById("qrCode"), window.rawURL);
+        new QRCode(document.getElementById("qrCode"), {
+            text: window.rawURL,
+            correctLevel : QRCode.CorrectLevel.M
+        });
 
         window.setState = function () {
             window.axios({
