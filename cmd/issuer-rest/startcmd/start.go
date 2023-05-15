@@ -1,6 +1,7 @@
 /*
 Copyright SecureKey Technologies Inc. All Rights Reserved.
 Copyright Avast Software. All Rights Reserved.
+Copyright Gen Digital Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
@@ -737,6 +738,7 @@ func startIssuer(parameters *issuerParameters) error { //nolint:funlen,gocyclo
 		Profiles:                      profiles,
 		PreAuthorizeHTML:              "static/preAuthorize.html",
 		AuthCodeFlowHTML:              "static/authCodeFlow.html",
+		OpenID4CIHTML:                 "static/openid4ci.html",
 		DIDCommHTML:                   "static/didcomm.html",
 		DIDCOMMVPHTML:                 "static/didcommvp.html",
 		TLSConfig:                     tlsConfig,

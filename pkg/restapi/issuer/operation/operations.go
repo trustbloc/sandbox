@@ -70,6 +70,7 @@ const (
 	authPath                    = "/auth"
 	preAuthorizePath            = "/pre-authorize"
 	authCodeFlowPath            = "/auth-code-flow"
+	openID4CIFlowPath           = "/openid4ci"
 	openID4CIWebhookCheckPath   = "/verify/openid4ci/webhook/check"
 	openID4CIWebhookPath        = "/verify/openid4ci/webhook"
 	searchPath                  = "/search"
@@ -175,6 +176,7 @@ type Operation struct {
 	externalLogin            bool
 	preAuthorizeHTML         string
 	authCodeFlowHTML         string
+	openID4CIHTML            string
 
 	vcsAPIAccessTokenHost         string
 	vcsAPIAccessTokenClientID     string
@@ -203,6 +205,7 @@ type Config struct {
 	VCHTML                   string
 	PreAuthorizeHTML         string
 	AuthCodeFlowHTML         string
+	OpenID4CIHTML            string
 	DIDCommHTML              string
 	DIDCOMMVPHTML            string
 	TLSConfig                *tls.Config
@@ -246,6 +249,7 @@ type initiate struct {
 	SuccessText string        `json:"successText"`
 	Pin         string        `json:"pin"`
 	Profiles    []profileView `json:"profiles"`
+	FlowType    string        `json:"flow_type"`
 }
 
 type clientCredentialsTokenResponseStruct struct {
@@ -307,6 +311,7 @@ func New(config *Config) (*Operation, error) { //nolint:funlen
 		externalLogin:                 config.externalLogin,
 		preAuthorizeHTML:              config.PreAuthorizeHTML,
 		authCodeFlowHTML:              config.AuthCodeFlowHTML,
+		openID4CIHTML:                 config.OpenID4CIHTML,
 		vcsAPIAccessTokenHost:         config.VcsAPIAccessTokenHost,
 		vcsAPIAccessTokenClientID:     config.VcsAPIAccessTokenClientID,
 		vcsAPIAccessTokenClientSecret: config.VcsAPIAccessTokenClientSecret,
@@ -365,6 +370,7 @@ func (c *Operation) registerHandler() {
 		// oidc4ci authorize & pre-authorize
 		support.NewHTTPHandler(preAuthorizePath, http.MethodGet, c.preAuthorize),
 		support.NewHTTPHandler(authCodeFlowPath, http.MethodGet, c.authCodeFlowHandler),
+		support.NewHTTPHandler(openID4CIFlowPath, http.MethodGet, c.openID4CIHandler),
 
 		// webhooks
 		support.NewHTTPHandler(openID4CIWebhookPath, http.MethodPost, c.eventsTopic.receiveTopics),
@@ -465,6 +471,22 @@ func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.buildInitiateOIDC4CIFlowPage(w, profile.ID, initiateReq, c.preAuthorizeHTML)
+}
+
+func (c *Operation) openID4CIHandler(w http.ResponseWriter, r *http.Request) {
+	profile, err := c.determineProfile(r.URL.Query())
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	initiateReq, err := c.constructInitiateOIDC4CIRequest(r.URL.Query(), profile)
+	if err != nil {
+		c.writeErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.buildInitiateOIDC4CIFlowPage(w, profile.ID, initiateReq, c.openID4CIHTML)
 }
 
 func (c *Operation) buildInitiateOIDC4CIFlowPage( //nolint:funlen,gocyclo
@@ -570,6 +592,7 @@ func (c *Operation) buildInitiateOIDC4CIFlowPage( //nolint:funlen,gocyclo
 		SuccessText: successText.String(),
 		Pin:         pin,
 		Profiles:    c.buildProfileList(profileID),
+		FlowType:    initiateReq.GrantType,
 	}); err != nil {
 		logger.Errorf(fmt.Sprintf("execute html template: %s", err.Error()))
 	}
@@ -624,6 +647,36 @@ func (c *Operation) getDefaultProfile() *Profile {
 
 func getProfileID(query url.Values) string {
 	return query.Get("profile_id")
+}
+
+func (c *Operation) constructInitiateOIDC4CIRequest(
+	query url.Values, profile *Profile,
+) (*initiateOIDC4CIRequest, error) {
+	flowTypeURLParam := query.Get("flow_type")
+	if flowTypeURLParam == "" || flowTypeURLParam == "pre-authorized" {
+		initiateReq := &initiateOIDC4CIRequest{
+			CredentialTemplateID: profile.CredentialTemplateID,
+			GrantType:            "urn:ietf:params:oauth:grant-type:pre-authorized_code",
+			ClaimData:            &profile.Claims,
+		}
+
+		if strings.EqualFold(query.Get("require_pin"), "true") {
+			initiateReq.UserPinRequired = true
+		}
+		return initiateReq, nil
+	} else if flowTypeURLParam == "authorization" {
+		initiateReq := &initiateOIDC4CIRequest{
+			CredentialTemplateID: profile.CredentialTemplateID,
+			GrantType:            "authorization_code",
+			ResponseType:         "code",
+			Scope:                []string{"openid", "profile"},
+			OpState:              uuid.New().String(),
+			ClaimEndpoint:        c.vcsClaimDataURL,
+		}
+		return initiateReq, nil
+	} else {
+		return nil, fmt.Errorf("failed to construct initiateOIDC4CIRequest: unsupported flow type provided")
+	}
 }
 
 func (c *Operation) getLinkedDIDs() ([]string, error) {

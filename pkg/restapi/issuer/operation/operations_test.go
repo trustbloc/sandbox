@@ -3989,6 +3989,273 @@ func TestPreAuthorizeHandler(t *testing.T) {
 	})
 }
 
+func TestOpenID4CIHandler(t *testing.T) {
+	template, createErr := os.CreateTemp("", "*.html")
+	require.NoError(t, createErr)
+
+	t.Cleanup(func() {
+		require.NoError(t, template.Close())
+	})
+
+	profiles := []Profile{
+		{
+			ID:                   issuer,
+			CredentialTemplateID: "templateID",
+		},
+	}
+
+	t.Run("success (authorization flow)", func(t *testing.T) {
+		svc, err := New(&Config{
+			Profiles:      profiles,
+			StoreProvider: memstore.NewProvider(),
+			OpenID4CIHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Body:       io.NopCloser(bytes.NewBufferString(`{"access_token":"token"}`)),
+						}, nil
+					}
+
+					b, marshalErr := json.Marshal(initiateOIDC4CIResponse{})
+					require.NoError(t, marshalErr)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(bytes.NewReader(b)),
+					}, nil
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, openID4CIFlowPath+"?flow_type=authorization", http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.openID4CIHandler(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("fail to issue access token", func(t *testing.T) {
+		svc, err := New(&Config{
+			Profiles:      profiles,
+			StoreProvider: memstore.NewProvider(),
+			OpenID4CIHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusInternalServerError,
+							Body:       io.NopCloser(bytes.NewBufferString("")),
+						}, nil
+					}
+
+					b, marshalErr := json.Marshal(initiateOIDC4CIResponse{})
+					require.NoError(t, marshalErr)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(bytes.NewReader(b)),
+					}, nil
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, openID4CIFlowPath+"?flow_type=authorization", http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.openID4CIHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to get access token")
+	})
+
+	t.Run("unable to send request for initiate", func(t *testing.T) {
+		svc, err := New(&Config{
+			Profiles:      profiles,
+			StoreProvider: memstore.NewProvider(),
+			OpenID4CIHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Body:       io.NopCloser(bytes.NewBufferString(`{"access_token":"token"}`)),
+						}, nil
+					}
+
+					return nil, fmt.Errorf("failed to send request")
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, openID4CIFlowPath+"?flow_type=authorization", http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.openID4CIHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to send request for initiate")
+	})
+
+	t.Run("unable to decode initiate response", func(t *testing.T) {
+		svc, err := New(&Config{
+			Profiles:      profiles,
+			StoreProvider: memstore.NewProvider(),
+			OpenID4CIHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Body:       io.NopCloser(bytes.NewBufferString(`{"access_token":"token"}`)),
+						}, nil
+					}
+
+					return &http.Response{
+						StatusCode: http.StatusInternalServerError,
+						Body:       io.NopCloser(bytes.NewBufferString("")),
+					}, nil
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, openID4CIFlowPath+"?flow_type=authorization", http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.openID4CIHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to decode initiate response")
+	})
+
+	t.Run("unable to load template html", func(t *testing.T) {
+		svc, err := New(&Config{
+			Profiles:      profiles,
+			StoreProvider: memstore.NewProvider(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Body:       io.NopCloser(bytes.NewBufferString(`{"access_token":"token"}`)),
+						}, nil
+					}
+
+					b, marshalErr := json.Marshal(initiateOIDC4CIResponse{})
+					require.NoError(t, marshalErr)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(bytes.NewReader(b)),
+					}, nil
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, openID4CIFlowPath, http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.openID4CIHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to load html")
+	})
+
+	t.Run("success (pre-authorized flow)", func(t *testing.T) {
+		svc, err := New(&Config{
+			Profiles:      profiles,
+			StoreProvider: memstore.NewProvider(),
+			OpenID4CIHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Body:       io.NopCloser(bytes.NewBufferString(`{"access_token":"token"}`)),
+						}, nil
+					}
+
+					b, marshalErr := json.Marshal(initiateOIDC4CIResponse{})
+					require.NoError(t, marshalErr)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(bytes.NewReader(b)),
+					}, nil
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, openID4CIFlowPath, http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.openID4CIHandler(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("profile not found", func(t *testing.T) {
+		router := mux.NewRouter()
+
+		router.HandleFunc(fmt.Sprintf("/issuer/profiles/%v/latest/interactions/initiate-oidc", issuer),
+			func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+		)
+
+		srv := httptest.NewServer(router)
+		defer srv.Close()
+
+		svc, err := New(&Config{
+			Profiles:      profiles,
+			StoreProvider: memstore.NewProvider(),
+			OpenID4CIHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodGet, openID4CIFlowPath+"?profile_id=invalid", nil)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.openID4CIHandler(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "profile invalid was not found")
+	})
+}
+
 type mockTransport struct {
 	roundTrip func(req *http.Request) (*http.Response, error)
 }
