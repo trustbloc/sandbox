@@ -41,7 +41,8 @@ ucis-rp
 uni-resolver-web
 vault-kms
 vault-server
-vcs
+vcs-awskms
+vcs-localkms
 verifier-vcs
 wallet
 vcwallet

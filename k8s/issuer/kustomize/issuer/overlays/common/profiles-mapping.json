@@ -4,6 +4,7 @@
     "id": "bank_issuer",
     "credential_template_id": "templateID",
     "support_well_known_config": true,
+    "vcs_url_suffix": "",
     "claims": {
       "type": [
         "VerifiedEmployee"
@@ -22,6 +23,7 @@
     "id": "pr_card_issuer_jwtsd",
     "credential_template_id": "permanent-resident-card-template-id",
     "support_well_known_config": true,
+    "vcs_url_suffix": "",
     "claims": {
       "type": [
         "PermanentResidentCard"
@@ -40,6 +42,7 @@
     "id": "vaccination_certificate_issuer",
     "credential_template_id": "vaccination-certificate-template-id",
     "support_well_known_config": false,
+    "vcs_url_suffix": "",
     "claims": {
       "type": [
         "VaccinationCertificate"
@@ -57,6 +60,23 @@
       "administeringCentre": "FEMA",
       "batchNumber": "1183738569",
       "healthProfessional": "FEMA"
+    }
+  },
+  {
+    "name": "University Degree Issuer BBS+",
+    "id": "university_degree_issuer_bbs",
+    "credential_template_id": "university_degree_issuer-template-id",
+    "support_well_known_config": false,
+    "vcs_url_suffix": "/vcs-localkms",
+    "claims": {
+      "type": [
+        "UniversityDegreeCredential"
+      ],
+      "familyName":   "John Doe",
+      "givenName":    "John",
+      "degree":       "MIT",
+      "degreeSchool": "MIT school",
+      "photo":        "binary data"
     }
   }
 ]

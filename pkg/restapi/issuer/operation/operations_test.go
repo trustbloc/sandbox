@@ -3850,7 +3850,7 @@ func TestAuthCodeFlowHandler(t *testing.T) {
 					}
 
 					return &http.Response{
-						StatusCode: http.StatusInternalServerError,
+						StatusCode: http.StatusOK,
 						Body:       io.NopCloser(bytes.NewBufferString("")),
 					}, nil
 				},
@@ -3865,6 +3865,78 @@ func TestAuthCodeFlowHandler(t *testing.T) {
 		svc.authCodeFlowHandler(rr, req)
 		require.Equal(t, http.StatusInternalServerError, rr.Code)
 		require.Contains(t, rr.Body.String(), "unable to decode initiate response")
+	})
+
+	t.Run("Not OK http response", func(t *testing.T) {
+		svc, err := New(&Config{
+			Profiles:         profiles,
+			StoreProvider:    memstore.NewProvider(),
+			AuthCodeFlowHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Body:       io.NopCloser(bytes.NewBufferString(`{"access_token":"token"}`)),
+						}, nil
+					}
+
+					return &http.Response{
+						StatusCode: http.StatusInternalServerError,
+						Body:       io.NopCloser(bytes.NewBufferString("")),
+					}, nil
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, authCodeFlowPath, http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.authCodeFlowHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "expected status code 200 but got status code 500")
+	})
+
+	t.Run("Error reading http response body", func(t *testing.T) {
+		svc, err := New(&Config{
+			Profiles:         profiles,
+			StoreProvider:    memstore.NewProvider(),
+			AuthCodeFlowHTML: template.Name(),
+		})
+		require.NoError(t, err)
+
+		svc.httpClient = &http.Client{
+			Transport: &mockTransport{
+				roundTrip: func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path == oauth2TokenPath {
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Body:       io.NopCloser(bytes.NewBufferString(`{"access_token":"token"}`)),
+						}, nil
+					}
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(errBodyReader{}),
+					}, nil
+				},
+			},
+		}
+
+		req, err := http.NewRequest(http.MethodGet, authCodeFlowPath, http.NoBody)
+		require.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+
+		svc.authCodeFlowHandler(rr, req)
+		require.Equal(t, http.StatusInternalServerError, rr.Code)
+		require.Contains(t, rr.Body.String(), "unable to read body: body read error")
 	})
 
 	t.Run("unable to load template html", func(t *testing.T) {
@@ -4133,7 +4205,7 @@ func TestOpenID4CIHandler(t *testing.T) {
 					}
 
 					return &http.Response{
-						StatusCode: http.StatusInternalServerError,
+						StatusCode: http.StatusOK,
 						Body:       io.NopCloser(bytes.NewBufferString("")),
 					}, nil
 				},
@@ -4271,4 +4343,10 @@ type mockHTTPClient struct {
 
 func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	return m.postValue, m.postErr
+}
+
+type errBodyReader struct{}
+
+func (errBodyReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("body read error")
 }
