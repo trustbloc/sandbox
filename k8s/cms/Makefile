@@ -29,7 +29,7 @@ ARCH  				= $(shell uname -m | sed 's/x86_64/amd64/')
 
 #IMAGES
 #STRAPI_IMG					?= strapi/strapi:3.6.8-alpine
-CMS_IMG					?= ghcr.io/trustbloc-cicd/sandbox-cms:0.1.9-snapshot-385aa34
+CMS_IMG					?= ghcr.io/trustbloc-cicd/sandbox-cms:0.1.9-snapshot-331299a
 OATHKEEPER_IMG			    ?= oryd/oathkeeper:v0.38.15-alpine
 
 # do not modify

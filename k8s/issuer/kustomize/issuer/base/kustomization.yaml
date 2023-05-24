@@ -39,4 +39,4 @@ kind: Kustomization
 images:
 - name: sandbox-issuer
   newName: ghcr.io/trustbloc-cicd/sandbox-issuer
-  newTag: 0.1.9-snapshot-385aa34
+  newTag: 0.1.9-snapshot-331299a
