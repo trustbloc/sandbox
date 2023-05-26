@@ -2,16 +2,25 @@
   {
     "name": "Verified Employee Verifier",
     "id": "jwt-web-ED25519-JsonWebSignature2020",
-    "support_well_known_config": true
+    "support_well_known_config": true,
+    "vcs_url_suffix": ""
   },
   {
     "name": "PR Card Verifier",
     "id": "pr-card-jwtsd-verifier",
-    "support_well_known_config": true
+    "support_well_known_config": true,
+    "vcs_url_suffix": ""
   },
   {
     "name": "Medical Clinic Verifier",
     "id": "medical-clinic-verifier",
-    "support_well_known_config": false
+    "support_well_known_config": false,
+    "vcs_url_suffix": ""
+  },
+  {
+    "name": "University Degree Verifier BBS+",
+    "id": "v_ldp_university_degree_sd_bbs",
+    "support_well_known_config": false,
+    "vcs_url_suffix": "/vcs-localkms"
   }
 ]

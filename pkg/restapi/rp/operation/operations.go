@@ -608,7 +608,7 @@ func (c *Operation) openID4VPGetQR(w http.ResponseWriter, r *http.Request) { //n
 	endpoint := fmt.Sprintf(initiateOidcInteractionURLFormat, profile.ID, defaultVerifierProfileVersion)
 
 	resp, err := c.sendHTTPRequest(http.MethodPost,
-		c.apiGatewayURL+endpoint, nil, httpContentTypeJSON, token)
+		c.apiGatewayURL+profile.VCSURLSuffix+endpoint, nil, httpContentTypeJSON, token)
 	if err != nil {
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to initiate oidc: %s", err.Error()))

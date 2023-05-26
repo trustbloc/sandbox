@@ -51,6 +51,7 @@ type Profile struct {
 	ID                     string `json:"id"`
 	Name                   string `json:"name"`
 	SupportWellKnownConfig bool   `json:"support_well_known_config"`
+	VCSURLSuffix           string `json:"vcs_url_suffix"`
 }
 
 type profileView struct {

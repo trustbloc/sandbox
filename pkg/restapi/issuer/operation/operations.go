@@ -450,7 +450,7 @@ func (c *Operation) authCodeFlowHandler(w http.ResponseWriter, r *http.Request) 
 		ClaimEndpoint:        c.vcsClaimDataURL,
 	}
 
-	c.buildInitiateOIDC4CIFlowPage(w, profile.ID, initiateReq, c.authCodeFlowHTML)
+	c.buildInitiateOIDC4CIFlowPage(w, profile, initiateReq, c.authCodeFlowHTML)
 }
 
 func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) {
@@ -470,7 +470,7 @@ func (c *Operation) preAuthorize(w http.ResponseWriter, r *http.Request) {
 		initiateReq.UserPinRequired = false
 	}
 
-	c.buildInitiateOIDC4CIFlowPage(w, profile.ID, initiateReq, c.preAuthorizeHTML)
+	c.buildInitiateOIDC4CIFlowPage(w, profile, initiateReq, c.preAuthorizeHTML)
 }
 
 func (c *Operation) openID4CIHandler(w http.ResponseWriter, r *http.Request) {
@@ -486,12 +486,12 @@ func (c *Operation) openID4CIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.buildInitiateOIDC4CIFlowPage(w, profile.ID, initiateReq, c.openID4CIHTML)
+	c.buildInitiateOIDC4CIFlowPage(w, profile, initiateReq, c.openID4CIHTML)
 }
 
 func (c *Operation) buildInitiateOIDC4CIFlowPage( //nolint:funlen,gocyclo
 	w http.ResponseWriter,
-	profileID string,
+	profile *Profile,
 	initiateReq *initiateOIDC4CIRequest,
 	htmlTemplate string,
 ) {
@@ -518,14 +518,19 @@ func (c *Operation) buildInitiateOIDC4CIFlowPage( //nolint:funlen,gocyclo
 		return
 	}
 
+	url := fmt.Sprintf("%v/issuer/profiles/%v/%v/interactions/initiate-oidc", c.vcsAPIURL+profile.VCSURLSuffix,
+		profile.ID, defaultIssuerProfileVersion)
+
+	logger.Infof("Initiate oidc4ci request url: %s", url)
+
 	req, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("%v/issuer/profiles/%v/%v/interactions/initiate-oidc", c.vcsAPIURL,
-			profileID, defaultIssuerProfileVersion),
+		url,
 		bytes.NewBuffer(b),
 	)
 	if err != nil {
 		logger.Errorf(err.Error())
+
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("can not prepare http request: %s", err.Error()))
 
@@ -550,9 +555,27 @@ func (c *Operation) buildInitiateOIDC4CIFlowPage( //nolint:funlen,gocyclo
 		}()
 	}
 
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logger.Errorf(err.Error())
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf("unable to read body: %s", err.Error()))
+
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		c.writeErrorResponse(w, http.StatusInternalServerError,
+			fmt.Sprintf(
+				"expected status code %d but got status code %d with response body %s instead, from %s",
+				http.StatusOK, resp.StatusCode, respBytes, url))
+
+		return
+	}
+
 	var parsedResp initiateOIDC4CIResponse
 
-	if err = json.NewDecoder(resp.Body).Decode(&parsedResp); err != nil {
+	if err = json.Unmarshal(respBytes, &parsedResp); err != nil {
 		logger.Errorf(err.Error())
 		c.writeErrorResponse(w, http.StatusInternalServerError,
 			fmt.Sprintf("unable to decode initiate response: %s", err.Error()))
@@ -591,7 +614,7 @@ func (c *Operation) buildInitiateOIDC4CIFlowPage( //nolint:funlen,gocyclo
 		TxID:        parsedResp.TxID,
 		SuccessText: successText.String(),
 		Pin:         pin,
-		Profiles:    c.buildProfileList(profileID),
+		Profiles:    c.buildProfileList(profile.ID),
 		FlowType:    initiateReq.GrantType,
 	}); err != nil {
 		logger.Errorf(fmt.Sprintf("execute html template: %s", err.Error()))

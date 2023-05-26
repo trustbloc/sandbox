@@ -87,6 +87,7 @@ type Profile struct {
 	CredentialTemplateID   string                 `json:"credential_template_id"`
 	Claims                 map[string]interface{} `json:"claims"`
 	SupportWellKnownConfig bool                   `json:"support_well_known_config"`
+	VCSURLSuffix           string                 `json:"vcs_url_suffix"`
 }
 
 type profileView struct {
