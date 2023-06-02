@@ -688,13 +688,14 @@ func (c *Operation) constructInitiateOIDC4CIRequest(
 		}
 		return initiateReq, nil
 	} else if flowTypeURLParam == "authorization" {
+		logger.Debugf("vcsClaimDataURL", c.vcsClaimDataURL)
 		initiateReq := &initiateOIDC4CIRequest{
 			CredentialTemplateID: profile.CredentialTemplateID,
 			GrantType:            "authorization_code",
 			ResponseType:         "code",
 			Scope:                []string{"openid", "profile"},
 			OpState:              uuid.New().String(),
-			ClaimEndpoint:        c.vcsClaimDataURL,
+			ClaimEndpoint:        c.vcsClaimDataURL + "?profile_id=" + profile.ID,
 		}
 		return initiateReq, nil
 	} else {
