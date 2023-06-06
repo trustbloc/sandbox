@@ -62,4 +62,4 @@ transformers:
 images:
 - name: sandbox-cli
   newName: ghcr.io/trustbloc-cicd/sandbox-cli
-  newTag: 0.1.9-snapshot-84d6192
+  newTag: 0.1.9-snapshot-6bd41bf
