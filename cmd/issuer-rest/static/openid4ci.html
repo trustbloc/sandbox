@@ -67,7 +67,7 @@ SPDX-License-Identifier: Apache-2.0
     </div>
   </header>
   <!-- Main Content -->
-  <div class="w-full w-full z-10 grow flex-col items-center justify-start bg-slate-100 p-8 overflow-scroll">
+  <div class="w-full z-10 grow flex-col items-center justify-start bg-slate-100 p-8 overflow-scroll">
     <div class="w-full p-4 grid place-items-center">
       <label id="txState">State: awaiting QR code scan</label>
     </div>
@@ -125,18 +125,6 @@ SPDX-License-Identifier: Apache-2.0
 
   const flowTypeMapping = getFlowTypeMapping()
 
-  const profileSelectList = document.getElementById("select-profile")
-  profileSelectList.addEventListener("change", function () {
-    const profile = profileSelectList.value
-    if (profile) {
-      window.location.href = "?profile_id=" + profile + "&flow_type=" + flowTypeMapping
-    }
-  })
-
-  if (!window.requiredPin) {
-    $("#pinBox").hide()
-  }
-
   const flowTypeToggle = document.getElementById("flow-type")
   if (flowTypeMapping === "authorization") {
     flowTypeToggle.checked = false
@@ -146,11 +134,25 @@ SPDX-License-Identifier: Apache-2.0
     if (flowTypeMapping === "pre-authorized" && flowTypeToggle.checked === false) {
       window.location.href = "?profile_id=" + profileSelectList.value + "&flow_type=authorization"
     } else if (flowTypeMapping === "authorization" && flowTypeToggle.checked === true) {
-      window.location.href = "?profile_id=" + profileSelectList.value + "&flow_type=pre-authorized"
+      window.location.href = "?profile_id=" + profileSelectList.value + "&flow_type=pre-authorized&require_pin=true"
     } else {
-      window.location.href = "?profile_id=" + profileSelectList.value
+      window.location.href = "?profile_id=" + profileSelectList.value + "&require_pin=true"
     }
   })
+
+  const profileSelectList = document.getElementById("select-profile")
+  profileSelectList.addEventListener("change", function () {
+    const profile = profileSelectList.value
+    if (profile && flowTypeMapping === "pre-authorized") {
+      window.location.href = "?profile_id=" + profile + "&flow_type=" + flowTypeMapping + "&require_pin=true"
+    } else if (profile) {
+      window.location.href = "?profile_id=" + profile + "&flow_type=" + flowTypeMapping
+    }
+  })
+
+  if (!window.requiredPin) {
+    $("#pinBox").hide()
+  }
 
   new QRCode(document.getElementById("qrCode"), {
     text: window.rawURL,
