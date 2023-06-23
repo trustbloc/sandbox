@@ -51,6 +51,14 @@ spec:
             echo $err_resp;
             if [ -z "$err_resp" ] || [ -n "$(echo ${err_resp} | grep already )" ];then echo "Success client creation"; break;else exit 1;fi;
 
+            err_resp=$(hydra clients create --endpoint http://hydra-admin --fake-tls-termination --id utopian_customs_and_immigration_issuer --name "utopian_customs_and_immigration_issuer" --secret utopian_customs_and_immigration_issuer-secret --grant-types authorization_code --response-types code --scope openid,profile,address,PRCardProof --skip-tls-verify --callbacks https://api-gateway.||DOMAIN||/oidc/redirect 2>&1 > /dev/null);
+            echo $err_resp;
+            if [ -z "$err_resp" ] || [ -n "$(echo ${err_resp} | grep already )" ];then echo "Success client creation"; break;else exit 1;fi;
+
+            err_resp=$(hydra clients create --endpoint http://hydra-admin --fake-tls-termination --id trueid-issuer --name "trueid-issuer" --secret trueid-issuer-secret --grant-types authorization_code --response-types code --scope openid,profile,address,TrueIdentityProf --skip-tls-verify --callbacks https://api-gateway.||DOMAIN||/oidc/redirect 2>&1 > /dev/null);
+            echo $err_resp;
+            if [ -z "$err_resp" ] || [ -n "$(echo ${err_resp} | grep already )" ];then echo "Success client creation"; break;else exit 1;fi;
+
             err_resp=$(hydra clients create --endpoint http://hydra-admin --fake-tls-termination --id hub-auth --secret hub-auth-secret --grant-types authorization_code,refresh_token --response-types code,id_token --scope openid,profile,email --skip-tls-verify --callbacks https://hub-auth.||DOMAIN||/oidc/callback 2>&1 > /dev/null);
             echo $err_resp;
             if [ -z "$err_resp" ] || [ -n "$(echo ${err_resp} | grep already )" ];then echo "Success client creation"; exit 0;else exit 1;fi;

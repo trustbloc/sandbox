@@ -23,12 +23,16 @@
     "support_well_known_config": false,
     "vcs_url_suffix": "/vcs-localkms"
   },
-
   {
     "name": "Utopian Background Check",
     "id": "utopian_background_check_verifier",
     "support_well_known_config": false,
     "vcs_url_suffix": ""
+  },
+  {
+    "name": "True Identity",
+    "id": "true-id-verifier",
+    "support_well_known_config": true,
+    "vcs_url_suffix": ""
   }
-
 ]

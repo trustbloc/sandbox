@@ -101,5 +101,25 @@
       "lprCategory": "CatA",
       "commuterClassification" : "B"
     }
+  },
+  {
+    "name": "True Identity",
+    "id": "true_identity_issuer",
+    "credential_template_id": "true-id-temp",
+    "support_well_known_config": true,
+    "vcs_url_suffix": "",
+    "claims": {
+      "type": [
+        "VerifiableCredential",
+        "TrueIdentity"
+      ],
+      "firstName": "Rambil",
+      "lastName": "Pisto",
+      "scanneddoc": "NY State Drivers License",
+      "selfie": "Verified Selfie",
+      "verification": "Fully Verified",
+      "address": "2345 Anywhere Street, Your City, NY 12345",
+      "ageverified": "Older than 21"
+    }
   }
 ]
