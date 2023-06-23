@@ -104,7 +104,7 @@
   },
   {
     "name": "True Identity",
-    "id": "true_identity_issuer",
+    "id": "trueid-issuer",
     "credential_template_id": "true-id-temp",
     "support_well_known_config": true,
     "vcs_url_suffix": "",
