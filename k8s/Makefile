@@ -15,7 +15,10 @@ LOGIN_CONSENT_IMG_LOCAL         ?= ghcr.io/trustbloc/sandbox-login-consent-serve
 CMS_IMG_LOCAL         	 		?= ghcr.io/trustbloc/sandbox-cms:latest
 CLI_IMG_LOCAL         	 		?= ghcr.io/trustbloc/sandbox-cli:latest
 
-.PHONY: deploy-all deploy-components setup-deploy ci-deploy-all ci-deploy-core ci-setup-deploy ci-minikube-setup local-setup-deploy minikube-up minikube-down minikube-image-load
+OS 								= $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ARCH  							= $(shell uname -m | sed 's/x86_64/amd64/')
+
+.PHONY: deploy-all deploy-components setup-deploy ci-deploy-all ci-deploy-core ci-setup-deploy ci-minikube-setup kustomize local-setup-deploy minikube-up minikube-down minikube-image-load
 
 undeploy-all:
 	# TODO instead of delete all, run undeploy target on each component
@@ -62,8 +65,13 @@ minikube-image-load:
 	@rm cli_img_local.image
 	@rm cms_img_local.image
 
-ci-minikube-setup: pull-core-deployment
+ci-minikube-setup: kustomize pull-core-deployment
 		cd scripts && ./ci_minikube_setup.sh
+
+kustomize:
+	@{ \
+	curl -sSLo - https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v4.3.0/kustomize_v4.3.0_$(OS)_$(ARCH).tar.gz | tar xzf - -C /usr/local/bin ;\
+	}
 
 minikube-up: pull-core-deployment
 	cd scripts && ./minikube_setup.sh
