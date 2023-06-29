@@ -9,7 +9,7 @@ kind: Component
 images:
 - name: strapi
   newName: ghcr.io/trustbloc-cicd/sandbox-cms
-  newTag: 0.1.9-snapshot-6bd41bf
+  newTag: 0.1.9-snapshot-56f5245
 
 secretGenerator:
 - envs:
