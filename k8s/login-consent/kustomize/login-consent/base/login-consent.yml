@@ -1,5 +1,6 @@
 #
 # Copyright SecureKey Technologies Inc. All Rights Reserved.
+# Copyright Gen Digital Inc. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -19,6 +20,10 @@ spec:
       labels:
         app: login-consent
     spec:
+      volumes:
+        - name: config
+          configMap:
+            name: login-consent-claims-config
       containers:
       - name: login-consent
         envFrom:
@@ -30,6 +35,9 @@ spec:
           - containerPort: 8081
             protocol: TCP
             name: http-port
+        volumeMounts:
+          - name: config
+            mountPath: /etc/login-consent/config
 ---
 apiVersion: v1
 kind: Service

@@ -518,18 +518,87 @@ func TestConsentServer_ClaimData(t *testing.T) {
 
 	tests := []struct {
 		name           string
+		env            map[string]string
+		profile        string
+		claims         string
 		method         string
 		responseStatus int
+		err            string
 	}{
 		{
-			name:           "/claim-data Method not allowed",
+			name: "/claim-data Method not allowed",
+			env: map[string]string{
+				claimsConfigFilePathEnvKey: "claims-config.json",
+			},
+			profile:        "bank_issuer",
+			claims:         "{\"bank_issuer\": {}}",
 			method:         http.MethodGet,
 			responseStatus: http.StatusMethodNotAllowed,
+			err:            "",
 		},
 		{
-			name:           "/claim-data POST SUCCESS",
+			name:           "/claim-data claims config file path env key is empty",
+			env:            map[string]string{},
+			profile:        "",
+			claims:         "",
+			method:         http.MethodPost,
+			responseStatus: http.StatusInternalServerError,
+			err:            "value is empty",
+		},
+		{
+			name: "/claim-data claims config file is missing",
+			env: map[string]string{
+				claimsConfigFilePathEnvKey: "",
+			},
+			profile:        "",
+			claims:         "",
+			method:         http.MethodPost,
+			responseStatus: http.StatusInternalServerError,
+			err:            "error opening claims config file",
+		},
+		{
+			name: "/claim-data POST SUCCESS",
+			env: map[string]string{
+				claimsConfigFilePathEnvKey: "claims-config.json",
+			},
+			profile:        "bank_issuer",
+			claims:         "{\"bank_issuer\": {}}",
 			method:         http.MethodPost,
 			responseStatus: http.StatusOK,
+			err:            "",
+		},
+		{
+			name: "/claim-data POST missing corresponding claims",
+			env: map[string]string{
+				claimsConfigFilePathEnvKey: "claims-config.json",
+			},
+			profile:        "bank_issuer",
+			claims:         "{\"pr_card_issuer_jwtsd\": {}}",
+			method:         http.MethodPost,
+			responseStatus: http.StatusInternalServerError,
+			err:            "claims for profile bank_issuer are missing",
+		},
+		{
+			name: "/claim-data POST fails to decode claims",
+			env: map[string]string{
+				claimsConfigFilePathEnvKey: "claims-config.json",
+			},
+			profile:        "bank_issuer",
+			claims:         "{some non valid json}}",
+			method:         http.MethodPost,
+			responseStatus: http.StatusInternalServerError,
+			err:            "failed to decode claims",
+		},
+		{
+			name: "/claim-data POST SUCCESS (pr_card_issuer_jwtsd)",
+			env: map[string]string{
+				claimsConfigFilePathEnvKey: "claims-config.json",
+			},
+			profile:        "pr_card_issuer_jwtsd",
+			claims:         "{\"pr_card_issuer_jwtsd\": {}}",
+			method:         http.MethodPost,
+			responseStatus: http.StatusOK,
+			err:            "",
 		},
 	}
 
@@ -538,18 +607,46 @@ func TestConsentServer_ClaimData(t *testing.T) {
 	for _, test := range tests {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
+			for k, v := range tc.env {
+				require.NoError(t, os.Setenv(k, v))
+			}
+
+			if len(tc.env[claimsConfigFilePathEnvKey]) > 0 {
+				_, err := os.Create(tc.env[claimsConfigFilePathEnvKey])
+				require.NoError(t, err)
+
+				if len(tc.profile) > 0 {
+					err := os.WriteFile(tc.env[claimsConfigFilePathEnvKey],
+						[]byte(tc.claims), 0o600)
+					require.NoError(t, err)
+				}
+			}
+
 			server, err := newConsentServer(testServer.URL, false, []string{})
 			require.NotNil(t, server)
 			require.NoError(t, err)
 
-			req, err := http.NewRequest(tc.method, "/claim-data", http.NoBody)
+			req, err := http.NewRequest(tc.method,
+				fmt.Sprintf("/claim-data?profile_id=%s", tc.profile), http.NoBody)
 			require.NoError(t, err)
 
 			res := httptest.NewRecorder()
 
 			server.claimData(res, req)
 
+			if tc.err != "" {
+				require.Contains(t, res.Body.String(), tc.err)
+			}
 			require.Equal(t, tc.responseStatus, res.Code, res.Body.String())
+
+			for k := range tc.env {
+				require.NoError(t, os.Unsetenv(k))
+			}
+
+			if len(tc.env[claimsConfigFilePathEnvKey]) > 0 {
+				err = os.Remove(tc.env[claimsConfigFilePathEnvKey])
+				require.NoError(t, err)
+			}
 		})
 	}
 }
