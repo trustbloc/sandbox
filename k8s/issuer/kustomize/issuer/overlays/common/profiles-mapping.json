@@ -65,7 +65,7 @@
   {
     "name": "University Degree Issuer BBS+",
     "id": "university_degree_issuer_bbs",
-    "credential_template_id": "university_degree_issuer-template-id",
+    "credential_template_id": "university-degree-issuer-template-id",
     "support_well_known_config": false,
     "vcs_url_suffix": "/vcs-localkms",
     "claims": {
@@ -83,7 +83,7 @@
     "name": "Utopian Customs and Immigration",
     "id": "utopian_customs_and_immigration_issuer",
     "credential_template_id": "permanent-resident-card-template-id",
-    "support_well_known_config": true,
+    "support_well_known_config": false,
     "vcs_url_suffix": "",
     "claims": {
       "type": [
