@@ -1043,10 +1043,10 @@ github.com/trustbloc/orb v1.0.0-rc4.0.20221129223433-07e05f2f6e0a h1:hTNcFcgr6cG
 github.com/trustbloc/orb v1.0.0-rc4.0.20221129223433-07e05f2f6e0a/go.mod h1:pC74Ix6y2ivSUYOPRa3G6LNVJ67x3H4iLKYZVwy37JQ=
 github.com/trustbloc/sidetree-core-go v1.0.0-rc4 h1:dkmNLKbHjr//JgJPLQgTNBgK40LAYXL9IV69gZCn2fo=
 github.com/trustbloc/sidetree-core-go v1.0.0-rc4/go.mod h1:SOuPJu8u7DSs2c494HPFAkkZ3KlfR/4swQ+YWqxZ2C8=
-github.com/trustbloc/vcs v1.0.1-0.20230619090702-ffb7ec83a96b h1:JTzAHYca4ZWiMk6c3hJqBWiBJX/3MbPo3xmPPfPywfw=
-github.com/trustbloc/vcs v1.0.1-0.20230619090702-ffb7ec83a96b/go.mod h1:uZ67pYp2WWt/U7YjqHLpMl6ThnPeoglgOPWc4C3OxQo=
-github.com/trustbloc/vcs/component/wallet-cli v0.0.0-20230619090702-ffb7ec83a96b h1:ZYVm/YI0BOg0S36m9rxH8VhQEvU4mO5Wpy5ZZGBpPC0=
-github.com/trustbloc/vcs/component/wallet-cli v0.0.0-20230619090702-ffb7ec83a96b/go.mod h1:IiTYTIQfJDagyLrzb4LIpJKQK7OVBrWOfVYC1Tit9AY=
+github.com/trustbloc/vcs v1.0.1-0.20230704132734-884d60b44a2a h1:Yu75nilej6qr9Sbw0pIT9DnCMJ2TjTQjepkwG6mAt3o=
+github.com/trustbloc/vcs v1.0.1-0.20230704132734-884d60b44a2a/go.mod h1:uZ67pYp2WWt/U7YjqHLpMl6ThnPeoglgOPWc4C3OxQo=
+github.com/trustbloc/vcs/component/wallet-cli v0.0.0-20230704132734-884d60b44a2a h1:U4C3+QFm28Z1ncbs4YrzWeSEGHy3LqyCWK3RN6q01LY=
+github.com/trustbloc/vcs/component/wallet-cli v0.0.0-20230704132734-884d60b44a2a/go.mod h1:IiTYTIQfJDagyLrzb4LIpJKQK7OVBrWOfVYC1Tit9AY=
 github.com/trustbloc/vct v1.0.0-rc4 h1:XYvbsyy2mxdeILiT6lQH1EGXSSD6C2zHSr670Vppn+g=
 github.com/trustbloc/vct v1.0.0-rc4/go.mod h1:2kzD3kdeD1LFVRpWo2/C8ktnsfJR3gtH3pf/AqfRqow=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
