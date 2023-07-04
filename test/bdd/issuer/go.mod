@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/cucumber/godog v0.12.5
 	github.com/hyperledger/aries-framework-go v0.3.3-0.20230615070726-b02a3e01fc44
-	github.com/trustbloc/vcs/component/wallet-cli v0.0.0-20230619090702-ffb7ec83a96b
+	github.com/trustbloc/vcs/component/wallet-cli v0.0.0-20230704132734-884d60b44a2a
 )
 
 require (
@@ -151,7 +151,7 @@ require (
 	github.com/trustbloc/logutil-go v1.0.0-rc1 // indirect
 	github.com/trustbloc/orb v1.0.0-rc4.0.20221129223433-07e05f2f6e0a // indirect
 	github.com/trustbloc/sidetree-core-go v1.0.0-rc4 // indirect
-	github.com/trustbloc/vcs v1.0.1-0.20230619090702-ffb7ec83a96b // indirect
+	github.com/trustbloc/vcs v1.0.1-0.20230704132734-884d60b44a2a // indirect
 	github.com/trustbloc/vct v1.0.0-rc4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fastjson v1.6.3 // indirect
