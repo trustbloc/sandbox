@@ -556,6 +556,7 @@ func (c *Operation) wellKnownConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("content-type", httpContentTypeJSON)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	_, err := w.Write(c.didConfig)
 	if err != nil {
